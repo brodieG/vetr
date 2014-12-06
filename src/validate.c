@@ -82,8 +82,11 @@ SEXP VALC_test(SEXP lang) {
 
   // Don't need paren calls since the parsing already accounted for them
   SEXP lang_cpy = lang;
-  while(TYPEOF(lang_cpy) == 6 && !strcmp(CHAR(PRINTNAME(CAR(lang_cpy))), "(")) {
-    lang_cpy = CDR(lang_cpy);
+  while(
+    TYPEOF(lang_cpy) == 6 &&
+    !strcmp(CHAR(PRINTNAME(CAR(lang_cpy))), "(")
+  ) {
+    lang_cpy = CADR(lang_cpy);
   }
   if(TYPEOF(lang_cpy) != 6) {  // Not a language expression
     return(lang_cpy);
