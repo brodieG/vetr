@@ -75,7 +75,8 @@ SEXP VALC_test(SEXP lang) {
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
-  list, placing each element into a pair list that replicates in structure the
+  list, placing each an R vector list that combines this element and an auxillary
+  value describing the elemnt into a pair list that replicates in structure the
   original language list
   */
 
@@ -88,7 +89,18 @@ SEXP VALC_test(SEXP lang) {
   // list element by element...
 
   SEXP res, res_cpy;
-  res = res_cpy = PROTECT(allocList(length(lang)));
+  res = res_cpy = PROTECT(allocList(length(lang) + 1));  // one more for full call
+
+  // First element of dotted pair is full call
+
+  res_vec=PROTECT(allocVector(VECSXP, 2));
+  SET_VECTOR_ELT(res_vec, 0, lang);
+  SET_VECTOR_ELT(res_vec, 1, PROTECT(ScalarInteger(1)));
+  SETCAR(res, res_vec);
+  UNPROTECT(2);
+  res = CDR(res);
+
+  // Next elements are now each component
 
   while(lang != R_NilValue) {
     res_vec=PROTECT(allocVector(VECSXP, 2));
