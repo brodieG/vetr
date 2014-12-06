@@ -80,36 +80,51 @@ SEXP VALC_test(SEXP lang) {
   original language list
   */
 
-  SEXP res_vec;
-  if(TYPEOF(lang) != 6) {  // Not a language expression
-    return(lang);
+  // Don't need paren calls since the parsing already accounted for them
+  SEXP lang_cpy = lang;
+  while(TYPEOF(lang_cpy) == 6 && !strcmp(CHAR(PRINTNAME(CAR(lang_cpy))), "(")) {
+    lang_cpy = CDR(lang_cpy);
+  }
+  if(TYPEOF(lang_cpy) != 6) {  // Not a language expression
+    return(lang_cpy);
   }
   // Maybe we can avoid computing length of `lang` right here since we're going
   // to loop through it anyway, but then need to figure out how to make a linked
   // list element by element...
 
-  SEXP res, res_cpy;
+  SEXP res, res_cpy, res_vec;
   res = res_cpy = PROTECT(allocList(length(lang) + 1));  // one more for full call
 
-  // First element of dotted pair is full call
+  // Note, this loop runs one extra time
 
-  res_vec=PROTECT(allocVector(VECSXP, 2));
-  SET_VECTOR_ELT(res_vec, 0, lang);
-  SET_VECTOR_ELT(res_vec, 1, PROTECT(ScalarInteger(1)));
-  SETCAR(res, res_vec);
-  UNPROTECT(2);
-  res = CDR(res);
+  int first_time=1;
 
-  // Next elements are now each component
+  while(res != R_NilValue) {
+    SEXP rec_val;
+    char * call_symb;
+    int call_type = 999;
 
-  while(lang != R_NilValue) {
     res_vec=PROTECT(allocVector(VECSXP, 2));
-    SET_VECTOR_ELT(res_vec, 0, VALC_test(CAR(lang)));
-    SET_VECTOR_ELT(res_vec, 1, PROTECT(ScalarInteger(1)));
+    if(first_time) {
+      rec_val=PROTECT(lang_cpy); //unnecessary PROTECT keeps stack balance
+    } else {
+      rec_val=PROTECT(VALC_test(CAR(lang_cpy)));
+    }
+    if(TYPEOF(rec_val) == 6) {
+      call_symb = CHAR(PRINTNAME(CAR(rec_val)));
+      if(!strcmp(call_symb, "&&") || !strcmp(call_symb, "||")) {
+        call_type = 1;
+    } }
+    SET_VECTOR_ELT(res_vec, 0, rec_val);
+    SET_VECTOR_ELT(res_vec, 1, PROTECT(ScalarInteger(call_type)));
+
     SETCAR(res, res_vec);
-    UNPROTECT(2);
-    lang = CDR(lang);
+    UNPROTECT(3);
+    if(!first_time) {
+      lang_cpy = CDR(lang_cpy);
+    }
     res = CDR(res);
+    first_time = 0;
   }
   UNPROTECT(1);
   return(res_cpy);
