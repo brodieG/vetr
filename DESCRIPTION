@@ -1,0 +1,13 @@
+Package: validate
+Title:
+Description:
+Version: 0.0.0.9000
+Author: Brodie Gaslam
+Maintainer: Brodie Gaslam <brodie.gaslam@yahoo.com>
+Depends:
+    R (>= 3.1.1)
+Imports:
+    alike,
+    matchcall
+License: GPL-3
+LazyData: true
