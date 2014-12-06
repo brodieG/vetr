@@ -71,19 +71,40 @@ int ALIKEC_int_charlen (R_xlen_t a) {
 
 // - Testing Function ----------------------------------------------------------
 
-SEXP VALC_test(SEXP obj1) {
+SEXP VALC_test(SEXP lang) {
+  /*
+  If the object is not a language list, then return it, as part of an R vector
+  list.  Otherwise, in a loop, recurse with this function on each element of the
+  list, placing each element into a pair list that replicates in structure the
+  original language list
+  */
 
-  if(TYPEOF(obj1) != 6) {  // Not a language expression
-    PrintValue(obj1);
-    return(obj1);
+  SEXP res_vec;
+  if(TYPEOF(lang) != 6) {  // Not a language expression
+    return(lang);
   }
-  SEXP obj1_orig = obj1;   // Keep a copy of pointer to beginning of object
-  while(obj1 != R_NilValue) {
-    SETCAR(obj1, VALC_test(CAR(obj1)));
-    obj1 = CDR(obj1);
+  // Maybe we can avoid computing length of `lang` right here since we're going
+  // to loop through it anyway, but then need to figure out how to make a linked
+  // list element by element...
+
+  SEXP res, res_cpy;
+  res = res_cpy = PROTECT(allocList(length(lang)));
+
+  while(lang != R_NilValue) {
+    res_vec=PROTECT(allocVector(VECSXP, 2));
+    SET_VECTOR_ELT(res_vec, 0, VALC_test(CAR(lang)));
+    SET_VECTOR_ELT(res_vec, 1, PROTECT(ScalarInteger(1)));
+    SETCAR(res, res_vec);
+    UNPROTECT(2);
+    lang = CDR(lang);
+    res = CDR(res);
   }
-  return(obj1_orig);
+  UNPROTECT(1);
+  return(res_cpy);
 }
+
+
+
 /* -------------------------------------------------------------------------- *\
 |                                                                              |
 |                                     TYPE                                     |
