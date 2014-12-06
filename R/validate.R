@@ -32,6 +32,7 @@
 #' @section Type 2 \dfn{Checkargs}:
 #' Type 2 \dfn{Checkargs} need to evaluate to TRUE in order to pass (see examples).
 #'
+#' @useDynLib validate, .registration=TRUE, .fixes="VALC_"
 #' @note Will force evaluation of the closure's arguments that are being checked,
 #'   so do not check a formal if that is a particularly undesirable side effect
 #'   for that formal
@@ -121,3 +122,11 @@ validate <- function(...) {
 
       stop(simpleError(msg, par.call))
 } } }
+
+#' Test Function
+#'
+#' @export
+#' @keywords internal
+
+testval <- function(x)
+  .Call(VALC_test, x)
