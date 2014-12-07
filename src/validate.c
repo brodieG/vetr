@@ -81,6 +81,8 @@ SEXP VALC_test(SEXP lang) {
   */
 
   // Don't need paren calls since the parsing already accounted for them
+  static int counter = -1;
+  counter++;
   SEXP lang_cpy = lang;
   while(
     TYPEOF(lang_cpy) == 6 &&
@@ -89,6 +91,9 @@ SEXP VALC_test(SEXP lang) {
     lang_cpy = CADR(lang_cpy);
   }
   if(TYPEOF(lang_cpy) != 6) {  // Not a language expression
+    counter--;
+    // Rprintf("Returning Terminal ");
+    // PrintValue(lang_cpy);
     return(lang_cpy);
   }
   // Maybe we can avoid computing length of `lang` right here since we're going
@@ -96,7 +101,7 @@ SEXP VALC_test(SEXP lang) {
   // list element by element...
 
   SEXP res, res_cpy, res_vec;
-  res = res_cpy = PROTECT(allocList(length(lang) + 1));  // one more for full call
+  res = res_cpy = PROTECT(allocList(length(lang_cpy) + 1));  // one more for full call
 
   // Note, this loop runs one extra time
 
@@ -120,8 +125,8 @@ SEXP VALC_test(SEXP lang) {
     } }
     SET_VECTOR_ELT(res_vec, 0, rec_val);
     SET_VECTOR_ELT(res_vec, 1, PROTECT(ScalarInteger(call_type)));
-
     SETCAR(res, res_vec);
+
     UNPROTECT(3);
     if(!first_time) {
       lang_cpy = CDR(lang_cpy);
@@ -130,6 +135,7 @@ SEXP VALC_test(SEXP lang) {
     first_time = 0;
   }
   UNPROTECT(1);
+  counter--;
   return(res_cpy);
 }
 
