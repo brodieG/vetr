@@ -101,7 +101,7 @@ SEXP VALC_test(SEXP lang) {
   // list element by element...
 
   SEXP res, res_cpy, res_vec;
-  res = res_cpy = PROTECT(allocList(length(lang_cpy) + 1));  // one more for full call
+  res = res_cpy = PROTECT(allocList(length(lang_cpy)));  // one more for full call
 
   // Note, this loop runs one extra time
 
@@ -128,9 +128,7 @@ SEXP VALC_test(SEXP lang) {
     SETCAR(res, res_vec);
 
     UNPROTECT(3);
-    if(!first_time) {
-      lang_cpy = CDR(lang_cpy);
-    }
+    lang_cpy = CDR(lang_cpy);
     res = CDR(res);
     first_time = 0;
   }
