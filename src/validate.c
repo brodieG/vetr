@@ -9,7 +9,9 @@
 \* -------------------------------------------------------------------------- */
 
 SEXP VALC_validate ();
-SEXP VALC_test(SEXP obj1);
+SEXP VALC_test(SEXP lang);
+SEXP VALC_parse(SEXP lang, SEXP var_name);
+SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode);
 
 static const
 R_CallMethodDef callMethods[] = {
@@ -30,48 +32,18 @@ void R_init_validate(DllInfo *info)
 }
 // - Helper Functions ----------------------------------------------------------
 
-/*
-Returns a character pointer to the string representation of the integer; allocates
-with R_alloc so in theory don't need to worry about freeing memory
 
-
-const char * ALIKEC_xlen_to_char(R_xlen_t a) {
-  if(a < 0)
-    error("Logic Error: unexpected negative length value.");
-  int int_len = (int) ceil(log10(a + 1.00001));  // + 1.00001 to account for 0
-  char * res;
-  res = R_alloc(int_len + 1, sizeof(char));
-  sprintf(res, "%td", a);    // Correct type of R_xlen_t?
-  return (const char *) res;
-}
-/* Returns a character pointer containing the results of using `a` as the parent
-string and all the others a substrings with `sprintf`
-
-note:
-- will over-allocate by up to 8 characters to account for possibility there may
-  not be an "%s" in `a`
-
-
-const char * ALIKEC_sprintf(char * a, const char * b, const char * c, const char * d, const char * e) {
-  int full_len = strlen(a) + strlen(b) + strlen(c) + strlen(d) + strlen(e) + 1;
-  char * res;
-  res = R_alloc(full_len, sizeof(char));
-  sprintf(res, a, b, c, d, e);
-  return res;
-}
-
-/* Estimate how many characters an integer can be represented with
-
-int ALIKEC_int_charlen (R_xlen_t a) {
-  if(a < 0)
-    error("Logic Error: unexpected negative length value.");
-  return (int) ceil(log10(a + 1.1));
-}
-*/
 
 // - Testing Function ----------------------------------------------------------
 
 SEXP VALC_test(SEXP lang) {
+  SEXP lang_cpy;
+  lang_cpy = PROTECT(duplicate(lang));
+  lang_cpy = VALC_parse(lang_cpy, install("test"));
+  UNPROTECT(1);
+  return(lang_cpy);
+}
+SEXP VALC_parse(SEXP lang, SEXP var_name) {
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
@@ -82,19 +54,17 @@ SEXP VALC_test(SEXP lang) {
 
   // Don't need paren calls since the parsing already accounted for them
   static int counter = -1;
-  counter++;
+  counter++;  // Tracks recursion level, used for debugging
   SEXP lang_cpy = lang;
   while(
-    TYPEOF(lang_cpy) == 6 &&
+    TYPEOF(lang_cpy) == LANGSXP &&
     !strcmp(CHAR(PRINTNAME(CAR(lang_cpy))), "(")
   ) {
     lang_cpy = CADR(lang_cpy);
   }
-  if(TYPEOF(lang_cpy) != 6) {  // Not a language expression
+  if(TYPEOF(lang_cpy) != LANGSXP) {  // Not a language expression
     counter--;
-    // Rprintf("Returning Terminal ");
-    // PrintValue(lang_cpy);
-    return(lang_cpy);
+    return(VALC_name_sub(lang_cpy, var_name, 2));
   }
   // Maybe we can avoid computing length of `lang` right here since we're going
   // to loop through it anyway, but then need to figure out how to make a linked
@@ -109,20 +79,24 @@ SEXP VALC_test(SEXP lang) {
 
   while(res != R_NilValue) {
     SEXP rec_val;
-    char * call_symb;
+    const char * call_symb;
     int call_type = 999;
 
     res_vec=PROTECT(allocVector(VECSXP, 2));
     if(first_time) {
       rec_val=PROTECT(lang_cpy); //unnecessary PROTECT keeps stack balance
     } else {
-      rec_val=PROTECT(VALC_test(CAR(lang_cpy)));
+      rec_val=PROTECT(VALC_parse(CAR(lang_cpy), var_name));  // <- recurse here
     }
-    if(TYPEOF(rec_val) == 6) {
+    if(TYPEOF(rec_val) == LANGSXP) {
       call_symb = CHAR(PRINTNAME(CAR(rec_val)));
       if(!strcmp(call_symb, "&&") || !strcmp(call_symb, "||")) {
         call_type = 1;
-    } }
+      } else if(!strcmp(call_symb, ".")) {
+        call_type = 2;
+      }
+      SETCAR(rec_val, VALC_name_sub(CAR(rec_val), var_name, 1));
+    }
     SET_VECTOR_ELT(res_vec, 0, rec_val);
     SET_VECTOR_ELT(res_vec, 1, PROTECT(ScalarInteger(call_type)));
     SETCAR(res, res_vec);
@@ -135,6 +109,64 @@ SEXP VALC_test(SEXP lang) {
   UNPROTECT(1);
   counter--;
   return(res_cpy);
+}
+
+static SEXP identity = NULL;  // Same as R_NilValue?
+static SEXP one_dot = NULL;
+
+/*
+Name replacement, substitutes:
+
+* If a called function (mode == 1)
+    * If a dot, replace with `identity`
+    * If only dots but more than one dot, replace with one dot fewer
+* If a normal symbol (mode == 2)
+    * If a dot, replace with arg name
+    * If only dots but more than one, replace with one dot fewer
+*/
+SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode) {
+  if(mode != 1 && mode != 2)
+    error("Logic error: invalid `mode` value in internal fun; contact maintainer.");
+  if(TYPEOF(symb) != SYMSXP){
+    return(symb);
+  }
+  const char * symb_char = CHAR(PRINTNAME(symb));  // this comes out as const, but we use it as non-const, could this cause problems?
+
+  int i = 0, non_dot = 0;
+
+  while(symb_char[i]) {
+    if(symb_char[i] != '.') {
+      non_dot = 1;
+      break;
+    }
+    i++;
+    if(i > 15000)
+      error("Logic Error: unexpectedly large symbol name (>15000, shouldn't happen); contact maintainer.");
+  }
+  if(!non_dot && i > 0) {  // Name is only dots, and at least one
+    if(i == 1 && mode == 1) {  // One dot and a fun
+      if(identity == NULL) identity = install("identity");
+      return(identity);
+    } else if (i == 1 && mode == 2) {  // one dot and an arg
+      return(arg_name);
+    } else if (i == 2) { // Most common multi dot scenario, escaped dot
+      if(one_dot == NULL) one_dot = install(".");
+      return(one_dot);
+    } else {
+      // Need to remove one dot
+
+      size_t name_len;
+      name_len = strlen(symb_char);
+      PrintValue(symb);
+      Rprintf("name_len: %d i: %d\n");
+      error("pausing for now");
+      char * symb_char_cpy;
+      symb_char_cpy = R_alloc(name_len, sizeof(char));
+      strcpy(symb_char_cpy, symb_char);
+      symb_char_cpy[i - 1] = '\0';  // shorten by one
+      return(install(symb_char_cpy));
+  } }
+  return(symb);
 }
 
 
