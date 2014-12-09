@@ -159,13 +159,10 @@ SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode) {
 
       size_t name_len;
       name_len = strlen(symb_char);
-      PrintValue(symb);
-      Rprintf("name_len: %d i: %d\n");
-      error("pausing for now");
       char * symb_char_cpy;
-      symb_char_cpy = R_alloc(name_len, sizeof(char));
-      strcpy(symb_char_cpy, symb_char);
-      symb_char_cpy[i - 1] = '\0';  // shorten by one
+      symb_char_cpy = R_alloc(name_len, sizeof(char));  // Could allocate one less than this
+      strcpy(symb_char_cpy, symb_char);                 // copy to make non const
+      symb_char_cpy[i - 1] = '\0';                      // shorten by one
       return(install(symb_char_cpy));
   } }
   return(symb);
