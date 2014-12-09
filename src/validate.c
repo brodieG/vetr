@@ -12,11 +12,13 @@ SEXP VALC_validate ();
 SEXP VALC_test(SEXP lang);
 SEXP VALC_parse(SEXP lang, SEXP var_name);
 SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode);
+SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name, SEXP mode);
 
 static const
 R_CallMethodDef callMethods[] = {
   {"validate", (DL_FUNC) &VALC_validate, 0},
   {"test", (DL_FUNC) &VALC_test, 1},
+  {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 3},
   {NULL, NULL, 0}
 };
 
@@ -168,7 +170,12 @@ SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode) {
   } }
   return(symb);
 }
-
+/*
+Unit testing interface
+*/
+SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name, SEXP mode) {
+  return(VALC_name_sub(symb, arg_name, asInteger(mode)));
+}
 
 
 /* -------------------------------------------------------------------------- *\
