@@ -11,7 +11,8 @@
 SEXP VALC_validate ();
 SEXP VALC_test(SEXP lang);
 SEXP VALC_parse(SEXP lang, SEXP var_name);
-SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode);
+SEXP VALC_parse_recurse(SEXP lang, SEXP var_name);
+  SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode);
 SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name, SEXP mode);
 
 static const
@@ -19,6 +20,7 @@ R_CallMethodDef callMethods[] = {
   {"validate", (DL_FUNC) &VALC_validate, 0},
   {"test", (DL_FUNC) &VALC_test, 1},
   {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 3},
+  {"parse", (DL_FUNC) &VALC_parse, 2},
   {NULL, NULL, 0}
 };
 
@@ -39,19 +41,24 @@ void R_init_validate(DllInfo *info)
 // - Testing Function ----------------------------------------------------------
 
 SEXP VALC_test(SEXP lang) {
-  SEXP lang_cpy;
-  lang_cpy = PROTECT(duplicate(lang));
-  lang_cpy = VALC_parse(lang_cpy, install("test"));
-  UNPROTECT(1);
-  return(lang_cpy);
+  return(VALC_parse(lang, install("test")));
 }
 SEXP VALC_parse(SEXP lang, SEXP var_name) {
+  SEXP lang_cpy = PROTECT(duplicate(lang)); // Must copy since we're going to modify this
+  SEXP res = VALC_parse_recurse(lang_cpy, var_name);
+  UNPROTECT(1);
+  return(res);
+}
+SEXP VALC_parse_recurse(SEXP lang, SEXP var_name) {
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
   list, placing each an R vector list that combines this element and an auxillary
   value describing the elemnt into a pair list that replicates in structure the
-  original language list
+  original language list.
+
+  Note we're purposefully modifying calls by reference so that the top level
+  calls reflect the full substitution of the parse process.
   */
 
   // Don't need paren calls since the parsing already accounted for them
@@ -88,14 +95,17 @@ SEXP VALC_parse(SEXP lang, SEXP var_name) {
     if(first_time) {
       rec_val=PROTECT(lang_cpy); //unnecessary PROTECT keeps stack balance
     } else {
-      rec_val=PROTECT(VALC_parse(CAR(lang_cpy), var_name));  // <- recurse here
+      rec_val=PROTECT(VALC_parse_recurse(CAR(lang_cpy), var_name));  // <- recurse here
+      SETCAR(lang_cpy, CAR(rec_val));  // We want to modify the copy of the original call as well
     }
     if(TYPEOF(rec_val) == LANGSXP) {
       call_symb = CHAR(PRINTNAME(CAR(rec_val)));
-      if(!strcmp(call_symb, "&&") || !strcmp(call_symb, "||")) {
+      if(!strcmp(call_symb, "&&")) {
         call_type = 1;
-      } else if(!strcmp(call_symb, ".")) {
+      } else if(!strcmp(call_symb, "||")) {
         call_type = 2;
+      } else if(!strcmp(call_symb, ".")) {
+        call_type = 10;
       }
       SETCAR(rec_val, VALC_name_sub(CAR(rec_val), var_name, 1));
     }
