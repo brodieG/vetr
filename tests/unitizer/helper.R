@@ -27,12 +27,13 @@ unitizer_sect("name_sub function", {
   validate:::name_sub("hello", quote(xyz), 1)       # Does nothing
 })
 unitizer_sect("parse", {
-  x <- quote(.(.))
+  x <- quote(.(.) && ((a)))
   validate:::parse_validator(x, quote(arg_to_validate))
   x # make sure unchanged from previous assignment
 
   validate:::parse_validator(quote(FALSE), quote(arg_to_validate))
   validate:::parse_validator(quote(((FALSE))), quote(arg_to_validate))
+  validate:::parse_validator(quote(((FALSE && ((TRUE))))), quote(arg_to_validate))
   validate:::parse_validator(quote(.(FALSE)), quote(arg_to_validate))
   validate:::parse_validator(quote(.), quote(arg_to_validate))
   validate:::parse_validator(quote(. && a), quote(arg_to_validate))

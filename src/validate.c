@@ -39,34 +39,14 @@ void R_init_validate(DllInfo *info)
 /*
   Don't need paren calls since the parsing already accounted for them
 */
-void VALC_remove_parens(SEXP lang) {
-  SEXP lang_cpy = lang;
+SEXP VALC_remove_parens(SEXP lang) {
   while(
-    TYPEOF(lang_cpy) == LANGSXP &&
-    !strcmp(CHAR(PRINTNAME(CAR(lang_cpy))), "(")
+    TYPEOF(lang) == LANGSXP &&
+    !strcmp(CHAR(PRINTNAME(CAR(lang))), "(")
   ) {
-    PrintValue(lang_cpy);
-    lang_cpy = CADR(lang_cpy);
-
-    PrintValue(lang_cpy);
-    PrintValue(CAR(lang_cpy));
-    Rprintf("symbol: %s\n", CHAR(PRINTNAME(CAR(lang_cpy))));
-    !strcmp(CHAR(PRINTNAME(CAR(lang_cpy))), "(")
-
-    PrintValue(CADR(lang_cpy));
-    Rprintf("type: %s\n", type2char(TYPEOF(CADR(lang_cpy))));
-    error("Pause");
+    lang = CADR(lang);
   }
-  if(TYPEOF(lang) == LANGSXP) {
-    PrintValue(lang);
-    PrintValue(lang_cpy);
-    PrintValue(CAR(lang_cpy));
-    PrintValue(CDR(lang_cpy));
-    error("Pause");
-
-    SETCAR(lang, CAR(lang_cpy));
-    SETCDR(lang, CDR(lang_cpy));
-  }
+  return(lang);
 }
 
 // - Testing Function ----------------------------------------------------------
@@ -78,9 +58,9 @@ SEXP VALC_parse(SEXP lang, SEXP var_name) {
   SEXP lang_cpy, res, res_vec;
 
   lang_cpy = PROTECT(duplicate(lang)); // Must copy since we're going to modify this
-  VALC_remove_parens(lang_cpy);
+  lang_cpy = PROTECT(VALC_remove_parens(lang_cpy));
 
-  if(TYPEOF(lang) != LANGSXP) {
+  if(TYPEOF(lang_cpy) != LANGSXP) {
     lang_cpy = PROTECT(VALC_name_sub(lang_cpy, var_name, 2)); // unnecessary PROTECT for stack balance
     res = ScalarInteger(999);
   } else {
@@ -90,7 +70,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name) {
   res_vec = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
   SET_VECTOR_ELT(res_vec, 1, res);
-  UNPROTECT(3);
+  UNPROTECT(4);
   return(res_vec);
 }
 void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name) {
@@ -144,7 +124,8 @@ void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name) {
   // be PROTECTed since it is pointed at but PROTECTED stuff.
 
   while(lang != R_NilValue) {
-    VALC_remove_parens(CAR(lang));  // Note, this is done by reference
+    SETCAR(lang, VALC_remove_parens(CAR(lang)));  // Note, this is done by reference
+
     if(TYPEOF(CAR(lang)) == LANGSXP) {
       SEXP track_car = allocList(length(CAR(lang)));
       SETCAR(lang_track, track_car);
