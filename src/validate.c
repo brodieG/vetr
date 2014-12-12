@@ -11,8 +11,8 @@
 SEXP VALC_validate ();
 SEXP VALC_test(SEXP lang);
 SEXP VALC_parse(SEXP lang, SEXP var_name);
-SEXP VALC_parse_recurse(SEXP lang, SEXP var_name);
-  SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode);
+void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name);
+SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode);
 SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name, SEXP mode);
 
 static const
@@ -36,7 +36,38 @@ void R_init_validate(DllInfo *info)
 }
 // - Helper Functions ----------------------------------------------------------
 
+/*
+  Don't need paren calls since the parsing already accounted for them
+*/
+void VALC_remove_parens(SEXP lang) {
+  SEXP lang_cpy = lang;
+  while(
+    TYPEOF(lang_cpy) == LANGSXP &&
+    !strcmp(CHAR(PRINTNAME(CAR(lang_cpy))), "(")
+  ) {
+    PrintValue(lang_cpy);
+    lang_cpy = CADR(lang_cpy);
 
+    PrintValue(lang_cpy);
+    PrintValue(CAR(lang_cpy));
+    Rprintf("symbol: %s\n", CHAR(PRINTNAME(CAR(lang_cpy))));
+    !strcmp(CHAR(PRINTNAME(CAR(lang_cpy))), "(")
+
+    PrintValue(CADR(lang_cpy));
+    Rprintf("type: %s\n", type2char(TYPEOF(CADR(lang_cpy))));
+    error("Pause");
+  }
+  if(TYPEOF(lang) == LANGSXP) {
+    PrintValue(lang);
+    PrintValue(lang_cpy);
+    PrintValue(CAR(lang_cpy));
+    PrintValue(CDR(lang_cpy));
+    error("Pause");
+
+    SETCAR(lang, CAR(lang_cpy));
+    SETCDR(lang, CDR(lang_cpy));
+  }
+}
 
 // - Testing Function ----------------------------------------------------------
 
@@ -44,25 +75,25 @@ SEXP VALC_test(SEXP lang) {
   return(VALC_parse(lang, install("test")));
 }
 SEXP VALC_parse(SEXP lang, SEXP var_name) {
-  SEXP lang_cpy = PROTECT(duplicate(lang)); // Must copy since we're going to modify this
-  SEXP res = VALC_parse_recurse(lang_cpy, var_name);
+  SEXP lang_cpy, res, res_vec;
 
-  // Special case since recursion no recursion so no list structure created;
-  // ideally this would be all handled within the recursion function
+  lang_cpy = PROTECT(duplicate(lang)); // Must copy since we're going to modify this
+  VALC_remove_parens(lang_cpy);
 
   if(TYPEOF(lang) != LANGSXP) {
-    SEXP res_list = PROTECT(allocList(length(lang_cpy)));  // one more for full call
-    SEXP res_vec = PROTECT(allocVector(VECSXP, 2));
-    SET_VECTOR_ELT(res_vec, 0, res);
-    SET_VECTOR_ELT(res_vec, 1, PROTECT(ScalarInteger(999)));
-    SETCAR(res_list, res_vec);
-    res = res_list;
-    UNPROTECT(3);
+    lang_cpy = PROTECT(VALC_name_sub(lang_cpy, var_name, 2)); // unnecessary PROTECT for stack balance
+    res = ScalarInteger(999);
+  } else {
+    res = PROTECT(allocList(length(lang_cpy)));
+    VALC_parse_recurse(lang_cpy, res, var_name);  // lang_cpy, res, are modified internally
   }
-  UNPROTECT(1);
-  return(res);
+  res_vec = PROTECT(allocVector(VECSXP, 2));
+  SET_VECTOR_ELT(res_vec, 0, lang_cpy);
+  SET_VECTOR_ELT(res_vec, 1, res);
+  UNPROTECT(3);
+  return(res_vec);
 }
-SEXP VALC_parse_recurse(SEXP lang, SEXP var_name) {
+void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name) {
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
@@ -82,75 +113,55 @@ SEXP VALC_parse_recurse(SEXP lang, SEXP var_name) {
 
   */
 
-  // Don't need paren calls since the parsing already accounted for them
-  static int counter = -1;
+  static int counter = -1, call_type = 999;
   counter++;  // Tracks recursion level, used for debugging
-  SEXP lang_cpy = lang;
-  while(
-    TYPEOF(lang_cpy) == LANGSXP &&
-    !strcmp(CHAR(PRINTNAME(CAR(lang_cpy))), "(")
-  ) {
-    lang_cpy = CADR(lang_cpy);
+
+  if(TYPEOF(lang) != LANGSXP) {  // Not a language expression
+    error("Logic Error: unexpectedly encountered a non-language object");
   }
-  if(TYPEOF(lang_cpy) != LANGSXP) {  // Not a language expression
-    counter--;
-    return(VALC_name_sub(lang_cpy, var_name, 2));  // Should never be able to exit just like this with 1 non-call elements being parsed?
+  const char * call_symb;
+
+  // Determine if we're dealing with a special code, and if so determine what
+  // type and record
+
+  PrintValue(CAR(lang));
+  call_symb = CHAR(PRINTNAME(CAR(lang)));
+  if(!strcmp(call_symb, "&&")) {
+    call_type = 1;
+  } else if(!strcmp(call_symb, "||")) {
+    call_type = 2;
+  } else if(!strcmp(call_symb, ".")) {
+    call_type = 10;
   }
-  // Maybe we can avoid computing length of `lang` right here since we're going
-  // to loop through it anyway, but then need to figure out how to make a linked
-  // list element by element...
+  SETCAR(lang, VALC_name_sub(CAR(lang), var_name, 1));  // Subs `.` if needed
+  SETCAR(lang_track, ScalarInteger(call_type));             // Track type of call
 
-  SEXP res, res_cpy, res_vec;
-  res = res_cpy = PROTECT(allocList(length(lang_cpy)));  // one more for full call
+  lang = CDR(lang);
+  lang_track = CDR(lang_track);
 
-  // Note, this loop runs one extra time
+  // Loop through remaining elements of call; if any are calls, recurse, otherwise
+  // sub for dots and record as templates (999).  Stuff here shouldn't need to
+  // be PROTECTed since it is pointed at but PROTECTED stuff.
 
-  int first_time=1;
-
-  while(res != R_NilValue) {
-    SEXP rec_val;
-    const char * call_symb;
-    int call_type = 999;
-
-    res_vec=PROTECT(allocVector(VECSXP, 2));
-    if(first_time) {
-      rec_val=PROTECT(lang_cpy); //unnecessary PROTECT keeps stack balance
+  while(lang != R_NilValue) {
+    VALC_remove_parens(CAR(lang));  // Note, this is done by reference
+    if(TYPEOF(CAR(lang)) == LANGSXP) {
+      SEXP track_car = allocList(length(CAR(lang)));
+      SETCAR(lang_track, track_car);
+      VALC_parse_recurse(CAR(lang), CAR(lang_track), var_name);
     } else {
-      rec_val=PROTECT(VALC_parse_recurse(CAR(lang_cpy), var_name));  // <- recurse here
-
-      // In the one case where the CAR isn't a language object, we need to
-      // explicitly repoint the language object that references it as it will
-      // be copied and modified by VALC_parse_recurse (see top of fun)
-
-      if(TYPEOF(CAR(lang_cpy)) != LANGSXP) {
-        SETCAR(lang_cpy, rec_val);
-      }
+      SETCAR(lang, VALC_name_sub(CAR(lang), var_name, 2));
+      SETCAR(lang_track, ScalarInteger(999));
     }
-    // Change definition of element type if a call to &&, ||, or `.(`
-
-    if(TYPEOF(lang_cpy) == LANGSXP) {
-      call_symb = CHAR(PRINTNAME(CAR(lang_cpy)));
-      if(!strcmp(call_symb, "&&")) {
-        call_type = 1;
-      } else if(!strcmp(call_symb, "||")) {
-        call_type = 2;
-      } else if(!strcmp(call_symb, ".")) {
-        call_type = 10;
-      }
-      SETCAR(lang_cpy, VALC_name_sub(CAR(lang_cpy), var_name, 1));
-    }
-    SET_VECTOR_ELT(res_vec, 0, rec_val);
-    SET_VECTOR_ELT(res_vec, 1, PROTECT(ScalarInteger(call_type)));
-    SETCAR(res, res_vec);
-
-    UNPROTECT(3);
-    lang_cpy = CDR(lang_cpy);
-    res = CDR(res);
-    first_time = 0;
+    lang = CDR(lang);
+    lang_track = CDR(lang_track);
   }
-  UNPROTECT(1);
+  if(lang == R_NilValue && lang_track != R_NilValue) {
+    error("Logic Error: unsychronized call tree and call tracking tree; contact maintainer.");
+  }
   counter--;
-  return(res_cpy);
+
+  // Don't return anything as all is done by modifying `lang` and `lang_track`
 }
 
 static SEXP identity = NULL;  // Same as R_NilValue?
@@ -172,6 +183,7 @@ SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode) {
   if(TYPEOF(symb) != SYMSXP){
     return(symb);
   }
+  Rprintf("Type: %s\n", type2char(TYPEOF(symb)));
   const char * symb_char = CHAR(PRINTNAME(symb));  // this comes out as const, but we use it as non-const, could this cause problems?
 
   int i = 0, non_dot = 0;
