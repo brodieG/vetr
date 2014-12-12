@@ -46,6 +46,19 @@ SEXP VALC_test(SEXP lang) {
 SEXP VALC_parse(SEXP lang, SEXP var_name) {
   SEXP lang_cpy = PROTECT(duplicate(lang)); // Must copy since we're going to modify this
   SEXP res = VALC_parse_recurse(lang_cpy, var_name);
+
+  // Special case since recursion no recursion so no list structure created;
+  // ideally this would be all handled within the recursion function
+
+  if(TYPEOF(lang) != LANGSXP) {
+    SEXP res_list = PROTECT(allocList(length(lang_cpy)));  // one more for full call
+    SEXP res_vec = PROTECT(allocVector(VECSXP, 2));
+    SET_VECTOR_ELT(res_vec, 0, res);
+    SET_VECTOR_ELT(res_vec, 1, PROTECT(ScalarInteger(999)));
+    SETCAR(res_list, res_vec);
+    res = res_list;
+    UNPROTECT(3);
+  }
   UNPROTECT(1);
   return(res);
 }
@@ -59,6 +72,14 @@ SEXP VALC_parse_recurse(SEXP lang, SEXP var_name) {
 
   Note we're purposefully modifying calls by reference so that the top level
   calls reflect the full substitution of the parse process.
+
+  We want to modify the copy of the original call as well, need to dig
+  into list with call to do so; maybe should use parallel trees, one with
+  the expressions, one with the status, and the recursion is done by
+  passing pointers to the current position in each tree.  Would be simpler.
+  Here instead we try to cram both trees into one by using lists and we
+  get this mess below
+
   */
 
   // Don't need paren calls since the parsing already accounted for them
@@ -73,7 +94,7 @@ SEXP VALC_parse_recurse(SEXP lang, SEXP var_name) {
   }
   if(TYPEOF(lang_cpy) != LANGSXP) {  // Not a language expression
     counter--;
-    return(VALC_name_sub(lang_cpy, var_name, 2));
+    return(VALC_name_sub(lang_cpy, var_name, 2));  // Should never be able to exit just like this with 1 non-call elements being parsed?
   }
   // Maybe we can avoid computing length of `lang` right here since we're going
   // to loop through it anyway, but then need to figure out how to make a linked
@@ -96,10 +117,19 @@ SEXP VALC_parse_recurse(SEXP lang, SEXP var_name) {
       rec_val=PROTECT(lang_cpy); //unnecessary PROTECT keeps stack balance
     } else {
       rec_val=PROTECT(VALC_parse_recurse(CAR(lang_cpy), var_name));  // <- recurse here
-      SETCAR(lang_cpy, CAR(rec_val));  // We want to modify the copy of the original call as well
+
+      // In the one case where the CAR isn't a language object, we need to
+      // explicitly repoint the language object that references it as it will
+      // be copied and modified by VALC_parse_recurse (see top of fun)
+
+      if(TYPEOF(CAR(lang_cpy)) != LANGSXP) {
+        SETCAR(lang_cpy, rec_val);
+      }
     }
-    if(TYPEOF(rec_val) == LANGSXP) {
-      call_symb = CHAR(PRINTNAME(CAR(rec_val)));
+    // Change definition of element type if a call to &&, ||, or `.(`
+
+    if(TYPEOF(lang_cpy) == LANGSXP) {
+      call_symb = CHAR(PRINTNAME(CAR(lang_cpy)));
       if(!strcmp(call_symb, "&&")) {
         call_type = 1;
       } else if(!strcmp(call_symb, "||")) {
@@ -107,7 +137,7 @@ SEXP VALC_parse_recurse(SEXP lang, SEXP var_name) {
       } else if(!strcmp(call_symb, ".")) {
         call_type = 10;
       }
-      SETCAR(rec_val, VALC_name_sub(CAR(rec_val), var_name, 1));
+      SETCAR(lang_cpy, VALC_name_sub(CAR(lang_cpy), var_name, 1));
     }
     SET_VECTOR_ELT(res_vec, 0, rec_val);
     SET_VECTOR_ELT(res_vec, 1, PROTECT(ScalarInteger(call_type)));
