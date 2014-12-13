@@ -11,8 +11,8 @@
 #' @param mode 1L or 2L
 #' @return symbol
 
-name_sub <- function(symb, arg_name, mode)
-  .Call(VALC_name_sub, symb, arg_name, mode)
+name_sub <- function(symb, arg_name)
+  .Call(VALC_name_sub, symb, arg_name)
 
 #' Parse Expressions For \code{`validate`} Use
 #'
@@ -29,3 +29,10 @@ name_sub <- function(symb, arg_name, mode)
 
 parse_validator <- function(lang, arg_name)
   .Call(VALC_parse, lang, arg_name)
+
+#' Remove Parens and \code{`.(`} From Calls
+#'
+#' @keywords internal
+
+remove_parens <- function(lang)
+  .Call(VALC_remove_parens, lang)

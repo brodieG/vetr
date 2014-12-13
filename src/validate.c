@@ -11,16 +11,18 @@
 SEXP VALC_validate ();
 SEXP VALC_test(SEXP lang);
 SEXP VALC_parse(SEXP lang, SEXP var_name);
-void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name);
-SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode);
-SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name, SEXP mode);
+void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is);
+SEXP VALC_name_sub(SEXP symb, SEXP arg_name);
+SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name);
+SEXP VALC_remove_parens(SEXP lang);
 
 static const
 R_CallMethodDef callMethods[] = {
   {"validate", (DL_FUNC) &VALC_validate, 0},
   {"test", (DL_FUNC) &VALC_test, 1},
-  {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 3},
+  {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
   {"parse", (DL_FUNC) &VALC_parse, 2},
+  {"remove_parens", (DL_FUNC) &VALC_remove_parens, 1},
   {NULL, NULL, 0}
 };
 
@@ -40,32 +42,52 @@ void R_init_validate(DllInfo *info)
   Don't need paren calls since the parsing already accounted for them
 */
 SEXP VALC_remove_parens(SEXP lang) {
-  while(
-    TYPEOF(lang) == LANGSXP &&
-    !strcmp(CHAR(PRINTNAME(CAR(lang))), "(")
-  ) {
+  SEXP mode, mode_0 = PROTECT(ScalarInteger(0)), mode_1 = PROTECT(ScalarInteger(1));
+  mode = mode_0;
+
+  while(TYPEOF(lang) == LANGSXP) {
+    if(!strcmp(CHAR(PRINTNAME(CAR(lang))), "(")) {
+      if(length(lang) != 2) {
+        error("Logic Error: `(` call with more than one argument; contact maintainer.");
+      }
+    } else if(!strcmp(CHAR(PRINTNAME(CAR(lang))), ".")) {
+      if(length(lang) != 2)
+        error("`.(` must be used with only one argument.");
+      mode = mode_1;
+    } else {
+      break;
+    }
     lang = CADR(lang);
   }
-  return(lang);
+  SEXP res = PROTECT(allocVector(VECSXP, 2));
+  SET_VECTOR_ELT(res, 0, lang);
+  SET_VECTOR_ELT(res, 1, mode);
+  UNPROTECT(3);
+  return(res);
 }
 
 // - Testing Function ----------------------------------------------------------
 
 SEXP VALC_test(SEXP lang) {
-  return(VALC_parse(lang, install("test")));
+  return(R_NilValue);
+  //Rprintf("%s\n", CHAR(deparse1WithCutoff(lang)));
 }
 SEXP VALC_parse(SEXP lang, SEXP var_name) {
-  SEXP lang_cpy, res, res_vec;
+  SEXP lang_cpy, res, res_vec, rem_res;
+  int mode;
 
   lang_cpy = PROTECT(duplicate(lang)); // Must copy since we're going to modify this
-  lang_cpy = PROTECT(VALC_remove_parens(lang_cpy));
+
+  rem_res = PROTECT(VALC_remove_parens(lang_cpy));
+  lang_cpy = VECTOR_ELT(rem_res, 0);
+  mode = asInteger(VECTOR_ELT(rem_res, 1));
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
-    lang_cpy = PROTECT(VALC_name_sub(lang_cpy, var_name, 2)); // unnecessary PROTECT for stack balance
-    res = ScalarInteger(999);
+    lang_cpy = VALC_name_sub(lang_cpy, var_name);
+    res = PROTECT(ScalarInteger(mode ? 10 : 999));
   } else {
     res = PROTECT(allocList(length(lang_cpy)));
-    VALC_parse_recurse(lang_cpy, res, var_name);  // lang_cpy, res, are modified internally
+    VALC_parse_recurse(lang_cpy, res, var_name, mode);  // lang_cpy, res, are modified internally
   }
   res_vec = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
@@ -73,12 +95,12 @@ SEXP VALC_parse(SEXP lang, SEXP var_name) {
   UNPROTECT(4);
   return(res_vec);
 }
-void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name) {
+void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is) {
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
   list, placing each an R vector list that combines this element and an auxillary
-  value describing the elemnt into a pair list that replicates in structure the
+  value describing the element into a pair list that replicates in structure the
   original language list.
 
   Note we're purposefully modifying calls by reference so that the top level
@@ -93,7 +115,8 @@ void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name) {
 
   */
 
-  static int counter = -1, call_type = 999;
+  static int counter = -1;
+  int call_type = 999;
   counter++;  // Tracks recursion level, used for debugging
 
   if(TYPEOF(lang) != LANGSXP) {  // Not a language expression
@@ -104,16 +127,14 @@ void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name) {
   // Determine if we're dealing with a special code, and if so determine what
   // type and record
 
-  PrintValue(CAR(lang));
   call_symb = CHAR(PRINTNAME(CAR(lang)));
-  if(!strcmp(call_symb, "&&")) {
+  if(eval_as_is) {
+    call_type = 10;
+  } else if(!strcmp(call_symb, "&&")) {
     call_type = 1;
   } else if(!strcmp(call_symb, "||")) {
     call_type = 2;
-  } else if(!strcmp(call_symb, ".")) {
-    call_type = 10;
   }
-  SETCAR(lang, VALC_name_sub(CAR(lang), var_name, 1));  // Subs `.` if needed
   SETCAR(lang_track, ScalarInteger(call_type));             // Track type of call
 
   lang = CDR(lang);
@@ -124,15 +145,25 @@ void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name) {
   // be PROTECTed since it is pointed at but PROTECTED stuff.
 
   while(lang != R_NilValue) {
-    SETCAR(lang, VALC_remove_parens(CAR(lang)));  // Note, this is done by reference
+    // Remove parens removes parens and `.` calls, and indicates whether a `.`
+    // call was encountered through the second value in the return list
+
+    SEXP rem_parens = PROTECT(VALC_remove_parens(CAR(lang)));
+    if(!eval_as_is && asInteger(VECTOR_ELT(rem_parens, 1))) {
+      eval_as_is = 1;
+    } else {
+      eval_as_is = 0;
+    }
+    SETCAR(lang, VECTOR_ELT(rem_parens, 0));
+    UNPROTECT(1);
 
     if(TYPEOF(CAR(lang)) == LANGSXP) {
       SEXP track_car = allocList(length(CAR(lang)));
       SETCAR(lang_track, track_car);
-      VALC_parse_recurse(CAR(lang), CAR(lang_track), var_name);
+      VALC_parse_recurse(CAR(lang), CAR(lang_track), var_name, eval_as_is);
     } else {
-      SETCAR(lang, VALC_name_sub(CAR(lang), var_name, 2));
-      SETCAR(lang_track, ScalarInteger(999));
+      SETCAR(lang, VALC_name_sub(CAR(lang), var_name));
+      SETCAR(lang_track, ScalarInteger(eval_as_is ? 10 : 999));
     }
     lang = CDR(lang);
     lang_track = CDR(lang_track);
@@ -145,26 +176,15 @@ void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name) {
   // Don't return anything as all is done by modifying `lang` and `lang_track`
 }
 
-static SEXP identity = NULL;  // Same as R_NilValue?
 static SEXP one_dot = NULL;
 
 /*
-Name replacement, substitutes:
-
-* If a called function (mode == 1)
-    * If a dot, replace with `identity`
-    * If only dots but more than one dot, replace with one dot fewer
-* If a normal symbol (mode == 2)
-    * If a dot, replace with arg name
-    * If only dots but more than one, replace with one dot fewer
+Name replacement, substitutes `.` for argname and multi dots for one dot fewer
 */
-SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode) {
-  if(mode != 1 && mode != 2)
-    error("Logic error: invalid `mode` value in internal fun; contact maintainer.");
+SEXP VALC_name_sub(SEXP symb, SEXP arg_name) {
   if(TYPEOF(symb) != SYMSXP){
     return(symb);
   }
-  Rprintf("Type: %s\n", type2char(TYPEOF(symb)));
   const char * symb_char = CHAR(PRINTNAME(symb));  // this comes out as const, but we use it as non-const, could this cause problems?
 
   int i = 0, non_dot = 0;
@@ -179,10 +199,7 @@ SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode) {
       error("Logic Error: unexpectedly large symbol name (>15000, shouldn't happen); contact maintainer.");
   }
   if(!non_dot && i > 0) {  // Name is only dots, and at least one
-    if(i == 1 && mode == 1) {  // One dot and a fun
-      if(identity == NULL) identity = install("identity");
-      return(identity);
-    } else if (i == 1 && mode == 2) {  // one dot and an arg
+    if (i == 1) {  // one dot and an arg
       return(arg_name);
     } else if (i == 2) { // Most common multi dot scenario, escaped dot
       if(one_dot == NULL) one_dot = install(".");
@@ -203,8 +220,8 @@ SEXP VALC_name_sub(SEXP symb, SEXP arg_name, int mode) {
 /*
 Unit testing interface
 */
-SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name, SEXP mode) {
-  return(VALC_name_sub(symb, arg_name, asInteger(mode)));
+SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name) {
+  return(VALC_name_sub(symb, arg_name));
 }
 
 
