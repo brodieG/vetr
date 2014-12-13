@@ -9,7 +9,7 @@
 \* -------------------------------------------------------------------------- */
 
 SEXP VALC_validate ();
-SEXP VALC_test(SEXP lang);
+SEXP VALC_test(SEXP a, SEXP b);
 SEXP VALC_parse(SEXP lang, SEXP var_name);
 void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is);
 SEXP VALC_name_sub(SEXP symb, SEXP arg_name);
@@ -19,7 +19,7 @@ SEXP VALC_remove_parens(SEXP lang);
 static const
 R_CallMethodDef callMethods[] = {
   {"validate", (DL_FUNC) &VALC_validate, 0},
-  {"test", (DL_FUNC) &VALC_test, 1},
+  {"test", (DL_FUNC) &VALC_test, 2},
   {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
   {"parse", (DL_FUNC) &VALC_parse, 2},
   {"remove_parens", (DL_FUNC) &VALC_remove_parens, 1},
@@ -68,8 +68,13 @@ SEXP VALC_remove_parens(SEXP lang) {
 
 // - Testing Function ----------------------------------------------------------
 
-SEXP VALC_test(SEXP lang) {
-  return(R_NilValue);
+SEXP VALC_test(SEXP a, SEXP b) {
+  // Borrowed from Dirk Eddelbuettel (http://stackoverflow.com/a/20479078/2725969)
+
+  static SEXP(*fun)(SEXP,SEXP) = NULL;
+  if (fun == NULL)
+    fun = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
+  return(fun(a, b));
   //Rprintf("%s\n", CHAR(deparse1WithCutoff(lang)));
 }
 SEXP VALC_parse(SEXP lang, SEXP var_name) {

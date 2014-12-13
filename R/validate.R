@@ -128,5 +128,5 @@ validate <- function(...) {
 #' @export
 #' @keywords internal
 
-testval <- function(x)
-  .Call(VALC_test, x)
+testval <- function(x, y)
+  .Call(VALC_test, x, y)
