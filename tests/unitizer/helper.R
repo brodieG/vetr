@@ -35,4 +35,8 @@ unitizer_sect("parse", {
   validate:::parse_validator(quote(matrix(nrow=3)), quote(arg_to_validate))
   validate:::parse_validator(quote(matrix(nrow=3) && .(.)), quote(arg_to_validate))
   validate:::parse_validator(quote((a || ((b && c))) && .(a + .)), quote(arg_to_validate))
+  validate:::parse_validator(quote((a || ((b && .(c)))) && (a + .(.))), quote(arg_to_validate))
+
+  validate:::parse_validator(quote(a && (b + .(c))), quote(arg_to_validate))  # uninterpretable?
+  validate:::parse_validator(quote(a && .), "hello")                          # uninterpretable?
 } )
