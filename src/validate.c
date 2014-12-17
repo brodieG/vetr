@@ -25,6 +25,7 @@ R_CallMethodDef callMethods[] = {
   {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
   {"parse", (DL_FUNC) &VALC_parse, 2},
   {"remove_parens", (DL_FUNC) &VALC_remove_parens, 1},
+  {"eval_check", (DL_FUNC) &VALC_evaluate, 3},
   {NULL, NULL, 0}
 };
 
@@ -251,7 +252,116 @@ SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name) {
   return(VALC_name_sub(symb, arg_name));
 }
 
+SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value) {
+  /*
+  check act_codes:
+    if 1 or 2
+      recurse and:
+        if return value is TRUE
+          and act_code == 2, return TRUE
+          and act_code == 1, continue
+        if return value is character
+          and act_code == 1,
+            return
+          and act_code == 2,
+            record for later return if no TRUEs are met
+        if return value is TRUE,
+        if with mode set to corresponding value (does it matter)
+    if 10, eval as is
+      if returns character then return character
+      if returns FALSE deparse into something like (`x` does not eval to TRUE`)
+    if 999, eval as alike
+  */
+  int mode;
+  if(TYPEOF(act_codes) == LISTSXP) {
+    if(TYPEOF(lang) != LANGSXP)
+      error("Logic Error: mismatched language and eval type tracking; contact maintainer.");
+    mode=asInteger(CAR(act_codes));
+  } else {
+    if(TYPEOF(lang) == LANGSXP)
+      error("Logic Error: mismatched language and eval type tracking; contact maintainer.");
+    mode = asInteger(act_codes);
+  }
+  if(mode == 1 || mode == 2) {
+    // Dealing with && or ||, so recurse on each element
 
+    if(TYPEOF(lang) == LANGSXP) {
+      int parse_count = 0;
+      SEXP err_list, err_list_cpy;
+      err_list = err_list_cpy = PROTECT(allocList(0)); // Track errors
+      lang = CDR(lang);
+      act_codes = CDR(act_codes);
+
+      while(lang != R_NilValue) {
+        SEXP eval_res;
+        eval_res = PROTECT(VALC_evaluate_recurse(lang, act_codes, arg_value));
+        if(TYPEOF(eval_res) == LISTSXP) {
+          if(mode == 1) {// At least one non-TRUE result, which is a failure, so return
+            UNPROTECT(1);
+            return(eval_res);
+          }
+          if(mode == 2)  // All need to fail, so store errors for now
+            err_list = listAppend(err_list, eval_res);
+        } else if (TYPEOF(eval_res) == LGLSXP && XLENGTH(eval_res) == 1) {
+          if(mode == 2) {
+            return(eval_res); // At least one TRUE value in or mode
+          }
+        } else {
+          error("Logic Error: unexpected return value when recursively evaluating parse; contact maintainer.");
+        }
+        parse_count++;
+      }
+      if(parse_count != 2)
+        error("Logic Error: unexpected language structure for modes 1/2; contact maintainer.");
+      if(mode == 2) {  // Only way to get here is if none of previous actually returned TRUE
+        return(err_list_cpy);
+      }
+    } else {
+      error("Logic Error: in mode c(1, 2), but not a language object; contact maintainer.");
+    }
+  } else if(mode == 10 || mode == 999) {
+    // For all this stuff, need to think about error handling
+    // Need environment to eval this in
+
+    SEXP eval_res;
+
+    if(mode == 10) eval_res = PROTECT(eval(lang, R_GlobalEnv));
+    else eval_res = PROTECT(alike(eval(lang, R_GlobalEnv), arg_value));
+
+    if(TYPEOF(eval_res) != LANGSXP || xlength(eval_res) != 1 || !asLogical(eval_res)) {
+      SEXP err_msg;
+      if(mode == 10) {
+        SETCADR(dep_call, lang);
+        err_msg = PROTECT(allocList(1));          // This needs to become a proper message, not just the deparsed call
+        SETCAR(err_msg, eval(dep_call, R_GlobalEnv));     // R_GlobalEnv not right place to eval
+      } else {
+        err_msg = PROTECT(eval_res);   // unnecesary PROTECT for balance
+      }
+      UNPROTECT(2);
+      return(err_msg);
+    }
+    UNPROTECT(1);
+    return(eval_res);  // this should be `TRUE`
+  } else {
+    error("Logic Error: unexpected parse mode %d", mode);
+  }
+  error("Logic Error: should never get here");
+  return(R_NilValue);  // Should never get here
+}
+/*
+TBD if this should call `VALC_parse` directly or not
+*/
+SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value) {
+  SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_name));
+  SEXP res = PROTECT(
+    VALC_evaluate_recurse(
+      VECTOR_ELT(lang_parsed, 0),
+      VECTOR_ELT(lang_parsed, 1),
+      arg_value
+  ) );
+  UNPROTECT(2);  // This seems a bit stupid, PROTECT/UNPROTECT
+  return(res);
+}
 /* -------------------------------------------------------------------------- *\
 |                                                                              |
 |                                     TYPE                                     |

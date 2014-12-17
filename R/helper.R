@@ -36,3 +36,8 @@ parse_validator <- function(lang, arg_name)
 
 remove_parens <- function(lang)
   .Call(VALC_remove_parens, lang)
+
+#' Evaluates a test
+
+eval_check <- function(lang, arg_name, arg_value)
+  .Call(VALC_eval_check, lang, arg_name, arg_value)

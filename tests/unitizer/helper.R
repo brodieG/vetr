@@ -40,3 +40,8 @@ unitizer_sect("parse", {
   validate:::parse_validator(quote(a && (b + .(c))), quote(arg_to_validate))  # uninterpretable?
   validate:::parse_validator(quote(a && .), "hello")                          # uninterpretable?
 } )
+unitizer_sect("evaluate", {
+  validate:::eval_check(quote(logical(2L)), quote(xyz), 1:2)
+  validate:::eval_check(quote(logical(2L)), quote(xyz), c(TRUE, FALSE))
+  validate:::eval_check(quote(logical(2L)), quote(xyz), c(TRUE, FALSE, TRUE))
+})
