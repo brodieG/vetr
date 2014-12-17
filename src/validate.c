@@ -15,6 +15,8 @@ void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_i
 SEXP VALC_name_sub(SEXP symb, SEXP arg_name);
 SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name);
 SEXP VALC_remove_parens(SEXP lang);
+void VALC_install_objs();
+SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value);
 
 static const
 R_CallMethodDef callMethods[] = {
@@ -32,12 +34,46 @@ void R_init_validate(DllInfo *info)
     No .Fortran() or .External() routines,
     so pass those arrays as NULL.
   */
-  R_registerRoutines(info,
-  NULL, callMethods,
-  NULL, NULL);
+  R_registerRoutines(info, NULL, callMethods, NULL, NULL);
+  VALC_install_objs();
 }
-// - Helper Functions ----------------------------------------------------------
+// - Objects We Install Once ---------------------------------------------------
 
+// One question: are static objects not garbage collected?  The examples from
+// "Writing R Extensions" don't seem to require the protection of these
+
+static SEXP one_dot = NULL;
+static SEXP dep_call = NULL;
+static SEXP(*alike)(SEXP,SEXP) = NULL;
+
+void VALC_install_objs() {
+    if(one_dot == NULL) one_dot = install(".");
+    if(dep_call == NULL) {  // ready to eval `deparse(x)` call, just sub in `x`
+      dep_call = allocList(2);
+      SETCAR(dep_call, install("deparse"));
+      SET_TYPEOF(dep_call, LANGSXP);
+
+      // Need to add a `width` argument, etc...
+    }
+    // Borrowed from Dirk Eddelbuettel (http://stackoverflow.com/a/20479078/2725969)
+
+    if (alike == NULL)
+      alike = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
+}
+
+// - Testing Function ----------------------------------------------------------
+
+SEXP VALC_test(SEXP a, SEXP b) {
+  // Borrowed from Dirk Eddelbuettel (http://stackoverflow.com/a/20479078/2725969)
+
+  static SEXP(*fun)(SEXP,SEXP) = NULL;
+  if (alike == NULL)
+    alike = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
+  return(fun(a, b));
+  //Rprintf("%s\n", CHAR(deparse1WithCutoff(lang)));
+}
+
+// - Helper Functions ----------------------------------------------------------
 /*
   Don't need paren calls since the parsing already accounted for them
 */
@@ -64,18 +100,6 @@ SEXP VALC_remove_parens(SEXP lang) {
   SET_VECTOR_ELT(res, 1, mode);
   UNPROTECT(3);
   return(res);
-}
-
-// - Testing Function ----------------------------------------------------------
-
-SEXP VALC_test(SEXP a, SEXP b) {
-  // Borrowed from Dirk Eddelbuettel (http://stackoverflow.com/a/20479078/2725969)
-
-  static SEXP(*fun)(SEXP,SEXP) = NULL;
-  if (fun == NULL)
-    fun = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
-  return(fun(a, b));
-  //Rprintf("%s\n", CHAR(deparse1WithCutoff(lang)));
 }
 SEXP VALC_parse(SEXP lang, SEXP var_name) {
   SEXP lang_cpy, res, res_vec, rem_res;
@@ -181,7 +205,6 @@ void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_i
   // Don't return anything as all is done by modifying `lang` and `lang_track`
 }
 
-static SEXP one_dot = NULL;
 
 /*
 Name replacement, substitutes `.` for argname and multi dots for one dot fewer
@@ -207,7 +230,6 @@ SEXP VALC_name_sub(SEXP symb, SEXP arg_name) {
     if (i == 1) {  // one dot and an arg
       return(arg_name);
     } else if (i == 2) { // Most common multi dot scenario, escaped dot
-      if(one_dot == NULL) one_dot = install(".");
       return(one_dot);
     } else {
       // Need to remove one dot
