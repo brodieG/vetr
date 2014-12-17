@@ -65,12 +65,9 @@ void VALC_install_objs() {
 // - Testing Function ----------------------------------------------------------
 
 SEXP VALC_test(SEXP a, SEXP b) {
-  // Borrowed from Dirk Eddelbuettel (http://stackoverflow.com/a/20479078/2725969)
-
-  static SEXP(*fun)(SEXP,SEXP) = NULL;
-  if (alike == NULL)
-    alike = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
-  return(fun(a, b));
+  Rprintf("%s\n", type2char(TYPEOF(a)));
+  Rprintf("%s\n", type2char(TYPEOF(CDR(a))));
+  return(R_NilValue);
   //Rprintf("%s\n", CHAR(deparse1WithCutoff(lang)));
 }
 
@@ -273,69 +270,105 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value) {
     if 999, eval as alike
   */
   int mode;
+  static int rec_count = 0;
+  Rprintf("Rec count %d\n", rec_count++);
+  Rprintf("type lang %s\n", type2char(TYPEOF(lang)));
+  PrintValue(lang);
+  PrintValue(act_codes);
+  Rprintf("Getting modes..\n");
+
   if(TYPEOF(act_codes) == LISTSXP) {
-    if(TYPEOF(lang) != LANGSXP)
-      error("Logic Error: mismatched language and eval type tracking; contact maintainer.");
-    mode=asInteger(CAR(act_codes));
+    if(TYPEOF(lang) != LANGSXP && TYPEOF(lang) != LISTSXP) {
+      error("Logic Error: mismatched language and eval type tracking 1; contact maintainer.");
+    }
+    if(TYPEOF(CAR(act_codes)) != INTSXP) {
+      if(TYPEOF(CAR(lang)) != LANGSXP) {
+        error("Logic error: call should have been evaluated at previous level; contact maintainer.");
+      }
+      if(TYPEOF(CAR(act_codes)) != LISTSXP || TYPEOF(CAAR(act_codes)) != INTSXP) {
+        error("Logic error: unexpected act_code structure; contact maintainer");
+      }
+      mode=asInteger(CAAR(act_codes));
+    } else {
+      mode=asInteger(CAR(act_codes));
+    }
   } else {
-    if(TYPEOF(lang) == LANGSXP)
-      error("Logic Error: mismatched language and eval type tracking; contact maintainer.");
+    if(TYPEOF(lang) == LANGSXP || TYPEOF(lang) == LISTSXP) {
+      error("Logic Error: mismatched language and eval type tracking 2; contact maintainer.");
+    }
     mode = asInteger(act_codes);
   }
+  Rprintf("Checking modes..\n");
   if(mode == 1 || mode == 2) {
     // Dealing with && or ||, so recurse on each element
 
+    Rprintf("mode 1 or 2..\n");
     if(TYPEOF(lang) == LANGSXP) {
       int parse_count = 0;
-      SEXP err_list, err_list_cpy;
-      err_list = err_list_cpy = PROTECT(allocList(0)); // Track errors
+      SEXP err_list = PROTECT(allocList(0)); // Track errors
       lang = CDR(lang);
       act_codes = CDR(act_codes);
 
       while(lang != R_NilValue) {
         SEXP eval_res;
-        eval_res = PROTECT(VALC_evaluate_recurse(lang, act_codes, arg_value));
+        eval_res = PROTECT(VALC_evaluate_recurse(CAR(lang), CAR(act_codes), arg_value));
+        Rprintf("Eval res type: %s\n", type2char(TYPEOF(eval_res)));
         if(TYPEOF(eval_res) == LISTSXP) {
           if(mode == 1) {// At least one non-TRUE result, which is a failure, so return
-            UNPROTECT(1);
+            UNPROTECT(2);
             return(eval_res);
           }
-          if(mode == 2)  // All need to fail, so store errors for now
+          if(mode == 2)  {// All need to fail, so store errors for now
             err_list = listAppend(err_list, eval_res);
+            PrintValue(err_list);
+          }
         } else if (TYPEOF(eval_res) == LGLSXP && XLENGTH(eval_res) == 1) {
           if(mode == 2) {
+            UNPROTECT(2);
             return(eval_res); // At least one TRUE value in or mode
           }
         } else {
           error("Logic Error: unexpected return value when recursively evaluating parse; contact maintainer.");
         }
+        lang = CDR(lang);
+        act_codes = CDR(act_codes);
         parse_count++;
+        UNPROTECT(1);
       }
       if(parse_count != 2)
         error("Logic Error: unexpected language structure for modes 1/2; contact maintainer.");
+      UNPROTECT(1);
       if(mode == 2) {  // Only way to get here is if none of previous actually returned TRUE
-        return(err_list_cpy);
+        return(err_list);
       }
     } else {
       error("Logic Error: in mode c(1, 2), but not a language object; contact maintainer.");
     }
   } else if(mode == 10 || mode == 999) {
+    Rprintf("Other modes..\n");
+
     // For all this stuff, need to think about error handling
     // Need environment to eval this in
 
     SEXP eval_res;
 
-    if(mode == 10) eval_res = PROTECT(eval(lang, R_GlobalEnv));
-    else eval_res = PROTECT(alike(eval(lang, R_GlobalEnv), arg_value));
-
+    if(mode == 10) {
+      Rprintf("Mode 10\n");
+      eval_res = PROTECT(eval(lang, R_GlobalEnv));
+    } else {
+      Rprintf("Mode 999\n");
+      PrintValue(lang);
+      PrintValue(arg_value);
+      eval_res = PROTECT(alike(eval(lang, R_GlobalEnv), arg_value));
+    }
+    Rprintf("Eval res type 2: %s\n", type2char(TYPEOF(eval_res)));
     if(TYPEOF(eval_res) != LANGSXP || xlength(eval_res) != 1 || !asLogical(eval_res)) {
-      SEXP err_msg;
+      SEXP err_msg = PROTECT(allocList(1));
       if(mode == 10) {
-        SETCADR(dep_call, lang);
-        err_msg = PROTECT(allocList(1));          // This needs to become a proper message, not just the deparsed call
+        SETCADR(dep_call, lang); // This needs to become a proper message, not just the deparsed call
         SETCAR(err_msg, eval(dep_call, R_GlobalEnv));     // R_GlobalEnv not right place to eval
       } else {
-        err_msg = PROTECT(eval_res);   // unnecesary PROTECT for balance
+        SETCAR(err_msg, eval_res);     // R_GlobalEnv not right place to eval
       }
       UNPROTECT(2);
       return(err_msg);

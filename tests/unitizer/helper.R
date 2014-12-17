@@ -44,4 +44,6 @@ unitizer_sect("evaluate", {
   validate:::eval_check(quote(logical(2L)), quote(xyz), 1:2)
   validate:::eval_check(quote(logical(2L)), quote(xyz), c(TRUE, FALSE))
   validate:::eval_check(quote(logical(2L)), quote(xyz), c(TRUE, FALSE, TRUE))
+
+  validate:::eval_check(quote(logical(2L) || NULL), quote(xyz), 1:2)
 })
