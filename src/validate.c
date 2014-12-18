@@ -270,12 +270,6 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value) {
     if 999, eval as alike
   */
   int mode;
-  static int rec_count = 0;
-  Rprintf("Rec count %d\n", rec_count++);
-  Rprintf("type lang %s\n", type2char(TYPEOF(lang)));
-  PrintValue(lang);
-  PrintValue(act_codes);
-  Rprintf("Getting modes..\n");
 
   if(TYPEOF(act_codes) == LISTSXP) {
     if(TYPEOF(lang) != LANGSXP && TYPEOF(lang) != LISTSXP) {
@@ -298,11 +292,9 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value) {
     }
     mode = asInteger(act_codes);
   }
-  Rprintf("Checking modes..\n");
   if(mode == 1 || mode == 2) {
     // Dealing with && or ||, so recurse on each element
 
-    Rprintf("mode 1 or 2..\n");
     if(TYPEOF(lang) == LANGSXP) {
       int parse_count = 0;
       SEXP err_list = PROTECT(allocList(0)); // Track errors
@@ -312,7 +304,6 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value) {
       while(lang != R_NilValue) {
         SEXP eval_res;
         eval_res = PROTECT(VALC_evaluate_recurse(CAR(lang), CAR(act_codes), arg_value));
-        Rprintf("Eval res type: %s\n", type2char(TYPEOF(eval_res)));
         if(TYPEOF(eval_res) == LISTSXP) {
           if(mode == 1) {// At least one non-TRUE result, which is a failure, so return
             UNPROTECT(2);
@@ -320,7 +311,6 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value) {
           }
           if(mode == 2)  {// All need to fail, so store errors for now
             err_list = listAppend(err_list, eval_res);
-            PrintValue(err_list);
           }
         } else if (TYPEOF(eval_res) == LGLSXP && XLENGTH(eval_res) == 1) {
           if(mode == 2) {
@@ -345,23 +335,16 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value) {
       error("Logic Error: in mode c(1, 2), but not a language object; contact maintainer.");
     }
   } else if(mode == 10 || mode == 999) {
-    Rprintf("Other modes..\n");
-
     // For all this stuff, need to think about error handling
     // Need environment to eval this in
 
     SEXP eval_res;
 
     if(mode == 10) {
-      Rprintf("Mode 10\n");
       eval_res = PROTECT(eval(lang, R_GlobalEnv));
     } else {
-      Rprintf("Mode 999\n");
-      PrintValue(lang);
-      PrintValue(arg_value);
       eval_res = PROTECT(alike(eval(lang, R_GlobalEnv), arg_value));
     }
-    Rprintf("Eval res type 2: %s\n", type2char(TYPEOF(eval_res)));
     if(TYPEOF(eval_res) != LGLSXP || xlength(eval_res) != 1 || !asLogical(eval_res)) {
       SEXP err_msg = PROTECT(allocList(1));
       if(mode == 10) {
