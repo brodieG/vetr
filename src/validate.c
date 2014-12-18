@@ -328,9 +328,10 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value, SEXP rho) 
       if(parse_count != 2)
         error("Logic Error: unexpected language structure for modes 1/2; contact maintainer.");
       UNPROTECT(1);
-      if(mode == 2) {  // Only way to get here is if none of previous actually returned TRUE
+      if(mode == 2) {  // Only way to get here is if none of previous actually returned TRUE and mode is OR
         return(err_list);
       }
+      return(eval_res);  // Or if all returned TRUE and mode is AND
     } else {
       error("Logic Error: in mode c(1, 2), but not a language object; contact maintainer.");
     }
