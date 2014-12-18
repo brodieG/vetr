@@ -46,4 +46,19 @@ unitizer_sect("evaluate", {
   validate:::eval_check(quote(logical(2L)), quote(xyz), c(TRUE, FALSE, TRUE))
 
   validate:::eval_check(quote(logical(2L) || NULL), quote(xyz), 1:2)
+  validate:::eval_check(quote(logical(2L) || NULL), quote(xyz), NULL)
+  validate:::eval_check(quote(logical(2L) || NULL), quote(xyz), c(TRUE, TRUE))
+
+  validate:::eval_check(quote(matrix(integer(), nrow=3) || NULL), quote(xyz), matrix(1:21, ncol=7))
+  validate:::eval_check(quote(matrix(integer(), nrow=3) || NULL), quote(xyz), 1:21)
+  validate:::eval_check(quote(matrix(integer(), nrow=3) || vector("list", 2L)), quote(xyz), list("hello"))
+  validate:::eval_check(quote(matrix(integer(), nrow=3) || vector("list", 2L)), quote(xyz), list("hello", "goodbye"))
+  validate:::eval_check(quote(matrix(integer(), nrow=3) || vector("list", 2L)), quote(xyz), list(NULL, NULL))
+
+  xyz <- c(TRUE, TRUE)
+  validate:::eval_check(quote(logical(2L) && .(!any(is.na(.)))), quote(xyz), xyz)
+  xyz <- c(TRUE, NA)
+  validate:::eval_check(quote(logical(2L) && .(!any(is.na(.)))), quote(xyz), xyz)
+  xyz <- c(TRUE, FALSE, TRUE)
+  validate:::eval_check(quote(logical(2L) && .(!any(is.na(.)))), quote(xyz), xyz)
 })
