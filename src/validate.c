@@ -362,7 +362,7 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value) {
       eval_res = PROTECT(alike(eval(lang, R_GlobalEnv), arg_value));
     }
     Rprintf("Eval res type 2: %s\n", type2char(TYPEOF(eval_res)));
-    if(TYPEOF(eval_res) != LANGSXP || xlength(eval_res) != 1 || !asLogical(eval_res)) {
+    if(TYPEOF(eval_res) != LGLSXP || xlength(eval_res) != 1 || !asLogical(eval_res)) {
       SEXP err_msg = PROTECT(allocList(1));
       if(mode == 10) {
         SETCADR(dep_call, lang); // This needs to become a proper message, not just the deparsed call
