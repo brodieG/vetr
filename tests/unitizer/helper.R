@@ -56,6 +56,8 @@ unitizer_sect("evaluate", {
   validate:::eval_check(quote(matrix(integer(), nrow=3) || vector("list", 2L)), quote(xyz), list(NULL, NULL))
 
   xyz <- c(TRUE, TRUE)
+  validate:::eval_check(quote(logical(2L) && .(all(xyz))), quote(xyz), xyz)
+  validate:::eval_check(quote(logical(2L) && .(all(.))), quote(xyz), xyz)
   validate:::eval_check(quote(logical(2L) && .(!any(is.na(.)))), quote(xyz), xyz)
   xyz <- c(TRUE, NA)
   validate:::eval_check(quote(logical(2L) && .(!any(is.na(.)))), quote(xyz), xyz)

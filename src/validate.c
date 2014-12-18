@@ -50,9 +50,14 @@ static SEXP(*alike)(SEXP,SEXP) = NULL;
 void VALC_install_objs() {
     if(one_dot == NULL) one_dot = install(".");
     if(dep_call == NULL) {  // ready to eval `deparse(x)` call, just sub in `x`
-      dep_call = allocList(2);
+      dep_call = PROTECT(allocList(2));
       SETCAR(dep_call, install("deparse"));
+      SEXP quot_call = PROTECT(allocList(2));
+      SET_TYPEOF(quot_call, LANGSXP);
+      SETCAR(quot_call, install("quote"));
+      SETCADR(dep_call, quot_call);
       SET_TYPEOF(dep_call, LANGSXP);
+      UNPROTECT(2);
 
       // Need to add a `width` argument, etc...
     }
@@ -348,7 +353,7 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value, SEXP rho) 
     if(TYPEOF(eval_res) != LGLSXP || xlength(eval_res) != 1 || !asLogical(eval_res)) {
       SEXP err_msg = PROTECT(allocList(1));
       if(mode == 10) {
-        SETCADR(dep_call, lang); // This needs to become a proper message, not just the deparsed call
+        SETCADR(CADR(dep_call), lang); // This needs to become a proper message, not just the deparsed call
         SETCAR(err_msg, eval(dep_call, rho));
       } else {
         SETCAR(err_msg, eval_res);
