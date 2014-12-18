@@ -16,7 +16,7 @@ SEXP VALC_name_sub(SEXP symb, SEXP arg_name);
 SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name);
 SEXP VALC_remove_parens(SEXP lang);
 void VALC_install_objs();
-SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value);
+SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value, SEXP rho);
 
 static const
 R_CallMethodDef callMethods[] = {
@@ -25,7 +25,7 @@ R_CallMethodDef callMethods[] = {
   {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
   {"parse", (DL_FUNC) &VALC_parse, 2},
   {"remove_parens", (DL_FUNC) &VALC_remove_parens, 1},
-  {"eval_check", (DL_FUNC) &VALC_evaluate, 3},
+  {"eval_check", (DL_FUNC) &VALC_evaluate, 4},
   {NULL, NULL, 0}
 };
 
@@ -249,7 +249,7 @@ SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name) {
   return(VALC_name_sub(symb, arg_name));
 }
 
-SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value) {
+SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value, SEXP rho) {
   /*
   check act_codes:
     if 1 or 2
@@ -298,12 +298,12 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value) {
     if(TYPEOF(lang) == LANGSXP) {
       int parse_count = 0;
       SEXP err_list = PROTECT(allocList(0)); // Track errors
+      SEXP eval_res;
       lang = CDR(lang);
       act_codes = CDR(act_codes);
 
       while(lang != R_NilValue) {
-        SEXP eval_res;
-        eval_res = PROTECT(VALC_evaluate_recurse(CAR(lang), CAR(act_codes), arg_value));
+        eval_res = PROTECT(VALC_evaluate_recurse(CAR(lang), CAR(act_codes), arg_value, rho));
         if(TYPEOF(eval_res) == LISTSXP) {
           if(mode == 1) {// At least one non-TRUE result, which is a failure, so return
             UNPROTECT(2);
@@ -336,22 +336,21 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value) {
     }
   } else if(mode == 10 || mode == 999) {
     // For all this stuff, need to think about error handling
-    // Need environment to eval this in
 
     SEXP eval_res;
 
     if(mode == 10) {
-      eval_res = PROTECT(eval(lang, R_GlobalEnv));
+      eval_res = PROTECT(eval(lang, rho));
     } else {
-      eval_res = PROTECT(alike(eval(lang, R_GlobalEnv), arg_value));
+      eval_res = PROTECT(alike(eval(lang, rho), arg_value));
     }
     if(TYPEOF(eval_res) != LGLSXP || xlength(eval_res) != 1 || !asLogical(eval_res)) {
       SEXP err_msg = PROTECT(allocList(1));
       if(mode == 10) {
         SETCADR(dep_call, lang); // This needs to become a proper message, not just the deparsed call
-        SETCAR(err_msg, eval(dep_call, R_GlobalEnv));     // R_GlobalEnv not right place to eval
+        SETCAR(err_msg, eval(dep_call, rho));
       } else {
-        SETCAR(err_msg, eval_res);     // R_GlobalEnv not right place to eval
+        SETCAR(err_msg, eval_res);
       }
       UNPROTECT(2);
       return(err_msg);
@@ -367,13 +366,18 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value) {
 /*
 TBD if this should call `VALC_parse` directly or not
 */
-SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value) {
+SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value, SEXP rho) {
+  if(TYPEOF(arg_name) != SYMSXP)
+    error("Argument `arg_name` must be a symbol.");
+  if(TYPEOF(rho) != ENVSXP)
+    error("Argument `rho` must be an environment.");
   SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_name));
   SEXP res = PROTECT(
     VALC_evaluate_recurse(
       VECTOR_ELT(lang_parsed, 0),
       VECTOR_ELT(lang_parsed, 1),
-      arg_value
+      arg_value,
+      rho
   ) );
   UNPROTECT(2);  // This seems a bit stupid, PROTECT/UNPROTECT
   return(res);

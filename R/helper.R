@@ -38,6 +38,10 @@ remove_parens <- function(lang)
   .Call(VALC_remove_parens, lang)
 
 #' Evaluates a test
+#'
+#' For unit testing
+#'
+#' @keywords internal
 
 eval_check <- function(lang, arg_name, arg_value)
-  .Call(VALC_eval_check, lang, arg_name, arg_value)
+  .Call(VALC_eval_check, lang, arg_name, arg_value, parent.frame())
