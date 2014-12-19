@@ -8,7 +8,7 @@
 |                                                                              |
 \* -------------------------------------------------------------------------- */
 
-SEXP VALC_validate ();
+SEXP VALC_validate();
 SEXP VALC_test(SEXP a, SEXP b);
 SEXP VALC_parse(SEXP lang, SEXP var_name);
 void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is);
@@ -17,6 +17,16 @@ SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name);
 SEXP VALC_remove_parens(SEXP lang);
 void VALC_install_objs();
 SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value, SEXP rho);
+
+// - Objects We Install Once ---------------------------------------------------
+
+// One question: are static objects not garbage collected?  The examples from
+// "Writing R Extensions" don't seem to require the protection of these
+
+SEXP VALC_SYM_one_dot;
+SEXP VALC_SYM_deparse;
+SEXP VALC_SYM_quote;
+SEXP(*VALC_alike)(SEXP,SEXP);
 
 static const
 R_CallMethodDef callMethods[] = {
@@ -36,37 +46,11 @@ void R_init_validate(DllInfo *info)
     so pass those arrays as NULL.
   */
   R_registerRoutines(info, NULL, callMethods, NULL, NULL);
-  VALC_install_objs();
+  VALC_SYM_quote = install("quote");
+  VALC_SYM_deparse = install("deparse");
+  VALC_SYM_one_dot = install(".");
+  VALC_alike = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
 }
-// - Objects We Install Once ---------------------------------------------------
-
-// One question: are static objects not garbage collected?  The examples from
-// "Writing R Extensions" don't seem to require the protection of these
-
-static SEXP one_dot = NULL;
-static SEXP dep_call = NULL;
-static SEXP(*alike)(SEXP,SEXP) = NULL;
-
-void VALC_install_objs() {
-    if(one_dot == NULL) one_dot = install(".");
-    if(dep_call == NULL) {  // ready to eval `deparse(x)` call, just sub in `x`
-      dep_call = PROTECT(allocList(2));
-      SETCAR(dep_call, install("deparse"));
-      SEXP quot_call = PROTECT(allocList(2));
-      SET_TYPEOF(quot_call, LANGSXP);
-      SETCAR(quot_call, install("quote"));
-      SETCADR(dep_call, quot_call);
-      SET_TYPEOF(dep_call, LANGSXP);
-      UNPROTECT(2);
-
-      // Need to add a `width` argument, etc...
-    }
-    // Borrowed from Dirk Eddelbuettel (http://stackoverflow.com/a/20479078/2725969)
-
-    if (alike == NULL)
-      alike = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
-}
-
 // - Testing Function ----------------------------------------------------------
 
 SEXP VALC_test(SEXP a, SEXP b) {
@@ -233,7 +217,7 @@ SEXP VALC_name_sub(SEXP symb, SEXP arg_name) {
     if (i == 1) {  // one dot and an arg
       return(arg_name);
     } else if (i == 2) { // Most common multi dot scenario, escaped dot
-      return(one_dot);
+      return(VALC_SYM_one_dot);
     } else {
       // Need to remove one dot
 
@@ -348,13 +332,26 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value, SEXP rho) 
     if(mode == 10) {
       eval_res = PROTECT(eval(lang, rho));
     } else {
-      eval_res = PROTECT(alike(eval(lang, rho), arg_value));
+      eval_res = PROTECT(VALC_alike(eval(lang, rho), arg_value));
     }
     if(TYPEOF(eval_res) != LGLSXP || xlength(eval_res) != 1 || !asLogical(eval_res)) {
       SEXP err_msg = PROTECT(allocList(1));
       if(mode == 10) {
-        SETCADR(CADR(dep_call), lang); // This needs to become a proper message, not just the deparsed call
+        // Tried to do this as part of init originally so we don't have to repeat
+        // wholesale creation of call, but the call elements kept getting over
+        // written by other stuff.  Not sure how to protect in calls defined at
+        // top level
+
+        SEXP dep_call = PROTECT(allocList(2));
+        SETCAR(dep_call, VALC_SYM_deparse);
+        SEXP quot_call = PROTECT(allocList(2));
+        SETCAR(quot_call, VALC_SYM_quote);
+        SETCADR(quot_call, lang);
+        SET_TYPEOF(quot_call, LANGSXP);
+        SETCADR(dep_call, quot_call);
+        SET_TYPEOF(dep_call, LANGSXP);
         SETCAR(err_msg, eval(dep_call, rho));
+        UNPROTECT(2);
       } else {
         SETCAR(err_msg, eval_res);
       }
