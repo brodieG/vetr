@@ -54,7 +54,8 @@ unitizer_sect("evaluate", {
   validate:::eval_check(quote(matrix(integer(), nrow=3) || vector("list", 2L)), quote(xyz), list("hello"))
   validate:::eval_check(quote(matrix(integer(), nrow=3) || vector("list", 2L)), quote(xyz), list("hello", "goodbye"))
   validate:::eval_check(quote(matrix(integer(), nrow=3) || vector("list", 2L)), quote(xyz), list(NULL, NULL))
-
+})
+unitizer_sect("evaluate with sub", {
   xyz <- c(TRUE, TRUE)
   validate:::eval_check(quote(logical(2L) && .(all(xyz))), quote(xyz), xyz)
   validate:::eval_check(quote(logical(2L) && .(all(.))), quote(xyz), xyz)
@@ -63,4 +64,47 @@ unitizer_sect("evaluate", {
   validate:::eval_check(quote(logical(2L) && .(!any(is.na(.)))), quote(xyz), xyz)
   xyz <- c(TRUE, FALSE, TRUE)
   validate:::eval_check(quote(logical(2L) && .(!any(is.na(.)))), quote(xyz), xyz)
+
+  abc1 <- letters[1:5]
+  validate:::eval_check(quote(character(5L) && .(all(. %in% letters[1:3]))), quote(abc1), abc1)
+  abc2 <- rep("a", 5)
+  validate:::eval_check(quote(character(5L) && .(all(. %in% letters[1:3]))), quote(abc2), abc2)
+
+  mat1 <- matrix(1:30, ncol=3)
+  validate:::eval_check(
+    quote(
+      (matrix(numeric(), ncol=3) || matrix(integer(), nrow=10) || character(10L)) &&
+      .(length(.) < 100)
+    ),
+    quote(mat1), mat1
+  )
+  mat2 <- matrix(1:120, ncol=3)
+  validate:::eval_check(
+    quote(
+      (matrix(numeric(), ncol=3) || matrix(integer(), nrow=10) || character(10L)) &&
+      .(length(.) < 100)
+    ),
+    quote(mat2), mat2
+  )
+  mat3 <- LETTERS[1:9]
+  validate:::eval_check(   # Fail all
+    quote(
+      (matrix(numeric(), ncol=3) || matrix(integer(), nrow=10) || character(10L)) &&
+      .(length(.) < 100)
+    ),
+    quote(mat3), mat3
+  )
+  validate:::eval_check(   # Fail all
+    quote(
+      matrix(numeric(), ncol=3) || matrix(integer(), nrow=10) ||
+      character(10L) || .(length(.) > 20)
+    ),
+    quote(mat3), mat3
+  )
+  # Test substitution in template
+  xyz1 <- rep(TRUE, 3)
+  validate:::eval_check(quote(logical(.(length(.))) && .(all(.))), quote(xyz1), xyz1)
+
+  xyz2 <- c(TRUE, FALSE, TRUE)
+  validate:::eval_check(quote(logical(.(length(.))) && .(all(.))), quote(xyz2), xyz2)
 })
