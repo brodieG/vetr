@@ -29,6 +29,7 @@ SEXP VALC_SYM_one_dot;
 SEXP VALC_SYM_deparse;
 SEXP VALC_SYM_quote;
 SEXP(*VALC_alike)(SEXP,SEXP);
+SEXP(*VALC_match_call)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
 
 static const
 R_CallMethodDef callMethods[] = {
@@ -53,6 +54,7 @@ void R_init_validate(DllInfo *info)
   VALC_SYM_quote = install("quote");
   VALC_SYM_deparse = install("deparse");
   VALC_SYM_one_dot = install(".");
+  VALC_match_call = (SEXP(*)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP)) R_GetCCallable("matchcall", "MC_match_call");
   VALC_alike = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
 }
 // - Testing Function ----------------------------------------------------------

@@ -50,6 +50,8 @@
 #'   otherwise
 
 validate <- function(...) {
+
+
   if(identical(parent.frame(1L), sys.frame(0L))) {
     stop("Parent frame is R_GlobalEnv, so it seems you are not running this function from a closure")
   }
