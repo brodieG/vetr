@@ -45,3 +45,17 @@ remove_parens <- function(lang)
 
 eval_check <- function(lang, arg_name, arg_value)
   .Call(VALC_eval_check, lang, arg_name, arg_value, parent.frame())
+
+#' @export
+
+valtest1 <- function(a){
+  b <- a
+  .Call(VALC_test1, b)
+}
+
+#' @export
+
+valtest2 <- function(a) {
+  b <- a
+  .Call(VALC_test2, b)
+}

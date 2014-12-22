@@ -49,5 +49,53 @@ Alternate: do the same recursive descent, returning a C "linked list"?  Or maybe
     * as `alike`
     * not at all because it is a child element to one of the two above
 
+## Optimization
 
+### `.Call` vs. `.External`:
+
+```
+> microbenchmark(valtest1(1, 2, 3), valtest2(1, 2, 3))
+Unit: nanoseconds
+              expr  min     lq median     uq    max neval
+ valtest1(1, 2, 3)  856 1092.5 1353.5 1523.5  18416   100
+ valtest2(1, 2, 3) 4316 4601.5 4906.0 5249.5 106648   100
+
+```
+but this was using `.External("funname", ...)` as the variable version does not seem to work:
+```
+Error in .External(VALC_test2, ...) : NULL value passed as symbol address
+```
+Actually, if we change both character fun name:
+```
+> microbenchmark(valtest1(1, 2, 3), valtest2(1, 2, 3))
+Unit: microseconds
+              expr   min     lq median     uq    max neval
+ valtest1(1, 2, 3) 4.655 4.7890  4.957 5.1860 57.944   100
+ valtest2(1, 2, 3) 4.296 4.5355  4.660 4.8635 19.669   100
+```
+so moral is we need to figure out how to get `.External` to work with the object?
+
+### Recursion vs Loop
+
+Doesn't really seem to make a difference:
+```
+SEXP VALC_test1(SEXP a) {
+  if(TYPEOF(a) == VECSXP) {
+    return(VALC_test1(VECTOR_ELT(a, 0)));
+  }
+  return(a);
+}
+SEXP VALC_test2(SEXP a) {
+  while(TYPEOF(a) == VECSXP) {
+    a = VECTOR_ELT(a, 0);
+  }
+  return(a);
+}
+> microbenchmark(valtest1(a), valtest2(a))
+Unit: microseconds
+        expr   min    lq median     uq   max neval
+ valtest1(a) 1.001 1.022 1.0595 1.1535 9.619   100
+ valtest2(a) 1.004 1.022 1.0800 1.1575 2.853   100
+```
+This is on an about 20-30 deep list
 

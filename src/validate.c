@@ -10,6 +10,8 @@
 
 SEXP VALC_validate();
 SEXP VALC_test(SEXP a, SEXP b);
+SEXP VALC_test1(SEXP a);
+SEXP VALC_test2(SEXP a);
 SEXP VALC_parse(SEXP lang, SEXP var_name);
 void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is);
 SEXP VALC_name_sub(SEXP symb, SEXP arg_name);
@@ -36,6 +38,8 @@ R_CallMethodDef callMethods[] = {
   {"parse", (DL_FUNC) &VALC_parse, 2},
   {"remove_parens", (DL_FUNC) &VALC_remove_parens, 1},
   {"eval_check", (DL_FUNC) &VALC_evaluate, 4},
+  {"test1", (DL_FUNC) &VALC_test1, 1},
+  {"test2", (DL_FUNC) &VALC_test2, 1},
   {NULL, NULL, 0}
 };
 
@@ -60,6 +64,18 @@ SEXP VALC_test(SEXP a, SEXP b) {
   //Rprintf("%s\n", CHAR(deparse1WithCutoff(lang)));
 }
 
+SEXP VALC_test1(SEXP a) {
+  if(TYPEOF(a) == VECSXP) {
+    return(VALC_test1(VECTOR_ELT(a, 0)));
+  }
+  return(a);
+}
+SEXP VALC_test2(SEXP a) {
+  while(TYPEOF(a) == VECSXP) {
+    a = VECTOR_ELT(a, 0);
+  }
+  return(a);
+}
 // - Helper Functions ----------------------------------------------------------
 /*
   Don't need paren calls since the parsing already accounted for them
@@ -88,6 +104,12 @@ SEXP VALC_remove_parens(SEXP lang) {
   UNPROTECT(3);
   return(res);
 }
+/* -------------------------------------------------------------------------- *\
+|                                                                              |
+|                                    PARSE                                     |
+|                                                                              |
+\* -------------------------------------------------------------------------- */
+
 SEXP VALC_parse(SEXP lang, SEXP var_name) {
   SEXP lang_cpy, res, res_vec, rem_res;
   int mode;
@@ -237,6 +259,11 @@ Unit testing interface
 SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name) {
   return(VALC_name_sub(symb, arg_name));
 }
+/* -------------------------------------------------------------------------- *\
+|                                                                              |
+|                                   EVAL                                       |
+|                                                                              |
+\* -------------------------------------------------------------------------- */
 
 SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value, SEXP rho) {
   /*
@@ -387,9 +414,11 @@ SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value, SEXP rho) {
 }
 /* -------------------------------------------------------------------------- *\
 |                                                                              |
-|                                     TYPE                                     |
+|                                    CHECK                                     |
 |                                                                              |
 \* -------------------------------------------------------------------------- */
+
+
 
 /*
 compare types, accounting for "integer like" numerics; empty string means success,
