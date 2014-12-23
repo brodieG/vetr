@@ -33,7 +33,7 @@ SEXP(*VALC_match_call)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
 
 static const
 R_CallMethodDef callMethods[] = {
-  {"validate", (DL_FUNC) &VALC_validate, 0},
+  {"validate", (DL_FUNC) &VALC_validate, 3},
   {"test", (DL_FUNC) &VALC_test, 2},
   {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
   {"parse", (DL_FUNC) &VALC_parse, 2},
@@ -60,10 +60,10 @@ void R_init_validate(DllInfo *info)
 // - Testing Function ----------------------------------------------------------
 
 SEXP VALC_test(SEXP a, SEXP b) {
-  Rprintf("%s\n", type2char(TYPEOF(a)));
-  Rprintf("%s\n", type2char(TYPEOF(CDR(a))));
-  return(R_NilValue);
-  //Rprintf("%s\n", CHAR(deparse1WithCutoff(lang)));
+  Rprintf("Wow\n");
+  SEXP chrval = mkChar("Hello\n");
+  // Rprintf(type2char(TYPEOF(chrval)));
+  return(ScalarString(chrval));
 }
 
 SEXP VALC_test1(SEXP a) {
@@ -420,13 +420,29 @@ SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value, SEXP rho) {
 |                                                                              |
 \* -------------------------------------------------------------------------- */
 
+SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
+  SEXP R_TRUE = PROTECT(ScalarLogical(1)),
+    chr_exp = PROTECT(ScalarString(mkChar("expand"))),
+    one=PROTECT(ScalarInteger(1)), zero=PROTECT(ScalarInteger(0));
 
+  // Get calls from function to validate and validator call
 
-/*
-compare types, accounting for "integer like" numerics; empty string means success,
-otherwise outputs an a character string explaining why the types are not alike
-*/
+  PrintValue(sys_frames);
+  PrintValue(sys_calls);
+  PrintValue(sys_pars);
+  SEXP fun_call = PROTECT(
+    VALC_match_call(
+      chr_exp, R_TRUE, R_TRUE, R_TRUE, one, sys_frames, sys_calls, sys_pars
+  ) );
+  SEXP val_call = PROTECT(
+    VALC_match_call(
+      chr_exp, R_TRUE, R_TRUE, R_TRUE, zero, sys_frames, sys_calls, sys_pars
+  ) );
+  SEXP res = PROTECT(allocVector(VECSXP, 2));
+  SET_VECTOR_ELT(res, 0, fun_call);
+  SET_VECTOR_ELT(res, 1, val_call);
 
-SEXP VALC_validate() {
-  return R_NilValue;
+  UNPROTECT(3);
+  UNPROTECT(4); // SEXPs used as arguments for match_call
+  return res;
 }

@@ -48,6 +48,11 @@ eval_check <- function(lang, arg_name, arg_value)
 
 #' @export
 
+valtest <- function(a, b)
+  .Call(VALC_test, a, b)
+
+#' @export
+
 valtest1 <- function(a){
   b <- a
   .Call(VALC_test1, b)
