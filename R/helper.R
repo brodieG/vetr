@@ -54,13 +54,11 @@ valtest <- function(a, b)
 #' @export
 
 valtest1 <- function(a){
-  b <- a
-  .Call(VALC_test1, b)
+  .Call(VALC_test1, a)
 }
 
 #' @export
 
 valtest2 <- function(a) {
-  b <- a
-  .Call(VALC_test2, b)
+  .Call(VALC_test2, a)
 }

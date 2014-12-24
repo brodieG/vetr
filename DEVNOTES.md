@@ -99,3 +99,31 @@ Unit: microseconds
 ```
 This is on an about 20-30 deep list
 
+### install
+
+Costs about 40ns per, based on simple test.
+
+### `match_call` use from within C code
+
+With two `match_call` and extracting fun:
+```
+Unit: microseconds
+         expr   min     lq median    uq    max neval
+ fun(1, 2, 3) 6.591 7.1275   7.35 7.638 59.792   500
+```
+With one `match_call` and extracting the fun name:
+```
+> microbenchmark(fun(1, 2, 3), times=500)
+Unit: microseconds
+         expr  min     lq median    uq    max neval
+ fun(1, 2, 3) 4.72 5.0715   5.23 5.418 55.835   500
+```
+With just the one `match.call`:
+```
+> microbenchmark(fun(1, 2, 3), times=500)
+Unit: microseconds
+         expr   min    lq median     uq    max neval
+ fun(1, 2, 3) 4.722 5.027  5.176 5.3605 38.562   500
+```
+So about 1.9us for using `match.call` to do the matching.  If we tried to match
+on tag name only could be faster; something to think about.

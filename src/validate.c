@@ -29,7 +29,9 @@ SEXP VALC_SYM_one_dot;
 SEXP VALC_SYM_deparse;
 SEXP VALC_SYM_quote;
 SEXP(*VALC_alike)(SEXP,SEXP);
-SEXP(*VALC_match_call)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+SEXP(*VALC_match_call)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+SEXP(*VALC_get_frame_data)(SEXP,SEXP,SEXP,int);
+SEXP(*VALC_get_fun)(SEXP,SEXP);
 
 static const
 R_CallMethodDef callMethods[] = {
@@ -54,8 +56,10 @@ void R_init_validate(DllInfo *info)
   VALC_SYM_quote = install("quote");
   VALC_SYM_deparse = install("deparse");
   VALC_SYM_one_dot = install(".");
-  VALC_match_call = (SEXP(*)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP)) R_GetCCallable("matchcall", "MC_match_call");
+  VALC_match_call = (SEXP(*)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP)) R_GetCCallable("matchcall", "MC_match_call");
   VALC_alike = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
+  VALC_get_frame_data = (SEXP(*)(SEXP,SEXP,SEXP,int)) R_GetCCallable("matchcall", "MC_get_frame_data");
+  VALC_get_fun = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("matchcall", "MC_get_fun");
 }
 // - Testing Function ----------------------------------------------------------
 
@@ -67,15 +71,11 @@ SEXP VALC_test(SEXP a, SEXP b) {
 }
 
 SEXP VALC_test1(SEXP a) {
-  if(TYPEOF(a) == VECSXP) {
-    return(VALC_test1(VECTOR_ELT(a, 0)));
-  }
+  SEXP b=install("quote");
   return(a);
 }
 SEXP VALC_test2(SEXP a) {
-  while(TYPEOF(a) == VECSXP) {
-    a = VECTOR_ELT(a, 0);
-  }
+  SEXP b=VALC_SYM_quote;
   return(a);
 }
 // - Helper Functions ----------------------------------------------------------
@@ -427,22 +427,33 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
 
   // Get calls from function to validate and validator call
 
-  PrintValue(sys_frames);
-  PrintValue(sys_calls);
-  PrintValue(sys_pars);
   SEXP fun_call = PROTECT(
     VALC_match_call(
-      chr_exp, R_TRUE, R_TRUE, R_TRUE, one, sys_frames, sys_calls, sys_pars
+      chr_exp, R_TRUE, R_TRUE, R_TRUE, one, R_NilValue, sys_frames, sys_calls,
+      sys_pars
   ) );
+  // Get definition of fun in original call; this unfortunately requires repeating
+  // some of the logic in the step above
+  SEXP fun_frame_dat = PROTECT(
+    VALC_get_frame_data(sys_frames, sys_calls, sys_pars, 1)
+  );
+  SEXP fun = PROTECT(
+    VALC_get_fun(VECTOR_ELT(fun_frame_dat, 0), VECTOR_ELT(fun_frame_dat, 1))
+  );
   SEXP val_call = PROTECT(
     VALC_match_call(
-      chr_exp, R_TRUE, R_TRUE, R_TRUE, zero, sys_frames, sys_calls, sys_pars
+      chr_exp, R_TRUE, R_TRUE, R_TRUE, zero, fun, sys_frames, sys_calls,
+      sys_pars
   ) );
+  UNPROTECT(8);
+  return(R_NilValue);
+  //
   SEXP res = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res, 0, fun_call);
   SET_VECTOR_ELT(res, 1, val_call);
 
-  UNPROTECT(3);
+  // Match the calls up
+  UNPROTECT(5);
   UNPROTECT(4); // SEXPs used as arguments for match_call
   return res;
 }
