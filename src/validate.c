@@ -79,6 +79,10 @@ SEXP VALC_test2(SEXP a) {
   return(a);
 }
 // - Helper Functions ----------------------------------------------------------
+
+int IS_TRUE(SEXP x) {
+  return(TYPEOF(x) == LGLSXP && XLENGTH(x) == 1 && asLogical(x));
+}
 /*
   Don't need paren calls since the parsing already accounted for them
 */
@@ -433,27 +437,140 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
       sys_pars
   ) );
   // Get definition of fun in original call; this unfortunately requires repeating
-  // some of the logic in the step above
+  // some of the logic in the step above, but is pretty fast
+
   SEXP fun_frame_dat = PROTECT(
     VALC_get_frame_data(sys_frames, sys_calls, sys_pars, 1)
   );
+  SEXP fun_frame = VECTOR_ELT(fun_frame_dat, 0); // really is stack parent of fun frame
   SEXP fun = PROTECT(
-    VALC_get_fun(VECTOR_ELT(fun_frame_dat, 0), VECTOR_ELT(fun_frame_dat, 1))
+    VALC_get_fun(fun_frame, VECTOR_ELT(fun_frame_dat, 1))
   );
+  // Now get matching call (could save up to 1.9us if we used different method,
+  // but nice thing of doing it this way is this is guaranteed to match to
+  // fun_call)
+
   SEXP val_call = PROTECT(
     VALC_match_call(
       chr_exp, R_TRUE, R_TRUE, R_TRUE, zero, fun, sys_frames, sys_calls,
       sys_pars
   ) );
-  UNPROTECT(8);
-  return(R_NilValue);
-  //
-  SEXP res = PROTECT(allocVector(VECSXP, 2));
-  SET_VECTOR_ELT(res, 0, fun_call);
-  SET_VECTOR_ELT(res, 1, val_call);
+  // For the elements with validation call setup, check for errors;  Note that
+  // we need to skip the first element of the calls since we only care about the
+  // args.
+
+  SEXP val_call_cpy, fun_call_cpy;
+
+  for(
+    val_call_cpy = CDR(val_call), fun_call_cpy = CDR(fun_call);
+    val_call_cpy != R_NilValue;
+    val_call_cpy = CDR(val_call_cpy), fun_call_cpy = CDR(fun_call_cpy)
+  ) {
+    if(TAG(val_call_cpy) != TAG(fun_call_cpy))
+      error("Logic Error: tag mismatch between function and validation; contact maintainer.");
+    SEXP val_tok, fun_tok;
+    val_tok = CAR(val_call_cpy);
+    if(val_tok == R_MissingArg) continue;
+    fun_tok = CAR(fun_call_cpy);
+    if(fun_tok == R_MissingArg) error("Missing Arg %s\n", CHAR(asChar(TAG(fun_call_cpy))));
+
+    SEXP fun_val = eval(fun_tok, fun_frame);  // Need to evaluate the argument
+    SEXP val_res = VALC_evaluate(val_tok, TAG(val_call_cpy), fun_val, fun_frame);
+    if(IS_TRUE(val_res)) continue;  // success, check next
+    else if(TYPEOF(val_res) != LISTSXP)
+      error(
+        "Logic Error: unexpected type %s when evaluating test for %s; contact mainainer.",
+        type2char(TYPEOF(val_res)), CHAR(asChar(TAG(fun_call_cpy)))
+      );
+    // - Failure ---------------------------------------------------------------
+
+    // Failure, explain why; two pass process because we first need to determine
+    // size of error, allocate, then convert to char
+
+    SEXP val_res_cpy;
+    const char * err_sub_base = "Pass all of the following:\n";
+    int count_top = 0, count_sub = 0, size = 0;
+    const int err_sub_base_len = strlen(err_sub_base);
+
+    // First pass get sizes
+
+    for(
+      val_res_cpy = val_res; val_res_cpy != R_NilValue;
+      val_res_cpy = CDR(val_res_cpy)
+    ) {
+      SEXP err_vec = CAR(val_res_cpy);
+      if(TYPEOF(err_vec) != STRSXP)
+        error("Logic Error: did not get character err msg; contact maintainer");
+
+      const R_xlen_t err_items = xlength(err_vec);
+      R_xlen_t i;
+
+      count_top++;
+      count_sub += err_items > 1 ? err_items : 0;
+
+      for(i = 0; i < err_items; i++) {
+        size += strlen(CHAR(STRING_ELT(err_vec, i)));
+      }
+      if(err_items > 1) size += err_sub_base_len;
+    }
+    const char * err_base = "Argument `%s` fails all of the following:\n";
+    const char * err_arg = CHAR(asChar(TAG(fun_call_cpy)));
+
+    size += strlen(err_base) + strlen(err_arg) + 5 * count_top + 7 * count_sub;
+    /*
+    SAMPLE ERROR:
+
+    Argument `n` failed because it did not meet any of the following requirements:
+      - Type mismatch, expected "logical", but got "integer"
+      - Length mismatch, expected 2 but got 3
+      - !any(is.na(x))
+      - pass all of the following:
+        + Modes: numeric, character
+        + Lengths: 3, 4
+        + target is numeric, current is character
+      - attribute `dim` is missing
+
+    Now that we know the size of the error we can construct it
+    */
+
+    char * err_final = R_alloc(size + 1, sizeof(char));
+    char * err_final_cpy = err_final;
+
+    sprintf(err_final_cpy, err_base, err_arg);
+    err_final_cpy = err_final_cpy + strlen(err_final_cpy);
+
+    // Second pass construct string
+
+    for(
+      val_res_cpy = val_res; val_res_cpy != R_NilValue;
+      val_res_cpy = CDR(val_res_cpy)
+    ) {
+      SEXP err_vec = CAR(val_res_cpy);
+      const R_xlen_t err_items = xlength(err_vec);
+      R_xlen_t i;
+
+      if(err_items > 1) {
+        sprintf(err_final_cpy, "  - %s\n", err_sub_base);
+        err_final_cpy += err_sub_base_len + 5;
+
+        for(i = 0; i < err_items; i ++) {
+          const char * err_sub = CHAR(STRING_ELT(err_vec, i));
+          sprintf(err_final_cpy, "    + %s\n", err_sub);
+          err_final_cpy += strlen(err_sub) + 7;
+        }
+      } else {
+        const char * err_sub = CHAR(STRING_ELT(err_vec, 0));
+        sprintf(err_final_cpy, "  - %s\n", err_sub);
+        err_final_cpy += strlen(err_sub) + 5;
+      }
+    }
+    error(err_final);
+  }
+  if(val_call_cpy != R_NilValue || fun_call_cpy != R_NilValue)
+    error("Logic Error: fun and validation matched calls different lengths; contact maintainer.");
 
   // Match the calls up
-  UNPROTECT(5);
+  UNPROTECT(4);
   UNPROTECT(4); // SEXPs used as arguments for match_call
-  return res;
+  return R_NilValue;
 }
