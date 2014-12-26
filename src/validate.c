@@ -428,7 +428,7 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value, SEXP rho) 
         SET_TYPEOF(quot_call, LANGSXP);
         SETCADR(dep_call, quot_call);
         SET_TYPEOF(dep_call, LANGSXP);
-        SETCAR(err_msg, eval(dep_call, rho));
+        SETCAR(err_msg, eval(dep_call, rho));  // Could span multiple lines...; need to address
         UNPROTECT(2);
       } else {
         SETCAR(err_msg, eval_res);
@@ -558,58 +558,79 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
       }
       if(err_items > 1) size += err_sub_base_len;
     }
-    const char * err_base = "Argument `%s` fails all of the following:\n";
+    // Depending on whether there is one error or multiple ones (multiple means
+    // value failed to match any of the OR possibilities), render erro
+
     const char * err_arg = CHAR(asChar(TAG(fun_call_cpy)));
 
-    size += strlen(err_base) + strlen(err_arg) + 5 * count_top + 7 * count_sub;
-    /*
-    SAMPLE ERROR:
+    if(count_top == 1) {
+      SEXP err_msg = PROTECT(allocVector(STRSXP, 5));
+      SET_STRING_ELT(err_msg, 0, mkChar("Argument `"));
+      SET_STRING_ELT(err_msg, 1, mkChar(err_arg));
+      SET_STRING_ELT(err_msg, 2, mkChar("` fails validation!: "));
+      SET_STRING_ELT(err_msg, 3, STRING_ELT(CAR(val_res), 0));
+      SET_STRING_ELT(err_msg, 4, mkChar("\n"));
+      SEXP err_call = allocList(2);
+      SETCAR(err_call, install("stop"));
+      SETCADR(err_call, err_msg);
+      SET_TYPEOF(err_call, LANGSXP);
+      eval(err_call, fun_frame);
+      error("Logic Error: shouldn't get here, R error should've been thrown; contact maintainer.");
+    } else if (count_top > 1) {
+      const char * err_base = "Argument `%s` fails all of the following:\n";
 
-    Argument `n` failed because it did not meet any of the following requirements:
-      - Type mismatch, expected "logical", but got "integer"
-      - Length mismatch, expected 2 but got 3
-      - !any(is.na(x))
-      - pass all of the following:
-        + Modes: numeric, character
-        + Lengths: 3, 4
-        + target is numeric, current is character
-      - attribute `dim` is missing
+      size += strlen(err_base) + strlen(err_arg) + 5 * count_top + 7 * count_sub;
+      /*
+      SAMPLE ERROR:
 
-    Now that we know the size of the error we can construct it
-    */
+      Argument `n` failed because it did not meet any of the following requirements:
+        - Type mismatch, expected "logical", but got "integer"
+        - Length mismatch, expected 2 but got 3
+        - !any(is.na(x))
+        - pass all of the following:
+          + Modes: numeric, character
+          + Lengths: 3, 4
+          + target is numeric, current is character
+        - attribute `dim` is missing
 
-    char * err_final = R_alloc(size + 1, sizeof(char));
-    char * err_final_cpy = err_final;
+      Now that we know the size of the error we can construct it
+      */
 
-    sprintf(err_final_cpy, err_base, err_arg);
-    err_final_cpy = err_final_cpy + strlen(err_final_cpy);
+      char * err_final = R_alloc(size + 1, sizeof(char));
+      char * err_final_cpy = err_final;
 
-    // Second pass construct string
+      sprintf(err_final_cpy, err_base, err_arg);
+      err_final_cpy = err_final_cpy + strlen(err_final_cpy);
 
-    for(
-      val_res_cpy = val_res; val_res_cpy != R_NilValue;
-      val_res_cpy = CDR(val_res_cpy)
-    ) {
-      SEXP err_vec = CAR(val_res_cpy);
-      const R_xlen_t err_items = xlength(err_vec);
-      R_xlen_t i;
+      // Second pass construct string
 
-      if(err_items > 1) {
-        sprintf(err_final_cpy, "  - %s\n", err_sub_base);
-        err_final_cpy += err_sub_base_len + 5;
+      for(
+        val_res_cpy = val_res; val_res_cpy != R_NilValue;
+        val_res_cpy = CDR(val_res_cpy)
+      ) {
+        SEXP err_vec = CAR(val_res_cpy);
+        const R_xlen_t err_items = xlength(err_vec);
+        R_xlen_t i;
 
-        for(i = 0; i < err_items; i ++) {
-          const char * err_sub = CHAR(STRING_ELT(err_vec, i));
-          sprintf(err_final_cpy, "    + %s\n", err_sub);
-          err_final_cpy += strlen(err_sub) + 7;
+        if(err_items > 1) {
+          sprintf(err_final_cpy, "  - %s\n", err_sub_base);
+          err_final_cpy += err_sub_base_len + 5;
+
+          for(i = 0; i < err_items; i ++) {
+            const char * err_sub = CHAR(STRING_ELT(err_vec, i));
+            sprintf(err_final_cpy, "    + %s\n", err_sub);
+            err_final_cpy += strlen(err_sub) + 7;
+          }
+        } else {
+          const char * err_sub = CHAR(STRING_ELT(err_vec, 0));
+          sprintf(err_final_cpy, "  - %s\n", err_sub);
+          err_final_cpy += strlen(err_sub) + 5;
         }
-      } else {
-        const char * err_sub = CHAR(STRING_ELT(err_vec, 0));
-        sprintf(err_final_cpy, "  - %s\n", err_sub);
-        err_final_cpy += strlen(err_sub) + 5;
       }
+      error(err_final);
+    } else {
+      error("Logic Error: no values in result error; contact maintainer.");
     }
-    error(err_final);
   }
   if(val_call_cpy != R_NilValue || fun_call_cpy != R_NilValue)
     error("Logic Error: fun and validation matched calls different lengths; contact maintainer.");
