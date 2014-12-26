@@ -67,7 +67,20 @@ void R_init_validate(DllInfo *info)
 // - Testing Function ----------------------------------------------------------
 
 SEXP VALC_test(SEXP a, SEXP b) {
-  VALC_stop(a, "error test message");
+  SEXP c;
+  // c = PROTECT(allocVector(VECSXP, 3));
+  // SET_VECTOR_ELT(c, 0, R_NilValue);
+  // SET_VECTOR_ELT(c, 1, R_NilValue);
+  // SET_VECTOR_ELT(c, 2, R_NilValue);
+  // VECTOR_ELT(c, 0);
+  // VECTOR_ELT(c, 1);
+  // VECTOR_ELT(c, 2);
+  // UNPROTECT(1);
+  c = PROTECT(list3(R_NilValue, R_NilValue, R_NilValue));
+  CAR(c);
+  CADR(c);
+  CADDR(c);
+  UNPROTECT(1);
   return(R_NilValue);
 }
 

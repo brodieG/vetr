@@ -49,6 +49,12 @@ Alternate: do the same recursive descent, returning a C "linked list"?  Or maybe
     * as `alike`
     * not at all because it is a child element to one of the two above
 
+## C Notes
+
+### PROTECT stack and `error`
+
+It seems like there are no stack imbalance problems when the script finishes with errors; is this okay?
+
 ## Optimization
 
 ### `.Call` vs. `.External`:
@@ -161,4 +167,45 @@ Unit: microseconds
                      expr    min     lq median      uq    max neval
   fun1(1:3, FALSE, FALSE) 23.165 24.257 25.050 26.0010 60.102   100
  fun1b(1:3, FALSE, FALSE) 19.199 20.684 22.361 23.4795 38.313   100
+```
+
+### LISTSXP vs VECSXP
+
+Linked lists seem to be slightly faster, at least for small lists:
+
+```
+SEXP VALC_test(SEXP a, SEXP b) {
+  SEXP c;
+  // c = PROTECT(allocVector(VECSXP, 3));
+  // SET_VECTOR_ELT(c, 0, R_NilValue);
+  // SET_VECTOR_ELT(c, 1, R_NilValue);
+  // SET_VECTOR_ELT(c, 2, R_NilValue);
+  // VECTOR_ELT(c, 0);
+  // VECTOR_ELT(c, 1);
+  // VECTOR_ELT(c, 2);
+  // UNPROTECT(1);
+  c = PROTECT(list3(R_NilValue, R_NilValue, R_NilValue));
+  CAR(c);
+  CADR(c);
+  CADDR(c);
+  UNPROTECT(1);
+  return(R_NilValue);
+}
+```
+
+VECSXP
+
+```
+> microbenchmark(valtest(1, 2))
+Unit: nanoseconds
+          expr min    lq median   uq   max neval
+ valtest(1, 2) 703 734.5    858 1068 35383   100
+ ```
+
+LISTSXP
+
+```
+Unit: nanoseconds
+          expr min  lq median     uq   max neval
+ valtest(1, 2) 681 728    837 1024.5 10264   100
 ```
