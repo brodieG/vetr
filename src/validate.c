@@ -139,6 +139,8 @@ const char * VALC_deparse(SEXP call, int first_only) {
 }
 /*
 Fake `stop`
+
+Main benefit is that it allows us to control the call that gets displayed.
 */
 void VALC_stop(SEXP call, const char * msg) {
   SEXP quot_call = list2(VALC_SYM_quote, call);
@@ -152,7 +154,7 @@ void VALC_stop(SEXP call, const char * msg) {
   SET_TYPEOF(err_call, LANGSXP);
   UNPROTECT(3);
   eval(err_call, R_GlobalEnv);
-  error("Logic Error: should never get here");
+  error("Logic Error: should never get here; contact maintainer.");
 }
 
 /* -------------------------------------------------------------------------- *\
@@ -564,17 +566,14 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     const char * err_arg = CHAR(asChar(TAG(fun_call_cpy)));
 
     if(count_top == 1) {
-      SEXP err_msg = PROTECT(allocVector(STRSXP, 5));
-      SET_STRING_ELT(err_msg, 0, mkChar("Argument `"));
-      SET_STRING_ELT(err_msg, 1, mkChar(err_arg));
-      SET_STRING_ELT(err_msg, 2, mkChar("` fails validation!: "));
-      SET_STRING_ELT(err_msg, 3, STRING_ELT(CAR(val_res), 0));
-      SET_STRING_ELT(err_msg, 4, mkChar("\n"));
-      SEXP err_call = allocList(2);
-      SETCAR(err_call, install("stop"));
-      SETCADR(err_call, err_msg);
-      SET_TYPEOF(err_call, LANGSXP);
-      eval(err_call, fun_frame);
+      const char * err_base = "Argument `%s` fails validation: %s";
+      const char * err_msg = CHAR(asChar(CAR(val_res)));
+      char * err_full = R_alloc(
+        (strlen(err_base) - 4) + strlen(err_arg) + strlen(err_msg) + 1,
+        sizeof(char)
+      );
+      sprintf(err_full, err_base, err_arg, err_msg);
+      VALC_stop(fun_call, err_full);
       error("Logic Error: shouldn't get here, R error should've been thrown; contact maintainer.");
     } else if (count_top > 1) {
       const char * err_base = "Argument `%s` fails all of the following:\n";
@@ -627,7 +626,8 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
           err_final_cpy += strlen(err_sub) + 5;
         }
       }
-      error(err_final);
+      VALC_stop(fun_call, err_final);
+      error("Logic Error: should never get here 629; contact maintainer.");
     } else {
       error("Logic Error: no values in result error; contact maintainer.");
     }
