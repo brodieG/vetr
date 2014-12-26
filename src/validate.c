@@ -29,6 +29,7 @@ SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value, SEXP rho);
 SEXP VALC_SYM_one_dot;
 SEXP VALC_SYM_deparse;
 SEXP VALC_SYM_quote;
+SEXP VALC_TRUE;
 SEXP(*VALC_alike)(SEXP,SEXP);
 SEXP(*VALC_match_call)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
 SEXP(*VALC_get_frame_data)(SEXP,SEXP,SEXP,int);
@@ -57,6 +58,7 @@ void R_init_validate(DllInfo *info)
   VALC_SYM_quote = install("quote");
   VALC_SYM_deparse = install("deparse");
   VALC_SYM_one_dot = install(".");
+  VALC_TRUE = ScalarLogical(1);
   VALC_match_call = (SEXP(*)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP)) R_GetCCallable("matchcall", "MC_match_call");
   VALC_alike = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
   VALC_get_frame_data = (SEXP(*)(SEXP,SEXP,SEXP,int)) R_GetCCallable("matchcall", "MC_get_frame_data");
@@ -638,5 +640,5 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
   // Match the calls up
   UNPROTECT(4);
   UNPROTECT(4); // SEXPs used as arguments for match_call
-  return R_NilValue;
+  return VALC_TRUE;
 }

@@ -50,4 +50,4 @@
 #'   otherwise
 
 validate <- function(...)
-  .Call(VALC_validate, sys.frames(), sys.calls(), sys.parents())
+  invisible(.Call(VALC_validate, sys.frames(), sys.calls(), sys.parents()))
