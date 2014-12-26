@@ -127,3 +127,38 @@ Unit: microseconds
 ```
 So about 1.9us for using `match.call` to do the matching.  If we tried to match
 on tag name only could be faster; something to think about.
+
+### Initial benchmark
+
+Using version 0.0.1.9000 and the following functions:
+```
+fun1 <- function(x, y, z)
+  validate(
+    x=matrix(integer(), ncol=3) || integer(3L),
+    y=integer(2L) || NULL || logical(1L),
+    z=logical(1L)
+  )
+fun1b <- function(x, y, z) {
+  stopifnot(
+    (
+      is.matrix(x) && ncol(x) == 3 && (
+        is.integer(x) || (is.numeric(x) && all(floor(x) == x))
+      )
+    ) ||
+    ((is.integer(x) || (is.numeric(x) && all(floor(x) == x))) && length(x) == 3)
+  )
+  stopifnot(
+    ((is.integer(y) || (is.numeric(y) && all(floor(y) == y))) && length(y) == 2) ||
+    is.null(y) || (is.logical(y) && length(y) == 1L)
+  )
+  stopifnot(is.logical(z) && length(z) == 1L)
+}
+```
+we get comparable performance:
+```
+> microbenchmark(fun1(1:3, FALSE, FALSE), fun1b(1:3, FALSE, FALSE))
+Unit: microseconds
+                     expr    min     lq median      uq    max neval
+  fun1(1:3, FALSE, FALSE) 23.165 24.257 25.050 26.0010 60.102   100
+ fun1b(1:3, FALSE, FALSE) 19.199 20.684 22.361 23.4795 38.313   100
+```
