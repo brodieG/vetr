@@ -12,6 +12,7 @@ SEXP VALC_validate();
 SEXP VALC_test(SEXP a, SEXP b);
 SEXP VALC_test1(SEXP a);
 SEXP VALC_test2(SEXP a);
+void VALC_stop(SEXP call, const char * msg);
 SEXP VALC_parse(SEXP lang, SEXP var_name);
 void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is);
 SEXP VALC_name_sub(SEXP symb, SEXP arg_name);
@@ -64,10 +65,8 @@ void R_init_validate(DllInfo *info)
 // - Testing Function ----------------------------------------------------------
 
 SEXP VALC_test(SEXP a, SEXP b) {
-  Rprintf("Wow\n");
-  SEXP chrval = mkChar("Hello\n");
-  // Rprintf(type2char(TYPEOF(chrval)));
-  return(ScalarString(chrval));
+  VALC_stop(a, "error test message");
+  return(R_NilValue);
 }
 
 SEXP VALC_test1(SEXP a) {
@@ -110,6 +109,52 @@ SEXP VALC_remove_parens(SEXP lang) {
   UNPROTECT(3);
   return(res);
 }
+/*
+Deparse R expression to const char
+
+if first_only then only return first line
+*/
+const char * VALC_deparse(SEXP call, int first_only) {
+  // SEXP quot_call = PROTECT(allocList(2));
+  // SEXP dep_call = PROTECT(allocList(2));
+  // SETCAR(quot_call, VALC_SYM_quote);
+  // SETCADR(quot_call, call);
+  // SET_TYPEOF(quot_call, LANGSXP);
+  // SETCAR(dep_call, VALC_SYM_deparse);
+  // SETCADR(dep_call, quot_call);
+  // SET_TYPEOF(dep_call, LANGSXP);
+
+  // SEXP err_vec = eval(dep_call, R_GlobalEnv);
+
+  // if(first_only || XLENGTH(err_vec) == (R_xlen_t) 1) {
+  //   return(CHAR(STRING_ELT(err_vec, 1)));
+  // } else {
+  //   // Get size of deparsed expression
+
+  //   const R_xlen_t err_len = XLENGTH(err_vec);
+
+
+  // }
+
+}
+/*
+Fake `stop`
+*/
+void VALC_stop(SEXP call, const char * msg) {
+  SEXP quot_call = list2(VALC_SYM_quote, call);
+  SET_TYPEOF(quot_call, LANGSXP);
+  SEXP cond_call = PROTECT(
+    list3(install("simpleError"), ScalarString(mkChar(msg)), quot_call)
+  );
+  SET_TYPEOF(cond_call, LANGSXP);
+  SEXP cond = PROTECT(eval(cond_call, R_GlobalEnv));
+  SEXP err_call = PROTECT(list2(install("stop"), cond));
+  SET_TYPEOF(err_call, LANGSXP);
+  UNPROTECT(3);
+  eval(err_call, R_GlobalEnv);
+  error("Logic Error: should never get here");
+}
+
 /* -------------------------------------------------------------------------- *\
 |                                                                              |
 |                                    PARSE                                     |
