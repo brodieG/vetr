@@ -504,9 +504,10 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
   SEXP fun_frame_dat = PROTECT(
     VALC_get_frame_data(sys_frames, sys_calls, sys_pars, 1)
   );
-  SEXP fun_frame = VECTOR_ELT(fun_frame_dat, 0); // really is stack parent of fun frame
+  SEXP fun_dyn_par_frame = CADR(fun_frame_dat);
+  SEXP fun_frame = CADDR(fun_frame_dat);
   SEXP fun = PROTECT(
-    VALC_get_fun(fun_frame, VECTOR_ELT(fun_frame_dat, 1))
+    VALC_get_fun(fun_dyn_par_frame, CAR(fun_frame_dat))
   );
   // Now get matching call (could save up to 1.9us if we used different method,
   // but nice thing of doing it this way is this is guaranteed to match to
@@ -534,9 +535,20 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     val_tok = CAR(val_call_cpy);
     if(val_tok == R_MissingArg) continue;
     fun_tok = CAR(fun_call_cpy);
-    if(fun_tok == R_MissingArg) error("Missing Arg %s\n", CHAR(asChar(TAG(fun_call_cpy))));
+    if(fun_tok == R_MissingArg) {
+      const char * err_tag = CHAR(asChar(TAG(fun_call_cpy)));
+      const char * err_base = "Argument `%s` is missing";
+      char * err_msg = R_alloc(
+        strlen(err_base) - 2 + strlen(err_tag) + 1, sizeof(char)
+      );
+      sprintf(err_msg, err_base, err_tag);
+      VALC_stop(fun_call, err_msg);
+      error("Logic Error: shouldn't get here 532; contact maintainer.");
+    }
+    SEXP fun_val = eval(fun_tok, fun_dyn_par_frame);  // Need to evaluate the argument
+    SEXP test_call = list1(install("ls"));
+    SET_TYPEOF(test_call, LANGSXP);
 
-    SEXP fun_val = eval(fun_tok, fun_frame);  // Need to evaluate the argument
     SEXP val_res = VALC_evaluate(val_tok, TAG(val_call_cpy), fun_val, fun_frame);
     if(IS_TRUE(val_res)) continue;  // success, check next
     else if(TYPEOF(val_res) != LISTSXP)
@@ -576,7 +588,7 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
       if(err_items > 1) size += err_sub_base_len;
     }
     // Depending on whether there is one error or multiple ones (multiple means
-    // value failed to match any of the OR possibilities), render erro
+    // value failed to match any of the OR possibilities), render error
 
     const char * err_arg = CHAR(asChar(TAG(fun_call_cpy)));
 

@@ -27,6 +27,16 @@ unitizer_sect("Multi-template validation", {
 
   fun1(1:3, FALSE, FALSE)                     # all pass
 })
-
-
+unitizer_sect("Template and Straight Eval", {
+  fun2 <- function(x, y, z)
+    validate(
+      x=(matrix(integer(), ncol=3) || integer(3L)) && .(!any(is.na(.))),
+      y=integer(3L) && .(all(. > 0)),
+      z=logical(1L) && .(!is.na(.))
+    )
+  fun2(matrix(c(1:8, NA), nrow=3), NULL, NULL)
+  fun2(matrix(c(1:9), nrow=3), -1:1, NULL)
+  fun2(matrix(c(1:9), nrow=3), 1:3, NA)
+  fun2(matrix(c(1:9), nrow=3), 1:3, TRUE)
+})
 
