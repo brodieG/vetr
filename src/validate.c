@@ -59,7 +59,7 @@ void R_init_validate(DllInfo *info)
   VALC_SYM_deparse = install("deparse");
   VALC_SYM_one_dot = install(".");
   VALC_TRUE = ScalarLogical(1);
-  VALC_match_call = (SEXP(*)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP)) R_GetCCallable("matchcall", "MC_match_call");
+  VALC_match_call = (SEXP(*)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP)) R_GetCCallable("matchcall", "MC_match_call_internal");
   VALC_alike = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
   VALC_get_frame_data = (SEXP(*)(SEXP,SEXP,SEXP,int)) R_GetCCallable("matchcall", "MC_get_frame_data");
   VALC_get_fun = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("matchcall", "MC_get_fun");
@@ -171,7 +171,18 @@ void VALC_stop(SEXP call, const char * msg) {
   eval(err_call, R_GlobalEnv);
   error("Logic Error: should never get here; contact maintainer.");
 }
-
+/*
+Creat simple error for a tag
+*/
+void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
+  const char * err_tag = CHAR(asChar(tag));
+  char * err_msg = R_alloc(
+    strlen(err_base) - 2 + strlen(err_tag) + 1, sizeof(char)
+  );
+  sprintf(err_msg, err_base, err_tag);
+  VALC_stop(fun_call, err_msg);
+  error("Logic Error: shouldn't get here 181; contact maintainer.");
+}
 /* -------------------------------------------------------------------------- *\
 |                                                                              |
 |                                    PARSE                                     |
@@ -281,8 +292,6 @@ void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_i
 
   // Don't return anything as all is done by modifying `lang` and `lang_track`
 }
-
-
 /*
 Name replacement, substitutes `.` for argname and multi dots for one dot fewer
 */
@@ -494,10 +503,11 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
   // Get calls from function to validate and validator call
 
   SEXP fun_call = PROTECT(
-    VALC_match_call(
-      chr_exp, R_TRUE, R_TRUE, R_TRUE, one, R_NilValue, sys_frames, sys_calls,
-      sys_pars
-  ) );
+    CAR(
+      VALC_match_call(
+        chr_exp, R_TRUE, R_TRUE, R_TRUE, one, R_NilValue, sys_frames, sys_calls,
+        sys_pars
+  ) ) );
   // Get definition of fun in original call; this unfortunately requires repeating
   // some of the logic in the step above, but is pretty fast
 
@@ -513,21 +523,26 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
   // but nice thing of doing it this way is this is guaranteed to match to
   // fun_call)
 
-  SEXP val_call = PROTECT(
+  SEXP val_call_data = PROTECT(
     VALC_match_call(
       chr_exp, R_TRUE, R_TRUE, R_TRUE, zero, fun, sys_frames, sys_calls,
       sys_pars
   ) );
+  SEXP val_call = CAR(val_call_data);
+  SEXP val_call_types = CADR(val_call_data);
+
   // For the elements with validation call setup, check for errors;  Note that
   // we need to skip the first element of the calls since we only care about the
   // args.
 
-  SEXP val_call_cpy, fun_call_cpy;
+  SEXP val_call_cpy, fun_call_cpy, val_call_types_cpy;
 
   for(
-    val_call_cpy = CDR(val_call), fun_call_cpy = CDR(fun_call);
+    val_call_cpy = CDR(val_call), fun_call_cpy = CDR(fun_call),
+    val_call_types_cpy = val_call_types;
     val_call_cpy != R_NilValue;
-    val_call_cpy = CDR(val_call_cpy), fun_call_cpy = CDR(fun_call_cpy)
+    val_call_cpy = CDR(val_call_cpy), fun_call_cpy = CDR(fun_call_cpy),
+    val_call_types_cpy = CDR(val_call_types_cpy)
   ) {
     if(TAG(val_call_cpy) != TAG(fun_call_cpy))
       error("Logic Error: tag mismatch between function and validation; contact maintainer.");
@@ -535,19 +550,28 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     val_tok = CAR(val_call_cpy);
     if(val_tok == R_MissingArg) continue;
     fun_tok = CAR(fun_call_cpy);
-    if(fun_tok == R_MissingArg) {
-      const char * err_tag = CHAR(asChar(TAG(fun_call_cpy)));
-      const char * err_base = "Argument `%s` is missing";
-      char * err_msg = R_alloc(
-        strlen(err_base) - 2 + strlen(err_tag) + 1, sizeof(char)
-      );
-      sprintf(err_msg, err_base, err_tag);
-      VALC_stop(fun_call, err_msg);
-      error("Logic Error: shouldn't get here 532; contact maintainer.");
+    if(fun_tok == R_MissingArg)
+      VALC_arg_error(TAG(fun_call_cpy), fun_call, "Argument `%s` is missing");
+    // Need to evaluate the argument
+
+    SEXP eval_env;
+
+    switch(asInteger(CAR(val_call_types_cpy))) {
+      case 1: eval_env = fun_dyn_par_frame; break;  // user args evaled in parent
+      case 2: eval_env = fun_frame; break;          // def args evaled in fun
+      default:
+        error("Logic Error: unexpected arg type %d", asInteger(CAR(val_call_types_cpy)));
     }
-    SEXP fun_val = eval(fun_tok, fun_dyn_par_frame);  // Need to evaluate the argument
-    SEXP test_call = list1(install("ls"));
-    SET_TYPEOF(test_call, LANGSXP);
+    int err_val = 0;
+    int * err_point = &err_val;
+
+    SEXP fun_val = R_tryEval(fun_tok, fun_dyn_par_frame, err_point);
+    if(* err_point) {
+      VALC_arg_error(
+        TAG(fun_call_cpy), fun_call,
+        "Argument `%s` produced error during evaluation; see prior error."
+    );}
+    // Evaluate the validation expression
 
     SEXP val_res = VALC_evaluate(val_tok, TAG(val_call_cpy), fun_val, fun_frame);
     if(IS_TRUE(val_res)) continue;  // success, check next
