@@ -11,15 +11,16 @@
 SEXP VALC_validate();
 SEXP VALC_test(SEXP a, SEXP b);
 SEXP VALC_test1(SEXP a);
-SEXP VALC_test2(SEXP a);
+SEXP VALC_test2(SEXP a, SEXP b);
 void VALC_stop(SEXP call, const char * msg);
+void VALC_stop2(SEXP call, const char * msg, SEXP rho);
 SEXP VALC_parse(SEXP lang, SEXP var_name);
 void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is);
 SEXP VALC_name_sub(SEXP symb, SEXP arg_name);
 SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name);
 SEXP VALC_remove_parens(SEXP lang);
 void VALC_install_objs();
-SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value, SEXP rho);
+SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value, SEXP lang_full, SEXP rho);
 
 // - Objects We Install Once ---------------------------------------------------
 
@@ -42,9 +43,9 @@ R_CallMethodDef callMethods[] = {
   {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
   {"parse", (DL_FUNC) &VALC_parse, 2},
   {"remove_parens", (DL_FUNC) &VALC_remove_parens, 1},
-  {"eval_check", (DL_FUNC) &VALC_evaluate, 4},
+  {"eval_check", (DL_FUNC) &VALC_evaluate, 5},
   {"test1", (DL_FUNC) &VALC_test1, 1},
-  {"test2", (DL_FUNC) &VALC_test2, 1},
+  {"test2", (DL_FUNC) &VALC_test2, 2},
   {NULL, NULL, 0}
 };
 
@@ -67,29 +68,21 @@ void R_init_validate(DllInfo *info)
 // - Testing Function ----------------------------------------------------------
 
 SEXP VALC_test(SEXP a, SEXP b) {
-  SEXP c;
-  // c = PROTECT(allocVector(VECSXP, 3));
-  // SET_VECTOR_ELT(c, 0, R_NilValue);
-  // SET_VECTOR_ELT(c, 1, R_NilValue);
-  // SET_VECTOR_ELT(c, 2, R_NilValue);
-  // VECTOR_ELT(c, 0);
-  // VECTOR_ELT(c, 1);
-  // VECTOR_ELT(c, 2);
-  // UNPROTECT(1);
-  c = PROTECT(list3(R_NilValue, R_NilValue, R_NilValue));
-  CAR(c);
-  CADR(c);
-  CADDR(c);
-  UNPROTECT(1);
+  // VALC_stop2(a, "error!", b);
+  VALC_stop(a, "error!");
   return(R_NilValue);
 }
 
 SEXP VALC_test1(SEXP a) {
-  SEXP b=install("quote");
+  error("stop!;;;;;");
   return(a);
 }
-SEXP VALC_test2(SEXP a) {
-  SEXP b=VALC_SYM_quote;
+SEXP VALC_test2(SEXP a, SEXP b) {
+  VALC_stop2(a, "error!", b);
+  return(a);
+}
+SEXP VALC_test3(SEXP a, SEXP b) {
+  VALC_stop2(a, "error!", b);
   return(a);
 }
 // - Helper Functions ----------------------------------------------------------
@@ -125,34 +118,6 @@ SEXP VALC_remove_parens(SEXP lang) {
   return(res);
 }
 /*
-Deparse R expression to const char
-
-if first_only then only return first line
-*/
-const char * VALC_deparse(SEXP call, int first_only) {
-  // SEXP quot_call = PROTECT(allocList(2));
-  // SEXP dep_call = PROTECT(allocList(2));
-  // SETCAR(quot_call, VALC_SYM_quote);
-  // SETCADR(quot_call, call);
-  // SET_TYPEOF(quot_call, LANGSXP);
-  // SETCAR(dep_call, VALC_SYM_deparse);
-  // SETCADR(dep_call, quot_call);
-  // SET_TYPEOF(dep_call, LANGSXP);
-
-  // SEXP err_vec = eval(dep_call, R_GlobalEnv);
-
-  // if(first_only || XLENGTH(err_vec) == (R_xlen_t) 1) {
-  //   return(CHAR(STRING_ELT(err_vec, 1)));
-  // } else {
-  //   // Get size of deparsed expression
-
-  //   const R_xlen_t err_len = XLENGTH(err_vec);
-
-
-  // }
-
-}
-/*
 Fake `stop`
 
 Main benefit is that it allows us to control the call that gets displayed.
@@ -171,7 +136,20 @@ void VALC_stop(SEXP call, const char * msg) {
   eval(err_call, R_GlobalEnv);
   error("Logic Error: should never get here; contact maintainer.");
 }
-/*
+void VALC_stop2(SEXP call, const char * msg, SEXP rho) {
+  SEXP quot_call = list2(VALC_SYM_quote, call);
+  SET_TYPEOF(quot_call, LANGSXP);
+  SEXP cond_call = PROTECT(
+    list3(install("simpleError"), ScalarString(mkChar(msg)), quot_call)
+  );
+  SET_TYPEOF(cond_call, LANGSXP);
+  SEXP cond = PROTECT(eval(cond_call, rho));
+  SEXP err_call = PROTECT(list2(install("stop"), cond));
+  SET_TYPEOF(err_call, LANGSXP);
+  UNPROTECT(3);
+  eval(err_call, R_GlobalEnv);
+  error("Logic Error: should never get here; contact maintainer.");
+}/*
 Creat simple error for a tag
 */
 void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
@@ -342,7 +320,10 @@ SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name) {
 |                                                                              |
 \* -------------------------------------------------------------------------- */
 
-SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value, SEXP rho) {
+SEXP VALC_evaluate_recurse(
+  SEXP lang, SEXP act_codes, SEXP arg_value, SEXP arg_name, SEXP lang_full,
+  SEXP rho
+) {
   /*
   check act_codes:
     if 1 or 2
@@ -396,7 +377,10 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value, SEXP rho) 
       act_codes = CDR(act_codes);
 
       while(lang != R_NilValue) {
-        eval_res = PROTECT(VALC_evaluate_recurse(CAR(lang), CAR(act_codes), arg_value, rho));
+        eval_res = PROTECT(
+          VALC_evaluate_recurse(
+            CAR(lang), CAR(act_codes), arg_value, arg_name, lang_full, rho
+        ) );
         if(TYPEOF(eval_res) == LISTSXP) {
           if(mode == 1) {// At least one non-TRUE result, which is a failure, so return
             UNPROTECT(2);
@@ -429,14 +413,20 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value, SEXP rho) 
       error("Logic Error: in mode c(1, 2), but not a language object; contact maintainer.");
     }
   } else if(mode == 10 || mode == 999) {
-    // For all this stuff, need to think about error handling
-
-    SEXP eval_res;
-
+    SEXP eval_res, eval_tmp;
+    int err_val = 0;
+    int * err_point = &err_val;
+    eval_tmp = PROTECT(R_tryEval(lang, rho, err_point));
+    if(* err_point) {
+      VALC_arg_error(
+        arg_name, lang_full,
+        "Validation expression for argument `%s` produced an error (see previous error)."
+      );
+    }
     if(mode == 10) {
-      eval_res = PROTECT(eval(lang, rho));
+      eval_res = PROTECT(eval_tmp);
     } else {
-      eval_res = PROTECT(VALC_alike(eval(lang, rho), arg_value));
+      eval_res = PROTECT(VALC_alike(eval_tmp, arg_value));
     }
     if(TYPEOF(eval_res) != LGLSXP || xlength(eval_res) != 1 || !asLogical(eval_res)) {
       SEXP err_msg = PROTECT(allocList(1));
@@ -462,7 +452,7 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value, SEXP rho) 
       UNPROTECT(2);
       return(err_msg);
     }
-    UNPROTECT(1);
+    UNPROTECT(2);
     return(eval_res);  // this should be `TRUE`
   } else {
     error("Logic Error: unexpected parse mode %d", mode);
@@ -473,7 +463,9 @@ SEXP VALC_evaluate_recurse(SEXP lang, SEXP act_codes, SEXP arg_value, SEXP rho) 
 /*
 TBD if this should call `VALC_parse` directly or not
 */
-SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value, SEXP rho) {
+SEXP VALC_evaluate(
+  SEXP lang, SEXP arg_name, SEXP arg_value, SEXP lang_full, SEXP rho
+) {
   if(TYPEOF(arg_name) != SYMSXP)
     error("Argument `arg_name` must be a symbol.");
   if(TYPEOF(rho) != ENVSXP)
@@ -483,8 +475,7 @@ SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value, SEXP rho) {
     VALC_evaluate_recurse(
       VECTOR_ELT(lang_parsed, 0),
       VECTOR_ELT(lang_parsed, 1),
-      arg_value,
-      rho
+      arg_value, arg_name, lang_full, rho
   ) );
   UNPROTECT(2);  // This seems a bit stupid, PROTECT/UNPROTECT
   return(res);
@@ -569,11 +560,13 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     if(* err_point) {
       VALC_arg_error(
         TAG(fun_call_cpy), fun_call,
-        "Argument `%s` produced error during evaluation; see prior error."
+        "Argument `%s` produced error during evaluation; see previous error."
     );}
     // Evaluate the validation expression
 
-    SEXP val_res = VALC_evaluate(val_tok, TAG(val_call_cpy), fun_val, fun_frame);
+    SEXP val_res = VALC_evaluate(
+      val_tok, TAG(val_call_cpy), fun_val, val_call, fun_frame
+    );
     if(IS_TRUE(val_res)) continue;  // success, check next
     else if(TYPEOF(val_res) != LISTSXP)
       error(

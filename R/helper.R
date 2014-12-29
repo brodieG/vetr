@@ -44,12 +44,12 @@ remove_parens <- function(lang)
 #' @keywords internal
 
 eval_check <- function(lang, arg_name, arg_value)
-  .Call(VALC_eval_check, lang, arg_name, arg_value, parent.frame())
+  .Call(VALC_eval_check, lang, arg_name, arg_value, sys.call(), parent.frame())
 
 #' @export
 
 valtest <- function(a, b)
-  .Call(VALC_test, a, b)
+  .Call(VALC_test, a, sys.frame(sys.nframe()))
 
 #' @export
 
@@ -60,5 +60,10 @@ valtest1 <- function(a){
 #' @export
 
 valtest2 <- function(a) {
-  .Call(VALC_test2, a)
+  .Call(VALC_test2, a, sys.frame(sys.nframe()))
+}
+#' @export
+#'
+valtest3 <- function(a) {
+  .Call(VALC_test2, a, parent.frame())
 }

@@ -39,4 +39,24 @@ unitizer_sect("Template and Straight Eval", {
   fun2(matrix(c(1:9), nrow=3), 1:3, NA)
   fun2(matrix(c(1:9), nrow=3), 1:3, TRUE)
 })
+unitizer_sect("Errors in Arguments", {
+  fun3 <- function(x, y)
+    validate(x=logical(1L), y=integer(3L))
+  fun3(stop("boom"))
+  fun3(TRUE, stop("boomBOOM"))
+  fun3(1:3, stop("boomBOOM"))
+
+  fun4 <- function(x, y)
+    validate(x=stop("BOOM"), y=integer(3L))
+  fun4(NULL, 1:3)
+
+  fun5 <- function(x, y)
+    validate(x=integer(3L), y=NULL || .(stop("hah")))
+  fun5(1:3, NULL)
+  fun5(1:2, NULL)
+
+  fun6 <- function(x, y)
+    validate(x=integer(3L), y=NULL && .(stop("hah")))
+  fun6(1:3, NULL)
+})
 

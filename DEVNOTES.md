@@ -51,6 +51,10 @@ Alternate: do the same recursive descent, returning a C "linked list"?  Or maybe
 
 ## C Notes
 
+### Tracebacks
+
+Tracebacks not set in unitizer when eval(stop()) from C, even though they are set outside of unitizer, and when calling `error` in C within unitizer.
+
 ### PROTECT stack and `error`
 
 It seems like there are no stack imbalance problems when the script finishes with errors; is this okay?
