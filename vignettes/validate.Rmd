@@ -1,0 +1,32 @@
+---
+title: "validate - Keep the Garbage Out"
+author: "Brodie Gaslam"
+output:
+    rmarkdown::html_vignette:
+        toc: true
+        css: styles.css
+
+vignette: >
+  %\VignetteIndexEntry{validate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+## Under Construction
+
+This vignette is an outline / draft.
+
+## Templates
+
+* What is a template
+* High level overview of how they work
+
+## NSE
+
+## Performance Considerations
+
+* Predifine templates
+* benchmarks vs. `stopifnot`
+
+## Argument Matching
+
