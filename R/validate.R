@@ -1,53 +1,65 @@
 #' Validate Function Arguments
 #'
-#' Each argument to this function (\dfn{Checkarg} hereafter) will be matched to an
-#' argument of the enclosing closure (\dfn{Closarg} hereafter) in order to validate
-#' it. Matching is either name based (no partial matching), positional, or a
-#' combination of both, with name based matching done first, and positional
-#' matching used for the remaining \dfn{Closeargs}.
+#' Validate function arguments by providing templates and expressions to match
+#' to the arguments of an enclosing function.
 #'
-#' \dfn{Checkargs} fall into two categories:
-#' \enumerate{
-#'   \item objects, or expressions producing objects that do not reference the
-#'     matching \dfn{Closarg}
-#'   \item expressions that reference the matching \dfn{Closarg}
-#' }
-#' For example, in:
+#' Each argument to \code{`validate`} is matched to one argument of the enclosing
+#' function following the same rules \code{`\link{match.call}`} uses.  For
+#' example, in:
 #' \preformatted{
 #' function(a, b) {
-#'   check_args(numeric(), nrow(b) == 3)
+#'   validate(numeric(), logical(1L))
 #' }
 #' }
-#' the first \dfn{Checkarg} is of Type 1 since it contains no references to \code{`a`}
-#' and the second \dfn{Checkarg} is of Type 2, since it references \code{`b`}, the
-#' matching \dfn{Closarg}.
+#' \code{`numeric()`} will be used to validate \code{`a`}, and
+#' \code{`logical(1L)`} to validate \code{`b`}.
 #'
-#' @section Type 1 \dfn{Checkargs}:
-#' Type 1 \dfn{Checkargs} are taken to be templates to compare \dfn{Closargs} against.
-#' These \dfn{Checkargs} are used as the \code{`obj.reference`} in a
-#' \code{`\link{alike}`} comparison.  The exact nature of what is considered
-#'  a valid match to a template is somewhat complex to explain, but should be
-#' intuitive to grasp (see examples for \code{`\link{alike}`}).
+#' The default validation mechanism is to use the arguments to \code{`validate`}
+#' as templates.  For example, \code{`numeric()`} means arguments to \code{`a`}
+#' must be numeric, of any length, and \code{`logical(1L)`} means arguments to
+#' \code{`b`} must be one length logical.  Arguments must match the template
+#' structure, but need not match the values.  \code{`validate`} uses
+#' \code{`alike`} to determine whether an object matches a template.
 #'
-#' @section Type 2 \dfn{Checkargs}:
-#' Type 2 \dfn{Checkargs} need to evaluate to TRUE in order to pass (see examples).
+#' You may use \code{`||`} and/or \code{`&&`} to construct more complex
+#' validations:
+#' \preformatted{
+#' function(a, b) {
+#'   validate(
+#'     a=numeric() || character(),
+#'     b=character(1L) || NULL
+#' }
+#' }
+#' \code{`validate`} parses each expression to isolate the templates and then
+#' tests each template in turn verifying that any/all of them match the
+#' arguments as specified by you with \code{`&&`} / \code{`||`}.
+#'
+#' Often it is useful to be able to use arbitrary expressions as part of a
+#' validation.  You may do so by using \code{`.(`}.  Any expression within
+#' \code{`.(`} will be evaluated as is, and an argument will validate
+#' successfully if that expression returns \code{`TRUE`} (note, a two length
+#' logical like \code{`c(T, T)`} will fail):
+#' \preformatted{
+#' function(a, b) {
+#'   validate(
+#'     a=numeric() && .(!any(is.na(.))),
+#'     b=logical() && .(length(a) == length(.) && !any(is.na(.)))
+#' }
+#' }
+#' If you use `.` as a variable anyplace in the validation expression it will be
+#' substituted by the corresponding argument name prior to validation.  If you
+#' need to use objects called \code{`.`} or \code{`.(`} in your validation
+#' expression you may do so by escaping them with another period (e.g. use
+#' \code{`..`} for a literal \code{`.`}).
 #'
 #' @useDynLib validate, .registration=TRUE, .fixes="VALC_"
-#' @note Will force evaluation of the closure's arguments that are being checked,
-#'   so do not check a formal if that is a particularly undesirable side effect
-#'   for that formal
-#' @note checks against default values along the lines of those made with
-#'   \code{`\link{match.arg}`} are not supported (this is a conscious design
-#'   decision)
-#' @note Hack alert: in order to get the error message to look like it came from
-#'   the enclosing closure rather than this function, we use a carriage return
-#'   to overwrite the first part of the error message (if you know of a better
-#'   way that won't mess with try/catch handling, let me know)
+#' @note Will force evaluation of any arguments that are being checked (you may
+#'   omit arguments that should not be evaluate from \code{`validate`})
 #' @export
-#' @param ... arguments to validate; if they are named the names must match
-#'   the names of the arguments from enclosing closure (no partial matching)
-#' @return NULL if validation succeeds, throws an error with \code{`\link{stop}`}
-#'   otherwise
+#' @param ... arguments to validate; they will be matched to the enclosing
+#'   function formals as with \code{`match.call`}
+#' @return TRUE invisibly if validation succeeds, throws an error with
+#'   \code{`\link{stop}`} otherwise
 
 validate <- function(...)
   invisible(.Call(VALC_validate, sys.frames(), sys.calls(), sys.parents()))

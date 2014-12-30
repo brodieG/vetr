@@ -59,4 +59,3 @@ unitizer_sect("Errors in Arguments", {
     validate(x=integer(3L), y=NULL && .(stop("hah")))
   fun6(1:3, NULL)
 })
-

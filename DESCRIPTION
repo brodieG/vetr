@@ -1,6 +1,8 @@
 Package: validate
 Title: Validate Your Inputs!
-Description: Simplify validation of your function inputs.
+Description: A template based validation mechanism for your function inputs that
+    simplifies argument checking for both complex and simple values while
+    providing informative messages to your users.
 Version: 0.0.1.9000
 Author: Brodie Gaslam
 Maintainer: Brodie Gaslam <brodie.gaslam@yahoo.com>
