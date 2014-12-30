@@ -3,25 +3,25 @@
 #' Validate function arguments by providing templates and expressions to match
 #' to the arguments of an enclosing function.
 #'
-#' Each argument to \code{`validate`} is matched to one argument of the enclosing
-#' function following the same rules \code{`\link{match.call}`} uses.  For
+#' Each argument to \code{validate} is matched to one argument of the enclosing
+#' function following the same rules \code{\link{match.call}} uses.  For
 #' example, in:
 #' \preformatted{
 #' function(a, b) {
 #'   validate(numeric(), logical(1L))
 #' }
 #' }
-#' \code{`numeric()`} will be used to validate \code{`a`}, and
-#' \code{`logical(1L)`} to validate \code{`b`}.
+#' \code{numeric()} will be used to validate \code{a}, and
+#' \code{logical(1L)} to validate \code{b}.
 #'
-#' The default validation mechanism is to use the arguments to \code{`validate`}
-#' as templates.  For example, \code{`numeric()`} means arguments to \code{`a`}
-#' must be numeric, of any length, and \code{`logical(1L)`} means arguments to
-#' \code{`b`} must be one length logical.  Arguments must match the template
-#' structure, but need not match the values.  \code{`validate`} uses
-#' \code{`alike`} to determine whether an object matches a template.
+#' The default validation mechanism is to use the arguments to \code{validate}
+#' as templates.  For example, \code{numeric()} means arguments to \code{a}
+#' must be numeric, of any length, and \code{logical(1L)} means arguments to
+#' \code{b} must be one length logical.  Arguments must match the template
+#' structure, but need not match the values.  \code{validate} uses
+#' \code{alike} to determine whether an object matches a template.
 #'
-#' You may use \code{`||`} and/or \code{`&&`} to construct more complex
+#' You may use \code{||} and/or \code{&&} to construct more complex
 #' validations:
 #' \preformatted{
 #' function(a, b) {
@@ -30,15 +30,15 @@
 #'     b=character(1L) || NULL
 #' }
 #' }
-#' \code{`validate`} parses each expression to isolate the templates and then
+#' \code{validate} parses each expression to isolate the templates and then
 #' tests each template in turn verifying that any/all of them match the
-#' arguments as specified by you with \code{`&&`} / \code{`||`}.
+#' arguments as specified by you with \code{&&} / \code{||}.
 #'
 #' Often it is useful to be able to use arbitrary expressions as part of a
-#' validation.  You may do so by using \code{`.(`}.  Any expression within
-#' \code{`.(`} will be evaluated as is, and an argument will validate
-#' successfully if that expression returns \code{`TRUE`} (note, a two length
-#' logical like \code{`c(T, T)`} will fail):
+#' validation.  You may do so by using \code{.(}.  Any expression within
+#' \code{.(} will be evaluated as is, and an argument will validate
+#' successfully if that expression returns \code{TRUE} (note, a two length
+#' logical like \code{c(T, T)} will fail):
 #' \preformatted{
 #' function(a, b) {
 #'   validate(
@@ -46,20 +46,20 @@
 #'     b=logical() && .(length(a) == length(.) && !any(is.na(.)))
 #' }
 #' }
-#' If you use `.` as a variable anyplace in the validation expression it will be
+#' If you use \code{.} as a variable anyplace in the validation expression it will be
 #' substituted by the corresponding argument name prior to validation.  If you
-#' need to use objects called \code{`.`} or \code{`.(`} in your validation
+#' need to use objects called \code{.} or \code{.(} in your validation
 #' expression you may do so by escaping them with another period (e.g. use
-#' \code{`..`} for a literal \code{`.`}).
+#' \code{..} for a literal \code{.}).
 #'
 #' @useDynLib validate, .registration=TRUE, .fixes="VALC_"
 #' @note Will force evaluation of any arguments that are being checked (you may
-#'   omit arguments that should not be evaluate from \code{`validate`})
+#'   omit arguments that should not be evaluate from \code{validate})
 #' @export
 #' @param ... arguments to validate; they will be matched to the enclosing
-#'   function formals as with \code{`match.call`}
+#'   function formals as with \code{match.call}
 #' @return TRUE invisibly if validation succeeds, throws an error with
-#'   \code{`\link{stop}`} otherwise
+#'   \code{\link{stop}} otherwise
 
 validate <- function(...)
   invisible(.Call(VALC_validate, sys.frames(), sys.calls(), sys.parents()))
