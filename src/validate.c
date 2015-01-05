@@ -607,7 +607,7 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     // Depending on whether there is one error or multiple ones (multiple means
     // value failed to match any of the OR possibilities), render error
 
-    const char * err_arg = CHAR(asChar(TAG(fun_call_cpy)));
+    const char * err_arg = CHAR(PRINTNAME(TAG(fun_call_cpy)));
 
     if(count_top == 1) {
       const char * err_base = "Argument `%s` fails validation: %s";
