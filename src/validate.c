@@ -618,7 +618,7 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
       );
       sprintf(err_full, err_base, err_arg, err_msg);
       VALC_stop(fun_call, err_full);
-      error("Logic Error: shouldn't get here, R error should've been thrown; contact maintainer.");
+      error("Logic Error: should not get here, R error should have been thrown; contact maintainer.");
     } else if (count_top > 1) {
       const char * err_base = "Argument `%s` fails all of the following:\n";
 
