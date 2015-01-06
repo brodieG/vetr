@@ -14,8 +14,8 @@ SEXP VALC_test1(SEXP a);
 SEXP VALC_test2(SEXP a, SEXP b);
 void VALC_stop(SEXP call, const char * msg);
 void VALC_stop2(SEXP call, const char * msg, SEXP rho);
-SEXP VALC_parse(SEXP lang, SEXP var_name);
-void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is);
+SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho);
+void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is);
 SEXP VALC_name_sub(SEXP symb, SEXP arg_name);
 SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name);
 SEXP VALC_remove_parens(SEXP lang);
@@ -29,6 +29,7 @@ SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value, SEXP lang_full, SEX
 
 SEXP VALC_SYM_one_dot;
 SEXP VALC_SYM_deparse;
+SEXP VALC_SYM_paren;
 SEXP VALC_SYM_quote;
 SEXP VALC_TRUE;
 SEXP(*VALC_alike)(SEXP,SEXP);
@@ -41,7 +42,7 @@ R_CallMethodDef callMethods[] = {
   {"validate", (DL_FUNC) &VALC_validate, 3},
   {"test", (DL_FUNC) &VALC_test, 2},
   {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
-  {"parse", (DL_FUNC) &VALC_parse, 2},
+  {"parse", (DL_FUNC) &VALC_parse, 3},
   {"remove_parens", (DL_FUNC) &VALC_remove_parens, 1},
   {"eval_check", (DL_FUNC) &VALC_evaluate, 5},
   {"test1", (DL_FUNC) &VALC_test1, 1},
@@ -59,6 +60,7 @@ void R_init_validate(DllInfo *info)
   VALC_SYM_quote = install("quote");
   VALC_SYM_deparse = install("deparse");
   VALC_SYM_one_dot = install(".");
+  VALC_SYM_paren = install("(");
   VALC_TRUE = ScalarLogical(1);
   VALC_match_call = (SEXP(*)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP)) R_GetCCallable("matchcall", "MC_match_call_internal");
   VALC_alike = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
@@ -69,7 +71,13 @@ void R_init_validate(DllInfo *info)
 
 SEXP VALC_test(SEXP a, SEXP b) {
   // VALC_stop2(a, "error!", b);
-  VALC_stop(a, "error!");
+  Rprintf("hello\n");
+  Rprintf("a: %s, b: %s\n", type2char(TYPEOF(a)), type2char(TYPEOF(b)));
+  SEXP found = PROTECT(findVar(a, b));
+  SEXP new_call = LCONS(VALC_SYM_paren, found);
+  PrintValue(new_call);
+  Rprintf("found type %s:", type2char(TYPEOF(found)));
+  UNPROTECT(1);
   return(R_NilValue);
 }
 
@@ -167,7 +175,7 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
 |                                                                              |
 \* -------------------------------------------------------------------------- */
 
-SEXP VALC_parse(SEXP lang, SEXP var_name) {
+SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   SEXP lang_cpy, res, res_vec, rem_res;
   int mode;
 
@@ -182,7 +190,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name) {
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
   } else {
     res = PROTECT(allocList(length(lang_cpy)));
-    VALC_parse_recurse(lang_cpy, res, var_name, mode);  // lang_cpy, res, are modified internally
+    VALC_parse_recurse(lang_cpy, res, var_name, rho, mode);  // lang_cpy, res, are modified internally
   }
   res_vec = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
@@ -190,7 +198,9 @@ SEXP VALC_parse(SEXP lang, SEXP var_name) {
   UNPROTECT(4);
   return(res_vec);
 }
-void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is) {
+void VALC_parse_recurse(
+  SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is
+) {
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
@@ -249,15 +259,28 @@ void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_i
     } else {
       eval_as_is = 0;
     }
-    SETCAR(lang, VECTOR_ELT(rem_parens, 0));
+    SEXP lang_car = VECTOR_ELT(rem_parens, 0);
+    SETCAR(lang, lang_car);
     UNPROTECT(1);
 
-    if(TYPEOF(CAR(lang)) == LANGSXP) {
-      SEXP track_car = allocList(length(CAR(lang)));
+    /* If a variable expands to language, sub it in and keep parsing, we wrap
+    in parens so we can recurse without any additional checks; could optimize
+    be skipping this step and being more careful with logic here.*/
+
+    if(TYPEOF(lang_car) == SYMSXP) {
+      SEXP found_var = PROTECT(findVar(lang_car, rho));
+      SEXPTYPE found_var_type = TYPEOF(found_var);
+      if(found_var_type == LANGSXP || found_var_type == SYMSXP) {
+        SEXP lang_car = PROTECT(LCONS(VALC_SYM_paren, found_var));
+        SETCAR(lang, lang_car);
+        UNPROTECT(1);
+    } }
+    if(TYPEOF(lang_car) == LANGSXP) {
+      SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
-      VALC_parse_recurse(CAR(lang), CAR(lang_track), var_name, eval_as_is);
+      VALC_parse_recurse(lang_car, CAR(lang_track), var_name, rho, eval_as_is);
     } else {
-      SETCAR(lang, VALC_name_sub(CAR(lang), var_name));
+      SETCAR(lang, VALC_name_sub(lang_car, var_name));
       SETCAR(lang_track, ScalarInteger(eval_as_is ? 10 : 999));
     }
     lang = CDR(lang);
@@ -470,7 +493,7 @@ SEXP VALC_evaluate(
     error("Argument `arg_name` must be a symbol.");
   if(TYPEOF(rho) != ENVSXP)
     error("Argument `rho` must be an environment.");
-  SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_name));
+  SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_name, rho));
   SEXP res = PROTECT(
     VALC_evaluate_recurse(
       VECTOR_ELT(lang_parsed, 0),

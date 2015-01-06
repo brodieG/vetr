@@ -25,10 +25,11 @@ name_sub <- function(symb, arg_name)
 #' @keywords internal
 #' @param symb an R symbol
 #' @param arg_name another R symbol
+#' @param an environment to look for language expressions to substitute
 #' @return list
 
-parse_validator <- function(lang, arg_name)
-  .Call(VALC_parse, lang, arg_name)
+parse_validator <- function(lang, arg_name, rho=parent.frame())
+  .Call(VALC_parse, lang, arg_name, rho)
 
 #' Remove Parens and \code{`.(`} From Calls
 #'
@@ -47,7 +48,7 @@ eval_check <- function(lang, arg_name, arg_value)
   .Call(VALC_eval_check, lang, arg_name, arg_value, sys.call(), parent.frame())
 
 valtest <- function(a, b)
-  .Call(VALC_test, a, sys.frame(sys.nframe()))
+  .Call(VALC_test, a, b)
 
 valtest1 <- function(a){
   .Call(VALC_test1, a)
