@@ -153,7 +153,7 @@ void VALC_stop2(SEXP call, const char * msg, SEXP rho) {
 Creat simple error for a tag
 */
 void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
-  const char * err_tag = CHAR(asChar(tag));
+  const char * err_tag = CHAR(PRINTNAME(tag));
   char * err_msg = R_alloc(
     strlen(err_base) - 2 + strlen(err_tag) + 1, sizeof(char)
   );
@@ -571,7 +571,7 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     else if(TYPEOF(val_res) != LISTSXP)
       error(
         "Logic Error: unexpected type %s when evaluating test for %s; contact mainainer.",
-        type2char(TYPEOF(val_res)), CHAR(asChar(TAG(fun_call_cpy)))
+        type2char(TYPEOF(val_res)), CHAR(PRINTNAME(TAG(fun_call_cpy)))
       );
     // - Failure ---------------------------------------------------------------
 
