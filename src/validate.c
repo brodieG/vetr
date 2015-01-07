@@ -180,7 +180,7 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho) {
   if(!symb) return(lang);
 
   if(symb && lang != VALC_SYM_one_dot) {
-    if((found_var = PROTECT(findVar(lang, rho))) != R_UnboundValue) {
+    if((found_var = PROTECT(duplicate(findVar(lang, rho)))) != R_UnboundValue) {
       SEXPTYPE found_var_type = TYPEOF(found_var);
       if(found_var_type == LANGSXP || found_var_type == SYMSXP)
         lang = found_var;
