@@ -40,6 +40,15 @@ unitizer_sect("parse", {
   validate:::parse_validator(quote(a && (b + .(c))), quote(arg_to_validate))  # uninterpretable?
   validate:::parse_validator(quote(a && .), "hello")                          # uninterpretable?
 } )
+unitizer_sect("parse with preset tokens", {
+  x <- quote(integer(1L))
+  y <- quote(integer(1L) || NULL)
+  z <- quote(integer(1L) && .(!any(is.na(.))))
+  validate:::parse_validator(quote(x), quote(w))
+  validate:::parse_validator(quote(y), quote(w))
+  validate:::parse_validator(quote(z), quote(w))
+  validate:::parse_validator(quote(z || NULL), quote(w))
+} )
 unitizer_sect("evaluate", {
   validate:::eval_check(quote(logical(2L)), quote(xyz), 1:2)
   validate:::eval_check(quote(logical(2L)), quote(xyz), c(TRUE, FALSE))
@@ -53,7 +62,7 @@ unitizer_sect("evaluate", {
   validate:::eval_check(quote(matrix(integer(), nrow=3) || NULL), quote(xyz), 1:21)
   validate:::eval_check(quote(matrix(integer(), nrow=3) || vector("list", 2L)), quote(xyz), list("hello"))
   validate:::eval_check(quote(matrix(integer(), nrow=3) || vector("list", 2L)), quote(xyz), list("hello", "goodbye"))
-  validate:::eval_check(quote(matrix(integer(), nrow=3) || vector("list", 2L)), quote(xyz), list(NULL, NULL))
+  validate:::eval_check(quote(matrix(integer(), nrow=3) || list(character(1L), 1L)), quote(xyz), list("hello", "goodbye"))
 })
 unitizer_sect("evaluate with sub", {
   xyz <- c(TRUE, TRUE)

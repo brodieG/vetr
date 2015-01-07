@@ -169,6 +169,26 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
   VALC_stop(fun_call, err_msg);
   error("Logic Error: shouldn't get here 181; contact maintainer.");
 }
+/*
+If a variable expands to language, sub it in and keep parsing
+*/
+
+SEXP VALC_sub_symbol(SEXP lang, SEXP rho) {
+  SEXP found_var;
+  int symb = TYPEOF(lang) == SYMSXP;
+
+  if(!symb) return(lang);
+
+  if(symb && lang != VALC_SYM_one_dot) {
+    if((found_var = PROTECT(findVar(lang, rho))) != R_UnboundValue) {
+      SEXPTYPE found_var_type = TYPEOF(found_var);
+      if(found_var_type == LANGSXP || found_var_type == SYMSXP)
+        lang = found_var;
+    }
+    UNPROTECT(1);
+  }
+  return(lang);
+}
 /* -------------------------------------------------------------------------- *\
 |                                                                              |
 |                                    PARSE                                     |
@@ -184,6 +204,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   rem_res = PROTECT(VALC_remove_parens(lang_cpy));
   lang_cpy = VECTOR_ELT(rem_res, 0);
   mode = asInteger(VECTOR_ELT(rem_res, 1));
+  lang_cpy = VALC_sub_symbol(lang_cpy, rho); // Replace any variables to language objects with language
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     lang_cpy = VALC_name_sub(lang_cpy, var_name);
@@ -219,7 +240,6 @@ void VALC_parse_recurse(
   get this mess below
 
   */
-
   static int counter = -1;
   int call_type = 999;
   counter++;  // Tracks recursion level, used for debugging
@@ -260,21 +280,10 @@ void VALC_parse_recurse(
       eval_as_is = 0;
     }
     SEXP lang_car = VECTOR_ELT(rem_parens, 0);
+    lang_car = VALC_sub_symbol(lang_car, rho); // Replace any variables to language objects with language
     SETCAR(lang, lang_car);
     UNPROTECT(1);
 
-    /* If a variable expands to language, sub it in and keep parsing, we wrap
-    in parens so we can recurse without any additional checks; could optimize
-    be skipping this step and being more careful with logic here.*/
-
-    if(TYPEOF(lang_car) == SYMSXP) {
-      SEXP found_var = PROTECT(findVar(lang_car, rho));
-      SEXPTYPE found_var_type = TYPEOF(found_var);
-      if(found_var_type == LANGSXP || found_var_type == SYMSXP) {
-        SEXP lang_car = PROTECT(LCONS(VALC_SYM_paren, found_var));
-        SETCAR(lang, lang_car);
-        UNPROTECT(1);
-    } }
     if(TYPEOF(lang_car) == LANGSXP) {
       SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
@@ -472,7 +481,7 @@ SEXP VALC_evaluate_recurse(
       } else {
         SETCAR(err_msg, eval_res);
       }
-      UNPROTECT(2);
+      UNPROTECT(3);
       return(err_msg);
     }
     UNPROTECT(2);
