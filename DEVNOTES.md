@@ -28,6 +28,8 @@ So we need to recurse through all elements hunting for any `.` and `.(` or dot o
   * if not, replace with arg name
 * if more than one dot, trim a dot
 
+UPDATE: now any expression that contains a dot is evaluted as is
+
 Two pass process then
 
 1. Descend, capture items to `alike`, vs items to plain evaluate
@@ -108,6 +110,10 @@ Unit: microseconds
  valtest2(a) 1.004 1.022 1.0800 1.1575 2.853   100
 ```
 This is on an about 20-30 deep list
+
+### Complex Return Values
+
+We're using SEXPs for complex return values, which often means we will create a SEXP from a C object, and then convert back to C on the other side.  Don't know how much overhead stuff like `ScalarInteger()` has, but probably much better to just make structs and use those minimizing the amount of SEXPs used.
 
 ### install
 

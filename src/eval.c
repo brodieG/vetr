@@ -72,10 +72,10 @@ SEXP VALC_evaluate_recurse(
           if(mode == 2)  {// All need to fail, so store errors for now
             err_list = listAppend(err_list, eval_res);
           }
-        } else if (TYPEOF(eval_res) == LGLSXP && XLENGTH(eval_res) == 1) {
+        } else if (VALC_all(eval_res)) {
           if(mode == 2) {
             UNPROTECT(2);
-            return(eval_res); // At least one TRUE value in or mode
+            return(ScalarLogical(1)); // At least one TRUE value in or mode
           }
         } else {
           error("Logic Error: unexpected return value when recursively evaluating parse; contact maintainer.");
@@ -107,7 +107,7 @@ SEXP VALC_evaluate_recurse(
       );
     }
     if(mode == 10) {
-      eval_res = PROTECT(eval_tmp);
+      eval_res = VALC_all_ext(PROTECT(eval_tmp));
     } else {
       eval_res = PROTECT(VALC_alike(eval_tmp, arg_value));
     }
