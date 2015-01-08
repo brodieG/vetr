@@ -110,10 +110,4 @@ unitizer_sect("evaluate with sub", {
     ),
     quote(mat3), mat3
   )
-  # Test substitution in template
-  xyz1 <- rep(TRUE, 3)
-  validate:::eval_check(quote(logical(.(length(.))) && .(all(.))), quote(xyz1), xyz1)
-
-  xyz2 <- c(TRUE, FALSE, TRUE)
-  validate:::eval_check(quote(logical(.(length(.))) && .(all(.))), quote(xyz2), xyz2)
 })

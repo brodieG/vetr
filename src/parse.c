@@ -114,11 +114,12 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   lang_cpy = VALC_sub_symbol(lang_cpy, rho); // Replace any variables to language objects with language
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
+    if(lang_cpy == VALC_SYM_one_dot) mode = 1;
     lang_cpy = VALC_name_sub(lang_cpy, var_name);
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
   } else {
     res = PROTECT(allocList(length(lang_cpy)));
-    VALC_parse_recurse(lang_cpy, res, var_name, rho, mode);  // lang_cpy, res, are modified internally
+    VALC_parse_recurse(lang_cpy, res, var_name, rho, mode, R_NilValue);  // lang_cpy, res, are modified internally
   }
   res_vec = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
@@ -130,8 +131,10 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
 \* -------------------------------------------------------------------------- */
 
 void VALC_parse_recurse(
-  SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is
+  SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is, SEXP first_fun
 ) {
+  Rprintf("Start recursion on: ");
+  PrintValue(lang);
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
@@ -172,8 +175,15 @@ void VALC_parse_recurse(
   }
   SETCAR(lang_track, ScalarInteger(call_type));             // Track type of call
 
+  if(first_fun == R_NilValue && call_type >= 10) {
+    // First time we're no longer parsing && / ||, record so that we can then
+    // modify call_type if we run into a `.` while parsing expression
+
+    first_fun = lang_track;
+  }
   lang = CDR(lang);
   lang_track = CDR(lang_track);
+  call_type = 999; // Reset for sub-elements
 
   // Loop through remaining elements of call; if any are calls, recurse, otherwise
   // sub for dots and record as templates (999).  Stuff here shouldn't need to
@@ -197,10 +207,18 @@ void VALC_parse_recurse(
     if(TYPEOF(lang_car) == LANGSXP) {
       SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
-      VALC_parse_recurse(lang_car, CAR(lang_track), var_name, rho, eval_as_is);
+      VALC_parse_recurse(
+        lang_car, CAR(lang_track), var_name, rho, eval_as_is, first_fun
+      );
     } else {
+      int new_call_type = call_type;
+      if(lang_car == VALC_SYM_one_dot || eval_as_is) {
+        if(first_fun != R_NilValue)
+          SETCAR(first_fun, ScalarInteger(10));
+        new_call_type = 10;
+      }
       SETCAR(lang, VALC_name_sub(lang_car, var_name));
-      SETCAR(lang_track, ScalarInteger(eval_as_is ? 10 : 999));
+      SETCAR(lang_track, ScalarInteger(new_call_type));
     }
     lang = CDR(lang);
     lang_track = CDR(lang_track);
