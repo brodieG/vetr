@@ -59,3 +59,12 @@ valtest2 <- function(a) {
 valtest3 <- function(a) {
   .Call(VALC_test2, a, parent.frame())
 }
+
+#' Internal version of `all`
+#'
+#' @keywords internal
+
+val_all <- function(x) .Call(VALC_all, x)
+
+
+

@@ -11,6 +11,7 @@ R_CallMethodDef callMethods[] = {
   {"eval_check", (DL_FUNC) &VALC_evaluate, 5},
   {"test1", (DL_FUNC) &VALC_test1, 1},
   {"test2", (DL_FUNC) &VALC_test2, 2},
+  {"all", (DL_FUNC) &VALC_all_ext, 1},
   {NULL, NULL, 0}
 };
 

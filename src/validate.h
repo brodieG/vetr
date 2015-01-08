@@ -17,11 +17,14 @@ SEXP(*VALC_get_frame_data)(SEXP,SEXP,SEXP,int);
 SEXP(*VALC_get_fun)(SEXP,SEXP);
 
 SEXP VALC_validate();
+SEXP VALC_remove_parens(SEXP lang);
+SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name);
 SEXP VALC_test(SEXP a, SEXP b);
 SEXP VALC_test1(SEXP a);
 SEXP VALC_test2(SEXP a, SEXP b);
 void VALC_stop(SEXP call, const char * msg);
 void VALC_stop2(SEXP call, const char * msg, SEXP rho);
+SEXP VALC_all_ext(SEXP vec);
 SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho);
 void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is, SEXP first_fun);
 void VALC_install_objs();
