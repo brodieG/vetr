@@ -133,8 +133,6 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
 void VALC_parse_recurse(
   SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is, SEXP first_fun
 ) {
-  Rprintf("Start recursion on: ");
-  PrintValue(lang);
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
