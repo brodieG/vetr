@@ -81,8 +81,7 @@ return 1 if every element is TRUE, 0 otherwise
 */
 
 int VALC_all(SEXP vec) {
-  if(TYPEOF(vec) != LGLSXP)
-    error("Logic Error: internal fun expected LGLSXP argument; contact maintainer.");
+  if(TYPEOF(vec) != LGLSXP) return 0;
   int * vec_c = LOGICAL(vec);
   R_xlen_t i, i_end = XLENGTH(vec);
 
