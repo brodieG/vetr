@@ -27,6 +27,7 @@ This vignette is an outline / draft.
 
 * Predifine templates
 * benchmarks vs. `stopifnot`
+* performance optimized for success; failure may be slower
 
 ## Argument Matching
 
