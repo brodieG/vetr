@@ -77,16 +77,17 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
   error("Logic Error: shouldn't get here 181; contact maintainer.");
 }
 /*
-return 1 if every element is TRUE, 0 otherwise
+return 1 if every element is TRUE, 0 if there is at least one FALSE, -1 if
+identical to FALSE, -2 if not logical
 */
 
 int VALC_all(SEXP vec) {
-  if(TYPEOF(vec) != LGLSXP) return 0;
+  if(TYPEOF(vec) != LGLSXP) return -2;
   int * vec_c = LOGICAL(vec);
   R_xlen_t i, i_end = XLENGTH(vec);
 
   for(i = 0; i < i_end; i++) {
-    if(vec_c[i] != 1) return 0;
+    if(vec_c[i] != 1) return i_end == 1 ? -1 : 0;
   }
   return 1;
 }
@@ -94,5 +95,5 @@ int VALC_all(SEXP vec) {
 ext interface for testing
 */
 SEXP VALC_all_ext(SEXP vec) {
-  return ScalarLogical(VALC_all(vec));
+  return ScalarInteger(VALC_all(vec));
 }
