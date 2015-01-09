@@ -72,7 +72,7 @@ SEXP VALC_evaluate_recurse(
           if(mode == 2)  {// All need to fail, so store errors for now
             err_list = listAppend(err_list, eval_res);
           }
-        } else if (VALC_all(eval_res)) {
+        } else if (VALC_all(eval_res) > 0) {
           if(mode == 2) {
             UNPROTECT(2);
             return(ScalarLogical(1)); // At least one TRUE value in or mode
@@ -97,7 +97,7 @@ SEXP VALC_evaluate_recurse(
     }
   } else if(mode == 10 || mode == 999) {
     SEXP eval_res, eval_tmp;
-    int err_val = 0;
+    int err_val = 0, eval_res_c;
     int * err_point = &err_val;
     eval_tmp = PROTECT(R_tryEval(lang, rho, err_point));
     if(* err_point) {
@@ -107,12 +107,20 @@ SEXP VALC_evaluate_recurse(
       );
     }
     if(mode == 10) {
-      eval_res = VALC_all_ext(PROTECT(eval_tmp));
+      eval_res_c = VALC_all(eval_tmp);
+      eval_res = PROTECT(ScalarLogical(eval_res_c == 1));
     } else {
       eval_res = PROTECT(VALC_alike(eval_tmp, arg_value));
     }
-    if(TYPEOF(eval_res) != LGLSXP || xlength(eval_res) != 1 || !asLogical(eval_res)) {
+    // Note we're handling both user exp and template eval here
+
+    if(
+      TYPEOF(eval_res) != LGLSXP || XLENGTH(eval_res) != 1 ||
+      !asLogical(eval_res)
+    ) {
       SEXP err_msg = PROTECT(allocList(1));
+      // mode == 10 is user eval, special treatment to produce err msg
+
       if(mode == 10) {
         // Tried to do this as part of init originally so we don't have to repeat
         // wholesale creation of call, but the call elements kept getting over
@@ -127,7 +135,34 @@ SEXP VALC_evaluate_recurse(
         SET_TYPEOF(quot_call, LANGSXP);
         SETCADR(dep_call, quot_call);
         SET_TYPEOF(dep_call, LANGSXP);
-        SETCAR(err_msg, eval(dep_call, rho));  // Could span multiple lines...; need to address
+
+        const char * err_call = CHAR(STRING_ELT(eval(dep_call, rho), 0));  // Could span multiple lines...; need to address
+        char * err_tok;
+        switch(eval_res_c) {
+          case -2: {
+              const char * err_tok_tmp = type2char(TYPEOF(eval_tmp));
+              const char * err_tok_base = "a %s instead of a logical";
+              err_tok = R_alloc(
+                strlen(err_tok_tmp) + strlen(err_tok_base), sizeof(char)
+              );
+              if(!sprintf(err_tok, err_tok_base, err_tok_tmp))
+                error("Logic error: could not build token error; contact maintainer");
+            }
+            break;
+          case -1: err_tok = "FALSE"; break;
+          case 0: err_tok = "a logical with non-TRUE values"; break;
+          default:
+            error("Logic Error: unexpected user exp eval value; contact maintainer.");
+        }
+        const char * err_base = "`%s` %s %s";
+        const char * err_act = TYPEOF(lang) == LANGSXP ? "is" : "is";  // used to want verb flexibility, leaving it in just in case
+        char * err_str = R_alloc(
+          strlen(err_call) + strlen(err_base) + strlen(err_act) + strlen(err_tok),
+          sizeof(char)
+        );
+        if(!sprintf(err_str, err_base, err_call, err_act, err_tok))
+          error("Logic Error: could not construct error message; contact maintainer.");
+        SETCAR(err_msg, mkString(err_str));
         UNPROTECT(2);
       } else {
         SETCAR(err_msg, eval_res);
