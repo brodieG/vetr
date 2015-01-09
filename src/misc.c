@@ -3,14 +3,30 @@
 // - Testing Function ----------------------------------------------------------
 
 SEXP VALC_test(SEXP a, SEXP b) {
-  // VALC_stop2(a, "error!", b);
-  Rprintf("hello\n");
-  Rprintf("a: %s, b: %s\n", type2char(TYPEOF(a)), type2char(TYPEOF(b)));
+  SEXP found2 = PROTECT(findVar(install("yy"), b));
+  Rprintf("getting once");
+  PrintValue(eval(a, b));
+  Rprintf("getting twice");
+  PrintValue(eval(a, b));
   SEXP found = PROTECT(findVar(a, b));
-  SEXP new_call = LCONS(VALC_SYM_paren, found);
-  PrintValue(new_call);
-  Rprintf("found type %s:", type2char(TYPEOF(found)));
-  UNPROTECT(1);
+  PrintValue(found);
+  PrintValue(found2);
+  Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
+  Rprintf("found type %s seen %d\n", type2char(TYPEOF(found2)), PRSEEN(found2));
+  // eval(a, b);
+  // Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
+  // SEXP c = PROTECT(LCONS(install("force"), list1(a)));
+  // PrintValue(c);
+  // eval(c, b);
+  // Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
+  // SET_PRSEEN(found, 1);
+  // found = PROTECT(findVar(a, b));
+  // PrintValue(found);
+
+  // Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
+  // PrintValue(found);
+
+  UNPROTECT(2);
   return(R_NilValue);
 }
 

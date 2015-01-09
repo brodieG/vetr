@@ -52,8 +52,11 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     val_call_cpy = CDR(val_call_cpy), fun_call_cpy = CDR(fun_call_cpy),
     val_call_types_cpy = CDR(val_call_types_cpy)
   ) {
-    if(TAG(val_call_cpy) != TAG(fun_call_cpy))
+    SEXP arg_tag;
+
+    if(TAG(val_call_cpy) != (arg_tag = TAG(fun_call_cpy)))
       error("Logic Error: tag mismatch between function and validation; contact maintainer.");
+
     SEXP val_tok, fun_tok;
     val_tok = CAR(val_call_cpy);
     if(val_tok == R_MissingArg) continue;
@@ -62,28 +65,22 @@ SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
       VALC_arg_error(TAG(fun_call_cpy), fun_call, "Argument `%s` is missing");
     // Need to evaluate the argument
 
-    SEXP eval_env;
-
-    switch(asInteger(CAR(val_call_types_cpy))) {
-      case 1: eval_env = fun_dyn_par_frame; break;  // user args evaled in parent
-      case 2: eval_env = fun_frame; break;          // def args evaled in fun
-      default:
-        error("Logic Error: unexpected arg type %d", asInteger(CAR(val_call_types_cpy)));
-    }
     int err_val = 0;
     int * err_point = &err_val;
 
-    SEXP fun_val = R_tryEval(fun_tok, fun_dyn_par_frame, err_point);
+    // Force evaluation of argument in fun frame, which should cause the
+    // corresponding promise to be evaluated in the correct frame
+
+    SEXP fun_val = R_tryEval(arg_tag, fun_frame, err_point);
     if(* err_point) {
       VALC_arg_error(
-        TAG(fun_call_cpy), fun_call,
+        arg_tag, fun_call,
         "Argument `%s` produced error during evaluation; see previous error."
     );}
     // Evaluate the validation expression
 
-    SEXP val_res = VALC_evaluate(
-      val_tok, TAG(val_call_cpy), fun_val, val_call, fun_frame
-    );
+    SEXP val_res = VALC_evaluate(val_tok, arg_tag, fun_val, val_call, fun_frame);
+
     if(IS_TRUE(val_res)) continue;  // success, check next
     else if(TYPEOF(val_res) != LISTSXP)
       error(
