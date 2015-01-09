@@ -197,6 +197,29 @@ SEXP VALC_evaluate(
       VECTOR_ELT(lang_parsed, 1),
       arg_value, arg_name, lang_full, rho
   ) );
+  // Remove duplicates, if any
+
+  switch(TYPEOF(res)) {
+    case LGLSXP:  break;
+    case LISTSXP: {
+      SEXP res_cpy, res_next, res_next_next, res_val;
+      for(
+        res_cpy = res; res_cpy != R_NilValue;
+        res_cpy = res_next
+      ) {
+        res_next = CDR(res_cpy);
+        res_val = CAR(res_cpy);
+        if(TYPEOF(res_val) != STRSXP)
+          error("Logic Error: non string value in return pairlist; contact maintainer.");
+        if(res_next == R_NilValue) break;
+        if(R_compute_identical(CAR(res_next), res_val, 16)) { // Need to remove res_next
+          res_next_next = CDR(res_next);
+          SETCDR(res_cpy, res_next_next);
+      } }
+    } break;
+    default:
+      error("Logic Error: unexpected evaluating return type; contact maintainer.");
+  }
   UNPROTECT(2);  // This seems a bit stupid, PROTECT/UNPROTECT
   return(res);
 }
