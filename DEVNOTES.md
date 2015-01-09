@@ -61,6 +61,10 @@ Tracebacks not set in unitizer when eval(stop()) from C, even though they are se
 
 It seems like there are no stack imbalance problems when the script finishes with errors; is this okay?
 
+### Promise Evaluation
+
+`eval` in C will cause a promise to be evaluated, even though eventhough `findVar` will keep returning a promise and `PRSEEN` will still return 0.  We tested this by accessing a slow evaluating argument more than once.
+
 ## Optimization
 
 ### `.Call` vs. `.External`:
