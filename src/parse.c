@@ -84,16 +84,16 @@ If a variable expands to language, sub it in and keep parsing
 */
 
 SEXP VALC_sub_symbol(SEXP lang, SEXP rho) {
-  SEXP found_var;
   int symb = TYPEOF(lang) == SYMSXP;
 
   if(!symb) return(lang);
 
-  if(symb && lang != VALC_SYM_one_dot) {
-    if((found_var = PROTECT(duplicate(findVar(lang, rho)))) != R_UnboundValue) {
-      SEXPTYPE found_var_type = TYPEOF(found_var);
-      if(found_var_type == LANGSXP || found_var_type == SYMSXP)
-        lang = found_var;
+  if(symb && lang != VALC_SYM_one_dot) {  // this could conflict with someone storing an expression in .. or .
+    if(findVar(lang, rho) != R_UnboundValue) {
+      SEXP found_val = PROTECT(eval(lang, rho));
+      SEXPTYPE found_val_type = TYPEOF(found_val);
+      if(found_val_type == LANGSXP || found_val_type == SYMSXP)
+        lang = found_val;
     }
     UNPROTECT(1);
   }
@@ -198,6 +198,7 @@ void VALC_parse_recurse(
       eval_as_is = 0;
     }
     SEXP lang_car = VECTOR_ELT(rem_parens, 0);
+
     lang_car = VALC_sub_symbol(lang_car, rho); // Replace any variables to language objects with language
     SETCAR(lang, lang_car);
     UNPROTECT(1);

@@ -42,6 +42,11 @@ unitizer_sect("parse", {
   validate:::parse_validator(quote(a && (b + .(c))), quote(arg_to_validate))  # uninterpretable?
   validate:::parse_validator(quote(a && .), "hello")                          # uninterpretable?
 } )
+unitizer_sect("token sub", {
+  validate:::symb_sub(INT1)
+  validate:::symb_sub(NO.NA)
+})
+
 unitizer_sect("preset tokens", {
   x <- quote(integer(1L))
   y <- quote(integer(1L) || NULL)

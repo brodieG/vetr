@@ -14,6 +14,14 @@
 name_sub <- function(symb, arg_name)
   .Call(VALC_name_sub, symb, arg_name)
 
+#' Expand variable names to experessions if they contain language
+#'
+#' @keywords internal
+
+symb_sub <- function(symb, env=parent.frame())
+  .Call(VALC_symb_sub, symb, env)
+
+
 #' Parse Expressions For \code{`validate`} Use
 #'
 #' Takes expressions provided to \code{`\link{validate}`} and identifies which
