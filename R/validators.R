@@ -37,45 +37,102 @@ NO.NA <- mk_val_token(!is.na(.), "contains NAs")
 
 NO.INF <- mk_val_token(!is.finite(.), "contains infinite values")
 
+GTE.0 <- mk_val_token(. < 0, "contains negative values")
+LTE.0 <- mk_val_token(. > 0, "contains positive values")
+
+GT.0 <- mk_val_token(. <= 0, "contains non-\"strictly positive\" values")
+LT.0 <- mk_val_token(. >= 0, "contains non-\"strictly negative\" values")
+
 #' Atomic Vector validator
 #'
-#' Validate against a specific atomic vector type of any length, or of length 1
-#' (i.e. scalars) that contain no NAs and are finite if inifinity is an option.
+#' Use as token to validate against atomic vectors with particular properties.
 #'
-#' If you wish to allow NAs or infinite values just use \code{integer(1L)} or
-#' some such as a template.
+#' For example, \code{INT.1.POS.STR} will validate:
+#' \itemize{
+#'   \item \code{INT}: integer-like
+#'   \item \code{1}: length 1
+#'   \item \code{POS.STR}: strictly positive (i.e. > zero)
+#' }
+#' whereas \code{INT} will validate any integer like vector of any length.
+#'
+#' Every one of the token validators documented here implicitly disallows NAs,
+#' and for numerics also disallows infinite values. If you wish to allow NAs or
+#' infinite values just use \code{integer(1L)}.
+#'
+#' Keep in mind these validators are just language objects so you can just as
+#' easily create your own by quoting an R expression or by using
+#' \code{\link{mk_val_token}} if you also want to attach a custom error message.
 #'
 #' @aliases NUM1 CHR1 LGL1 CPX1 INT NUM CHR CPX LGL
 #' @seealso \code{\link{validator_sub}}
 #' @export
 #' @rdname validator_atomic
 
-INT1 <- quote(integer(1L) && NO.NA && NO.INF)  # need finite because we allow integer-like
+INT.1 <- quote(integer(1L) && NO.NA && NO.INF)  # need finite because we allow integer-like
 #' @export
 #' @rdname validator_atomic
-NUM1 <- quote(numeric(1L) && NO.NA && NO.INF)
+INT.1.POS <- quote(integer(1L) && NO.NA && NO.INF && GTE.0)
 #' @export
 #' @rdname validator_atomic
-CPX1 <- quote(complex(1L) && NO.NA && NO.INF)
+INT.1.NEG <- quote(integer(1L) && NO.NA && NO.INF && LTE.0)
 #' @export
 #' @rdname validator_atomic
-CHR1 <- quote(character(1L) && NO.NA)
+INT.1.POS.STR <- quote(integer(1L) && NO.NA && NO.INF && GT.0)
 #' @export
 #' @rdname validator_atomic
-LGL1 <- quote(logical(1L) && NO.NA)
-
-#' @export
-#' @rdname validator_atomic
-LGL <- quote(logical() && NO.NA)
+INT.1.NEG.STR <- quote(integer(1L) && NO.NA && NO.INF && LT.0)
 #' @export
 #' @rdname validator_atomic
 INT <- quote(integer() && NO.NA && NO.INF)
 #' @export
 #' @rdname validator_atomic
+INT.POS <- quote(integer() && NO.NA && NO.INF && GTE.0)
+#' @export
+#' @rdname validator_atomic
+INT.NEG <- quote(integer() && NO.NA && NO.INF && LTE.0)
+#' @export
+#' @rdname validator_atomic
+INT.POS.STR <- quote(integer() && NO.NA && NO.INF && GTE.0)
+#' @export
+#' @rdname validator_atomic
+INT.NEG.STR <- quote(integer() && NO.NA && NO.INF && LTE.0)
+
+#' @export
+#' @rdname validator_atomic
+NUM.1 <- quote(numeric(1L) && NO.NA && NO.INF)
+#' @export
+#' @rdname validator_atomic
+NUM.1.POS <- quote(numeric(1L) && NO.NA && NO.INF && GTE.0)
+#' @export
+#' @rdname validator_atomic
+NUM.1.NEG <- quote(numeric(1L) && NO.NA && NO.INF && LTE.0)
+#' @export
+#' @rdname validator_atomic
 NUM <- quote(numeric() && NO.NA && NO.INF)
+#' @export
+#' @rdname validator_atomic
+NUM.POS <- quote(numeric() && NO.NA && NO.INF && GTE.0)
+#' @export
+#' @rdname validator_atomic
+NUM.NEG <- quote(numeric() && NO.NA && NO.INF && LTE.0)
+
+#' @export
+#' @rdname validator_atomic
+CHR.1 <- quote(character(1L) && NO.NA)
 #' @export
 #' @rdname validator_atomic
 CHR <- quote(character() && NO.NA)
 #' @export
 #' @rdname validator_atomic
 CPX <- quote(complex() && NO.NA && NO.INF)
+#' @export
+#' @rdname validator_atomic
+CPX.1 <- quote(complex(1L) && NO.NA && NO.INF)
+#' @export
+#' @rdname validator_atomic
+LGL <- quote(logical() && NO.NA)
+#' @export
+#' @rdname validator_atomic
+LGL.1 <- quote(logical(1L) && NO.NA)
+
+
