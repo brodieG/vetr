@@ -3,7 +3,14 @@
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 
-SEXP VALC_validate(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
+SEXP VALC_validate(SEXP target, SEXP current, SEXP par_call, SEXP rho) {
+  return VALC_evaluate(target, VALC_SYM_current, current, par_call, rho);  // need to process this
+}
+
+/* -------------------------------------------------------------------------- *\
+\* -------------------------------------------------------------------------- */
+
+SEXP VALC_validate_args(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
   SEXP R_TRUE = PROTECT(ScalarLogical(1)),
     chr_exp = PROTECT(ScalarString(mkChar("expand"))),
     one=PROTECT(ScalarInteger(1)), zero=PROTECT(ScalarInteger(0));

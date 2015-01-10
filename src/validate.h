@@ -10,13 +10,15 @@ SEXP VALC_SYM_one_dot;
 SEXP VALC_SYM_deparse;
 SEXP VALC_SYM_paren;
 SEXP VALC_SYM_quote;
+SEXP VALC_SYM_current;
 SEXP VALC_TRUE;
 SEXP(*VALC_alike)(SEXP,SEXP);
 SEXP(*VALC_match_call)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
 SEXP(*VALC_get_frame_data)(SEXP,SEXP,SEXP,int);
 SEXP(*VALC_get_fun)(SEXP,SEXP);
 
-SEXP VALC_validate();
+SEXP VALC_validate(SEXP target, SEXP current, SEXP par_call, SEXP rho);
+SEXP VALC_validate_args();
 SEXP VALC_remove_parens(SEXP lang);
 SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name);
 SEXP VALC_test(SEXP a, SEXP b);

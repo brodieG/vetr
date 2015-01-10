@@ -3,7 +3,8 @@
 
 static const
 R_CallMethodDef callMethods[] = {
-  {"validate", (DL_FUNC) &VALC_validate, 3},
+  {"validate", (DL_FUNC) &VALC_validate, 4},
+  {"validate_args", (DL_FUNC) &VALC_validate_args, 3},
   {"test", (DL_FUNC) &VALC_test, 2},
   {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
   {"symb_sub", (DL_FUNC) &VALC_sub_symbol, 2},
@@ -27,6 +28,7 @@ void R_init_validate(DllInfo *info)
   VALC_SYM_deparse = install("deparse");
   VALC_SYM_one_dot = install(".");
   VALC_SYM_paren = install("(");
+  VALC_SYM_current = install("current");
   VALC_TRUE = ScalarLogical(1);
   VALC_match_call = (SEXP(*)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP)) R_GetCCallable("matchcall", "MC_match_call_internal");
   VALC_alike = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");

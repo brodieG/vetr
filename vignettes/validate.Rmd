@@ -20,8 +20,11 @@ This vignette is an outline / draft.
 
 * What is a template
 * High level overview of how they work
+* validation tokens; contract not to use INT.1 etc. as variables?  Should these be hidden?
 
 ## NSE
+
+* watch out for infinite recursion `x <- quote(x)` or some such as a validator
 
 ## Performance Considerations
 

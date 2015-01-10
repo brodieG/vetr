@@ -182,6 +182,12 @@ SEXP VALC_evaluate_recurse(
 \* -------------------------------------------------------------------------- */
 /*
 TBD if this should call `VALC_parse` directly or not
+
+@param lang the validator expression
+@param arg_name the name of the argument being validated
+@param arg_value the value being validated
+@param lang_full solely so that we can produce error message with original call
+@param rho the environment in which to evaluate the validation function
 */
 SEXP VALC_evaluate(
   SEXP lang, SEXP arg_name, SEXP arg_value, SEXP lang_full, SEXP rho

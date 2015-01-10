@@ -2,6 +2,15 @@
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 /*
+Takes multi-dot and removes extra dots
+*/
+SEXP VALC_remove_dots(SEXP symb) {
+  return R_NilValue;
+}
+
+/* -------------------------------------------------------------------------- *\
+\* -------------------------------------------------------------------------- */
+/*
 Name replacement, substitutes `.` for argname and multi dots for one dot fewer
 */
 SEXP VALC_name_sub(SEXP symb, SEXP arg_name) {
