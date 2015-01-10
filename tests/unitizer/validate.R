@@ -59,3 +59,17 @@ unitizer_sect("Errors in Arguments", {
     validate(x=integer(3L), y=NULL && .(stop("hah")))
   fun6(1:3, NULL)
 })
+unitizer_sect("Args evaled in correct env?", {
+  fun7 <- function(x, y=z + 2) { z <- "boom"; validate(x=TRUE, y=1L) }
+  fun7a <- function(x, y=z + 2) { z <- 40; validate(x=TRUE, y=1L) }
+  z <- 1
+  fun7(TRUE)     # fail because z in fun is character
+  fun7a(TRUE)    # works
+  fun8 <- function(x, y=z + 2) { a <- b <- TRUE; validate(x=TRUE, y=1L) }
+  fun8a <- function(x, y=z + 2) { a <- b <- NULL; validate(x=TRUE, y=1L) }
+  a <- NULL
+  b <- TRUE
+  fun8(a && b)   # fail because a in parent is list
+  a <- TRUE
+  fun8a(a && b)  # works despite NULLs in function
+})
