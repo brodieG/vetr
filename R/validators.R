@@ -17,8 +17,9 @@
 
 mk_val_token <- function(exp, err.msg="") {
   if(!is.character(err.msg)) stop("Argument `err.msg` must be character.")
-  x <- substitute(x)
+  x <- substitute(exp)
   attr(x, "err.msg") <- err.msg
+  x
 }
 #' Sub Validator Tokens
 #'
