@@ -90,10 +90,10 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho) {
 
   if(symb && lang != VALC_SYM_one_dot) {  // this could conflict with someone storing an expression in .. or .
     if(findVar(lang, rho) != R_UnboundValue) {
-      SEXP found_val = PROTECT(eval(lang, rho));
+      SEXP found_val = eval(lang, rho);
       SEXPTYPE found_val_type = TYPEOF(found_val);
       if(found_val_type == LANGSXP || found_val_type == SYMSXP)
-        lang = found_val;
+        lang = PROTECT(duplicate(found_val));
     }
     UNPROTECT(1);
   }
