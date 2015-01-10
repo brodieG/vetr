@@ -63,9 +63,6 @@ CHR1 <- quote(character(1L) && NO.NA)
 #' @export
 #' @rdname validator_atomic
 LGL1 <- quote(logical(1L) && NO.NA)
-#' @export
-#' @rdname validator_atomic
-CPX1 <- quote(complex(1L) && NO.NA && NO.INF)
 
 #' @export
 #' @rdname validator_atomic
