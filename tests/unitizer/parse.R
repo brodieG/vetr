@@ -42,7 +42,7 @@ unitizer_sect("parse", {
   validate:::parse_validator(quote(a && (b + .(c))), quote(arg_to_validate))  # uninterpretable?
   validate:::parse_validator(quote(a && .), "hello")                          # uninterpretable?
 } )
-unitizer_sect("parse with preset tokens", {
+unitizer_sect("preset tokens", {
   x <- quote(integer(1L))
   y <- quote(integer(1L) || NULL)
   z <- quote(integer(1L) && .(!any(is.na(.))))
@@ -50,4 +50,16 @@ unitizer_sect("parse with preset tokens", {
   validate:::parse_validator(quote(y), quote(w))
   validate:::parse_validator(quote(z), quote(w))
   validate:::parse_validator(quote(z || NULL), quote(w))
+} )
+unitizer_sect("validators", {
+  validate:::parse_validator(INT1, quote(w))
+  validate:::parse_validator(INT, quote(w))
+  validate:::parse_validator(CHR1, quote(w))
+  validate:::parse_validator(CHR, quote(w))
+  validate:::parse_validator(NUM1, quote(w))
+  validate:::parse_validator(NUM, quote(w))
+  validate:::parse_validator(LGL1, quote(w))
+  validate:::parse_validator(LGL, quote(w))
+  validate:::parse_validator(CPX1, quote(w))
+  validate:::parse_validator(CPX, quote(w))
 } )
