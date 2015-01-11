@@ -30,18 +30,18 @@ mk_val_token <- function(exp, err.msg="") {
 #' @export
 #' @rdname validator_sub
 
-NO.NA <- mk_val_token(!is.na(.), "contains NAs")
+NO.NA <- mk_val_token(!is.na(.), "contains NAs, but should not")
 
 #' @export
 #' @rdname validator_sub
 
-NO.INF <- mk_val_token(is.finite(.), "contains infinite values")
+NO.INF <- mk_val_token(is.finite(.), "contains infinite values, but should not")
 
-GTE.0 <- mk_val_token(. < 0, "contains negative values")
-LTE.0 <- mk_val_token(. > 0, "contains positive values")
+GTE.0 <- mk_val_token(. < 0, "contains negative values, but should not")
+LTE.0 <- mk_val_token(. > 0, "contains positive values, but should not")
 
-GT.0 <- mk_val_token(. <= 0, "contains non-\"strictly positive\" values")
-LT.0 <- mk_val_token(. >= 0, "contains non-\"strictly negative\" values")
+GT.0 <- mk_val_token(. <= 0, "contains non-\"strictly positive\" values, but should not")
+LT.0 <- mk_val_token(. >= 0, "contains non-\"strictly negative\" values, but should not")
 
 #' Atomic Vector validator
 #'
