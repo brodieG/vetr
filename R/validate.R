@@ -67,7 +67,7 @@ validate_args <- function(...)
 #' @export
 
 validate <- function(target, current)
-  .Call(VALC_validate, target, current, sys.call(), sys.frame(sys.nframe()))
+  .Call(VALC_validate, substitute(target), current, sys.call(), sys.frame(sys.nframe()))
 
 #' @export
 
