@@ -35,7 +35,7 @@ NO.NA <- mk_val_token(!is.na(.), "contains NAs")
 #' @export
 #' @rdname validator_sub
 
-NO.INF <- mk_val_token(!is.finite(.), "contains infinite values")
+NO.INF <- mk_val_token(is.finite(.), "contains infinite values")
 
 GTE.0 <- mk_val_token(. < 0, "contains negative values")
 LTE.0 <- mk_val_token(. > 0, "contains positive values")
