@@ -95,7 +95,7 @@ If a variable expands to language, sub it in and keep parsing
 SEXP VALC_sub_symbol(SEXP lang, SEXP rho) {
   int symb = TYPEOF(lang) == SYMSXP;
 
-  if(!symb) return(lang);
+  if(!symb || lang == R_MissingArg) return(lang);
 
   if(symb && lang != VALC_SYM_one_dot) {  // this could conflict with someone storing an expression in .. or .
     if(findVar(lang, rho) != R_UnboundValue) {
@@ -163,6 +163,7 @@ void VALC_parse_recurse(
   static int counter = -1;
   int call_type = 999;
   counter++;  // Tracks recursion level, used for debugging
+
 
   if(TYPEOF(lang) != LANGSXP) {  // Not a language expression
     error("Logic Error: unexpectedly encountered a non-language object");
