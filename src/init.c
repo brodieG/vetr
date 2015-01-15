@@ -34,5 +34,10 @@ void R_init_validate(DllInfo *info)
   VALC_alike = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("alike", "ALIKEC_alike_fast");
   VALC_get_frame_data = (SEXP(*)(SEXP,SEXP,SEXP,int)) R_GetCCallable("matchcall", "MC_get_frame_data");
   VALC_get_fun = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("matchcall", "MC_get_fun");
+  CSR_strmcpy = (char * (*)(const char *, size_t)) R_GetCCallable("cstringr", "CSR_strmcpy");
+  CSR_smprintf4 = (char * (*)(size_t, const char *, const char *, const char *, const char *, const char *))
+    R_GetCCallable("cstringr", "CSR_smprintf4");
+  CSR_strmlen = (size_t (*)(const char *, size_t)) R_GetCCallable("cstringr", "CSR_strmlen");
+
 }
 

@@ -34,7 +34,7 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
     count_sub += err_items > 1 ? err_items : 0;
 
     for(i = 0; i < err_items; i++) {
-      size += strlen(CHAR(STRING_ELT(err_vec, i)));
+      size += CSR_strmlen(CHAR(STRING_ELT(err_vec, i)), VALC_MAX_CHAR);
     }
     if(err_items > 1) size += err_sub_base_len;
   }
@@ -44,17 +44,19 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
   const char * err_arg = CHAR(PRINTNAME(val_tag));
 
   if(count_top == 1) {
-    const char * err_base = "Argument `%s` fails to meet expectation: %s";
-    const char * err_msg = CHAR(asChar(CAR(val_res)));
-    char * err_full = R_alloc(
-      (strlen(err_base) - 4) + strlen(err_arg) + strlen(err_msg) + 1,
-      sizeof(char)
+
+    const char * err_base = "Argument `%s` fails to meet: %s";
+
+    char * err_msg = CSR_strmcpy(CHAR(asChar(CAR(val_res))), VALC_MAX_CHAR);
+    if(err_msg) err_msg[0] = tolower(err_msg[0]);
+
+    char * err_full = CSR_smprintf4(
+      VALC_MAX_CHAR, err_base, err_arg, err_msg, "", ""
     );
-    sprintf(err_full, err_base, err_arg, err_msg);
     VALC_stop(fun_call, err_full);
     error("Logic Error: should not get here, R error should have been thrown; contact maintainer.");
   } else if (count_top > 1) {
-    const char * err_base = "Argument `%s` fails to meet any of the following expectations:\n";
+    const char * err_base = "Argument `%s` must meet at least one of the following, but does not:\n";
 
     size += strlen(err_base) + strlen(err_arg) + 5 * count_top + 7 * count_sub;
     /*
@@ -94,12 +96,14 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
         err_final_cpy += err_sub_base_len + 5;
 
         for(i = 0; i < err_items; i ++) {
-          const char * err_sub = CHAR(STRING_ELT(err_vec, i));
-          sprintf(err_final_cpy, "    + %s\n", err_sub);
+          char * err_sub = CSR_strmcpy(
+            CHAR(STRING_ELT(err_vec, i)), VALC_MAX_CHAR
+          );
+          sprintf(err_final_cpy, "    + %s\n", (const char *) err_sub);
           err_final_cpy += strlen(err_sub) + 7;
         }
       } else {
-        const char * err_sub = CHAR(STRING_ELT(err_vec, 0));
+        char * err_sub = CSR_strmcpy(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
         sprintf(err_final_cpy, "  - %s\n", err_sub);
         err_final_cpy += strlen(err_sub) + 5;
       }

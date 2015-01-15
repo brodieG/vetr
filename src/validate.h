@@ -1,5 +1,6 @@
 #include <R.h>
 #include <Rinternals.h>
+#include <ctype.h>
 
 // - Objects We Install Once ---------------------------------------------------
 
@@ -12,10 +13,6 @@ SEXP VALC_SYM_paren;
 SEXP VALC_SYM_quote;
 SEXP VALC_SYM_current;
 SEXP VALC_TRUE;
-SEXP(*VALC_alike)(SEXP,SEXP);
-SEXP(*VALC_match_call)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
-SEXP(*VALC_get_frame_data)(SEXP,SEXP,SEXP,int);
-SEXP(*VALC_get_fun)(SEXP,SEXP);
 
 SEXP VALC_validate(SEXP target, SEXP current, SEXP par_call, SEXP rho);
 SEXP VALC_validate_args();
@@ -35,3 +32,23 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho);
 void VALC_install_objs();
 SEXP VALC_evaluate(SEXP lang, SEXP arg_name, SEXP arg_value, SEXP lang_full, SEXP rho);
 void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base);
+
+// - Imported Funs -------------------------------------------------------------
+
+SEXP(*VALC_alike)(SEXP,SEXP);
+SEXP(*VALC_match_call)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+SEXP(*VALC_get_frame_data)(SEXP,SEXP,SEXP,int);
+SEXP(*VALC_get_fun)(SEXP,SEXP);
+
+// String Maniip
+
+char * (*CSR_smprintf4)(
+  size_t, const char *, const char *, const char *, const char *, const char *
+);
+char * (*CSR_strmcpy)(const char *, size_t);
+size_t (*CSR_strmlen)(const char *, size_t);
+
+#ifndef VALC_MAX_CHAR
+# define VALC_MAX_CHAR 10000
+#endif
+
