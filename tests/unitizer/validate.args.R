@@ -1,10 +1,5 @@
 library(validate)
 
-unitizer_sect("Tokens", {
-
-} )
-
-
 unitizer_sect("Single template validation", {
   fun0 <- function(x, y, z)
     validate_args(x=matrix(integer(), ncol=3), y=integer(2L), z=logical(1L))
