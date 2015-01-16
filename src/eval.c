@@ -127,6 +127,9 @@ SEXP VALC_evaluate_recurse(
         // written by other stuff.  Not sure how to protect in calls defined at
         // top level
 
+        SEXP err_attrib;
+        const char * err_call;
+
         SEXP dep_call = PROTECT(allocList(2));
         SETCAR(dep_call, VALC_SYM_deparse);
         SEXP quot_call = PROTECT(allocList(2));
@@ -135,33 +138,43 @@ SEXP VALC_evaluate_recurse(
         SET_TYPEOF(quot_call, LANGSXP);
         SETCADR(dep_call, quot_call);
         SET_TYPEOF(dep_call, LANGSXP);
+        err_call = CHAR(STRING_ELT(eval(dep_call, rho), 0));  // Could span multiple lines...; need to address
 
-        const char * err_call = CHAR(STRING_ELT(eval(dep_call, rho), 0));  // Could span multiple lines...; need to address
-        char * err_tok;
-        switch(eval_res_c) {
-          case -2: {
-              const char * err_tok_tmp = type2char(TYPEOF(eval_tmp));
-              const char * err_tok_base = "is \"%s\" instead of a \"logical\"";
-              err_tok = R_alloc(
-                strlen(err_tok_tmp) + strlen(err_tok_base), sizeof(char)
-              );
-              if(sprintf(err_tok, err_tok_base, err_tok_tmp) < 0)
-                error("Logic error: could not build token error; contact maintainer");
-            }
-            break;
-          case -1: err_tok = "is FALSE"; break;
-          case 0: err_tok = "contains non-TRUE values"; break;
-          default:
-            error("Logic Error: unexpected user exp eval value; contact maintainer.");
+        if((err_attrib = getAttrib(lang, VALC_SYM_errmsg)) != R_NilValue) {
+          if(TYPEOF(err_attrib) != STRSXP || XLENGTH(err_attrib) != 1) {
+            error(
+              "\"err.msg\" attribute for `%s` token must be a one length character vector",
+              err_call
+          );}
+          SETCAR(err_msg, err_attrib);
+        } else {
+          char * err_str;
+          char * err_tok;
+          switch(eval_res_c) {
+            case -2: {
+                const char * err_tok_tmp = type2char(TYPEOF(eval_tmp));
+                const char * err_tok_base = "is \"%s\" instead of a \"logical\"";
+                err_tok = R_alloc(
+                  strlen(err_tok_tmp) + strlen(err_tok_base), sizeof(char)
+                );
+                if(sprintf(err_tok, err_tok_base, err_tok_tmp) < 0)
+                  error("Logic error: could not build token error; contact maintainer");
+              }
+              break;
+            case -1: err_tok = "is FALSE"; break;
+            case 0: err_tok = "contains non-TRUE values"; break;
+            default:
+              error("Logic Error: unexpected user exp eval value; contact maintainer.");
+          }
+          const char * err_base = "have `%s` all TRUE (%s)";
+          err_str = R_alloc(
+            strlen(err_call) + strlen(err_base) + strlen(err_tok),
+            sizeof(char)
+          );
+          if(sprintf(err_str, err_base, err_call, err_tok) < 0)
+            error("Logic Error: could not construct error message; contact maintainer.");
+          SETCAR(err_msg, mkString(err_str));
         }
-        const char * err_base = "have `%s` all TRUE (%s)";
-        char * err_str = R_alloc(
-          strlen(err_call) + strlen(err_base) + strlen(err_tok),
-          sizeof(char)
-        );
-        if(sprintf(err_str, err_base, err_call, err_tok) < 0)
-          error("Logic Error: could not construct error message; contact maintainer.");
-        SETCAR(err_msg, mkString(err_str));
         UNPROTECT(2);
       } else {
         SETCAR(err_msg, eval_res);

@@ -13,6 +13,7 @@ SEXP VALC_SYM_paren;
 SEXP VALC_SYM_quote;
 SEXP VALC_SYM_current;
 SEXP VALC_TRUE;
+SEXP VALC_SYM_errmsg;
 
 SEXP VALC_validate(SEXP target, SEXP current, SEXP par_call, SEXP rho);
 SEXP VALC_validate_args();
