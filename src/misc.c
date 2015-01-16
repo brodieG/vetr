@@ -4,15 +4,7 @@
 
 SEXP VALC_test(SEXP a, SEXP b) {
   SEXP found2 = PROTECT(findVar(install("yy"), b));
-  Rprintf("getting once");
-  PrintValue(eval(a, b));
-  Rprintf("getting twice");
-  PrintValue(eval(a, b));
   SEXP found = PROTECT(findVar(a, b));
-  PrintValue(found);
-  PrintValue(found2);
-  Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
-  Rprintf("found type %s seen %d\n", type2char(TYPEOF(found2)), PRSEEN(found2));
   // eval(a, b);
   // Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
   // SEXP c = PROTECT(LCONS(install("force"), list1(a)));

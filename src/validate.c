@@ -13,8 +13,8 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
     );
 
   SEXP val_res_cpy;
-  const char * err_sub_base = "Pass all of the following:\n";
-  int count_top = 0, count_sub = 0, size = 0;
+  const char * err_sub_base = "Meet all of the following:\n";
+  size_t count_top = 0, count_sub = 0, size = 0;
   const int err_sub_base_len = strlen(err_sub_base);
 
   // First pass get sizes
@@ -45,7 +45,7 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
 
   if(count_top == 1) {
 
-    const char * err_base = "Argument `%s` fails to meet: %s";
+    const char * err_base = "Argument `%s` should %s";
 
     char * err_msg = CSR_strmcpy(CHAR(asChar(CAR(val_res))), VALC_MAX_CHAR);
     if(err_msg) err_msg[0] = tolower(err_msg[0]);
@@ -56,9 +56,9 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
     VALC_stop(fun_call, err_full);
     error("Logic Error: should not get here, R error should have been thrown; contact maintainer.");
   } else if (count_top > 1) {
-    const char * err_base = "Argument `%s` must meet at least one of the following, but does not:\n";
+    const char * err_base = "Argument `%s` should meet at least one of the following:\n";
 
-    size += strlen(err_base) + strlen(err_arg) + 5 * count_top + 7 * count_sub;
+    size += strlen(err_base) + strlen(err_arg) + 5 * count_top + 12 * count_sub;
     /*
     SAMPLE ERROR:
 
@@ -83,6 +83,7 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
 
     // Second pass construct string
 
+    size_t count = 0;
     for(
       val_res_cpy = val_res; val_res_cpy != R_NilValue;
       val_res_cpy = CDR(val_res_cpy)
@@ -99,14 +100,18 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
           char * err_sub = CSR_strmcpy(
             CHAR(STRING_ELT(err_vec, i)), VALC_MAX_CHAR
           );
-          sprintf(err_final_cpy, "    + %s\n", (const char *) err_sub);
-          err_final_cpy += strlen(err_sub) + 7;
+          sprintf(
+            err_final_cpy, "    + %s%s\n", (const char *) err_sub,
+            i < err_items - 1 ? " AND," : ""
+          );
+          err_final_cpy += strlen(err_sub) + 7 + i < err_items - 1 ? 5 : 0;
         }
       } else {
         char * err_sub = CSR_strmcpy(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
         sprintf(err_final_cpy, "  - %s\n", err_sub);
         err_final_cpy += strlen(err_sub) + 5;
       }
+      count++;
     }
     VALC_stop(fun_call, err_final);
     error("Logic Error: should never get here 629; contact maintainer.");
@@ -115,8 +120,6 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
   }
   return VALC_TRUE;
 }
-
-
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 

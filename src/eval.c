@@ -141,26 +141,25 @@ SEXP VALC_evaluate_recurse(
         switch(eval_res_c) {
           case -2: {
               const char * err_tok_tmp = type2char(TYPEOF(eval_tmp));
-              const char * err_tok_base = "a %s instead of a logical";
+              const char * err_tok_base = "is \"%s\" instead of a \"logical\"";
               err_tok = R_alloc(
                 strlen(err_tok_tmp) + strlen(err_tok_base), sizeof(char)
               );
-              if(!sprintf(err_tok, err_tok_base, err_tok_tmp))
+              if(sprintf(err_tok, err_tok_base, err_tok_tmp) < 0)
                 error("Logic error: could not build token error; contact maintainer");
             }
             break;
-          case -1: err_tok = "FALSE"; break;
-          case 0: err_tok = "a logical with non-TRUE values"; break;
+          case -1: err_tok = "is FALSE"; break;
+          case 0: err_tok = "contains non-TRUE values"; break;
           default:
             error("Logic Error: unexpected user exp eval value; contact maintainer.");
         }
-        const char * err_base = "`%s` %s %s";
-        const char * err_act = TYPEOF(lang) == LANGSXP ? "is" : "is";  // used to want verb flexibility, leaving it in just in case
+        const char * err_base = "have `%s` all TRUE (%s)";
         char * err_str = R_alloc(
-          strlen(err_call) + strlen(err_base) + strlen(err_act) + strlen(err_tok),
+          strlen(err_call) + strlen(err_base) + strlen(err_tok),
           sizeof(char)
         );
-        if(!sprintf(err_str, err_base, err_call, err_act, err_tok))
+        if(sprintf(err_str, err_base, err_call, err_tok) < 0)
           error("Logic Error: could not construct error message; contact maintainer.");
         SETCAR(err_msg, mkString(err_str));
         UNPROTECT(2);
@@ -170,7 +169,7 @@ SEXP VALC_evaluate_recurse(
       UNPROTECT(3);
       return(err_msg);
     }
-    UNPROTECT(2);
+    UNPROTECT(3);
     return(eval_res);  // this should be `TRUE`
   } else {
     error("Logic Error: unexpected parse mode %d", mode);
