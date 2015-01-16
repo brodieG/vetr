@@ -101,8 +101,9 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho) {
     if(findVar(lang, rho) != R_UnboundValue) {
       SEXP found_val = eval(lang, rho);
       SEXPTYPE found_val_type = TYPEOF(found_val);
-      if(found_val_type == LANGSXP || found_val_type == SYMSXP)
+      if(found_val_type == LANGSXP || found_val_type == SYMSXP) {
         lang = PROTECT(duplicate(found_val));
+      } else PROTECT(R_NilValue);  // Balance
     }
     UNPROTECT(1);
   }

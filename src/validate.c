@@ -126,8 +126,12 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
 SEXP VALC_validate(SEXP target, SEXP current, SEXP par_call, SEXP rho) {
   SEXP res;
   res = PROTECT(VALC_evaluate(target, VALC_SYM_current, current, par_call, rho));
-  if(IS_TRUE(res)) return(VALC_TRUE);
+  if(IS_TRUE(res)) {
+    UNPROTECT(1);
+    return(VALC_TRUE);
+  }
   VALC_process_error(res, VALC_SYM_current, par_call);
+  UNPROTECT(1);
   error("Logic Error: should never get here 124");
   return R_NilValue;
 }

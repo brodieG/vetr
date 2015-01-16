@@ -169,7 +169,7 @@ SEXP VALC_evaluate_recurse(
       UNPROTECT(3);
       return(err_msg);
     }
-    UNPROTECT(3);
+    UNPROTECT(2);
     return(eval_res);  // this should be `TRUE`
   } else {
     error("Logic Error: unexpected parse mode %d", mode);
