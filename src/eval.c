@@ -110,7 +110,7 @@ SEXP VALC_evaluate_recurse(
       eval_res_c = VALC_all(eval_tmp);
       eval_res = PROTECT(ScalarLogical(eval_res_c == 1));
     } else {
-      eval_res = PROTECT(VALC_alike(eval_tmp, arg_value));
+      eval_res = PROTECT(VALC_alike(eval_tmp, arg_value, 0, sqrt(DOUBLE_EPS), 0, ""));
     }
     // Note we're handling both user exp and template eval here
 
