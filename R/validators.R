@@ -37,11 +37,11 @@ NO.NA <- mk_val_token(!is.na(.), "not contain NAs, but does")
 
 NO.INF <- mk_val_token(is.finite(.), "contain only finite values, but does not")
 
-GTE.0 <- mk_val_token(. >= 0, "contain only positive values, but does not")
-LTE.0 <- mk_val_token(. <= 0, "contain only negative values, but does not")
+GTE.0 <- mk_val_token(. >= 0, "contain only positive values, but has negatives")
+LTE.0 <- mk_val_token(. <= 0, "contain only negative values, but has positives")
 
-GT.0 <- mk_val_token(. > 0, "contain only \"strictly positive\" values, but does not")
-LT.0 <- mk_val_token(. < 0, "contain only \"strictly negative\" values, but does not")
+GT.0 <- mk_val_token(. > 0, "contain only \"strictly positive\" values, but has zeroes or negatives")
+LT.0 <- mk_val_token(. < 0, "contain only \"strictly negative\" values, but has zeroes or positives")
 
 #' Atomic Vector validator
 #'
@@ -92,10 +92,10 @@ INT.POS <- quote(integer() && NO.NA && NO.INF && GTE.0)
 INT.NEG <- quote(integer() && NO.NA && NO.INF && LTE.0)
 #' @export
 #' @rdname validator_atomic
-INT.POS.STR <- quote(integer() && NO.NA && NO.INF && GTE.0)
+INT.POS.STR <- quote(integer() && NO.NA && NO.INF && GT.0)
 #' @export
 #' @rdname validator_atomic
-INT.NEG.STR <- quote(integer() && NO.NA && NO.INF && LTE.0)
+INT.NEG.STR <- quote(integer() && NO.NA && NO.INF && LT.0)
 
 #' @export
 #' @rdname validator_atomic
