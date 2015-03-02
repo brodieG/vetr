@@ -31,9 +31,13 @@ void R_init_validate(DllInfo *info)
   VALC_SYM_current = install("current");
   VALC_SYM_errmsg = install("err.msg");
   VALC_TRUE = ScalarLogical(1);
+
   VALC_match_call = (SEXP(*)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP)) R_GetCCallable("matchcall", "MC_match_call_internal");
-  VALC_alike = (SEXP(*)(SEXP,SEXP, int, double, int, const char *)) R_GetCCallable("alike", "ALIKEC_alike_internal");
+  VALC_alike = (SEXP(*)(SEXP, SEXP, SEXP)) R_GetCCallable("alike", "ALIKEC_alike_ext");
   VALC_get_frame_data = (SEXP(*)(SEXP,SEXP,SEXP,int)) R_GetCCallable("matchcall", "MC_get_frame_data");
+
+
+
   VALC_get_fun = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("matchcall", "MC_get_fun");
   CSR_strmcpy = (char * (*)(const char *, size_t)) R_GetCCallable("cstringr", "CSR_strmcpy");
   CSR_smprintf4 = (char * (*)(size_t, const char *, const char *, const char *, const char *, const char *))
