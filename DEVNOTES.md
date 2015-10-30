@@ -223,3 +223,91 @@ Unit: nanoseconds
           expr min  lq median     uq   max neval
  valtest(1, 2) 681 728    837 1024.5 10264   100
 ```
+
+## Message Prototyping
+
+    Error in validate(INT.1 || NULL, 1:3) :
+      Argument `current` must meet at least one of the following, but does not:
+      - Expected length 1, but got 3
+      - Expected type "NULL", but got "integer"
+
+
+    Error in validate(INT.1 || NULL, 1:3) :
+      Argument `current` must:
+      - have length 1 (is 3), OR
+      - have type "NULL" (is "integer"), OR
+      - have class "matrix" (is "integer"), OR
+      - have `!is.na(current)` all TRUE (is FALSE, contains FALSE, contains NA)
+      - inherit from class "foo"
+
+    Error in validate(INT.1 || NULL, 1:3) :
+      Argument `current` must have:
+      - length 1 (is 3), OR
+      - type "NULL" (is "integer"), OR
+      - class "matrix" (is "integer"), OR
+      - `!is.na(current)` all TRUE (is FALSE, contains FALSE, contains NA)
+      - inheritance from class "foo"
+
+      Argument `current` should:
+      - be length 1 (is 3), OR
+      - be type "NULL" (is "integer"), OR
+      - be class "matrix" (is "integer"), OR
+      - have `!is.na(current)` all TRUE (is FALSE, contains FALSE, contains NA)
+      - inherit from class "foo"
+
+      Argument `current` should:
+      - be length 1 (is 3), OR
+      - be type "NULL" (is "integer"), OR
+      - be class "matrix" (is "integer"), OR
+      - have `!is.na(current)` all TRUE (is FALSE, contains FALSE, contains NA)
+      - inherit from class "foo"
+
+    "Expected at index [[2]][[2]][[2]][[2]]: length 3 (is 1)"
+
+
+    be length 3 (is 1) at index [[2]][[2]][[2]][[2]]
+
+    alike(integer(1L), 1:3)
+    should be length 1 (is 3)
+
+    should be length 1 (is 3)
+    should be length 1 to be alike (is 3)
+    should be length 1 (is 3) to be alike
+
+    Expected length 1, but got 3
+    length 1 (is 3)
+
+    Expected length 1 (is 3)
+
+    must have length 1 (is 3)
+
+
+    # Nope, row.names won't match
+    > alike(df.tpl, df.cur2)
+    Test Failed Because:
+    Value mismatch: 1 string mismatch
+
+    +++ .new:
+    [1] "should be \"one\" at index [[1]] for row.names (is \"uno\")"
+    --- .ref
+    [1] "Expected \"one\" at index [[1]] for row.names, but got \"uno\""
+
+    unitizer>
+
+    # Nope, row.names won't match
+    > alike(df.tpl, df.cur2)
+    Test Failed Because:
+    Value mismatch: 1 string mismatch
+
+    +++ .new: [1] "should be \"one\" at index [[1]] for row.names (is \"uno\")"
+    --- .ref: [1] "Expected \"one\" at index [[1]] for row.names, but got \"uno\""
+
+    unitizer>
+
+    # Nope, row.names won't match
+    > alike(df.tpl, df.cur2)
+    Test Failed Because:
+    Value mismatch: 1 string mismatch
+    + [1] "should be \"one\" at index [[1]] for row.names (is \"uno\")"
+    - [1] "Expected \"one\" at index [[1]] for row.names, but got \"uno\""
+    unitizer>
