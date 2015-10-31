@@ -70,9 +70,12 @@ LTE.0 <- mk_val_token(. <= 0, "contain only negative values, but has positives")
 
 #' @export
 #' @name validation_tokens
+
 GT.0 <- mk_val_token(. > 0, "contain only \"strictly positive\" values, but has zeroes or negatives")
+
 #' @export
 #' @name validation_tokens
+
 LT.0 <- mk_val_token(. < 0, "contain only \"strictly negative\" values, but has zeroes or positives")
 
 #' Atomic Vector validator
