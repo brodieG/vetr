@@ -1,12 +1,21 @@
-#' validate_args Function Arguments
+#' Validate Objects and Function Arguments
 #'
-#' validate_args function arguments by providing templates and expressions to match
-#' to the arguments of an enclosing function.
+#' Use templates to validate objects or function arguments. \code{validate}
+#' validates objects, and \code{validate_args} can be used inside a function
+#' to validate the function arguments.
 #'
-#' Each argument to \code{validate_args} is matched to one argument of the enclosing
-#' function following the same rules \code{\link{match.call}} uses.  For
-#' example, in:
-#' \preformatted{
+#' The \code{validate} functions use R objects as templates that the values
+#' being tested must match.  For example, in:\preformatted{
+#' validate(numeric(), 3.145)
+#' validate(numeric(), c(1, 2, 3))
+#' validate(numeric(), matrix(runif(9), 3)
+#' }
+#' the first argument is the template, and the second the value to check.
+#' \code{validate} uses whatever aspects of the template are defined and
+#' ensures that the value tested
+#' Each argument to \code{validate_args} is matched to one argument of the
+#' enclosing function following the same rules \code{\link{match.call}} uses.
+#' For example, in: \preformatted{
 #' function(a, b) {
 #'   validate_args(numeric(), logical(1L))
 #' }
@@ -14,16 +23,16 @@
 #' \code{numeric()} will be used to validate_args \code{a}, and
 #' \code{logical(1L)} to validate_args \code{b}.
 #'
-#' The default validation mechanism is to use the arguments to \code{validate_args}
-#' as templates.  For example, \code{numeric()} means arguments to \code{a}
-#' must be numeric, of any length, and \code{logical(1L)} means arguments to
-#' \code{b} must be one length logical.  Arguments must match the template
-#' structure, but need not match the values.  \code{validate_args} uses
-#' \code{alike} to determine whether an object matches a template.
+#' The default validation mechanism is to use the arguments to
+#' \code{validate_args} as templates.  For example, \code{numeric()} means
+#' arguments to \code{a} must be numeric, of any length, and \code{logical(1L)}
+#' means arguments to \code{b} must be one length logical.  Arguments must
+#' match the template structure, but need not match the values.
+#' \code{validate_args} uses \code{alike} to determine whether an object
+#' matches a template.
 #'
 #' You may use \code{||} and/or \code{&&} to construct more complex
-#' validations:
-#' \preformatted{
+#' validations: \preformatted{
 #' function(a, b) {
 #'   validate_args(
 #'     a=numeric() || character(),
@@ -52,18 +61,27 @@
 #' expression you may do so by escaping them with another period (e.g. use
 #' \code{..} for a literal \code{.}).
 #'
+#' If you find yourself using particular custom validation expressions
+#' repeatedly, you may save them by using \code{link{
+#'
 #' @useDynLib validate, .registration=TRUE, .fixes="VALC_"
 #' @note Will force evaluation of any arguments that are being checked (you may
 #'   omit arguments that should not be evaluate from \code{validate_args})
+#' @name validate
+#' @rdname validate
+#' @aliases validate_args
 #' @export
 #' @param ... arguments to validate_args; they will be matched to the enclosing
 #'   function formals as with \code{match.call}
+#' @param a template expression
+#' @param current a value to validate
 #' @return TRUE invisibly if validation succeeds, throws an error with
 #'   \code{\link{stop}} otherwise
 
 validate_args <- function(...)
   invisible(.Call(VALC_validate_args, sys.frames(), sys.calls(), sys.parents()))
 
+#' @rdname validate
 #' @export
 
 validate <- function(target, current)
