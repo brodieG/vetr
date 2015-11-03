@@ -65,10 +65,16 @@ unitizer_sect("evaluate with sub", {
   )
 })
 unitizer_sect("custom expressions", {
-  validate:::eval_check(quote(. > 0), quote(x), -1:1)
-  validate:::eval_check(quote(. > 0), quote(x), 1)
-  validate:::eval_check(quote(. > 0), quote(x), -1)
-  validate:::eval_check(quote(. > 0), quote(x), 1:3)
-  validate:::eval_check(quote(. > 0), quote(x), NA_integer_)
-  validate:::eval_check(quote(. > 0), quote(x), integer())
+  x <- -1:1
+  y <- 1
+  z <- -1
+  w <- NA_integer_
+  u <- integer()
+  t <- 1:3
+  validate:::eval_check(quote(. > 0), quote(x), x)
+  validate:::eval_check(quote(. > 0), quote(y), y)
+  validate:::eval_check(quote(. > 0), quote(z), z)
+  validate:::eval_check(quote(. > 0), quote(t), t)
+  validate:::eval_check(quote(. > 0), quote(w), w)
+  validate:::eval_check(quote(. > 0), quote(u), u)
 })

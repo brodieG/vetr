@@ -168,15 +168,15 @@ SEXP VALC_evaluate_recurse(
             default:
               error("Logic Error: unexpected user exp eval value; contact maintainer.");
           }
-          const char * err_extra_a = "contain only";
-          const char * err_extra_b = "be"; // must be shorter than _a
+          const char * err_extra_a = "all TRUE values";
+          const char * err_extra_b = "TRUE"; // must be shorter than _a
           const char * err_extra;
           if(eval_res_c == 0) {
-            err_extra = err_extra_b;
-          } else {
             err_extra = err_extra_a;
+          } else {
+            err_extra = err_extra_b;
           }
-          const char * err_base = "lead `%s` to %s TRUE (%s)";
+          const char * err_base = "cause `%s` to evaluate to %s (%s)";
           err_str = R_alloc(
             strlen(err_call) + strlen(err_base) + strlen(err_tok) +
             strlen(err_extra), sizeof(char)
