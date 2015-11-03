@@ -3,8 +3,9 @@
 // - Testing Function ----------------------------------------------------------
 
 SEXP VALC_test(SEXP a, SEXP b) {
-  SEXP found2 = PROTECT(findVar(install("yy"), b));
-  SEXP found = PROTECT(findVar(a, b));
+  error("stop testing function shouldn't be in use");
+  // SEXP found2 = PROTECT(findVar(install("yy"), b));
+  // SEXP found = PROTECT(findVar(a, b));
   // eval(a, b);
   // Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
   // SEXP c = PROTECT(LCONS(install("force"), list1(a)));
@@ -85,8 +86,9 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
   error("Logic Error: shouldn't get here 181; contact maintainer.");
 }
 /*
-return 1 if every element is TRUE, 0 if there is at least one FALSE, -1 if
-identical to FALSE, -2 if not logical
+return 2 if isTRUE, 1 if every element is TRUE, 0 if there is at least one
+FALSE, -1 if identical to FALSE, -2 if not logical, -3 if NA, -4 if length
+zero
 */
 
 int VALC_all(SEXP vec) {
@@ -94,9 +96,12 @@ int VALC_all(SEXP vec) {
   int * vec_c = LOGICAL(vec);
   R_xlen_t i, i_end = XLENGTH(vec);
 
+  if(!i_end) return -4;
   for(i = 0; i < i_end; i++) {
+    if(vec_c[i] == NA_INTEGER) return -3;
     if(vec_c[i] != 1) return i_end == 1 ? -1 : 0;
   }
+  if(i_end == 1) return 2;
   return 1;
 }
 /*
