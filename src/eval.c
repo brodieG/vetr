@@ -108,7 +108,7 @@ SEXP VALC_evaluate_recurse(
     }
     if(mode == 10) {
       eval_res_c = VALC_all(eval_tmp);
-      eval_res = PROTECT(ScalarLogical(eval_res_c == 1));
+      eval_res = PROTECT(ScalarLogical(eval_res_c > 1));
     } else {
       eval_res = PROTECT(VALC_alike(eval_tmp, arg_value, rho));
     }
@@ -162,16 +162,26 @@ SEXP VALC_evaluate_recurse(
               }
               break;
             case -1: err_tok = "is FALSE"; break;
+            case -3: err_tok = "contains NAs"; break;
+            case -4: err_tok = "is zero length"; break;
             case 0: err_tok = "contains non-TRUE values"; break;
             default:
               error("Logic Error: unexpected user exp eval value; contact maintainer.");
           }
-          const char * err_base = "have `%s` all TRUE (%s)";
+          const char * err_extra_a = "contain only";
+          const char * err_extra_b = "be"; // must be shorter than _a
+          const char * err_extra;
+          if(eval_res_c == 0) {
+            err_extra = err_extra_b;
+          } else {
+            err_extra = err_extra_a;
+          }
+          const char * err_base = "lead `%s` to %s TRUE (%s)";
           err_str = R_alloc(
-            strlen(err_call) + strlen(err_base) + strlen(err_tok),
-            sizeof(char)
+            strlen(err_call) + strlen(err_base) + strlen(err_tok) +
+            strlen(err_extra), sizeof(char)
           );
-          if(sprintf(err_str, err_base, err_call, err_tok) < 0)
+          if(sprintf(err_str, err_base, err_call, err_extra, err_tok) < 0)
             error("Logic Error: could not construct error message; contact maintainer.");
           SETCAR(err_msg, mkString(err_str));
         }

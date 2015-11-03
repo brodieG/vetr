@@ -1,3 +1,6 @@
+# Runs the tests without attempting to fully compose the result message
+
+library(validate)
 
 unitizer_sect("evaluate", {
   validate:::eval_check(quote(logical(2L)), quote(xyz), 1:2)
@@ -60,4 +63,12 @@ unitizer_sect("evaluate with sub", {
     ),
     quote(mat3), mat3
   )
+})
+unitizer_sect("custom expressions", {
+  validate:::eval_check(quote(. > 0), quote(x), -1:1)
+  validate:::eval_check(quote(. > 0), quote(x), 1)
+  validate:::eval_check(quote(. > 0), quote(x), -1)
+  validate:::eval_check(quote(. > 0), quote(x), 1:3)
+  validate:::eval_check(quote(. > 0), quote(x), NA_integer_)
+  validate:::eval_check(quote(. > 0), quote(x), integer())
 })
