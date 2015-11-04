@@ -177,7 +177,7 @@ SEXP VALC_evaluate_recurse(
           } else {
             err_extra = err_extra_b;
           }
-          const char * err_base = "cause `%s` to evaluate to %s (%s)";
+          const char * err_base = "have `%s` evaluate to %s (%s)";
           err_str = R_alloc(
             strlen(err_call) + strlen(err_base) + strlen(err_tok) +
             strlen(err_extra), sizeof(char)
