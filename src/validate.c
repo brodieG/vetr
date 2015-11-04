@@ -22,7 +22,7 @@ SEXP VALC_process_error(
     error("Logic Error: arg error must be 0 or 1");
 
   SEXP val_res_cpy;
-  size_t count_top = 0, count_sub = 0, size = 0;
+  size_t count_top = 0, size = 0;
 
   // First pass get sizes; note that prior to commit e3724f9 char vectors with
   // length greater than one were allowed, but that outcome should not occur
@@ -65,7 +65,7 @@ SEXP VALC_process_error(
   } else if (count_top > 1) {
     const char * err_base = "Argument `%s` should meet at least one of the following:\n";
 
-    size += strlen(err_base) + strlen(err_arg) + 5 * count_top + 12 * count_sub;
+    size += strlen(err_base) + strlen(err_arg) + 5 * count_top;
 
     char * err_final = R_alloc(size + 1, sizeof(char));
     char * err_final_cpy = err_final;
