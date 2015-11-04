@@ -79,7 +79,7 @@
 #'   \code{\link{stop}} otherwise
 
 validate_args <- function(...)
-  invisible(.Call(VALC_validate_args, sys.frames(), sys.calls(), sys.parents()))
+  .Call(VALC_validate_args, sys.frames(), sys.calls(), sys.parents())
 
 #' @rdname validate
 #' @export
