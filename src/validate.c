@@ -1,6 +1,12 @@
 #include "validate.h"
+/*
+ * val_res should be a pairlist containing character vectors in each position
+ * and each of those character vectors should be length one
+ */
 
-SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
+SEXP VALC_process_error(
+  SEXP val_res, SEXP val_tag, SEXP fun_call, int error
+) {
   // - Failure ---------------------------------------------------------------
 
   // Failure, explain why; two pass process because we first need to determine
@@ -11,32 +17,32 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
       "Logic Error: unexpected type %s when evaluating test for %s; contact mainainer.",
       type2char(TYPEOF(val_res)), CHAR(PRINTNAME(val_tag))
     );
+  if(error != 0 && error !=1)
+    error("Logic Error: arg error must be 0 or 1");
 
   SEXP val_res_cpy;
-  const char * err_sub_base = "Meet all of the following:\n";
   size_t count_top = 0, count_sub = 0, size = 0;
-  const int err_sub_base_len = strlen(err_sub_base);
 
-  // First pass get sizes
+  // First pass get sizes; note that prior to commit e3724f9 char vectors with
+  // length greater than one were allowed, but that outcome should not occur
+  // so we no longer support it; look at prior commits for the code to support
+  // that
 
   for(
     val_res_cpy = val_res; val_res_cpy != R_NilValue;
     val_res_cpy = CDR(val_res_cpy)
   ) {
+    R_xlen_t err_items = xlength(err_vec), i;
     SEXP err_vec = CAR(val_res_cpy);
     if(TYPEOF(err_vec) != STRSXP)
       error("Logic Error: did not get character err msg; contact maintainer");
-
-    const R_xlen_t err_items = xlength(err_vec);
-    R_xlen_t i;
+    if(XLENGTH(err_vec) != 1)
+      error("Logic Error: no longer support err msgs greater than length one; contact maintainer")
 
     count_top++;
-    count_sub += err_items > 1 ? err_items : 0;
-
     for(i = 0; i < err_items; i++) {
       size += CSR_strmlen(CHAR(STRING_ELT(err_vec, i)), VALC_MAX_CHAR);
     }
-    if(err_items > 1) size += err_sub_base_len;
   }
   // Depending on whether there is one error or multiple ones (multiple means
   // value failed to match any of the OR possibilities), render error
@@ -59,21 +65,6 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
     const char * err_base = "Argument `%s` should meet at least one of the following:\n";
 
     size += strlen(err_base) + strlen(err_arg) + 5 * count_top + 12 * count_sub;
-    /*
-    SAMPLE ERROR:
-
-    Argument `n` failed because it did not meet any of the following requirements:
-      - Type mismatch, expected "logical", but got "integer"
-      - Length mismatch, expected 2 but got 3
-      - !any(is.na(x))
-      - pass all of the following:
-        + Modes: numeric, character
-        + Lengths: 3, 4
-        + target is numeric, current is character
-      - attribute `dim` is missing
-
-    Now that we know the size of the error we can construct it
-    */
 
     char * err_final = R_alloc(size + 1, sizeof(char));
     char * err_final_cpy = err_final;
@@ -92,25 +83,9 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
       const R_xlen_t err_items = xlength(err_vec);
       R_xlen_t i;
 
-      if(err_items > 1) {
-        sprintf(err_final_cpy, "  - %s\n", err_sub_base);
-        err_final_cpy += err_sub_base_len + 5;
-
-        for(i = 0; i < err_items; i ++) {
-          char * err_sub = CSR_strmcpy(
-            CHAR(STRING_ELT(err_vec, i)), VALC_MAX_CHAR
-          );
-          sprintf(
-            err_final_cpy, "    + %s%s\n", (const char *) err_sub,
-            i < err_items - 1 ? " AND," : ""
-          );
-          err_final_cpy += strlen(err_sub) + 7 + i < err_items - 1 ? 5 : 0;
-        }
-      } else {
-        char * err_sub = CSR_strmcpy(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
-        sprintf(err_final_cpy, "  - %s\n", err_sub);
-        err_final_cpy += strlen(err_sub) + 5;
-      }
+      char * err_sub = CSR_strmcpy(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
+      sprintf(err_final_cpy, "  - %s\n", err_sub);
+      err_final_cpy += strlen(err_sub) + 5;
       count++;
     }
     VALC_stop(fun_call, err_final);

@@ -112,6 +112,21 @@ SEXP VALC_evaluate_recurse(
     } else {
       eval_res = PROTECT(VALC_alike(eval_tmp, arg_value, rho));
     }
+    // `eval_res` must be character(1L) or TRUE, at some poit we used to allow
+    // longer character vectors, but we changed `alike` to return character(1L)
+    // if you look at commits pre e3724f9 you can find legacy code that handled
+    // the multi element character values
+
+    if(
+      TYPEOF(eval_res) != LGLSXP || TYPEOF(eval_res) != STRSXP ||
+      XLENGTH(eval_res) != 1L || (
+        TYPEOF(eval_res) == LGLSXP && asInteger(eval_res) == NA_INTEGER
+      )
+    )
+      error("Logic error: token eval must be TRUE, FALSE, or character(1L), contact maintainer")
+
+
+
     // Note we're handling both user exp and template eval here
 
     if(
@@ -140,6 +155,8 @@ SEXP VALC_evaluate_recurse(
         SET_TYPEOF(dep_call, LANGSXP);
         err_call = CHAR(STRING_ELT(eval(dep_call, rho), 0));  // Could span multiple lines...; need to address
 
+        // If message attribute defined, this is easy:
+
         if((err_attrib = getAttrib(lang, VALC_SYM_errmsg)) != R_NilValue) {
           if(TYPEOF(err_attrib) != STRSXP || XLENGTH(err_attrib) != 1) {
             error(
@@ -148,6 +165,9 @@ SEXP VALC_evaluate_recurse(
           );}
           SETCAR(err_msg, err_attrib);
         } else {
+          // message attribute not defined, must construct error message based
+          // on result of evaluation
+
           char * err_str;
           char * err_tok;
           switch(eval_res_c) {
@@ -177,7 +197,7 @@ SEXP VALC_evaluate_recurse(
           } else {
             err_extra = err_extra_b;
           }
-          const char * err_base = "have `%s` evaluate to %s (%s)";
+          const char * err_base = "`%s` should evaluate to %s (%s)";
           err_str = R_alloc(
             strlen(err_call) + strlen(err_base) + strlen(err_tok) +
             strlen(err_extra), sizeof(char)
@@ -187,7 +207,7 @@ SEXP VALC_evaluate_recurse(
           SETCAR(err_msg, mkString(err_str));
         }
         UNPROTECT(2);
-      } else {
+      } else { // must have been `alike` eval
         SETCAR(err_msg, eval_res);
       }
       UNPROTECT(3);
