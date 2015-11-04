@@ -12,5 +12,10 @@ Imports:
     alike,
     cstringr,
     matchcall (>= 0.2.0.9001)
+VignetteBuilder: knitr
+Suggests:
+    knitr,
+    testthat,
+    devtools
 License: GPL-3
 LazyData: true

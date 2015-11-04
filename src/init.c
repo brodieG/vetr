@@ -33,7 +33,7 @@ void R_init_validate(DllInfo *info)
   VALC_TRUE = ScalarLogical(1);
 
   VALC_match_call = (SEXP(*)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP)) R_GetCCallable("matchcall", "MC_match_call_internal");
-  VALC_alike = (SEXP(*)(SEXP, SEXP, SEXP)) R_GetCCallable("alike", "ALIKEC_alike_ext");
+  VALC_alike = (SEXP(*)(SEXP, SEXP, SEXP)) R_GetCCallable("alike", "ALIKEC_alike_ext2");
   VALC_get_frame_data = (SEXP(*)(SEXP,SEXP,SEXP,int)) R_GetCCallable("matchcall", "MC_get_frame_data");
 
 
