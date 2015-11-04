@@ -96,9 +96,10 @@ int VALC_all(SEXP vec) {
   int * vec_c = LOGICAL(vec);
   R_xlen_t i, i_end = XLENGTH(vec);
 
-  if(!i_end) return -4;
+  if(!i_end) return -5;
   for(i = 0; i < i_end; i++) {
-    if(vec_c[i] == NA_INTEGER) return -3;
+    if(vec_c[i] == NA_INTEGER)
+      return i_end == 1 ? -3 : -4;
     if(vec_c[i] != 1) return i_end == 1 ? -1 : 0;
   }
   if(i_end == 1) return 2;

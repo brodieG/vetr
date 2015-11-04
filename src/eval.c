@@ -108,7 +108,7 @@ SEXP VALC_evaluate_recurse(
     }
     if(mode == 10) {
       eval_res_c = VALC_all(eval_tmp);
-      eval_res = PROTECT(ScalarLogical(eval_res_c > 1));
+      eval_res = PROTECT(ScalarLogical(eval_res_c > 0));
     } else {
       eval_res = PROTECT(VALC_alike(eval_tmp, arg_value, rho));
     }
@@ -162,11 +162,12 @@ SEXP VALC_evaluate_recurse(
               }
               break;
             case -1: err_tok = "is FALSE"; break;
-            case -3: err_tok = "contains NAs"; break;
-            case -4: err_tok = "is zero length"; break;
+            case -3: err_tok = "is NA"; break;
+            case -4: err_tok = "contains NAs"; break;
+            case -5: err_tok = "is zero length"; break;
             case 0: err_tok = "contains non-TRUE values"; break;
             default:
-              error("Logic Error: unexpected user exp eval value; contact maintainer.");
+              error("Logic Error: unexpected user exp eval value %d; contact maintainer.", eval_res_c);
           }
           const char * err_extra_a = "all TRUE values";
           const char * err_extra_b = "TRUE"; // must be shorter than _a
