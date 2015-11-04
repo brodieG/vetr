@@ -5,8 +5,9 @@
  */
 
 SEXP VALC_process_error(
-  SEXP val_res, SEXP val_tag, SEXP fun_call, int error
+  SEXP val_res, SEXP val_tag, SEXP fun_call
 ) {
+  int ret_mode = 0;
   // - Failure ---------------------------------------------------------------
 
   // Failure, explain why; two pass process because we first need to determine
@@ -17,7 +18,7 @@ SEXP VALC_process_error(
       "Logic Error: unexpected type %s when evaluating test for %s; contact mainainer.",
       type2char(TYPEOF(val_res)), CHAR(PRINTNAME(val_tag))
     );
-  if(error != 0 && error !=1)
+  if(ret_mode != 0 && ret_mode !=1)
     error("Logic Error: arg error must be 0 or 1");
 
   SEXP val_res_cpy;
@@ -32,12 +33,12 @@ SEXP VALC_process_error(
     val_res_cpy = val_res; val_res_cpy != R_NilValue;
     val_res_cpy = CDR(val_res_cpy)
   ) {
-    R_xlen_t err_items = xlength(err_vec), i;
     SEXP err_vec = CAR(val_res_cpy);
+    R_xlen_t i, err_items = xlength(err_vec);
     if(TYPEOF(err_vec) != STRSXP)
       error("Logic Error: did not get character err msg; contact maintainer");
     if(XLENGTH(err_vec) != 1)
-      error("Logic Error: no longer support err msgs greater than length one; contact maintainer")
+      error("Logic Error: no longer support err msgs greater than length one; contact maintainer");
 
     count_top++;
     for(i = 0; i < err_items; i++) {
@@ -80,8 +81,6 @@ SEXP VALC_process_error(
       val_res_cpy = CDR(val_res_cpy)
     ) {
       SEXP err_vec = CAR(val_res_cpy);
-      const R_xlen_t err_items = xlength(err_vec);
-      R_xlen_t i;
 
       char * err_sub = CSR_strmcpy(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
       sprintf(err_final_cpy, "  - %s\n", err_sub);

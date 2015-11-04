@@ -112,26 +112,20 @@ SEXP VALC_evaluate_recurse(
     } else {
       eval_res = PROTECT(VALC_alike(eval_tmp, arg_value, rho));
     }
-    // `eval_res` must be character(1L) or TRUE, at some poit we used to allow
-    // longer character vectors, but we changed `alike` to return character(1L)
-    // if you look at commits pre e3724f9 you can find legacy code that handled
-    // the multi element character values
+    // Sanity checks
 
     if(
-      TYPEOF(eval_res) != LGLSXP || TYPEOF(eval_res) != STRSXP ||
+      (TYPEOF(eval_res) != LGLSXP && TYPEOF(eval_res) != STRSXP) ||
       XLENGTH(eval_res) != 1L || (
         TYPEOF(eval_res) == LGLSXP && asInteger(eval_res) == NA_INTEGER
       )
     )
-      error("Logic error: token eval must be TRUE, FALSE, or character(1L), contact maintainer")
-
-
+      error("Logic error: token eval must be TRUE, FALSE, or character(1L), contact maintainer (is type: %s)", type2char(TYPEOF(eval_res)));
 
     // Note we're handling both user exp and template eval here
 
     if(
-      TYPEOF(eval_res) != LGLSXP || XLENGTH(eval_res) != 1 ||
-      !asLogical(eval_res)
+      TYPEOF(eval_res) != LGLSXP || !asLogical(eval_res)
     ) {
       SEXP err_msg = PROTECT(allocList(1));
       // mode == 10 is user eval, special treatment to produce err msg
@@ -197,7 +191,7 @@ SEXP VALC_evaluate_recurse(
           } else {
             err_extra = err_extra_b;
           }
-          const char * err_base = "`%s` should evaluate to %s (%s)";
+          const char * err_base = "have `%s` evaluate to %s (%s)";
           err_str = R_alloc(
             strlen(err_call) + strlen(err_base) + strlen(err_tok) +
             strlen(err_extra), sizeof(char)
