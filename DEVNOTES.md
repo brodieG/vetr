@@ -233,7 +233,10 @@ Unlike `validate_args`, we should have the option not to stop.  Options:
 * Return message as is, but that is not super helpful due to the "Argument `current` stuff
 * Return a variation on above, but more anonymous (start with "should..")
 * Return a character vector with the values it could be
+    * prepend "should .." or not?
 * throw an error
+
+Default should be reasonably useful error message as character value, perhaps starting with "should", options are stop, just the message stop uses, default, just the raw values.
 
 ### Random output
 

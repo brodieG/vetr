@@ -75,8 +75,18 @@
 #'   function formals as with \code{match.call}
 #' @param a template expression
 #' @param current a value to validate
-#' @return TRUE invisibly if validation succeeds, throws an error with
-#'   \code{\link{stop}} otherwise
+#' @param return.mode character(1L), controls the format of the return value for
+#'   \code{validate}, one of:\itemize{
+#'     \item "default": character(1L) message for use elsewhere in code
+#'     \item "stop": \code{stop} with error message insted of return
+#'     \item "full": character(1L) the full error message used in "stop" mode,
+#'       but actually return
+#'     \item "raw": character, as long as there are OR options for a match, with
+#'       none of the surrounding verbiage
+#' }
+#' @return TRUE  if validation succeeds, otherwise \code{stop} for
+#'   \code{validate_args} and varies for \code{validate} according to value
+#'   chosen in \code{return.mode}
 
 validate_args <- function(...)
   .Call(VALC_validate_args, sys.frames(), sys.calls(), sys.parents())
@@ -84,10 +94,10 @@ validate_args <- function(...)
 #' @rdname validate
 #' @export
 
-validate <- function(target, current)
+validate <- function(target, current, return.mode="default")
   .Call(
     VALC_validate, substitute(target), current, sys.call(),
-    sys.frame(sys.nframe())
+    sys.frame(sys.nframe()), return.mode
   )
 
 #' @export
