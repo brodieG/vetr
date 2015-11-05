@@ -238,6 +238,14 @@ Unlike `validate_args`, we should have the option not to stop.  Options:
 
 Default should be reasonably useful error message as character value, perhaps starting with "should", options are stop, just the message stop uses, default, just the raw values.
 
+One issue with the default mode is that we end up with stuff like:
+```
+should meet at least one of the following:
+  - be length 1 (is 2)
+  - have `current > 4` evaluate to all TRUE values (contains non-TRUE values)
+```
+The problems is the `current` in the scond line.  What would be better?  Just use the `.` syntax?  Not sure.
+
 ### Random output
 
     Error in validate(INT.1 || NULL, 1:3) :

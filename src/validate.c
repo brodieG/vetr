@@ -62,7 +62,7 @@ SEXP VALC_process_error(
       error("Logic Error: no longer support err msgs greater than length one; contact maintainer");
 
     count_top++;
-    size += CSR_strmlen(CHAR(STRING_ELT(err_vec, 1)), VALC_MAX_CHAR);
+    size += CSR_strmlen(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
   }
   if(!count_top) return VALC_TRUE;
 
@@ -117,7 +117,7 @@ SEXP VALC_process_error(
       err_full = R_alloc(size + 1, sizeof(char));
       char * err_full_cpy = err_full;
 
-      sprintf(err_full_cpy, err_base, err_arg);
+      sprintf(err_full_cpy, "%s", err_head);
       err_full_cpy = err_full_cpy + CSR_strmlen(err_full_cpy, VALC_MAX_CHAR);
 
       // Second pass construct string
