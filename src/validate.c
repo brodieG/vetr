@@ -166,7 +166,7 @@ SEXP VALC_validate(
   const char * ret_mode_chr = CHAR(asChar(ret_mode_sxp));
   int ret_mode;
 
-  if(!strcmp(ret_mode_chr, "default")) {
+  if(!strcmp(ret_mode_chr, "text")) {
     ret_mode = 0;
   } else if(!strcmp(ret_mode_chr, "stop")) {
     ret_mode = 3;
@@ -174,7 +174,7 @@ SEXP VALC_validate(
     ret_mode = 2;
   } else if(!strcmp(ret_mode_chr, "full")) {
     ret_mode = 1;
-  } else error("Argument `return.mode` must be one of \"default\", \"stop\", \"raw\",\"full\"");
+  } else error("Argument `return.mode` must be one of \"text\", \"stop\", \"raw\",\"full\"");
   SEXP out = VALC_process_error(res, VALC_SYM_current, par_call, ret_mode);
   UNPROTECT(1);
   return out;
