@@ -70,3 +70,8 @@ unitizer_sect("Compound Expressions", {
 })
 
 
+unitizer_sect("Other Return Modes", {
+  validate(INT.1 || NULL || LGL, "hello", return.mode="stop")
+  validate(INT.1 || NULL || LGL, "hello", return.mode="raw")
+  validate(INT.1 || NULL || LGL, "hello", return.mode="full")
+})

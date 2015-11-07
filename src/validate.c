@@ -1,7 +1,20 @@
 #include "validate.h"
+/*
+ * val_res should be a pairlist containing character vectors in each position
+ * and each of those character vectors should be length one
+ *
+ * ret_mode is the mode of the return value
+ * - 0 = default, error message as length 1 character vector with everything
+ *   except the "Argument ..." part
+ * - 1 = entire error message returned as character(1L)
+ * - 2 = pieces of error message returned as character(N)
+ * - 3 = error
+ */
 
-SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
-  // - Failure ---------------------------------------------------------------
+SEXP VALC_process_error(
+  SEXP val_res, SEXP val_tag, SEXP fun_call, int ret_mode
+) {
+  // - Failure / Validation ----------------------------------------------------
 
   // Failure, explain why; two pass process because we first need to determine
   // size of error, allocate, then convert to char
@@ -11,13 +24,32 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
       "Logic Error: unexpected type %s when evaluating test for %s; contact mainainer.",
       type2char(TYPEOF(val_res)), CHAR(PRINTNAME(val_tag))
     );
+  if(ret_mode < 0 || ret_mode > 3)
+    error("Logic Error: arg ret_mode must be between 0 and 4; contact maintainer.");
 
   SEXP val_res_cpy;
-  const char * err_sub_base = "Meet all of the following:\n";
-  size_t count_top = 0, count_sub = 0, size = 0;
-  const int err_sub_base_len = strlen(err_sub_base);
+  size_t count_top = 0, size = 0;
+  const char * err_arg = CHAR(PRINTNAME(val_tag));
+  const char * err_very_base = "Argument `%s` ";
 
-  // First pass get sizes
+  // Compose optional argument part of message. This ends up being "Argument
+  // `x` should %s" where arg and should are optional
+
+  char * err_arg_msg = "";
+  if(ret_mode == 1 || ret_mode == 3) {
+    err_arg_msg = CSR_smprintf4(
+      VALC_MAX_CHAR, err_very_base, err_arg, "", "", ""
+    );
+  }
+  const char * err_base = "%s%s%%s";
+  char * err_base_msg = CSR_smprintf4(
+    VALC_MAX_CHAR, err_base, err_arg_msg, ret_mode != 2 ? "should " : "", "", ""
+  );
+
+  // First pass get sizes; note that prior to commit e3724f9 char vectors with
+  // length greater than one were allowed, but that outcome should not occur
+  // so we no longer support it; look at prior commits for the code to support
+  // that
 
   for(
     val_res_cpy = val_res; val_res_cpy != R_NilValue;
@@ -26,114 +58,126 @@ SEXP VALC_process_error(SEXP val_res, SEXP val_tag, SEXP fun_call) {
     SEXP err_vec = CAR(val_res_cpy);
     if(TYPEOF(err_vec) != STRSXP)
       error("Logic Error: did not get character err msg; contact maintainer");
-
-    const R_xlen_t err_items = xlength(err_vec);
-    R_xlen_t i;
+    if(XLENGTH(err_vec) != 1)
+      error("Logic Error: no longer support err msgs greater than length one; contact maintainer");
 
     count_top++;
-    count_sub += err_items > 1 ? err_items : 0;
-
-    for(i = 0; i < err_items; i++) {
-      size += CSR_strmlen(CHAR(STRING_ELT(err_vec, i)), VALC_MAX_CHAR);
-    }
-    if(err_items > 1) size += err_sub_base_len;
+    size += CSR_strmlen(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
   }
+  if(!count_top) return VALC_TRUE;
+
   // Depending on whether there is one error or multiple ones (multiple means
-  // value failed to match any of the OR possibilities), render error
+  // value failed to match any of the OR possibilities), render error; we render
+  // directly into a STRSXP because we might want to return that and it is
+  // simpler to do that even if it turns out in the end we just want to
+  // return the full error.
 
-  const char * err_arg = CHAR(PRINTNAME(val_tag));
+  char * err_full;
+  SEXP err_vec_res = PROTECT(
+    allocVector(STRSXP, ret_mode == 2 ? count_top : 1)
+  );
+  // Handle simplest case where we just return the unmodified error messages
+  // by copying to a new string
 
-  if(count_top == 1) {
-
-    const char * err_base = "Argument `%s` should %s";
-
-    char * err_msg = CSR_strmcpy(CHAR(asChar(CAR(val_res))), VALC_MAX_CHAR);
-    if(err_msg) err_msg[0] = tolower(err_msg[0]);
-
-    char * err_full = CSR_smprintf4(
-      VALC_MAX_CHAR, err_base, err_arg, err_msg, "", ""
-    );
-    VALC_stop(fun_call, err_full);
-    error("Logic Error: should not get here, R error should have been thrown; contact maintainer.");
-  } else if (count_top > 1) {
-    const char * err_base = "Argument `%s` should meet at least one of the following:\n";
-
-    size += strlen(err_base) + strlen(err_arg) + 5 * count_top + 12 * count_sub;
-    /*
-    SAMPLE ERROR:
-
-    Argument `n` failed because it did not meet any of the following requirements:
-      - Type mismatch, expected "logical", but got "integer"
-      - Length mismatch, expected 2 but got 3
-      - !any(is.na(x))
-      - pass all of the following:
-        + Modes: numeric, character
-        + Lengths: 3, 4
-        + target is numeric, current is character
-      - attribute `dim` is missing
-
-    Now that we know the size of the error we can construct it
-    */
-
-    char * err_final = R_alloc(size + 1, sizeof(char));
-    char * err_final_cpy = err_final;
-
-    sprintf(err_final_cpy, err_base, err_arg);
-    err_final_cpy = err_final_cpy + strlen(err_final_cpy);
-
-    // Second pass construct string
-
+  if(ret_mode == 2) {
     size_t count = 0;
     for(
       val_res_cpy = val_res; val_res_cpy != R_NilValue;
       val_res_cpy = CDR(val_res_cpy)
     ) {
-      SEXP err_vec = CAR(val_res_cpy);
-      const R_xlen_t err_items = xlength(err_vec);
-      R_xlen_t i;
+      // mkChar/CHAR business may not be necessary; also not protecting since
+      // we're assigning to a protected object (this is a good place to look
+      // if we start getting C crashes...)
 
-      if(err_items > 1) {
-        sprintf(err_final_cpy, "  - %s\n", err_sub_base);
-        err_final_cpy += err_sub_base_len + 5;
-
-        for(i = 0; i < err_items; i ++) {
-          char * err_sub = CSR_strmcpy(
-            CHAR(STRING_ELT(err_vec, i)), VALC_MAX_CHAR
-          );
-          sprintf(
-            err_final_cpy, "    + %s%s\n", (const char *) err_sub,
-            i < err_items - 1 ? " AND," : ""
-          );
-          err_final_cpy += strlen(err_sub) + 7 + i < err_items - 1 ? 5 : 0;
-        }
-      } else {
-        char * err_sub = CSR_strmcpy(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
-        sprintf(err_final_cpy, "  - %s\n", err_sub);
-        err_final_cpy += strlen(err_sub) + 5;
-      }
+      SET_STRING_ELT(
+        err_vec_res, count, mkChar(CHAR(STRING_ELT(CAR(val_res_cpy), 0)))
+      );
       count++;
     }
-    VALC_stop(fun_call, err_final);
-    error("Logic Error: should never get here 629; contact maintainer.");
   } else {
-    error("Logic Error: no values in result error; contact maintainer.");
+    // Here we need to compose the full character value
+    if(count_top == 1) {
+      char * err_msg = CSR_strmcpy(CHAR(asChar(CAR(val_res))), VALC_MAX_CHAR);
+      if(err_msg) err_msg[0] = tolower(err_msg[0]);
+
+      err_full = CSR_smprintf4(
+        VALC_MAX_CHAR, err_base_msg, err_msg, "", "", ""
+      );
+      SET_STRING_ELT(err_vec_res, 0, mkChar(err_full));
+    } else {
+      char * err_head = CSR_smprintf4(
+        VALC_MAX_CHAR, err_base_msg, "meet at least one of the following:\n",
+        "", "", ""
+      );
+      size += CSR_strmlen(err_head, VALC_MAX_CHAR) + 5 * count_top;
+
+      // Need to use base C string manip because we are writing each line
+      // sequentially to the pre-allocated block
+
+      err_full = R_alloc(size + 1, sizeof(char));
+      char * err_full_cpy = err_full;
+
+      sprintf(err_full_cpy, "%s", err_head);
+      err_full_cpy = err_full_cpy + CSR_strmlen(err_full_cpy, VALC_MAX_CHAR);
+
+      // Second pass construct string
+
+      size_t count = 0;
+      for(
+        val_res_cpy = val_res; val_res_cpy != R_NilValue;
+        val_res_cpy = CDR(val_res_cpy)
+      ) {
+        SEXP err_vec = CAR(val_res_cpy);
+
+        char * err_sub = CSR_strmcpy(
+          CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR
+        );
+        sprintf(err_full_cpy, "  - %s\n", err_sub);
+        err_full_cpy += strlen(err_sub) + 5;
+        count++;
+      }
+    }
+    SET_STRING_ELT(err_vec_res, 0, mkChar(err_full));
   }
-  return VALC_TRUE;
+  // Return TRUE, message, or throw an error depending on user input
+
+  UNPROTECT(1);  // unprotects vector result
+  if(ret_mode != 3) {
+    return err_vec_res;
+  } else {
+    VALC_stop(fun_call, err_full);
+    error("Logic Error: this code should not evaluate; contact maintainer 2745.");
+  }
 }
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 
-SEXP VALC_validate(SEXP target, SEXP current, SEXP par_call, SEXP rho) {
+SEXP VALC_validate(
+  SEXP target, SEXP current, SEXP par_call, SEXP rho, SEXP ret_mode_sxp
+) {
   SEXP res;
   res = PROTECT(VALC_evaluate(target, VALC_SYM_current, current, par_call, rho));
   if(IS_TRUE(res)) {
     UNPROTECT(1);
     return(VALC_TRUE);
   }
-  VALC_process_error(res, VALC_SYM_current, par_call);
+  if(TYPEOF(ret_mode_sxp) != STRSXP && XLENGTH(ret_mode_sxp) != 1)
+    error("Argument `return.mode` must be character(1L)");
+  const char * ret_mode_chr = CHAR(asChar(ret_mode_sxp));
+  int ret_mode;
+
+  if(!strcmp(ret_mode_chr, "default")) {
+    ret_mode = 0;
+  } else if(!strcmp(ret_mode_chr, "stop")) {
+    ret_mode = 3;
+  } else if(!strcmp(ret_mode_chr, "raw")) {
+    ret_mode = 2;
+  } else if(!strcmp(ret_mode_chr, "full")) {
+    ret_mode = 1;
+  } else error("Argument `return.mode` must be one of \"default\", \"stop\", \"raw\",\"full\"");
+  SEXP out = VALC_process_error(res, VALC_SYM_current, par_call, ret_mode);
   UNPROTECT(1);
-  error("Logic Error: should never get here 124");
-  return R_NilValue;
+  return out;
 }
 
 /* -------------------------------------------------------------------------- *\
@@ -217,7 +261,9 @@ SEXP VALC_validate_args(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
 
     SEXP val_res = VALC_evaluate(val_tok, arg_tag, fun_val, val_call, fun_frame);
     if(IS_TRUE(val_res)) continue;  // success, check next
-    VALC_process_error(val_res, TAG(fun_call_cpy), fun_call);    // fail, produce error message
+    // fail, produce error message
+    VALC_process_error(val_res, TAG(fun_call_cpy), fun_call, 3);
+    error("Logic Error: should never get here 2487; contact maintainer");
   }
   if(val_call_cpy != R_NilValue || fun_call_cpy != R_NilValue)
     error("Logic Error: fun and validation matched calls different lengths; contact maintainer.");

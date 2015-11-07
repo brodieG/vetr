@@ -224,7 +224,27 @@ Unit: nanoseconds
  valtest(1, 2) 681 728    837 1024.5 10264   100
 ```
 
-## Message Prototyping
+## Usability
+
+### `validate` return values
+
+Unlike `validate_args`, we should have the option not to stop.  Options:
+
+* Return message as is, but that is not super helpful due to the "Argument `current` stuff
+* Return a variation on above, but more anonymous (start with "should..")
+* Return a character vector with the values it could be
+    * prepend "should .." or not?
+* throw an error
+
+Default should be reasonably useful error message as character value, perhaps starting with "should", options are stop, just the message stop uses, default, just the raw values.
+
+One issue with the default mode is that we end up with stuff like:
+```
+should meet at least one of the following:
+  - be length 1 (is 2)
+  - have `current > 4` evaluate to all TRUE values (contains non-TRUE values)
+```
+The problems is the `current` in the scond line.  What would be better?  Just use the `.` syntax?  Not sure.
 
 ### Random output
 

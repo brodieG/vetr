@@ -3,7 +3,7 @@
 
 static const
 R_CallMethodDef callMethods[] = {
-  {"validate", (DL_FUNC) &VALC_validate, 4},
+  {"validate", (DL_FUNC) &VALC_validate, 5},
   {"validate_args", (DL_FUNC) &VALC_validate_args, 3},
   {"test", (DL_FUNC) &VALC_test, 2},
   {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
