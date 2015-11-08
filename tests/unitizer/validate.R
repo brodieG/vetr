@@ -65,13 +65,10 @@ unitizer_sect("Compound Expressions", {
   validate((matrix(integer(), 0) && nrow(.) == ncol(.)) || NULL, matrix(1:16, nrow=4))  # Pass
   validate((matrix(integer(), 0) && nrow(.) == ncol(.)) || NULL, matrix(1:16, nrow=2))  # Fail
   validate((matrix(integer(), 0) && nrow(.) == ncol(.)) || NULL, matrix(runif(16), nrow=4))  # Fail
-
-
 })
 
-
 unitizer_sect("Other Return Modes", {
-  validate(INT.1 || NULL || LGL, "hello", return.mode="stop")
+  validate(INT.1 || NULL || LGL, "hello", return.mode="text")
   validate(INT.1 || NULL || LGL, "hello", return.mode="raw")
   validate(INT.1 || NULL || LGL, "hello", return.mode="full")
 })
