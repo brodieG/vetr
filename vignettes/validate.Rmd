@@ -12,27 +12,50 @@ vignette: >
   %\usepackage[utf8]{inputenc}
 ---
 
-## Overview
-
-This package provides functions that simplify testing R objects for structural requirements.  For example, the following tests whether an object is a length 3 numeric vector:
-
-```{r}
-validate(numeric(3), c(1, 2, 3))
-validate(numeric(3), 1.5)
+```{r global_options}
+knitr::opts_chunk$set(error=TRUE)
 ```
 
-`validate` allows you to encode structural requirements as R object templates, and provides plain language-ish explanations of validation failures.
+## Overview
+
+This package provides functions that simplify testing R objects for structural requirements.  The primary objective of the package is to make function validation of complex objects easier, and particularly to allow us to enforce structural requirements for S3 objects.  For example, here we use `validate_args` to require that a function have a 3 column numeric matrix as the first argument and a scalar logical as the second:
+
+```{r}
+fun <- function(a, b) {
+  validate_args(matrix(numeric(), ncol=3), logical(1L))
+  TRUE
+}
+fun(1:5, TRUE)
+fun(matrix(1:6, 2), "TRUE")
+fun(matrix(1:6, 3), TRUE)
+fun(matrix(1:6, 2), TRUE)
+```
+
+`validate_args` uses R objects as templates that must be matched by the argument that is under validation.
+
+`validate` is a utility function that allows you to validate a user specified object instead of automatically matching to a function's arguments:
+
+```{r}
+my.obj <- 1.5
+validate(matrix(numeric(), ncol=3), my.obj)
+```
+
+We will primarily use `validate` in this vignette because it is simplifies exposition.  Validation expressions are used identically in `validate` and `validate_args`.  Unlike with `validate_args`, `validate` can optionally return the error message instead of `stop`ing:
+
+```{r}
+validate(matrix(numeric(), ncol=3), my.obj, return.mode="text")
+```
 
 ## Templates
 
-`validate` uses templates to define structural requirements that we wish to enforce.  Templates are "partially specified" R objects.  We check the value we want to test against the aspects of our template that are defined, and ignore all others.  Consider:
+`validate` and `validate_args` use templates to define structural requirements that we wish to enforce.  Templates are "partially specified" R objects.  We check the value we want to test against the aspects of our template that are defined, and ignore all others.  Consider:
 
 ```{r}
 validate(numeric(), runif(10))
 validate(numeric(), sample(letters))
 ```
 
-Our template is a zero (undefined) length numeric vector, so any numeric vector will satisfy it, but non-numeric objects will fail validation.  Notice this also works with more complex objects:
+Our template is a zero (undefined) length numeric vector, so any numeric vector will satisfy it, but non-numeric objects will fail validation.  This becomes more interesting with complex objects:
 
 ```{r}
 validate(numeric(), matrix(runif(9), 3))
@@ -49,9 +72,47 @@ validate(mx.3.row, matrix(runif(6), nrow=2))
 
 Notice how both the two and three column matrices that have three rows pass validation, but the matrix that only has two rows does not.
 
+The primary objective of template based validation is to allow us to enforce structural requirements for S3 objects.  Suppose that we are trying to build a program to analyze car test drives on race tracks:
+
+```{r}
+test.run.tpl <- structure(
+  list(car.id=integer(1L), data=data.frame(dist=numeric(), time=Sys.time()[0])),
+  class="test.run"
+)
+```
+Then:
+```{r}
+analyze <- function(x, ...) UseMethod("analyze")
+analyze.test.run <- function(x, ...) {
+  validate_args(test.run.tpl)
+  TRUE # stand-in for really meaningful code
+}
+```
+Would allow us to ensure that only objects that actually match our test run template are fed through the `analyze` logic:
+
+```{r}
+run.1 <- structure(
+  list(vehicle="mazda", data=data.frame(x=rep(TRUE, 10), y=runif(10))),
+  class="test.run"
+)
+analyze(run.1)
+names(run.1)[[1]] <- "car.id"
+analyze(run.1)
+run.1$car.id <- 548L
+analyze(run.1)
+run.1$car <- structure(list(model="mazda"), class="car")
+analyze(run.1)
+run.1$car <- structure(list(model="mazda", HP=250), class="car")
+analyze(run.1)
+run.1$data$time <- Sys.time() + 1:10
+analyze(run.1)
+run.1$data$x <- 1:10
+analyze(run.1)
+```
+
 Internally `validate` uses `alike` to compare the template to the test value.  See the [alike vignette](http://htmlpreview.github.io/?https://raw.githubusercontent.com/brodieG/alike/master/inst/doc/alike.html) for extensive details on how templates work.
 
-`alike` and `validate` both follow the same convention as `all.equal`, with the first argument the reference object to match (`target`) and the second the value to teset (`current`).
+`alike` and `validate` both follow the same convention as `all.equal`, with the first argument the reference object to match (`target`) and the second the value to test (`current`).
 
 ## Validating Functions
 
