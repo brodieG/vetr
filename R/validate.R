@@ -8,14 +8,15 @@
 #' being tested must match.  For example, in:\preformatted{
 #' validate(numeric(), 3.145)
 #' validate(numeric(), c(1, 2, 3))
-#' validate(numeric(), matrix(runif(9), 3)
+#' validate(numeric(), matrix(runif(9), 3))
 #' }
 #' the first argument is the template, and the second the value to check.
 #' \code{validate} uses whatever aspects of the template are defined and
 #' ensures that the value tested
 #' Each argument to \code{validate_args} is matched to one argument of the
 #' enclosing function following the same rules \code{\link{match.call}} uses.
-#' For example, in: \preformatted{
+#' For example, in:
+#' \preformatted{
 #' function(a, b) {
 #'   validate_args(numeric(), logical(1L))
 #' }
@@ -37,6 +38,7 @@
 #'   validate_args(
 #'     a=numeric() || character(),
 #'     b=character(1L) || NULL
+#'   )
 #' }
 #' }
 #' \code{validate_args} parses each expression to isolate the templates and then
@@ -44,8 +46,8 @@
 #' arguments as specified by you with \code{&&} / \code{||}.
 #'
 #' Often it is useful to be able to use arbitrary expressions as part of a
-#' validation.  You may do so by using \code{.(}.  Any expression within
-#' \code{.(} will be evaluated as is, and an argument will validate_args
+#' validation.  You may do so by using \code{.()}.  Any expression within
+#' \code{.()} will be evaluated as is, and an argument will validate_args
 #' successfully if that expression returns \code{TRUE} (note, a two length
 #' logical like \code{c(T, T)} will fail):
 #' \preformatted{
@@ -53,16 +55,16 @@
 #'   validate_args(
 #'     a=numeric() && .(!any(is.na(.))),
 #'     b=logical() && .(length(a) == length(.) && !any(is.na(.)))
+#'   )
 #' }
 #' }
 #' If you use \code{.} as a variable anyplace in the validation expression it
 #' will be substituted by the corresponding argument name prior to validation.
-#' If you need to use objects called \code{.} or \code{.(} in your validation
+#' If you need to use objects called \code{.} or \code{.()} in your validation
 #' expression you may do so by escaping them with another period (e.g. use
 #' \code{..} for a literal \code{.}).
 #'
 #' If you find yourself using particular custom validation expressions
-#' repeatedly, you may save them by using \code{link{
 #'
 #' @useDynLib validate, .registration=TRUE, .fixes="VALC_"
 #' @note Will force evaluation of any arguments that are being checked (you may
