@@ -41,15 +41,13 @@ my.obj <- 1.5
 validate(matrix(numeric(), ncol=3), my.obj)
 ```
 
-We will primarily use `validate` in this vignette because it is simplifies exposition.  Validation expressions are used identically in `validate` and `validate_args`.  Unlike with `validate_args`, `validate` can optionally return the error message instead of `stop`ing:
+Validation expressions are used identically in `validate` and `validate_args`.  Unlike with `validate_args`, `validate` can optionally return the error message instead of `stop`ing:
 
 ```{r}
 validate(matrix(numeric(), ncol=3), my.obj, return.mode="text")
 ```
 
 ## Templates
-
-### Overview
 
 `validate` and `validate_args` use templates to define structural requirements that we wish to enforce.  Templates are "partially specified" R objects.  We check the value we want to test against the aspects of our template that are defined, and ignore all others.  Consider:
 
@@ -66,8 +64,6 @@ mx.3.row <- matrix(numeric(), nrow=3)
 validate(mx.3.row, matrix(runif(6), nrow=3))
 validate(mx.3.row, matrix(runif(6), nrow=2))
 ```
-
-### With Complex S3 Objects
 
 The primary objective of template based validation is to allow us to enforce structural requirements for S3 objects.  Suppose that we are trying to build a program to analyze car test drives on race tracks.  We want to store our data in a consistent structure:
 
@@ -103,60 +99,11 @@ analyze(laps.3)   # Lap times should be time crossed finish line, no seconds
 analyze(laps.4)   # Valid object
 ```
 
-### Alternatives
-
-#### `stopifnot`
-
-
-Notice how `validate_args` checks that the class of the columns inside the data frame nested inside our object matches expectations.
-
 Internally `validate` uses `alike` to compare the template to the test value.  See the [alike vignette](http://htmlpreview.github.io/?https://raw.githubusercontent.com/brodieG/alike/master/inst/doc/alike.html) for extensive details on how templates work.
 
 `alike` and `validate` both follow the same convention as `all.equal`, with the first argument the reference object to match (`target`) and the second the value to test (`current`).
 
-## Validating Functions
-
-`validate_args` is designed specifically to simplify testing function arguments.  For example, the following function requires a three column numeric matrix as an input, as well as an optional scalar logical argument:
-```{r}
-dist3d <- function(x, summarize=FALSE) {
-  validate_args(matrix(numeric(), ncol=3), logical(1L))
-  # do something
-}
-dist3d(matrix(runif(12), ncol=3))
-dist3d(matrix(runif(12), ncol=3), summarize=TRUE)
-dist3d(matrix(runif(12), ncol=4))
-dist3d(matrix(runif(12), ncol=3), summarize=c(TRUE, FALSE))
-```
-
-Equivalently we could have written:
-
-```{r}
-dist3d <- function(x, summarize=FALSE) {
-  stopifnot(
-    is.numeric(x), is.matrix(x), ncol(x) == 3, is.logical(negate),
-    length(negate) == 1L
-  )
-  # do something
-}
-dist3d(matrix(runif(12), ncol=3), summarize=TRUE)
-dist3d(matrix(runif(12), ncol=3), summarize=c(TRUE, FALSE))
-```
-
-Both functions do the same validations, but with `validate_args` the validation is easier to specify, and the error messages are more helpul.
-
-`validate_args` is very similar to `validate`, except you only have to specify the validation templates.  `validate_args` takes care of retrieving the values provided as the function arguments.  We could have written `dist3d` as:
-```{r}
-dist3d <- function(x, summarize=FALSE) {
-  validate(matrix(numeric(), ncol=3), x)
-  validate(logical(1L), summarize)
-  # do something
-}
-```
-AUTHNOTE: this will change if we change `validate` to return the reason for failure rather than `stop`.
-
 ## Complex Validation
-
-**NOTE**: we will illustrate advanced features using `validate`, though you may use the same validation templates / expressions as arguments to `validate_args`.
 
 ### Multi-element Validation
 
@@ -168,22 +115,22 @@ validate(integer(1L) || character(1L), "hello")
 validate(integer(1L) || character(1L), TRUE)
 ```
 
-We are able to specify multiple templates by using `||`.
+We are able to specify multiple templates by using `||`.  We will refer to validation expression elements as validation tokens.
 
-### Validation Expressions
+### Custom Validation Tokens
 
-At other times templates alone are not sufficient.  Here we check that values are length 3 numeric vectors and strictly positive:
+At  times templates alone are not sufficient.  Here we check that values are length 3 numeric vectors and strictly positive:
 
 ```{r}
 validate(numeric(3) && all(. > 0), c(1, 2, 3))
 validate(numeric(3) && all(. > 0), c(1, -2, 3))
 ```
 
-The `.` is a stand-in for the object being tested.
+The `.` is a stand-in for the object being tested.  By using a `.` as part of a token, we indicate to `validate`/`validate_args` that that token should be interpreted as an expression to evaluate instead of a template.  The `.` is substituted with the corresponding variable name and the expression is evaluated.  If the evaluation returns `TRUE` or a vector that is all `TRUE`, the validation token passes, otherwise it fails.
 
 ### Non Standard Evaluation of Validation Expressions
 
-Validation expressions combine templates and custom expressions delimited by `&&` and `||`. While superficially validation expressions look like R expressions, they are never run through the R evaluator.  Instead, they are parsed into tokens and each token is examined to determine whether it should be treated as a template or as a validation expression.  For example:
+Validation expressions combine templates and custom tokens delimited by `&&` and `||`. While superficially validation expressions look like R expressions, they are never run through the R evaluator.  Instead, they are parsed into tokens and each token is examined to determine whether it should be treated as a template or as a validation expression.  For example:
 
 ```{r, eval=FALSE}
 logical(1) || (numeric(1) && . %in% 0:1)
@@ -205,13 +152,11 @@ If you need `&&` or `||` to be interpreted literally you can wrap the call in `i
 identity(length(a) == length(b) && . %in% 0:1)
 ```
 
-which will be treated as a single custom expression instead of a template and a custom expression.
+which will be treated as a single custom validation token instead of a template and a custom validation token.
 
-### Validation Tokens
+### Pre-defining Validation Tokens
 
-#### Storing Validation Tokens in Variables
-
-`validate` uses complex rules to parse and evaluate validation expressions, but they resolve to mostly intuitive outcomes.  One upside of the complexity is that you can actually store validation tokens or validation expressions in variables:
+`validate` uses complex rules to parse and evaluate validation expressions, but they resolve to mostly intuitive outcomes.  One upside of the complexity is that you can actually store validation tokens, whether templates or custom, in variables:
 
 ```{r}
 TF <- quote(logical(1L) && !is.na(.))  # note `quote`
@@ -223,7 +168,7 @@ validate(TF, 1)
 Since validate parses and evaluates tokens recursively, you can even combine pre-stored tokens:
 
 ```{r}
-ZEROONE <- quote(numeric(1) && . %in% 0:1)
+ZEROONE <- quote(numeric(1) && !is.na(.) && . %in% 0:1)
 TF_ish <- quote(TF || ZEROONE)
 validate(TF_ish, 1)
 validate(TF_ish, "0")
@@ -232,18 +177,17 @@ validate(TF_ish, "0")
 You can also provide more helpful error messages with `mk_val_token`:
 
 ```{r}
-TF <- mk_val_token(
-  logical(1L) && !is.na(.), "be TRUE or FALSE" # `quote` not required
-)
+TF <- mk_val_token(logical(1L) && !is.na(.), "be TRUE or FALSE")
 validate(TF, NA)
 ```
-#### Validation Expression Parsing and Evaluation Rules
+
+### Validation Expression Parsing and Evaluation Rules
 
 Hopefully you were able to get an intuitive sense of how validation expressions work.  If you are interested in the actual rules, read on, otherwise skip to the next section.
 
 After parsing the validation expression, `validate` examines each token for the presence of `.` or `.()`.  If either are present then the `.` values are substituted for the corresponding variable name (`current` for `validate`, and whatever variable is matched to the validation expression for `validate_args`).  Then each token is evaluted in the parent frame.  If the token evaluated was a custom expression then it is checked for truth.  If not, the result of evaluating the token is used as a template for an `alike` check against the object being tested, except for the special case when the template evaluates to a quoted language object.  In that case `validate` recursively applies the same logic to the language object as described above.
 
-#### Predefined Tokens
+### Predefined Tokens
 
 `validate` comes with many predifined validation tokens for common cases:
 
@@ -256,6 +200,38 @@ validate(CHR, factor(letters))
 ```
 
 See `?validation_tokens` for more details about what predefined tokens are available.
+
+## Alternatives
+
+### `stopifnot`
+
+A simple built-in alternative is to use `stopifnot`.  Here are the equivalent checks with `stopifnot`:
+
+```{r}
+analyze2 <- function(x, ...) {
+  stopifnot(
+    is.list(x), inherits(x, "laps"), identical(names(x), names(laps.template)),
+    is.character(x$car), length(x$car) == 1L, is.data.frame(x$data),
+    identical(names(x$data), names(laps.template$data)),
+    identical(attributes(x$data$lap), attributes(laps.template$data$lap)),
+    identical(attributes(x$data$time), attributes(laps.template$data$time))
+  )
+  TRUE
+}
+analyze2(laps.1)   # Forgot to include car
+```
+
+compare to:
+
+```{r}
+analyze(laps.1)    # Forgot to include car
+```
+
+Notice how `validate_args` checks that the class of the columns inside the data frame nested inside our object matches expectations.
+
+### S4 Classes
+
+The natural solution to enforcing structural requirements in R objects is to use S4 classes.  Unfortunately S3 objects are so prevalent in R that a "backwards compatible" mechanism for enforcing structure requirement is warranted.
 
 ## Performance Considerations
 
