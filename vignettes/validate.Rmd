@@ -12,8 +12,9 @@ vignette: >
   %\usepackage[utf8]{inputenc}
 ---
 
-```{r global_options}
+```{r global_options, echo=FALSE}
 knitr::opts_chunk$set(error=TRUE)
+options(width=80)
 ```
 
 ## Overview
@@ -48,67 +49,66 @@ validate(matrix(numeric(), ncol=3), my.obj, return.mode="text")
 
 ## Templates
 
+### Overview
+
 `validate` and `validate_args` use templates to define structural requirements that we wish to enforce.  Templates are "partially specified" R objects.  We check the value we want to test against the aspects of our template that are defined, and ignore all others.  Consider:
 
 ```{r}
 validate(numeric(), runif(10))
-validate(numeric(), sample(letters))
-```
-
-Our template is a zero (undefined) length numeric vector, so any numeric vector will satisfy it, but non-numeric objects will fail validation.  This becomes more interesting with complex objects:
-
-```{r}
 validate(numeric(), matrix(runif(9), 3))
+validate(numeric(), letters)
 ```
 
-The matrix validates because it is numeric.  Enforcing more constraits is straightforward.  In this example we require numeric matrices with three rows:
+Our template is a zero (undefined) length numeric vector, so any numeric vector will satisfy it, including a numeric matrix.  We enforce more constraints by defining more aspects of our template.  In this example we require numeric matrices with three rows:
 
 ```{r}
 mx.3.row <- matrix(numeric(), nrow=3)
 validate(mx.3.row, matrix(runif(6), nrow=3))
-validate(mx.3.row, matrix(runif(9), nrow=3))
 validate(mx.3.row, matrix(runif(6), nrow=2))
 ```
 
-Notice how both the two and three column matrices that have three rows pass validation, but the matrix that only has two rows does not.
+### With Complex S3 Objects
 
-The primary objective of template based validation is to allow us to enforce structural requirements for S3 objects.  Suppose that we are trying to build a program to analyze car test drives on race tracks:
+The primary objective of template based validation is to allow us to enforce structural requirements for S3 objects.  Suppose that we are trying to build a program to analyze car test drives on race tracks.  We want to store our data in a consistent structure:
 
 ```{r}
-test.run.tpl <- structure(
-  list(car.id=integer(1L), data=data.frame(dist=numeric(), time=Sys.time()[0])),
-  class="test.run"
+laps.template <- structure(
+  list(car=character(1L), data=data.frame(lap=numeric(), time=Sys.time()[0])),
+  class="laps"
 )
 ```
-Then:
+
+We can then write a function that verifies inputs meet our structural expectations:
+
 ```{r}
 analyze <- function(x, ...) UseMethod("analyze")
-analyze.test.run <- function(x, ...) {
-  validate_args(test.run.tpl)
+analyze.laps <- function(x, ...) {
+  validate_args(laps.template)
   TRUE # stand-in for really meaningful code
 }
 ```
-Would allow us to ensure that only objects that actually match our test run template are fed through the `analyze` logic:
+
+and then test with several inputs:
 
 ```{r}
-run.1 <- structure(
-  list(vehicle="mazda", data=data.frame(x=rep(TRUE, 10), y=runif(10))),
-  class="test.run"
-)
-analyze(run.1)
-names(run.1)[[1]] <- "car.id"
-analyze(run.1)
-run.1$car.id <- 548L
-analyze(run.1)
-run.1$car <- structure(list(model="mazda"), class="car")
-analyze(run.1)
-run.1$car <- structure(list(model="mazda", HP=250), class="car")
-analyze(run.1)
-run.1$data$time <- Sys.time() + 1:10
-analyze(run.1)
-run.1$data$x <- 1:10
-analyze(run.1)
+lap.times <- data.frame(lap=1:10, time=cumsum(rnorm(10, 120, 3)))
+laps.1 <- structure(lap.times, class="laps")
+laps.2 <- structure(list("corvette z06", lap.times), class="laps")
+laps.3 <- laps.4 <- setNames(laps.2, c("car", "data"))
+laps.4$data <- transform(laps.4$data, time=Sys.time() + time)
+
+analyze(laps.1)   # Forgot to include car
+analyze(laps.2)   # Missing names
+analyze(laps.3)   # Lap times should be time crossed finish line, no seconds
+analyze(laps.4)   # Valid object
 ```
+
+### Alternatives
+
+#### `stopifnot`
+
+
+Notice how `validate_args` checks that the class of the columns inside the data frame nested inside our object matches expectations.
 
 Internally `validate` uses `alike` to compare the template to the test value.  See the [alike vignette](http://htmlpreview.github.io/?https://raw.githubusercontent.com/brodieG/alike/master/inst/doc/alike.html) for extensive details on how templates work.
 
