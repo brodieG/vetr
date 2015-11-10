@@ -117,7 +117,7 @@ pre {
   border-radius: 3px;
   margin: 3px 0px;
   padding: 2px 10px;
-  font-size: 85%;
+  /*font-size: 85%;*/
 }
 pre:not([class]) {
   border: 1px solid #eee;
