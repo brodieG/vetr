@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Brodie Gaslam" />
+
+
+<title>validate - Keep the Garbage Out</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link href="data:text/css,%2F%2A%0AStyles%20primarily%20borrowed%20from%20rmarkdown%2Ftemplates%2Fhtml%5Fvignette%2Fresources%2Fvignette%2Ecss%0Aat%20a%20time%2012%2F2%2F2014%20when%20rmarkdown%20was%20%28and%20probably%20still%20is%29%20under%20the%20GPL%2D3%0Alicense%0A%2A%2F%0Abody%20%7B%0A%20%20background%2Dcolor%3A%20%23fff%3B%0A%20%20margin%3A%201em%20auto%3B%0A%20%20max%2Dwidth%3A%20700px%3B%0A%20%20overflow%3A%20visible%3B%0A%20%20padding%2Dleft%3A%202em%3B%0A%20%20padding%2Dright%3A%202em%3B%0A%20%20font%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0A%20%20font%2Dsize%3A%2014px%3B%0A%20%20line%2Dheight%3A%201%2E5%3B%0A%7D%0A%0A%23header%20%7B%0A%20%20text%2Dalign%3A%20center%3B%0A%7D%0A%0A%23TOC%20%7B%0A%20%20clear%3A%20both%3B%0A%20%20padding%3A%204px%3B%0A%20%20width%3A%20100%25%3B%0A%20%20border%3A%201px%20solid%20%23CCCCCC%3B%0A%20%20border%2Dradius%3A%205px%3B%0A%20%20background%2Dcolor%3A%20%23f6f6f6%3B%0A%20%20font%2Dsize%3A%2013px%3B%0A%20%20line%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0A%20%20font%2Dweight%3A%20bold%3B%0A%20%20font%2Dsize%3A%2015px%3B%0A%20%20margin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0A%20%20padding%2Dleft%3A%2040px%3B%0A%20%20margin%2Dleft%3A%20%2D1%2E5em%3B%0A%20%20margin%2Dtop%3A%205px%3B%0A%20%20margin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0A%20%20margin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0A%20%20line%2Dheight%3A%2016px%3B%0A%7D%0A%0Atable%20%7B%0A%20%20margin%3A%201em%20auto%3B%0A%20%20border%2Dwidth%3A%201px%3B%0A%20%20border%2Dcolor%3A%20%23DDDDDD%3B%0A%20%20border%2Dstyle%3A%20outset%3B%0A%20%20border%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0A%20%20border%2Dwidth%3A%202px%3B%0A%20%20padding%3A%205px%3B%0A%20%20border%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0A%20%20border%2Dwidth%3A%201px%3B%0A%20%20border%2Dstyle%3A%20inset%3B%0A%20%20line%2Dheight%3A%2018px%3B%0A%20%20padding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0A%0Ap%20%7B%0A%20%20margin%3A%201em%200%3B%0A%7D%0Ablockquote%20%7B%0A%20%20background%2Dcolor%3A%20%23f6f6f6%3B%0A%20%20padding%3A%200%2E25em%200%2E75em%3B%0A%7D%0A%0Ahr%20%7B%0A%20%20border%2Dstyle%3A%20solid%3B%0A%20%20border%3A%20none%3B%0A%20%20border%2Dtop%3A%201px%20solid%20%23777%3B%0A%20%20margin%3A%2028px%200%3B%0A%7D%0A%0Adl%20%7B%0A%20%20margin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0A%20%20margin%2Dbottom%3A%2013px%3B%0A%20%20margin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0A%20%20font%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0A%20%20margin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0A%20%20list%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0A%20%20margin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0A%20%20background%2Dcolor%3A%20%23eee%3B%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20color%3A%20%23333%3B%0A%7D%0Apre%20%7B%0A%20%20white%2Dspace%3A%20pre%2Dwrap%3B%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20margin%3A%203px%200px%3B%0A%20%20padding%3A%202px%2010px%3B%0A%20%20%2F%2Afont%2Dsize%3A%2085%25%3B%2A%2F%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0A%20%20border%3A%201px%20solid%20%23eee%3B%0A%20%20word%2Dwrap%3A%20break%2Dword%3B%0A%20%20word%2Dbreak%3A%20break%2Dall%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%2C%20pre%3Anot%28%5Bclass%5D%29%20code%20%7B%0A%20%20background%2Dcolor%3A%20transparent%3B%0A%7D%0Acode%20%7B%0A%20%20font%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%2C%20h1%20%3E%20code%2C%20h2%20%3E%20code%2C%20h3%20%3E%20code%2C%0Ah4%20%3E%20code%2C%20h5%20%3E%20code%2C%20h6%20%3E%20code%20%7B%0A%20%20padding%3A%202px%200px%3B%0A%20%20line%2Dheight%3A%201%3B%0A%7D%0Adiv%2Efigure%20%7B%0A%20%20text%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20padding%3A%202px%3B%0A%20%20border%3A%201px%20solid%20%23DDDDDD%3B%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20border%3A%201px%20solid%20%23CCCCCC%3B%0A%20%20margin%3A%200%205px%3B%0A%7D%0A%0Ah1%20%7B%0A%20%20margin%2Dtop%3A%200%3B%0A%20%20padding%2Dbottom%3A%203px%3B%0A%20%20font%2Dsize%3A%2035px%3B%0A%20%20line%2Dheight%3A%2040px%3B%0A%20%20border%2Dbottom%3A%201px%20solid%20%23999%3B%0A%7D%0A%0Ah2%20%7B%0A%20%20border%2Dbottom%3A%201px%20solid%20%23999%3B%0A%20%20padding%2Dtop%3A%205px%3B%0A%20%20padding%2Dbottom%3A%202px%3B%0A%20%20font%2Dsize%3A%20145%25%3B%0A%7D%0A%0Ah3%20%7B%0A%20%20padding%2Dtop%3A%205px%3B%0A%20%20font%2Dsize%3A%20120%25%3B%0A%7D%0A%0Ah4%20%7B%0A%20%20color%3A%20%23777%3B%0A%20%20font%2Dsize%3A%20105%25%3B%0A%7D%0A%0Ah4%2Eauthor%2C%20h4%2Edate%20%7Bdisplay%3A%20none%3B%7D%0A%0Ah5%2C%20h6%20%7B%0A%20%20font%2Dsize%3A%20105%25%3B%0A%7D%0A%0Aa%20%7B%0A%20%20color%3A%20%232255dd%3B%0A%20%20font%2Dweight%3A%20bold%3B%0A%20%20text%2Ddecoration%3A%20none%3B%0A%7D%0A%20%20a%3Ahover%20%7B%0A%20%20%20%20color%3A%20%236666ff%3B%20%7D%0A%20%20a%3Avisited%20%7B%0A%20%20%20%20color%3A%20%23800080%3B%20%7D%0A%20%20a%3Avisited%3Ahover%20%7B%0A%20%20%20%20color%3A%20%23BB00BB%3B%20%7D%0A%20%20a%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0A%20%20%20%20text%2Ddecoration%3A%20underline%3B%20%7D%0A%20%20a%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0A%20%20%20%20text%2Ddecoration%3A%20underline%3B%20%7D%0A%0A%2F%2A%20Class%20described%20in%20https%3A%2F%2Fbenjeffrey%2Ecom%2Fposts%2Fpandoc%2Dsyntax%2Dhighlighting%2Dcss%0A%20%20%20Colours%20from%20https%3A%2F%2Fgist%2Egithub%2Ecom%2Frobsimmons%2F1172277%20%2A%2F%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20Keyword%20%2A%2F%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%2F%2A%20DataType%20%2A%2F%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%2F%2A%20DecVal%20%28decimal%20values%29%20%2A%2F%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20BaseN%20%2A%2F%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20Float%20%2A%2F%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20Char%20%2A%2F%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20String%20%2A%2F%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%2F%2A%20Comment%20%2A%2F%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%2F%2A%20OtherToken%20%2A%2F%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20AlertToken%20%2A%2F%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20Function%20calls%20%2A%2F%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%2F%2A%20ErrorTok%20%2A%2F%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+<div id="header">
+<h1 class="title">validate - Keep the Garbage Out</h1>
+<h4 class="author"><em>Brodie Gaslam</em></h4>
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#overview">Overview</a><ul>
+<li><a href="#validating-function-arguments">Validating Function Arguments</a></li>
+<li><a href="#validating-objects">Validating Objects</a></li>
+</ul></li>
+<li><a href="#templates">Templates</a></li>
+<li><a href="#complex-validation">Complex Validation</a><ul>
+<li><a href="#matching-multiple-elements">Matching Multiple Elements</a></li>
+<li><a href="#custom-validation-tokens">Custom Validation Tokens</a></li>
+<li><a href="#non-standard-evaluation-of-validation-expressions">Non Standard Evaluation of Validation Expressions</a></li>
+<li><a href="#pre-defining-validation-tokens">Pre-defining Validation Tokens</a></li>
+<li><a href="#validation-expression-parsing-and-evaluation-rules">Validation Expression Parsing and Evaluation Rules</a></li>
+<li><a href="#predefined-tokens">Predefined Tokens</a></li>
+</ul></li>
+<li><a href="#alternatives">Alternatives</a><ul>
+<li><a href="#stopifnot"><code>stopifnot</code></a></li>
+<li><a href="#s4-classes">S4 Classes</a></li>
+</ul></li>
+<li><a href="#performance-considerations">Performance Considerations</a><ul>
+<li><a href="#benchmarks">Benchmarks</a></li>
+<li><a href="#templates-and-performance">Templates and Performance</a></li>
+</ul></li>
+<li><a href="#acknowledgements">Acknowledgements</a></li>
+</ul>
+</div>
+
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<div id="validating-function-arguments" class="section level3">
+<h3>Validating Function Arguments</h3>
+<p>This package provides functions that simplify testing R objects for structural requirements. For example, here we use <code>validate_args</code> to require that a function have a 3 column numeric matrix as the first argument and a scalar logical as the second:</p>
+<pre class="sourceCode r"><code class="sourceCode r">fun &lt;-<span class="st"> </span>function(a, b) {
+  <span class="kw">validate_args</span>(<span class="kw">matrix</span>(<span class="kw">numeric</span>(), <span class="dt">ncol=</span><span class="dv">3</span>), <span class="kw">logical</span>(<span class="dv">1</span>))
+  <span class="ot">TRUE</span>
+}</code></pre>
+<p>Notice how we provide our structural requirements encoded as R objects instead of as a sequence of assertions. The traditional version of the above code would be:</p>
+<pre class="sourceCode r"><code class="sourceCode r">fun_traditional &lt;-<span class="st"> </span>function(a, b) {
+  <span class="kw">stopifnot</span>(<span class="kw">is.numeric</span>(a), <span class="kw">is.matrix</span>(a), <span class="kw">ncol</span>(a) ==<span class="st"> </span><span class="dv">3</span>, <span class="kw">is.logical</span>(b), <span class="kw">length</span>(b) ==<span class="st"> </span><span class="dv">1</span>)
+  <span class="ot">TRUE</span>
+}</code></pre>
+<p><code>validate_args</code> also provides more contextual information in the event of validation failure:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">6</span>, <span class="dt">ncol=</span><span class="dv">2</span>), <span class="ot">TRUE</span>)                <span class="co"># Fail</span></code></pre>
+<pre><code>## Error in fun(a = matrix(1:6, ncol = 2), b = TRUE): Argument `a` should have 3 columns (has 2)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fun_traditional</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">6</span>, <span class="dt">ncol=</span><span class="dv">2</span>), <span class="ot">TRUE</span>)    <span class="co"># Fail</span></code></pre>
+<pre><code>## Error: ncol(a) == 3 is not TRUE</code></pre>
+<p>Some more examples of <code>validate_args</code>:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">6</span>, <span class="dt">ncol=</span><span class="dv">3</span>), <span class="st">&quot;hello&quot;</span>)              <span class="co"># Fail</span></code></pre>
+<pre><code>## Error in fun(a = matrix(1:6, ncol = 3), b = &quot;hello&quot;): Argument `b` should be type &quot;logical&quot; (is &quot;character&quot;)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">6</span>, <span class="dt">ncol=</span><span class="dv">3</span>), <span class="ot">TRUE</span>)                 <span class="co"># Success</span></code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<p><strong>Note</strong>: if you want to accept any dimension matrix you must use <code>matrix(numeric(), 0, 0)</code> since <code>matrix(numeric())</code> actually produces a one column matrix.</p>
+</div>
+<div id="validating-objects" class="section level3">
+<h3>Validating Objects</h3>
+<p><code>validate</code> is a utility function that allows you to validate a user specified object instead of automatically matching to a function’s arguments:</p>
+<pre class="sourceCode r"><code class="sourceCode r">my.obj &lt;-<span class="st"> </span><span class="fl">1.5</span>
+<span class="kw">validate</span>(<span class="kw">matrix</span>(<span class="kw">numeric</span>(), <span class="dt">ncol=</span><span class="dv">3</span>), my.obj)</code></pre>
+<pre><code>## Error in validate(matrix(numeric(), ncol = 3), my.obj): Argument `current` should be class &quot;matrix&quot; (is &quot;numeric&quot;)</code></pre>
+<p>Validation expressions are used identically in <code>validate</code> and <code>validate_args</code>. Unlike with <code>validate_args</code>, <code>validate</code> can optionally return the error message instead of <code>stop</code>ing:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">matrix</span>(<span class="kw">numeric</span>(), <span class="dt">ncol=</span><span class="dv">3</span>), my.obj, <span class="dt">return.mode=</span><span class="st">&quot;text&quot;</span>)</code></pre>
+<pre><code>## [1] &quot;should be class \&quot;matrix\&quot; (is \&quot;numeric\&quot;)&quot;</code></pre>
+</div>
+</div>
+<div id="templates" class="section level2">
+<h2>Templates</h2>
+<p><code>validate</code> and <code>validate_args</code> use templates to define structural requirements that we wish to enforce. Templates are “partially specified” R objects. We check the value we want to test against the aspects of our template that are defined, and ignore all others. Consider:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">numeric</span>(), <span class="kw">runif</span>(<span class="dv">10</span>))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">numeric</span>(), <span class="kw">matrix</span>(<span class="kw">runif</span>(<span class="dv">9</span>), <span class="dv">3</span>))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">numeric</span>(), letters)</code></pre>
+<pre><code>## Error in validate(numeric(), letters): Argument `current` should be type &quot;numeric&quot; (is &quot;character&quot;)</code></pre>
+<p><code>validate</code> follows the same convention as <code>all.equal</code>, with the first argument the reference object to match (<code>target</code>) and the second the value to test (<code>current</code>). In this case our <code>target</code> template is a zero (undefined) length numeric vector, so any numeric vector will satisfy it, including a numeric matrix, but not a character vector. We can easily add more constraints by specifying more structure:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">numeric</span>(<span class="dv">3</span>), <span class="kw">runif</span>(<span class="dv">10</span>))</code></pre>
+<pre><code>## Error in validate(numeric(3), runif(10)): Argument `current` should be length 3 (is 10)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">numeric</span>(<span class="dv">3</span>), <span class="kw">runif</span>(<span class="dv">3</span>))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<p>In the <a href="#overview">overview</a> we added dimension attributes with <code>matrix</code> to test for the presence of three columns.</p>
+<p>Templates can be recursive objects. We illustrate here with an S3 object that could be used to analyze car test drives on race tracks:</p>
+<pre class="sourceCode r"><code class="sourceCode r">laps.template &lt;-<span class="st"> </span><span class="kw">structure</span>(
+  <span class="kw">list</span>(
+    <span class="dt">car=</span><span class="kw">character</span>(<span class="dv">1</span>),
+    <span class="dt">data=</span><span class="kw">data.frame</span>(<span class="dt">lap=</span><span class="kw">numeric</span>(), <span class="dt">time=</span><span class="kw">Sys.time</span>()[<span class="dv">0</span>])
+  ),
+  <span class="dt">class=</span><span class="st">&quot;laps&quot;</span>
+)</code></pre>
+<p>Our template is a list that contains a character car identifier and a data frame with lap timestamp data. We can then write functions that require our “laps” class objects to conform to that structure:</p>
+<pre class="sourceCode r"><code class="sourceCode r">analyze &lt;-<span class="st"> </span>function(x) {
+  <span class="kw">validate_args</span>(laps.template)
+  <span class="ot">TRUE</span> <span class="co"># stand-in for really meaningful code</span>
+}</code></pre>
+<p>and we create several objects to run our tests with:</p>
+<pre class="sourceCode r"><code class="sourceCode r">lap.times &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">lap=</span><span class="dv">1</span>:<span class="dv">10</span>, <span class="dt">time=</span><span class="kw">cumsum</span>(<span class="kw">rnorm</span>(<span class="dv">10</span>, <span class="dv">120</span>, <span class="dv">3</span>)))
+laps<span class="fl">.1</span> &lt;-<span class="st"> </span><span class="kw">structure</span>(lap.times, <span class="dt">class=</span><span class="st">&quot;laps&quot;</span>)
+laps<span class="fl">.2</span> &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="kw">list</span>(<span class="st">&quot;corvette z06&quot;</span>, lap.times), <span class="dt">class=</span><span class="st">&quot;laps&quot;</span>)
+laps<span class="fl">.3</span> &lt;-<span class="st"> </span>laps<span class="fl">.4</span> &lt;-<span class="st"> </span><span class="kw">setNames</span>(laps<span class="fl">.2</span>, <span class="kw">c</span>(<span class="st">&quot;car&quot;</span>, <span class="st">&quot;data&quot;</span>))
+laps<span class="fl">.4</span>$data &lt;-<span class="st"> </span><span class="kw">transform</span>(laps<span class="fl">.4</span>$data, <span class="dt">time=</span><span class="kw">Sys.time</span>() +<span class="st"> </span>time)</code></pre>
+<p>and call our <code>analyze</code> function with them:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">analyze</span>(laps<span class="fl">.1</span>)   <span class="co"># Forgot to include car</span></code></pre>
+<pre><code>## Error in analyze(x = laps.1): Argument `x` should be &quot;car&quot; at index [[1]] for &quot;names&quot; (is &quot;lap&quot;)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">analyze</span>(laps<span class="fl">.2</span>)   <span class="co"># Missing names</span></code></pre>
+<pre><code>## Error in analyze(x = laps.2): Argument `x` should be type &quot;character&quot; (is &quot;NULL&quot;) for &quot;names&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">analyze</span>(laps<span class="fl">.3</span>)   <span class="co"># Lap times should be in POSIXct</span></code></pre>
+<pre><code>## Error in analyze(x = laps.3): Argument `x` should be class &quot;POSIXct&quot; (is &quot;numeric&quot;) at index [[&quot;data&quot;]][[&quot;time&quot;]]</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">analyze</span>(laps<span class="fl">.4</span>)   <span class="co"># Valid object</span></code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<p>Notice how <code>validate_args</code> checks that the class of the columns of the data frame nested inside our object matches expectations.</p>
+<p>Internally <code>validate</code> uses <code>alike</code> to compare the template to the test value. See the <a href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/brodieG/alike/master/inst/doc/alike.html">alike vignette</a> for extensive details on how templates work.</p>
+</div>
+<div id="complex-validation" class="section level2">
+<h2>Complex Validation</h2>
+<div id="matching-multiple-elements" class="section level3">
+<h3>Matching Multiple Elements</h3>
+<p>Sometimes we want to allow an object to match different types of variables:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">integer</span>(<span class="dv">1</span>) ||<span class="st"> </span><span class="kw">character</span>(<span class="dv">1</span>), <span class="dv">2</span>)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">integer</span>(<span class="dv">1</span>) ||<span class="st"> </span><span class="kw">character</span>(<span class="dv">1</span>), <span class="st">&quot;hello&quot;</span>)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">integer</span>(<span class="dv">1</span>) ||<span class="st"> </span><span class="kw">character</span>(<span class="dv">1</span>), <span class="ot">TRUE</span>)</code></pre>
+<pre><code>## Error in validate(integer(1) || character(1), TRUE): Argument `current` should meet at least one of the following:
+##   - be type &quot;integer-like&quot; (is &quot;logical&quot;)
+##   - be type &quot;character&quot; (is &quot;logical&quot;)</code></pre>
+<p>We constructed a compound <strong>validation expression</strong> by combining two <strong>validation tokens</strong> with the <code>||</code> operator.</p>
+</div>
+<div id="custom-validation-tokens" class="section level3">
+<h3>Custom Validation Tokens</h3>
+<p>Templates only allow us to verify object structure, but it is often desirable to place some constraints on object values as well. For example, we may want to require that our inputs have all positive values. To achieve this we can supplement template tokens with custom validation tokens:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">numeric</span>(<span class="dv">3</span>) &amp;&amp;<span class="st"> </span><span class="kw">all</span>(. &gt;<span class="st"> </span><span class="dv">0</span>), <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">numeric</span>(<span class="dv">3</span>) &amp;&amp;<span class="st"> </span><span class="kw">all</span>(. &gt;<span class="st"> </span><span class="dv">0</span>), <span class="kw">c</span>(<span class="dv">1</span>, -<span class="dv">2</span>, <span class="dv">3</span>))</code></pre>
+<pre><code>## Error in validate(numeric(3) &amp;&amp; all(. &gt; 0), c(1, -2, 3)): Argument `current` should have `all(current &gt; 0)` evaluate to TRUE (is FALSE)</code></pre>
+<p>The <code>.</code> represents the object or argument being tested. By using a <code>.</code> as part of a token, we indicate to <code>validate</code> / <code>validate_args</code> that that token should be interpreted as an expression to evaluate instead of a template. The <code>.</code> is substituted with the corresponding object / argument name and the expression is evaluated. If the evaluation returns <code>TRUE</code> or a vector that is all <code>TRUE</code>, the validation token passes, otherwise it fails.</p>
+</div>
+<div id="non-standard-evaluation-of-validation-expressions" class="section level3">
+<h3>Non Standard Evaluation of Validation Expressions</h3>
+<p>Validation expressions combine templates and custom tokens delimited by <code>&amp;&amp;</code> and <code>||</code>. While superficially validation expressions look like R expressions, they are never run through the R evaluator. Instead, they are recursively parsed into tokens and each token is examined to determine whether it should be treated as a template or as a validation expression. For example:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">logical</span>(<span class="dv">1</span>) ||<span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="dv">0</span>:<span class="dv">1</span>)</code></pre>
+<p>is parsed as three tokens: <code>logical(1)</code>, <code>numeric(1)</code>, and <code>. %in% 0:1</code>. Tokens that contain <code>.</code> are interpreted as custom expressions, and tokens that don’t are treated as templates. In this case the first two tokens are considered templates, and the last is a custom expression, so the overall validation expression will accept scalar logicals, or 0 or 1:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">logical</span>(<span class="dv">1</span>) ||<span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="dv">0</span>:<span class="dv">1</span>), <span class="ot">TRUE</span>)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">logical</span>(<span class="dv">1</span>) ||<span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="dv">0</span>:<span class="dv">1</span>), <span class="dv">0</span>)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(<span class="kw">logical</span>(<span class="dv">1</span>) ||<span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="dv">0</span>:<span class="dv">1</span>), <span class="st">&quot;1&quot;</span>)</code></pre>
+<pre><code>## Error in validate(logical(1) || (numeric(1) &amp;&amp; . %in% 0:1), &quot;1&quot;): Argument `current` should meet at least one of the following:
+##   - be type &quot;logical&quot; (is &quot;character&quot;)
+##   - be type &quot;numeric&quot; (is &quot;character&quot;)</code></pre>
+<p>If you need to reference a literal dot (<code>.</code>) in a template, you can escape it by adding another dot so that <code>.</code> becomes <code>..</code>. If you want to reference <code>...</code> you’ll need to use <code>....</code>. If you have a validation expression that doesn’t reference the validation object (i.e. doesn’t use <code>.</code>) you can mark it as a validation expression by wrapping it in <code>.()</code> (if you want to use a literal <code>.()</code> you can use <code>..()</code>).</p>
+<p>If you need <code>&amp;&amp;</code> or <code>||</code> to be interpreted literally you can wrap the call in <code>identity</code> to tell <code>validate</code> not to recursively parse the expression:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">identity</span>(<span class="kw">length</span>(a) ==<span class="st"> </span><span class="kw">length</span>(b) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="dv">0</span>:<span class="dv">1</span>)</code></pre>
+<p>which will be treated as a single custom validation token. <code>validate</code> will not recurse into calls other than to <code>(</code>, <code>&amp;&amp;</code>, and <code>||</code>. The <code>identity</code> example here is just an example of this behavior. Note that an implication of this is you should not nest template tokens inside functions as <code>validate</code> will not identify them as templates and you may get unexpected results as a result. For example:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">identity</span>(<span class="kw">logical</span>(1L) &amp;&amp;<span class="st"> </span><span class="kw">my_special_fun</span>(.))</code></pre>
+<p>will always fail because <code>logical(1L)</code> will be interpreted as <code>FALSE</code> rather than as a template token.</p>
+</div>
+<div id="pre-defining-validation-tokens" class="section level3">
+<h3>Pre-defining Validation Tokens</h3>
+<p><code>validate</code> uses complex rules to parse and evaluate validation expressions, but they resolve to mostly intuitive outcomes. One upside of the complexity is that you can actually store validation tokens, whether templates or custom, in variables:</p>
+<pre class="sourceCode r"><code class="sourceCode r">TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">logical</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>!<span class="kw">is.na</span>(.))  <span class="co"># note `quote`</span>
+<span class="kw">validate</span>(TF, <span class="ot">TRUE</span>)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(TF, <span class="ot">NA</span>)</code></pre>
+<pre><code>## Error in validate(TF, NA): Argument `current` should have `!is.na(current)` evaluate to TRUE (is FALSE)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(TF, <span class="dv">1</span>)</code></pre>
+<pre><code>## Error in validate(TF, 1): Argument `current` should be type &quot;logical&quot; (is &quot;double&quot;)</code></pre>
+<p>Since validate parses and evaluates tokens recursively, you can even combine pre-stored tokens:</p>
+<pre class="sourceCode r"><code class="sourceCode r">ZERO_OR_ONE &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">numeric</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>!<span class="kw">is.na</span>(.) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="dv">0</span>:<span class="dv">1</span>)
+TF_ish &lt;-<span class="st"> </span><span class="kw">quote</span>(TF ||<span class="st"> </span>ZERO_OR_ONE)
+<span class="kw">validate</span>(TF_ish, <span class="dv">1</span>)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(TF_ish, <span class="st">&quot;0&quot;</span>)</code></pre>
+<pre><code>## Error in validate(TF_ish, &quot;0&quot;): Argument `current` should meet at least one of the following:
+##   - be type &quot;logical&quot; (is &quot;character&quot;)
+##   - be type &quot;numeric&quot; (is &quot;character&quot;)</code></pre>
+<p>You can also provide more helpful error messages with <code>mk_val_token</code> for specific tokens:</p>
+<pre class="sourceCode r"><code class="sourceCode r">NONA &lt;-<span class="st"> </span><span class="kw">mk_val_token</span>(!<span class="kw">is.na</span>(.), <span class="st">&quot;not contain NAs&quot;</span>)
+TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">logical</span>(1L) &amp;&amp;<span class="st"> </span>NOT.NA)
+<span class="kw">validate</span>(TF, <span class="ot">NA</span>)</code></pre>
+<pre><code>## Error in validate(TF, NA): Argument `current` should not contain NAs</code></pre>
+<p>See <code>?mk_val_token</code> for more details.</p>
+</div>
+<div id="validation-expression-parsing-and-evaluation-rules" class="section level3">
+<h3>Validation Expression Parsing and Evaluation Rules</h3>
+<p>Hopefully you were able to get an intuitive sense of how validation expressions work. If you are interested in the actual rules, read on, otherwise skip to the next section.</p>
+<p>After parsing the validation expression, <code>validate</code> examines each token for the presence of <code>.</code> or <code>.()</code>. If either are present then the <code>.</code> values are substituted for the corresponding variable name (<code>current</code> for <code>validate</code>, and whatever variable is matched to the validation expression for <code>validate_args</code>). Then each token is evaluted in the parent frame. If the token evaluated was a custom expression then it is checked for truth. If not, the result of evaluating the token is used as a template for an <code>alike</code> check against the object being tested, except for the special case when the template evaluates to a quoted language object. In that case <code>validate</code> recursively applies the same logic to the language object as described above.</p>
+<p>AUTHNOTE: more details on which exact parent frame is used.</p>
+</div>
+<div id="predefined-tokens" class="section level3">
+<h3>Predefined Tokens</h3>
+<p><code>validate</code> comes with many predifined validation tokens for common cases:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(NUM<span class="fl">.1</span>.POS, <span class="dv">5</span>)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(NUM<span class="fl">.1</span>.POS, -<span class="dv">3</span>)</code></pre>
+<pre><code>## Error in validate(NUM.1.POS, -3): Argument `current` should contain only positive values, but has negatives</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(NUM<span class="fl">.1</span>.POS, <span class="kw">runif</span>(<span class="dv">5</span>))</code></pre>
+<pre><code>## Error in validate(NUM.1.POS, runif(5)): Argument `current` should be length 1 (is 5)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(CHR, letters)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">validate</span>(CHR, <span class="kw">factor</span>(letters))</code></pre>
+<pre><code>## Error in validate(CHR, factor(letters)): Argument `current` should be type &quot;character&quot; (is &quot;integer&quot;)</code></pre>
+<p>See <code>?validation_tokens</code> for more details about what predefined tokens are available.</p>
+</div>
+</div>
+<div id="alternatives" class="section level2">
+<h2>Alternatives</h2>
+<div id="stopifnot" class="section level3">
+<h3><code>stopifnot</code></h3>
+<p>A simple built-in alternative is to use <code>stopifnot</code>. Here are the equivalent for our S3 lap object checks with <code>stopifnot</code>:</p>
+<pre class="sourceCode r"><code class="sourceCode r">analyze2 &lt;-<span class="st"> </span>function(x, ...) {
+  <span class="kw">stopifnot</span>(
+    <span class="kw">is.list</span>(x), <span class="kw">inherits</span>(x, <span class="st">&quot;laps&quot;</span>), <span class="kw">identical</span>(<span class="kw">names</span>(x), <span class="kw">names</span>(laps.template)),
+    <span class="kw">is.character</span>(x$car), <span class="kw">length</span>(x$car) ==<span class="st"> </span><span class="dv">1</span>, <span class="kw">is.data.frame</span>(x$data),
+    <span class="kw">identical</span>(<span class="kw">names</span>(x$data), <span class="kw">names</span>(laps.template$data)),
+    <span class="kw">identical</span>(<span class="kw">attributes</span>(x$data$lap), <span class="kw">attributes</span>(laps.template$data$lap)),
+    <span class="kw">identical</span>(<span class="kw">attributes</span>(x$data$time), <span class="kw">attributes</span>(laps.template$data$time))
+  )
+  <span class="ot">TRUE</span>
+}
+<span class="kw">analyze2</span>(laps<span class="fl">.1</span>)   <span class="co"># Forgot to include car</span></code></pre>
+<pre><code>## Error: identical(names(x), names(laps.template)) is not TRUE</code></pre>
+<p>compare to:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">analyze</span>(laps<span class="fl">.1</span>)    <span class="co"># Forgot to include car</span></code></pre>
+<pre><code>## Error in analyze(x = laps.1): Argument `x` should be &quot;car&quot; at index [[1]] for &quot;names&quot; (is &quot;lap&quot;)</code></pre>
+</div>
+<div id="s4-classes" class="section level3">
+<h3>S4 Classes</h3>
+<p>The natural solution to enforcing structural requirements in R objects is to use S4 classes. Unfortunately S3 objects are so prevalent in R that a “backwards compatible” mechanism for enforcing structure requirement is warranted.</p>
+</div>
+</div>
+<div id="performance-considerations" class="section level2">
+<h2>Performance Considerations</h2>
+<div id="benchmarks" class="section level3">
+<h3>Benchmarks</h3>
+<p>Both <code>validate</code> and <code>alike</code> are written primarily in C to minimize the performance impact of adding validation checks to your functions. Performance is comparable to or faster better than using <code>stopifnot</code>. Here we run our checks on valid “laps” objects we used to illustrate <a href="#complex-s3-objects">validation with complex S3 objects</a>:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(microbenchmark)
+<span class="kw">microbenchmark</span>(
+  <span class="kw">analyze2</span>(laps<span class="fl">.4</span>), <span class="co"># stopifnot version</span>
+  <span class="kw">analyze</span>(laps<span class="fl">.4</span>)   <span class="co"># validate version</span>
+)</code></pre>
+<pre><code>## Unit: microseconds
+##              expr    min      lq     mean  median      uq     max neval
+##  analyze2(laps.4) 82.640 85.9385 95.51536 91.7195 98.4030 268.128   100
+##   analyze(laps.4) 24.139 26.0750 29.67021 27.6625 29.2685 121.384   100</code></pre>
+<p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
+</div>
+<div id="templates-and-performance" class="section level3">
+<h3>Templates and Performance</h3>
+<p>Complex templates will be slower to evalute than simple ones, particularly for lists with lots of nested elements since <code>alike</code> recurses through all template list elements.</p>
+<p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">microbenchmark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre>
+<pre><code>## Unit: microseconds
+##                       expr     min       lq     mean   median       uq      max
+##  data.frame(a = numeric()) 109.185 113.2295 162.3455 121.8485 132.4075 2495.355
+##  neval
+##    100</code></pre>
+<p>This is slower than the entire validation process show in our prior examples.</p>
+</div>
+</div>
+<div id="acknowledgements" class="section level2">
+<h2>Acknowledgements</h2>
+<p>Thanks to <a href="https://github.com/smbache">smbache</a> for some ideas I borrowed from his package <a href="https://github.com/smbache/ensurer">ensurer</a>, in particular for providing a function to validate objects other than function arguments. Thanks also to Hadley Wickham for pointing me to smbache when I asked him about object validation.</p>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
