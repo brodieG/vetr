@@ -116,12 +116,14 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   SEXP lang_cpy, res, res_vec, rem_res;
   int mode;
 
-  lang_cpy = PROTECT(duplicate(lang)); // Must copy since we're going to modify this
+  // Must copy since we're going to modify this
+  lang_cpy = PROTECT(duplicate(lang));
 
   rem_res = PROTECT(VALC_remove_parens(lang_cpy));
   lang_cpy = VECTOR_ELT(rem_res, 0);
   mode = asInteger(VECTOR_ELT(rem_res, 1));
-  lang_cpy = VALC_sub_symbol(lang_cpy, rho); // Replace any variables to language objects with language
+  // Replace any variables to language objects with language
+  lang_cpy = VALC_sub_symbol(lang_cpy, rho);
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     if(lang_cpy == VALC_SYM_one_dot) mode = 1;
@@ -129,7 +131,8 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
   } else {
     res = PROTECT(allocList(length(lang_cpy)));
-    VALC_parse_recurse(lang_cpy, res, var_name, rho, mode, R_NilValue);  // lang_cpy, res, are modified internally
+    // lang_cpy, res, are modified internally
+    VALC_parse_recurse(lang_cpy, res, var_name, rho, mode, R_NilValue);
   }
   res_vec = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
@@ -146,20 +149,18 @@ void VALC_parse_recurse(
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
-  list, placing each an R vector list that combines this element and an auxillary
-  value describing the element into a pair list that replicates in structure the
-  original language list.
+  list, placing each an R vector list that combines this element and an
+  auxillary value describing the element into a pair list that replicates in
+  structure the original language list.
 
   Note we're purposefully modifying calls by reference so that the top level
   calls reflect the full substitution of the parse process.
 
-  We want to modify the copy of the original call as well, need to dig
-  into list with call to do so; maybe should use parallel trees, one with
-  the expressions, one with the status, and the recursion is done by
-  passing pointers to the current position in each tree.  Would be simpler.
-  Here instead we try to cram both trees into one by using lists and we
-  get this mess below
-
+  We want to modify the copy of the original call as well, need to dig into list
+  with call to do so; maybe should use parallel trees, one with the expressions,
+  one with the status, and the recursion is done by passing pointers to the
+  current position in each tree.  Would be simpler.  Here instead we try to cram
+  both trees into one by using lists and we get this mess below
   */
   static int counter = -1;
   int call_type = 999;
@@ -210,7 +211,8 @@ void VALC_parse_recurse(
     }
     SEXP lang_car = VECTOR_ELT(rem_parens, 0);
 
-    lang_car = VALC_sub_symbol(lang_car, rho); // Replace any variables to language objects with language
+    // Replace any variables to language objects with language
+    lang_car = VALC_sub_symbol(lang_car, rho);
     SETCAR(lang, lang_car);
     UNPROTECT(1);
 
