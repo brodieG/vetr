@@ -38,7 +38,7 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base);
 
 // - Imported Funs -------------------------------------------------------------
 
-SEXP(*VALC_alike)(SEXP,SEXP, SEXP);
+SEXP(*VALC_alike)(SEXP,SEXP,SEXP,SEXP);
 SEXP(*VALC_match_call)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
 SEXP(*VALC_get_frame_data)(SEXP,SEXP,SEXP,int);
 SEXP(*VALC_get_fun)(SEXP,SEXP);
