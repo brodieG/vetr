@@ -29,21 +29,16 @@ SEXP VALC_process_error(
 
   SEXP val_res_cpy;
   size_t count_top = 0, size = 0;
-  const char * err_arg = CHAR(PRINTNAME(val_tag));
-  const char * err_very_base = "Argument `%s` ";
 
   // Compose optional argument part of message. This ends up being "Argument
   // `x` should %s" where arg and should are optional
 
   char * err_arg_msg = "";
-  if(ret_mode == 1 || ret_mode == 3) {
-    err_arg_msg = CSR_smprintf4(
-      VALC_MAX_CHAR, err_very_base, err_arg, "", "", ""
-    );
-  }
+  if(ret_mode == 1 || ret_mode == 3) err_arg_msg = "Argument ";
+
   const char * err_base = "%s%s%%s";
   char * err_base_msg = CSR_smprintf4(
-    VALC_MAX_CHAR, err_base, err_arg_msg, ret_mode != 2 ? "should " : "", "", ""
+    VALC_MAX_CHAR, err_base, err_arg_msg, "", "", ""
   );
 
   // First pass get sizes; note that prior to commit e3724f9 char vectors with
