@@ -253,6 +253,24 @@ The problems is the `current` in the scond line.  What would be better?  Just us
       - Expected length 1, but got 3
       - Expected type "NULL", but got "integer"
 
+    
+    Error in validate(INT.1 || NULL, 1:3) :
+      At least one of the following should be true:
+      - `length(1:3)` should be 1, but is 3
+      - `1:3` should be type NULL, but is integer
+
+   Error in fun2(x = 1:3, y = TRUE) :
+      Argument `x` fails validation because none of the following are true:
+      - `length(1:3)` should be 1, but is 3
+      - `1:3` should be type NULL, but is integer
+
+   Error in fun2(x = 1:3, y = TRUE) :
+      Bad argument `x`; does not pass any of the following:
+      - `length(1:3)` should be 1, not 3
+      - `1:3` should be type NULL, not integer
+
+   Error in fun2(x = 1:3, y = TRUE) :
+      Argument `y` wrong because `TRUE` should be type integer, not logical
 
     Error in validate(INT.1 || NULL, 1:3) :
       Argument `current` must:
