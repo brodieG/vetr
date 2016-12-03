@@ -151,7 +151,10 @@ SEXP VALC_validate(
   SEXP target, SEXP current, SEXP par_call, SEXP rho, SEXP ret_mode_sxp
 ) {
   SEXP res;
-  res = PROTECT(VALC_evaluate(target, VALC_SYM_current, current, par_call, rho));
+  res = PROTECT(
+    VALC_evaluate(
+      target, VALC_SYM_current, VALC_SYM_current, current, par_call, rho
+  ) );
   if(IS_TRUE(res)) {
     UNPROTECT(1);
     return(VALC_TRUE);
@@ -254,11 +257,9 @@ SEXP VALC_validate_args(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     );}
     // Evaluate the validation expression
 
-    PrintValue(val_tok);
-    PrintValue(CAR(fun_call_cpy));
-    Rprintf(type2char(TYPEOF(fun_call_cpy)));
-    SEXP val_res =
-      VALC_evaluate(val_tok, CAR(fun_call_cpy), fun_val, val_call, fun_frame);
+    SEXP val_res = VALC_evaluate(
+      val_tok, CAR(fun_call_cpy), arg_tag, fun_val, val_call, fun_frame
+    );
     if(IS_TRUE(val_res)) continue;  // success, check next
     // fail, produce error message: NOTE - might change if we try to use full
     // expression instead of just arg name

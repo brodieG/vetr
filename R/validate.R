@@ -98,7 +98,7 @@ validate_args <- function(...)
 
 validate <- function(target, current, return.mode="stop")
   .Call(
-    VALC_validate, substitute(target), current, sys.call(),
+    VALC_validate, substitute(target), quote(current), current, sys.call(),
     sys.frame(sys.nframe()), return.mode
   )
 
