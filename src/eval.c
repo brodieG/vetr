@@ -180,27 +180,28 @@ SEXP VALC_evaluate_recurse(
                   error("Logic error: could not build token error; contact maintainer");
               }
               break;
-            case -1: err_tok = "is FALSE"; break;
-            case -3: err_tok = "is NA"; break;
+            case -1: err_tok = "FALSE"; break;
+            case -3: err_tok = "NA"; break;
             case -4: err_tok = "contains NAs"; break;
-            case -5: err_tok = "is zero length"; break;
+            case -5: err_tok = "zero length"; break;
             case 0: err_tok = "contains non-TRUE values"; break;
             default:
               error("Logic Error: unexpected user exp eval value %d; contact maintainer.", eval_res_c);
           }
-          const char * err_extra_a = "all TRUE values";
-          const char * err_extra_b = "TRUE"; // must be shorter than _a
+          const char * err_extra_a = "is not all TRUE";
+          const char * err_extra_b = "is not TRUE"; // must be shorter than _a
           const char * err_extra;
           if(eval_res_c == 0) {
             err_extra = err_extra_a;
           } else {
             err_extra = err_extra_b;
           }
-          const char * err_base = "have `%s` evaluate to %s (%s)";
+          const char * err_base = "`%s` %s (%s)";
           err_str = R_alloc(
             strlen(err_call) + strlen(err_base) + strlen(err_tok) +
             strlen(err_extra), sizeof(char)
           );
+          // not sure why we're not using cstringr here
           if(sprintf(err_str, err_base, err_call, err_extra, err_tok) < 0)
             error("Logic Error: could not construct error message; contact maintainer.");
           SETCAR(err_msg, mkString(err_str));

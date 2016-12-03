@@ -3,7 +3,11 @@
  * val_res should be a pairlist containing character vectors in each position
  * and each of those character vectors should be length one
  *
- * ret_mode is the mode of the return value
+ * @param val_res is the return value of VALC_evaluate
+ * @param val_tag is the argument name in questions
+ * @param fun_call (unsure?) is the original function call to use when throwing
+ *   the error
+ * @param ret_mode is the mode of the return value
  * - 0 = default, error message as length 1 character vector with everything
  *   except the "Argument ..." part
  * - 1 = entire error message returned as character(1L)
@@ -34,9 +38,15 @@ SEXP VALC_process_error(
   // `x` should %s" where arg and should are optional
 
   char * err_arg_msg = "";
-  if(ret_mode == 1 || ret_mode == 3) err_arg_msg = "Argument ";
+  const char * err_arg = CHAR(PRINTNAME(val_tag));
+  const char * err_very_base = "For argument `%s`";
 
-  const char * err_base = "%s%s%%s";
+  if(ret_mode == 1 || ret_mode == 3) {
+    err_arg_msg = CSR_smprintf4(
+      VALC_MAX_CHAR, err_very_base, err_arg, "", "", ""
+    );
+  }
+  const char * err_base = "%s%%s%%s";
   char * err_base_msg = CSR_smprintf4(
     VALC_MAX_CHAR, err_base, err_arg_msg, "", "", ""
   );
@@ -90,18 +100,22 @@ SEXP VALC_process_error(
       count++;
     }
   } else {
-    // Here we need to compose the full character value
     if(count_top == 1) {
+      // Here we need to compose the full character value since there is only
+      // one correct value for the arg
+
       char * err_msg = CSR_strmcpy(CHAR(asChar(CAR(val_res))), VALC_MAX_CHAR);
       if(err_msg) err_msg[0] = tolower(err_msg[0]);
 
       err_full = CSR_smprintf4(
-        VALC_MAX_CHAR, err_base_msg, err_msg, "", "", ""
+        VALC_MAX_CHAR, err_base_msg, ", ", err_msg, "", ""
       );
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_full));
     } else {
+      // Have multiple "or" cases
+
       char * err_head = CSR_smprintf4(
-        VALC_MAX_CHAR, err_base_msg, "meet at least one of the following:\n",
+        VALC_MAX_CHAR, err_base_msg, " at least one of these should pass:\n",
         "", "", ""
       );
       size += CSR_strmlen(err_head, VALC_MAX_CHAR) + 5 * count_top;
@@ -194,8 +208,8 @@ SEXP VALC_validate_args(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
         chr_exp, R_TRUE, R_TRUE, R_TRUE, one, R_NilValue, sys_frames, sys_calls,
         sys_pars
   ) ) );
-  // Get definition of fun in original call; this unfortunately requires repeating
-  // some of the logic in the step above, but is pretty fast
+  // Get definition of fun in original call; this unfortunately requires
+  // repeating some of the logic in the step above, but is pretty fast
 
   SEXP fun_frame_dat = PROTECT(
     VALC_get_frame_data(sys_frames, sys_calls, sys_pars, 1)
