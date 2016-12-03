@@ -4,7 +4,7 @@
 \* -------------------------------------------------------------------------- */
 
 SEXP VALC_evaluate_recurse(
-  SEXP lang, SEXP act_codes, SEXP arg_value, SEXP arg_name, SEXP lang_full,
+  SEXP lang, SEXP act_codes, SEXP arg_value, SEXP arg_lang, SEXP lang_full,
   SEXP rho
 ) {
   /*
@@ -62,7 +62,7 @@ SEXP VALC_evaluate_recurse(
       while(lang != R_NilValue) {
         eval_res = PROTECT(
           VALC_evaluate_recurse(
-            CAR(lang), CAR(act_codes), arg_value, arg_name, lang_full, rho
+            CAR(lang), CAR(act_codes), arg_value, arg_lang, lang_full, rho
         ) );
         if(TYPEOF(eval_res) == LISTSXP) {
           if(mode == 1) {// At least one non-TRUE result, which is a failure, so return
@@ -102,7 +102,7 @@ SEXP VALC_evaluate_recurse(
     eval_tmp = PROTECT(R_tryEval(lang, rho, err_point));
     if(* err_point) {
       VALC_arg_error(
-        arg_name, lang_full,
+        arg_lang, lang_full,
         "Validation expression for argument `%s` produced an error (see previous error)."
       );
     }
@@ -110,7 +110,7 @@ SEXP VALC_evaluate_recurse(
       eval_res_c = VALC_all(eval_tmp);
       eval_res = PROTECT(ScalarLogical(eval_res_c > 0));
     } else {
-      eval_res = PROTECT(VALC_alike(eval_tmp, arg_value, arg_name, rho));
+      eval_res = PROTECT(VALC_alike(eval_tmp, arg_value, arg_lang, rho));
     }
     // Sanity checks
 
@@ -221,24 +221,24 @@ SEXP VALC_evaluate_recurse(
 TBD if this should call `VALC_parse` directly or not
 
 @param lang the validator expression
-@param arg_name the name of the argument being validated
+@param arg_lang the substituted language being validated
 @param arg_value the value being validated
 @param lang_full solely so that we can produce error message with original call
 @param rho the environment in which to evaluate the validation function
 */
 SEXP VALC_evaluate(
-  SEXP lang, SEXP arg_name, SEXP arg_value, SEXP lang_full, SEXP rho
+  SEXP lang, SEXP arg_lang, SEXP arg_value, SEXP lang_full, SEXP rho
 ) {
-  if(TYPEOF(arg_name) != SYMSXP)
-    error("Argument `arg_name` must be a symbol.");
+  if(!IS_LANG(arg_lang))
+    error("Argument `arg_lang` must be language.");
   if(TYPEOF(rho) != ENVSXP)
     error("Argument `rho` must be an environment.");
-  SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_name, rho));
+  SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, rho));
   SEXP res = PROTECT(
     VALC_evaluate_recurse(
       VECTOR_ELT(lang_parsed, 0),
       VECTOR_ELT(lang_parsed, 1),
-      arg_value, arg_name, lang_full, rho
+      arg_value, arg_lang, lang_full, rho
   ) );
   // Remove duplicates, if any
 

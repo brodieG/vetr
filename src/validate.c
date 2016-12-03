@@ -259,9 +259,14 @@ SEXP VALC_validate_args(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     );}
     // Evaluate the validation expression
 
-    SEXP val_res = VALC_evaluate(val_tok, arg_tag, fun_val, val_call, fun_frame);
+    PrintValue(val_tok);
+    PrintValue(CAR(fun_call_cpy));
+    Rprintf(type2char(TYPEOF(fun_call_cpy)));
+    SEXP val_res =
+      VALC_evaluate(val_tok, CAR(fun_call_cpy), fun_val, val_call, fun_frame);
     if(IS_TRUE(val_res)) continue;  // success, check next
-    // fail, produce error message
+    // fail, produce error message: NOTE - might change if we try to use full
+    // expression instead of just arg name
     VALC_process_error(val_res, TAG(fun_call_cpy), fun_call, 3);
     error("Logic Error: should never get here 2487; contact maintainer");
   }
