@@ -29,6 +29,7 @@ void VALC_stop2(SEXP call, const char * msg, SEXP rho);
 SEXP VALC_all_ext(SEXP vec);
 int VALC_all(SEXP vec);
 int IS_TRUE(SEXP x);
+int IS_LANG(SEXP x);
 SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho);
 void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is, SEXP first_fun);
 SEXP VALC_sub_symbol(SEXP lang, SEXP rho);

@@ -40,6 +40,12 @@ SEXP VALC_test3(SEXP a, SEXP b) {
 int IS_TRUE(SEXP x) {
   return(TYPEOF(x) == LGLSXP && XLENGTH(x) == 1 && asLogical(x));
 }
+int IS_LANG(SEXP x) {
+  return(
+    TYPEOF(x) != LANGSXP || TYPEOF(x) != SYMSXP ||
+    !(isVectorAtomic(x) || XLENGTH(x) == 1) || x != R_NilValue
+  );
+}
 /*
 Fake `stop`
 
