@@ -43,7 +43,7 @@ unitizer_sect("parse", {
   validate:::parse_validator(quote(a && .), "hello")                          # uninterpretable?
 } )
 unitizer_sect("token sub", {
-  validate:::symb_sub(INT1)
+  validate:::symb_sub(INT.1)
   validate:::symb_sub(NO.NA)
 })
 
@@ -57,14 +57,14 @@ unitizer_sect("preset tokens", {
   validate:::parse_validator(quote(z || NULL), quote(w))
 } )
 unitizer_sect("validators", {
-  validate:::parse_validator(INT1, quote(w))
+  validate:::parse_validator(INT.1, quote(w))
   validate:::parse_validator(INT, quote(w))
-  validate:::parse_validator(CHR1, quote(w))
+  validate:::parse_validator(CHR.1, quote(w))
   validate:::parse_validator(CHR, quote(w))
-  validate:::parse_validator(NUM1, quote(w))
+  validate:::parse_validator(NUM.1, quote(w))
   validate:::parse_validator(NUM, quote(w))
-  validate:::parse_validator(LGL1, quote(w))
+  validate:::parse_validator(LGL.1, quote(w))
   validate:::parse_validator(LGL, quote(w))
-  validate:::parse_validator(CPX1, quote(w))
+  validate:::parse_validator(CPX.1, quote(w))
   validate:::parse_validator(CPX, quote(w))
 } )
