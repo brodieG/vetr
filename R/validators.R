@@ -63,37 +63,54 @@ mk_val_token <- function(exp, err.msg="") {
 #' @rdname validation_tokens
 #' @export
 
-NO.NA <- mk_val_token(!is.na(.), "not contain NAs, but does")
+NO.NA <- mk_val_token(!is.na(.), "`%s` should not contain NAs, but does")
 
 #' @export
 #' @name validation_tokens
 
-NO.INF <- mk_val_token(is.finite(.), "contain only finite values, but does not")
+NO.INF <- mk_val_token(
+  is.finite(.), "`%s` should contain only finite values, but does not"
+)
+#' @export
+#' @name validation_tokens
+
+GTE.0 <- mk_val_token(
+  . >= 0, "`%s` should contain only positive values, but has negatives"
+)
 
 #' @export
 #' @name validation_tokens
 
-GTE.0 <- mk_val_token(. >= 0, "contain only positive values, but has negatives")
+LTE.0 <- mk_val_token(
+  . <= 0, "`%s` should contain only negative values, but has positives"
+)
 
 #' @export
 #' @name validation_tokens
 
-LTE.0 <- mk_val_token(. <= 0, "contain only negative values, but has positives")
+GT.0 <- mk_val_token(
+  . > 0,
+  paste0(
+    "`%s` should contain only \"strictly positive\" values, but has zeroes or ",
+    "negatives"
+  )
+)
 
 #' @export
 #' @name validation_tokens
 
-GT.0 <- mk_val_token(. > 0, "contain only \"strictly positive\" values, but has zeroes or negatives")
-
-#' @export
-#' @name validation_tokens
-
-LT.0 <- mk_val_token(. < 0, "contain only \"strictly negative\" values, but has zeroes or positives")
+LT.0 <- mk_val_token(
+  . < 0,
+  paste0(
+    "`%s` should contain only \"strictly negative\" values, but has zeroes ",
+    "or positives"
+  )
+)
 
 #' Atomic Vector validator
 #'
 #'
-#' @aliases NUM1 CHR1 LGL1 CPX1 INT NUM CHR CPX LGL
+#' @aliases NUM.1 CHR.1 LGL.1 CPX.1 INT NUM CHR CPX LGL
 #' @seealso \code{\link{validator_sub}}
 #' @export
 #' @rdname validator_atomic

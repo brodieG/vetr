@@ -36,6 +36,8 @@ void R_init_validate(DllInfo *info)
   VALC_alike = (SEXP(*)(SEXP, SEXP, SEXP, SEXP)) R_GetCCallable(
     "alike", "ALIKEC_alike_ext"
   );
+  VALC_deparse = (SEXP(*)(SEXP, int)) R_GetCCallable("alike", "ALIKEC_deparse");
+
   VALC_get_frame_data = (SEXP(*)(SEXP,SEXP,SEXP,int)) R_GetCCallable("matchcall", "MC_get_frame_data");
 
   VALC_get_fun = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("matchcall", "MC_get_fun");

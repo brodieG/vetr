@@ -70,7 +70,8 @@ SEXP VALC_evaluate_recurse(
             rho
         ) );
         if(TYPEOF(eval_res) == LISTSXP) {
-          if(mode == 1) {// At least one non-TRUE result, which is a failure, so return
+          if(mode == 1) {
+            // At least one non-TRUE result, which is a failure, so return
             UNPROTECT(2);
             return(eval_res);
           }
@@ -98,7 +99,11 @@ SEXP VALC_evaluate_recurse(
       }
       return(eval_res);  // Or if all returned TRUE and mode is AND
     } else {
-      error("Logic Error: in mode c(1, 2), but not a language object; contact maintainer.");
+      error(
+        "%s%s",
+        "Logic Error: in mode c(1, 2), but not a language object; ",
+        "contact maintainer."
+      );
     }
   } else if(mode == 10 || mode == 999) {
     SEXP eval_res, eval_tmp;
@@ -159,10 +164,24 @@ SEXP VALC_evaluate_recurse(
         if((err_attrib = getAttrib(lang, VALC_SYM_errmsg)) != R_NilValue) {
           if(TYPEOF(err_attrib) != STRSXP || XLENGTH(err_attrib) != 1) {
             error(
-              "\"err.msg\" attribute for `%s` token must be a one length character vector",
-              err_call
+              "\"err.msg\" attribute for `%s` token must be a %s",
+              err_call, "one length character vector"
           );}
-          SETCAR(err_msg, err_attrib);
+          // Need to deparse language for our error message
+
+          SEXP arg_lang_dep = PROTECT(VALC_deparse(arg_lang, -1));
+
+          // Need to make copy of string, modify it, and turn it back into
+          // string
+
+          const char * err_attrib_msg = CHAR(STRING_ELT(err_attrib, 0));
+          char * err_attrib_mod = CSR_smprintf4(
+            VALC_MAX_CHAR, err_attrib_msg,
+            CHAR(STRING_ELT(arg_lang_dep, 0)), "", "", ""
+          );
+          UNPROTECT(1);  // no longer need arg_lang_dep
+          // not protecting mkString since assigning to protected object
+          SETCAR(err_msg, mkString(err_attrib_mod));
         } else {
           // message attribute not defined, must construct error message based
           // on result of evaluation
