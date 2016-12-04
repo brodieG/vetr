@@ -9,14 +9,14 @@
  *   the error
  * @param ret_mode is the mode of the return value
  * - 0 = default, error message as length 1 character vector with everything
- *   except the "Argument ..." part
+ *   except the introductory part of the error message
  * - 1 = entire error message returned as character(1L)
  * - 2 = pieces of error message returned as character(N)
- * - 3 = error
+ * @param stop if 1 then stop, otherwise return
  */
 
 SEXP VALC_process_error(
-  SEXP val_res, SEXP val_tag, SEXP fun_call, int ret_mode
+  SEXP val_res, SEXP val_tag, SEXP fun_call, int ret_mode, int stop
 ) {
   // - Failure / Validation ----------------------------------------------------
 
@@ -25,11 +25,15 @@ SEXP VALC_process_error(
 
   if(TYPEOF(val_res) != LISTSXP)
     error(
-      "Logic Error: unexpected type %s when evaluating test for %s; contact mainainer.",
-      type2char(TYPEOF(val_res)), CHAR(PRINTNAME(val_tag))
+      "Logic Error: unexpected type %s when evaluating test for %s; %s",
+      type2char(TYPEOF(val_res)), CHAR(PRINTNAME(val_tag)),
+      "contact mainainer."
     );
-  if(ret_mode < 0 || ret_mode > 3)
-    error("Logic Error: arg ret_mode must be between 0 and 4; contact maintainer.");
+  if(ret_mode < 0 || ret_mode > 2)
+    error(
+      "%s%s", "Logic Error: arg ret_mode must be between 0 and 2; ",
+      "contact maintainer."
+    );
 
   SEXP val_res_cpy;
   size_t count_top = 0, size = 0;
@@ -41,7 +45,7 @@ SEXP VALC_process_error(
   const char * err_arg = CHAR(PRINTNAME(val_tag));
   const char * err_very_base = "For argument `%s`";
 
-  if(ret_mode == 1 || ret_mode == 3) {
+  if(ret_mode == 1) {
     err_arg_msg = CSR_smprintf4(
       VALC_MAX_CHAR, err_very_base, err_arg, "", "", ""
     );
@@ -64,7 +68,10 @@ SEXP VALC_process_error(
     if(TYPEOF(err_vec) != STRSXP)
       error("Logic Error: did not get character err msg; contact maintainer");
     if(XLENGTH(err_vec) != 1)
-      error("Logic Error: no longer support err msgs greater than length one; contact maintainer");
+      error(
+        "%s%s", "Logic Error: no longer support err msgs greater than ",
+        "length one; contact maintainer"
+      );
 
     count_top++;
     size += CSR_strmlen(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
@@ -107,16 +114,24 @@ SEXP VALC_process_error(
       char * err_msg = CSR_strmcpy(CHAR(asChar(CAR(val_res))), VALC_MAX_CHAR);
       if(err_msg) err_msg[0] = tolower(err_msg[0]);
 
+      const char * err_interim = "";
+      if(ret_mode == 1) err_interim = ", ";
+
       err_full = CSR_smprintf4(
-        VALC_MAX_CHAR, err_base_msg, ", ", err_msg, "", ""
+        VALC_MAX_CHAR, err_base_msg, err_interim, err_msg, "", ""
       );
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_full));
     } else {
       // Have multiple "or" cases
 
+      const char * err_interim = "";
+      if(ret_mode == 1) {
+        err_interim = " at least one of these should pass:\n";
+      } else if(!ret_mode) {
+        err_interim = "At least one of these should pass:\n";
+      }
       char * err_head = CSR_smprintf4(
-        VALC_MAX_CHAR, err_base_msg, " at least one of these should pass:\n",
-        "", "", ""
+        VALC_MAX_CHAR, err_base_msg, err_interim, "", "", ""
       );
       size += CSR_strmlen(err_head, VALC_MAX_CHAR) + 5 * count_top;
 
@@ -151,7 +166,7 @@ SEXP VALC_process_error(
   // Return TRUE, message, or throw an error depending on user input
 
   UNPROTECT(1);  // unprotects vector result
-  if(ret_mode != 3) {
+  if(!stop) {
     return err_vec_res;
   } else {
     VALC_stop(fun_call, err_full);
@@ -162,32 +177,41 @@ SEXP VALC_process_error(
 \* -------------------------------------------------------------------------- */
 
 SEXP VALC_validate(
-  SEXP target, SEXP current, SEXP par_call, SEXP rho, SEXP ret_mode_sxp
+  SEXP target, SEXP current, SEXP cur_sub, SEXP par_call, SEXP rho,
+  SEXP ret_mode_sxp, SEXP stop
 ) {
   SEXP res;
   res = PROTECT(
-    VALC_evaluate(
-      target, VALC_SYM_current, VALC_SYM_current, current, par_call, rho
-  ) );
+    VALC_evaluate(target, cur_sub, VALC_SYM_current, current, par_call, rho)
+  );
   if(IS_TRUE(res)) {
     UNPROTECT(1);
     return(VALC_TRUE);
   }
   if(TYPEOF(ret_mode_sxp) != STRSXP && XLENGTH(ret_mode_sxp) != 1)
     error("Argument `return.mode` must be character(1L)");
+  int stop_int;
+
+  if(
+    (TYPEOF(stop) != LGLSXP && XLENGTH(stop) != 1) ||
+    ((stop_int = asInteger(stop)) == NA_INTEGER)
+  )
+    error("Argument `stop` must be TRUE or FALSE");
+
   const char * ret_mode_chr = CHAR(asChar(ret_mode_sxp));
   int ret_mode;
 
   if(!strcmp(ret_mode_chr, "text")) {
     ret_mode = 0;
-  } else if(!strcmp(ret_mode_chr, "stop")) {
-    ret_mode = 3;
   } else if(!strcmp(ret_mode_chr, "raw")) {
     ret_mode = 2;
   } else if(!strcmp(ret_mode_chr, "full")) {
     ret_mode = 1;
-  } else error("Argument `return.mode` must be one of \"text\", \"stop\", \"raw\",\"full\"");
-  SEXP out = VALC_process_error(res, VALC_SYM_current, par_call, ret_mode);
+  } else error("Argument `return.mode` must be one of \"text\", \"raw\",\"full\"");
+
+  SEXP out = VALC_process_error(
+    res, VALC_SYM_current, par_call, ret_mode, stop_int
+  );
   UNPROTECT(1);
   return out;
 }
@@ -277,7 +301,7 @@ SEXP VALC_validate_args(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     if(IS_TRUE(val_res)) continue;  // success, check next
     // fail, produce error message: NOTE - might change if we try to use full
     // expression instead of just arg name
-    VALC_process_error(val_res, TAG(fun_call_cpy), fun_call, 3);
+    VALC_process_error(val_res, TAG(fun_call_cpy), fun_call, 1, 1);
     error("Logic Error: should never get here 2487; contact maintainer");
   }
   if(val_call_cpy != R_NilValue || fun_call_cpy != R_NilValue)

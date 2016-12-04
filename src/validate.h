@@ -16,7 +16,8 @@ SEXP VALC_TRUE;
 SEXP VALC_SYM_errmsg;
 
 SEXP VALC_validate(
-  SEXP target, SEXP current, SEXP par_call, SEXP rho, SEXP ret_mode_sxp
+  SEXP target, SEXP current, SEXP cur_sub, SEXP par_call, SEXP rho,
+  SEXP ret_mode_sxp, SEXP stop
 );
 SEXP VALC_validate_args();
 SEXP VALC_remove_parens(SEXP lang);
