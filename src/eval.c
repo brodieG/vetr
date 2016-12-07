@@ -173,6 +173,12 @@ SEXP VALC_evaluate_recurse(
 
           // Need to make copy of string, modify it, and turn it back into
           // string
+          /*
+           * ISSUE HERE: WE NEED DIFFERENT SUB MECHANISM DEPENDING ON WHETHER
+           * THE DEPARSED LANGUAGE IS LENGTH 1 OR GREATER; SEEMS LIKE WE NEED TO
+           * SEPARATE THE SUBSTITUTION POINT FROM THE err_attrib PIECE AND HAVE
+           * VALIDATE HANDLE IT COMPLETELY INTERNALLY
+           */
 
           const char * err_attrib_msg = CHAR(STRING_ELT(err_attrib, 0));
           char * err_attrib_mod = CSR_smprintf4(
