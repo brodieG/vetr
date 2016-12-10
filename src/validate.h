@@ -45,6 +45,8 @@ SEXP(*VALC_match_call)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
 SEXP(*VALC_get_frame_data)(SEXP,SEXP,SEXP,int);
 SEXP(*VALC_get_fun)(SEXP,SEXP);
 SEXP(*VALC_deparse)(SEXP,int);
+const char * (*VALC_pad)(SEXP,int,int);
+const char * (*VALC_pad_or_quote)(SEXP,int,int);
 
 // String Maniip
 

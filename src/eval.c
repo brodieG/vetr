@@ -148,16 +148,7 @@ SEXP VALC_evaluate_recurse(
 
         SEXP err_attrib;
         const char * err_call;
-
-        SEXP dep_call = PROTECT(allocList(2));
-        SETCAR(dep_call, VALC_SYM_deparse);
-        SEXP quot_call = PROTECT(allocList(2));
-        SETCAR(quot_call, VALC_SYM_quote);
-        SETCADR(quot_call, lang);
-        SET_TYPEOF(quot_call, LANGSXP);
-        SETCADR(dep_call, quot_call);
-        SET_TYPEOF(dep_call, LANGSXP);
-        err_call = CHAR(STRING_ELT(eval(dep_call, rho), 0));  // Could span multiple lines...; need to address
+        err_call = VALC_pad_or_quote(lang, -1, -1);
 
         // If message attribute defined, this is easy:
 
@@ -167,25 +158,14 @@ SEXP VALC_evaluate_recurse(
               "\"err.msg\" attribute for `%s` token must be a %s",
               err_call, "one length character vector"
           );}
-          // Need to deparse language for our error message
-
-          SEXP arg_lang_dep = PROTECT(VALC_deparse(arg_lang, -1));
-
           // Need to make copy of string, modify it, and turn it back into
           // string
-          /*
-           * ISSUE HERE: WE NEED DIFFERENT SUB MECHANISM DEPENDING ON WHETHER
-           * THE DEPARSED LANGUAGE IS LENGTH 1 OR GREATER; SEEMS LIKE WE NEED TO
-           * SEPARATE THE SUBSTITUTION POINT FROM THE err_attrib PIECE AND HAVE
-           * VALIDATE HANDLE IT COMPLETELY INTERNALLY
-           */
 
           const char * err_attrib_msg = CHAR(STRING_ELT(err_attrib, 0));
           char * err_attrib_mod = CSR_smprintf4(
             VALC_MAX_CHAR, err_attrib_msg,
-            CHAR(STRING_ELT(arg_lang_dep, 0)), "", "", ""
+            VALC_pad_or_quote(arg_lang, -1, -1), "", "", ""
           );
-          UNPROTECT(1);  // no longer need arg_lang_dep
           // not protecting mkString since assigning to protected object
           SETCAR(err_msg, mkString(err_attrib_mod));
         } else {
@@ -221,7 +201,7 @@ SEXP VALC_evaluate_recurse(
           } else {
             err_extra = err_extra_b;
           }
-          const char * err_base = "`%s` %s (%s)";
+          const char * err_base = "%s%s (%s)";
           err_str = R_alloc(
             strlen(err_call) + strlen(err_base) + strlen(err_tok) +
             strlen(err_extra), sizeof(char)
@@ -231,7 +211,7 @@ SEXP VALC_evaluate_recurse(
             error("Logic Error: could not construct error message; contact maintainer.");
           SETCAR(err_msg, mkString(err_str));
         }
-        UNPROTECT(2);
+        UNPROTECT(1);
       } else { // must have been `alike` eval
         SETCAR(err_msg, eval_res);
       }

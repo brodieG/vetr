@@ -63,26 +63,26 @@ mk_val_token <- function(exp, err.msg="") {
 #' @rdname validation_tokens
 #' @export
 
-NO.NA <- mk_val_token(!is.na(.), "`%s` should not contain NAs, but does")
+NO.NA <- mk_val_token(!is.na(.), "%sshould not contain NAs, but does")
 
 #' @export
 #' @name validation_tokens
 
 NO.INF <- mk_val_token(
-  is.finite(.), "`%s` should contain only finite values, but does not"
+  is.finite(.), "%sshould contain only finite values, but does not"
 )
 #' @export
 #' @name validation_tokens
 
 GTE.0 <- mk_val_token(
-  . >= 0, "`%s` should contain only positive values, but has negatives"
+  . >= 0, "%sshould contain only positive values, but has negatives"
 )
 
 #' @export
 #' @name validation_tokens
 
 LTE.0 <- mk_val_token(
-  . <= 0, "`%s` should contain only negative values, but has positives"
+  . <= 0, "%sshould contain only negative values, but has positives"
 )
 
 #' @export
@@ -91,7 +91,7 @@ LTE.0 <- mk_val_token(
 GT.0 <- mk_val_token(
   . > 0,
   paste0(
-    "`%s` should contain only \"strictly positive\" values, but has zeroes or ",
+    "%sshould contain only \"strictly positive\" values, but has zeroes or ",
     "negatives"
   )
 )
@@ -102,7 +102,7 @@ GT.0 <- mk_val_token(
 LT.0 <- mk_val_token(
   . < 0,
   paste0(
-    "`%s` should contain only \"strictly negative\" values, but has zeroes ",
+    "%sshould contain only \"strictly negative\" values, but has zeroes ",
     "or positives"
   )
 )

@@ -38,6 +38,7 @@ void R_init_validate(DllInfo *info)
   );
   VALC_deparse = (SEXP(*)(SEXP, int)) R_GetCCallable("alike", "ALIKEC_deparse");
   VALC_pad = (const char * (*)(SEXP, int, int)) R_GetCCallable("alike", "ALIKEC_pad");
+  VALC_pad_or_quote = (const char * (*)(SEXP, int, int)) R_GetCCallable("alike", "ALIKEC_pad_or_quote");
   VALC_get_frame_data = (SEXP(*)(SEXP,SEXP,SEXP,int)) R_GetCCallable("matchcall", "MC_get_frame_data");
 
   VALC_get_fun = (SEXP(*)(SEXP,SEXP)) R_GetCCallable("matchcall", "MC_get_fun");
