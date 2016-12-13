@@ -54,15 +54,25 @@ SEXP VALC_process_error(
   char * err_base_msg = CSR_smprintf4(
     VALC_MAX_CHAR, err_base, err_arg_msg, "", "", ""
   );
-
-  // First pass get sizes; note that prior to commit e3724f9 char vectors with
-  // length greater than one were allowed, but that outcome should not occur
-  // so we no longer support it; look at prior commits for the code to support
-  // that
+  // First count how many items we have as we need different treatment depending
+  // on what we're looking at
 
   for(
     val_res_cpy = val_res; val_res_cpy != R_NilValue;
     val_res_cpy = CDR(val_res_cpy)
+  ) {
+    count_top++;
+  }
+  if(!count_top) return VALC_TRUE;
+
+  // Now get sizes (first pass) get sizes; note that prior to commit e3724f9
+  // char vectors with length greater than one were allowed, but that outcome
+  // should not occur so we no longer support it; look at prior commits for the
+  // code to support that
+
+  for(
+    val_res_cpy = val_res; val_res_cpy != R_NilValue;
+    val_res_cpy = CDR(val_res_cpy);
   ) {
     SEXP err_vec = CAR(val_res_cpy);
     if(TYPEOF(err_vec) != STRSXP)
@@ -73,6 +83,16 @@ SEXP VALC_process_error(
         "length one; contact maintainer"
       );
 
+    if(count_top > 1) {
+      // Apply bulleting padding when there are multiple items
+
+      SET_STRING_ELT(
+        err_vec, 0, 
+        mkChar(VALC_pad()
+      )
+
+    } else {
+    }
     count_top++;
     size += CSR_strmlen(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
   }
@@ -144,7 +164,7 @@ SEXP VALC_process_error(
       sprintf(err_full_cpy, "%s", err_head);
       err_full_cpy = err_full_cpy + CSR_strmlen(err_full_cpy, VALC_MAX_CHAR);
 
-      // Second pass construct string
+      // Second pass construct string (first pass at beginning of fun)
 
       size_t count = 0;
       for(
