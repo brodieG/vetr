@@ -72,9 +72,9 @@ SEXP VALC_process_error(
 
   for(
     val_res_cpy = val_res; val_res_cpy != R_NilValue;
-    val_res_cpy = CDR(val_res_cpy);
+    val_res_cpy = CDR(val_res_cpy)
   ) {
-    SEXP err_vec = CAR(val_res_cpy);
+    SEXP err_vec = PROTECT(duplicate(CAR(val_res_cpy)));
     if(TYPEOF(err_vec) != STRSXP)
       error("Logic Error: did not get character err msg; contact maintainer");
     if(XLENGTH(err_vec) != 1)
@@ -87,14 +87,15 @@ SEXP VALC_process_error(
       // Apply bulleting padding when there are multiple items
 
       SET_STRING_ELT(
-        err_vec, 0, 
-        mkChar(VALC_pad()
-      )
-
-    } else {
+        err_vec, 0,
+        mkChar(
+          VALC_bullet(CHAR(STRING_ELT(err_vec, 0)), "- ", " ", VALC_MAX_CHAR)
+      ) );
+      SETCAR(val_res_cpy, err_vec);
     }
     count_top++;
     size += CSR_strmlen(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
+    UNPROTECT(1);
   }
   if(!count_top) return VALC_TRUE;
 
