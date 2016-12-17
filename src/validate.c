@@ -93,12 +93,9 @@ SEXP VALC_process_error(
       ) );
       SETCAR(val_res_cpy, err_vec);
     }
-    count_top++;
     size += CSR_strmlen(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
     UNPROTECT(1);
   }
-  if(!count_top) return VALC_TRUE;
-
   // Depending on whether there is one error or multiple ones (multiple means
   // value failed to match any of the OR possibilities), render error; we render
   // directly into a STRSXP because we might want to return that and it is
