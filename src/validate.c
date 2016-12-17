@@ -93,7 +93,13 @@ SEXP VALC_process_error(
       ) );
       SETCAR(val_res_cpy, err_vec);
     }
-    size += CSR_strmlen(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
+    size_t elt_size = CSR_strmlen(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
+    if(!elt_size)
+      error("%s%s"
+        "Logic Error: could not compute string element size because it ",
+        "exceeded VALC_MAX_CHAR; contact maintainer."
+      )
+    size += elt_size;
     UNPROTECT(1);
   }
   // Depending on whether there is one error or multiple ones (multiple means
@@ -107,7 +113,8 @@ SEXP VALC_process_error(
     allocVector(STRSXP, ret_mode == 2 ? count_top : 1)
   );
   // Handle simplest case where we just return the unmodified error messages
-  // by copying to a new string
+  // by copying to a new string (why don't we just duplicate the whole enchilada
+  // here?  This seem pretty roundabout.
 
   if(ret_mode == 2) {
     size_t count = 0;
@@ -138,7 +145,6 @@ SEXP VALC_process_error(
       err_full = CSR_smprintf4(
         VALC_MAX_CHAR, err_base_msg, err_interim, err_msg, "", ""
       );
-      SET_STRING_ELT(err_vec_res, 0, mkChar(err_full));
     } else {
       // Have multiple "or" cases
 
@@ -151,7 +157,13 @@ SEXP VALC_process_error(
       char * err_head = CSR_smprintf4(
         VALC_MAX_CHAR, err_base_msg, err_interim, "", "", ""
       );
-      size += CSR_strmlen(err_head, VALC_MAX_CHAR) + 5 * count_top;
+      size_t elt_size = CSR_strmlen(err_head, VALC_MAX_CHAR);
+      if(!elt_size)
+        error("%s%s"
+          "Logic Error: could not compute string element size because it ",
+          "exceeded VALC_MAX_CHAR; contact maintainer (2)."
+        );
+      size += (elt_size + count_top);
 
       // Need to use base C string manip because we are writing each line
       // sequentially to the pre-allocated block
@@ -160,9 +172,17 @@ SEXP VALC_process_error(
       char * err_full_cpy = err_full;
 
       sprintf(err_full_cpy, "%s", err_head);
-      err_full_cpy = err_full_cpy + CSR_strmlen(err_full_cpy, VALC_MAX_CHAR);
+      size_t fc_size = CSR_strmlen(err_full_cpy, VALC_MAX_CHAR);
+      if(!fc_size)
+        error("%s%s"
+          "Logic Error: could not compute full copy size because it ",
+          "exceeded VALC_MAX_CHAR; contact maintainer."
+        );
+
+      err_full_cpy = err_full_cpy + fc_size;
 
       // Second pass construct string (first pass at beginning of fun)
+      // TURN THIS OFF IN FAVOR OF THE AUTO-BULLETTING
 
       size_t count = 0;
       for(
