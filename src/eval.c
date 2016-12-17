@@ -176,13 +176,15 @@ SEXP VALC_evaluate_recurse(
           char * err_tok;
           switch(eval_res_c) {
             case -2: {
-                const char * err_tok_tmp = type2char(TYPEOF(eval_tmp));
-                const char * err_tok_base = "is \"%s\" instead of a \"logical\"";
-                err_tok = R_alloc(
-                  strlen(err_tok_tmp) + strlen(err_tok_base), sizeof(char)
+              const char * err_tok_tmp = type2char(TYPEOF(eval_tmp));
+              const char * err_tok_base = "is \"%s\" instead of a \"logical\"";
+              err_tok = R_alloc(
+                strlen(err_tok_tmp) + strlen(err_tok_base), sizeof(char)
+              );
+              if(sprintf(err_tok, err_tok_base, err_tok_tmp) < 0)
+                error(
+                  "Logic error: could not build token error; contact maintainer"
                 );
-                if(sprintf(err_tok, err_tok_base, err_tok_tmp) < 0)
-                  error("Logic error: could not build token error; contact maintainer");
               }
               break;
             case -1: err_tok = "FALSE"; break;
@@ -191,7 +193,10 @@ SEXP VALC_evaluate_recurse(
             case -5: err_tok = "zero length"; break;
             case 0: err_tok = "contains non-TRUE values"; break;
             default:
-              error("Logic Error: unexpected user exp eval value %d; contact maintainer.", eval_res_c);
+              error(
+                "Logic Error: %s %d; contact maintainer.",
+                "unexpected user exp eval value", eval_res_c
+              );
           }
           const char * err_extra_a = "is not all TRUE";
           const char * err_extra_b = "is not TRUE"; // must be shorter than _a
@@ -266,15 +271,22 @@ SEXP VALC_evaluate(
         res_next = CDR(res_cpy);
         res_val = CAR(res_cpy);
         if(TYPEOF(res_val) != STRSXP)
-          error("Logic Error: non string value in return pairlist; contact maintainer.");
+          error(
+            "%s%s",
+            "Logic Error: non string value in return pairlist; contact ",
+            "maintainer."
+          );
         if(res_next == R_NilValue) break;
-        if(R_compute_identical(CAR(res_next), res_val, 16)) { // Need to remove res_next
+        // Need to remove res_next
+        if(R_compute_identical(CAR(res_next), res_val, 16)) {
           res_next_next = CDR(res_next);
           SETCDR(res_cpy, res_next_next);
       } }
     } break;
     default:
-      error("Logic Error: unexpected evaluating return type; contact maintainer.");
+      error(
+        "Logic Error: unexpected evaluating return type; contact maintainer."
+      );
   }
   UNPROTECT(2);  // This seems a bit stupid, PROTECT/UNPROTECT
   return(res);
