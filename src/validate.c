@@ -89,16 +89,12 @@ SEXP VALC_process_error(
       SET_STRING_ELT(
         err_vec, 0,
         mkChar(
-          VALC_bullet(CHAR(STRING_ELT(err_vec, 0)), "- ", " ", VALC_MAX_CHAR)
-      ) );
+          VALC_bullet(
+            CHAR(STRING_ELT(err_vec, 0)), "  - ", "    ", VALC_MAX_CHAR
+      ) ) );
       SETCAR(val_res_cpy, err_vec);
     }
     size_t elt_size = CSR_strmlen(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
-    if(!elt_size)
-      error("%s%s"
-        "Logic Error: could not compute string element size because it ",
-        "exceeded VALC_MAX_CHAR; contact maintainer."
-      )
     size += elt_size;
     UNPROTECT(1);
   }
@@ -158,11 +154,6 @@ SEXP VALC_process_error(
         VALC_MAX_CHAR, err_base_msg, err_interim, "", "", ""
       );
       size_t elt_size = CSR_strmlen(err_head, VALC_MAX_CHAR);
-      if(!elt_size)
-        error("%s%s"
-          "Logic Error: could not compute string element size because it ",
-          "exceeded VALC_MAX_CHAR; contact maintainer (2)."
-        );
       size += (elt_size + count_top);
 
       // Need to use base C string manip because we are writing each line
@@ -173,11 +164,6 @@ SEXP VALC_process_error(
 
       sprintf(err_full_cpy, "%s", err_head);
       size_t fc_size = CSR_strmlen(err_full_cpy, VALC_MAX_CHAR);
-      if(!fc_size)
-        error("%s%s"
-          "Logic Error: could not compute full copy size because it ",
-          "exceeded VALC_MAX_CHAR; contact maintainer."
-        );
 
       err_full_cpy = err_full_cpy + fc_size;
 
@@ -194,8 +180,9 @@ SEXP VALC_process_error(
         char * err_sub = CSR_strmcpy(
           CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR
         );
-        sprintf(err_full_cpy, "  - %s\n", err_sub);
-        err_full_cpy += strlen(err_sub) + 5;
+        sprintf(err_full_cpy, "%s\n", err_sub);
+        // offset, +1 for the newline we add above
+        err_full_cpy += CSR_strmlen(err_sub, VALC_MAX_CHAR) + 1;
         count++;
       }
     }
