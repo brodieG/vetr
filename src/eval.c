@@ -168,23 +168,23 @@ SEXP VALC_evaluate_recurse(
 
         SEXP err_attrib;
         const char * err_call;
-        err_call = VALC_pad_or_quote(lang, -1, -1);
+        err_call = VALC_pad_or_quote(arg_lang, -1, -1);
 
         // If message attribute defined, this is easy:
 
         if((err_attrib = getAttrib(lang, VALC_SYM_errmsg)) != R_NilValue) {
           if(TYPEOF(err_attrib) != STRSXP || XLENGTH(err_attrib) != 1) {
-            error(
-              "\"err.msg\" attribute for `%s` token must be a %s",
-              err_call, "one length character vector"
-          );}
+            VALC_arg_error(
+              arg_tag, lang_full,
+              "\"err.msg\" attribute for validation token for argument `%s` must be a one length character vector."
+            );
+          }
           // Need to make copy of string, modify it, and turn it back into
           // string
 
           const char * err_attrib_msg = CHAR(STRING_ELT(err_attrib, 0));
           char * err_attrib_mod = CSR_smprintf4(
-            VALC_MAX_CHAR, err_attrib_msg,
-            VALC_pad_or_quote(arg_lang, -1, -1), "", "", ""
+            VALC_MAX_CHAR, err_attrib_msg, err_call, "", "", ""
           );
           // not protecting mkString since assigning to protected object
           SETCAR(err_msg, mkString(err_attrib_mod));
