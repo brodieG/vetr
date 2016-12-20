@@ -34,11 +34,17 @@ SEXP VALC_evaluate_recurse(
 
   if(TYPEOF(act_codes) == LISTSXP) {
     if(TYPEOF(lang) != LANGSXP && TYPEOF(lang) != LISTSXP) {
-      error("Logic Error: mismatched language and eval type tracking 1; contact maintainer.");
+      error("%s%s"
+        "Internal Error: mismatched language and eval type tracking 1; contact ",
+        "maintainer."
+      );
     }
     if(TYPEOF(CAR(act_codes)) != INTSXP) {
       if(TYPEOF(CAR(lang)) != LANGSXP) {
-        error("Logic error: call should have been evaluated at previous level; contact maintainer.");
+        error("%s%s",
+          "Logic error: call should have been evaluated at previous level; ",
+          "contact maintainer."
+        );
       }
       if(TYPEOF(CAR(act_codes)) != LISTSXP || TYPEOF(CAAR(act_codes)) != INTSXP) {
         error("Logic error: unexpected act_code structure; contact maintainer");
@@ -49,7 +55,10 @@ SEXP VALC_evaluate_recurse(
     }
   } else {
     if(TYPEOF(lang) == LANGSXP || TYPEOF(lang) == LISTSXP) {
-      error("Logic Error: mismatched language and eval type tracking 2; contact maintainer.");
+      error("%s%s",
+        "Internal Error: mismatched language and eval type tracking 2; contact ",
+        "maintainer."
+      );
     }
     mode = asInteger(act_codes);
   }
@@ -84,7 +93,10 @@ SEXP VALC_evaluate_recurse(
             return(ScalarLogical(1)); // At least one TRUE value in or mode
           }
         } else {
-          error("Logic Error: unexpected return value when recursively evaluating parse; contact maintainer.");
+          error("%s%s",
+            "Internal Error: unexpected return value when recursively ",
+            "evaluating parse; contact maintainer."
+          );
         }
         lang = CDR(lang);
         act_codes = CDR(act_codes);
@@ -92,16 +104,21 @@ SEXP VALC_evaluate_recurse(
         UNPROTECT(1);
       }
       if(parse_count != 2)
-        error("Logic Error: unexpected language structure for modes 1/2; contact maintainer.");
+        error("%s%s",
+          "Internal Error: unexpected language structure for modes 1/2; ",
+          "contact maintainer."
+        );
       UNPROTECT(1);
-      if(mode == 2) {  // Only way to get here is if none of previous actually returned TRUE and mode is OR
+      // Only way to get here is if none of previous actually returned TRUE and
+      // mode is OR
+      if(mode == 2) {
         return(err_list);
       }
       return(eval_res);  // Or if all returned TRUE and mode is AND
     } else {
       error(
         "%s%s",
-        "Logic Error: in mode c(1, 2), but not a language object; ",
+        "Internal Error: in mode c(1, 2), but not a language object; ",
         "contact maintainer."
       );
     }
@@ -130,7 +147,10 @@ SEXP VALC_evaluate_recurse(
         TYPEOF(eval_res) == LGLSXP && asInteger(eval_res) == NA_INTEGER
       )
     )
-      error("Logic error: token eval must be TRUE, FALSE, or character(1L), contact maintainer (is type: %s)", type2char(TYPEOF(eval_res)));
+      error("%s (is type: %s), %s",
+        "Internal Error: token eval must be TRUE, FALSE, or character(1L), ",
+        type2char(TYPEOF(eval_res)), "contact maintainer."
+      );
 
     // Note we're handling both user exp and template eval here
 
@@ -194,7 +214,7 @@ SEXP VALC_evaluate_recurse(
             case 0: err_tok = "contains non-TRUE values"; break;
             default:
               error(
-                "Logic Error: %s %d; contact maintainer.",
+                "Internal Error: %s %d; contact maintainer.",
                 "unexpected user exp eval value", eval_res_c
               );
           }
@@ -213,7 +233,7 @@ SEXP VALC_evaluate_recurse(
           );
           // not sure why we're not using cstringr here
           if(sprintf(err_str, err_base, err_call, err_extra, err_tok) < 0)
-            error("Logic Error: could not construct error message; contact maintainer.");
+            error("Internal Error: could not construct error message; contact maintainer.");
           SETCAR(err_msg, mkString(err_str));
         }
         UNPROTECT(1);
@@ -226,9 +246,9 @@ SEXP VALC_evaluate_recurse(
     UNPROTECT(2);
     return(eval_res);  // this should be `TRUE`
   } else {
-    error("Logic Error: unexpected parse mode %d", mode);
+    error("Internal Error: unexpected parse mode %d", mode);
   }
-  error("Logic Error: should never get here");
+  error("Internal Error: should never get here");
   return(R_NilValue);  // Should never get here
 }
 /* -------------------------------------------------------------------------- *\
@@ -273,7 +293,7 @@ SEXP VALC_evaluate(
         if(TYPEOF(res_val) != STRSXP)
           error(
             "%s%s",
-            "Logic Error: non string value in return pairlist; contact ",
+            "Internal Error: non string value in return pairlist; contact ",
             "maintainer."
           );
         if(res_next == R_NilValue) break;
@@ -285,7 +305,7 @@ SEXP VALC_evaluate(
     } break;
     default:
       error(
-        "Logic Error: unexpected evaluating return type; contact maintainer."
+        "Internal Error: unexpected evaluating return type; contact maintainer."
       );
   }
   UNPROTECT(2);  // This seems a bit stupid, PROTECT/UNPROTECT
