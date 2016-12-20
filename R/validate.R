@@ -13,6 +13,7 @@
 #' the first argument is the template, and the second the value to check.
 #' \code{validate} uses whatever aspects of the template are defined and
 #' ensures that the value tested
+#'
 #' Each argument to \code{validate_args} is matched to one argument of the
 #' enclosing function following the same rules \code{\link{match.call}} uses.
 #' For example, in:
