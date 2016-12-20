@@ -68,9 +68,9 @@ unitizer_sect("Compound Expressions", {
 })
 
 unitizer_sect("Other Return Modes", {
-  validate(INT.1 || NULL || LGL, "hello", return.mode="text")
-  validate(INT.1 || NULL || LGL, "hello", return.mode="raw")
-  validate(INT.1 || NULL || LGL, "hello", return.mode="full")
+  validate(INT.1 || NULL || LGL, "hello", format="text")
+  validate(INT.1 || NULL || LGL, "hello", format="raw")
+  validate(INT.1 || NULL || LGL, "hello", format="full")
 })
 
 unitizer_sect("Multi-line Stuff", {
