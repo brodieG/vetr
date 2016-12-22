@@ -23,6 +23,10 @@ SEXP VALC_process_error(
   // Failure, explain why; two pass process because we first need to determine
   // size of error, allocate, then convert to char
 
+  PrintValue(val_res);
+  PrintValue(val_tag);
+  PrintValue(fun_call);
+  Rprintf("hello %d\n", 23412);
   if(TYPEOF(val_res) != LISTSXP)
     error(
       "Logic Error: unexpected type %s when evaluating test for %s; %s",
@@ -74,30 +78,36 @@ SEXP VALC_process_error(
     val_res_cpy = val_res; val_res_cpy != R_NilValue;
     val_res_cpy = CDR(val_res_cpy)
   ) {
-    SEXP err_vec = PROTECT(duplicate(CAR(val_res_cpy)));
-    if(TYPEOF(err_vec) != STRSXP)
+    if(TYPEOF(CAR(val_res_cpy)) != STRSXP)
       error("Logic Error: did not get character err msg; contact maintainer");
-    if(XLENGTH(err_vec) != 1)
+    if(XLENGTH(CAR(val_res_cpy)) != 1)
       error(
         "%s%s", "Logic Error: no longer support err msgs greater than ",
         "length one; contact maintainer"
       );
 
+    SEXP err_vec;
     if(count_top > 1) {
       // Apply bulleting padding when there are multiple items
 
-      SET_STRING_ELT(
-        err_vec, 0,
-        mkChar(
+      err_vec = PROTECT(
+        mkString(
           VALC_bullet(
-            CHAR(STRING_ELT(err_vec, 0)), "  - ", "    ", VALC_MAX_CHAR
+            CHAR(STRING_ELT(CAR(val_res_cpy), 0)), "  - ", "    ", VALC_MAX_CHAR
       ) ) );
       SETCAR(val_res_cpy, err_vec);
+      UNPROTECT(1);
     }
-    size_t elt_size = CSR_strmlen(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
+    size_t elt_size = CSR_strmlen(
+      CHAR(STRING_ELT(CAR(val_res_cpy), 0)), VALC_MAX_CHAR
+    );
+    Rprintf("elt_size %zu\n", elt_size);
     size += elt_size;
-    UNPROTECT(1);
   }
+  PrintValue(val_res);
+  Rprintf("Size %d\n", 163);
+  //
+  //Rprintf("Size %d\n", size);
   // Depending on whether there is one error or multiple ones (multiple means
   // value failed to match any of the OR possibilities), render error; we render
   // directly into a STRSXP because we might want to return that and it is

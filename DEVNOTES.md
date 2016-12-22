@@ -1,3 +1,25 @@
+## NSE?
+
+Is it possible to allow the functions to accept arbitrary language objects and
+expressions?
+
+For example, currently something like `validate(INT.1, x)` works fine because
+`INT.1` is a language object, but `validate(INT.1 || LGL.1)` fails because R
+will try to evaluate the expression which obviously doesn't work.
+
+Proposal:
+
+1. Substitute first
+2. Parse
+3. Evaluate language components
+4. Continue parsing?
+
+Seems like this should work just fine so long as we substitute target first.
+
+Need to watch out for infinite loops with stuff that keeps evaluating to
+language? (e.g. `y <- quote(get("y")); validate(y, x);`)
+
+## Parse Rules
 
 ```
 fun <- function(argument1, argument2, argument3, argument.opt=FALSE) {

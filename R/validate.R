@@ -95,13 +95,15 @@
 validate_args <- function(...)
   .Call(VALC_validate_args, sys.frames(), sys.calls(), sys.parents())
 
+# Do we need both `substitute(target)` and sys.call??
+
 #' @rdname validate
 #' @export
 
 validate <- function(target, current, format="text", stop=TRUE)
   .Call(
-    VALC_validate, target, current, substitute(current), sys.call(),
-    sys.frame(sys.nframe()), format, stop
+    VALC_validate, substitute(target), current, substitute(current), 
+    sys.call(), sys.frame(sys.nframe()), format, stop
   )
 
 #' @export
