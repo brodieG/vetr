@@ -4,20 +4,6 @@
 
 SEXP VALC_test(SEXP a, SEXP b) {
   error("stop testing function shouldn't be in use");
-  // SEXP found2 = PROTECT(findVar(install("yy"), b));
-  // SEXP found = PROTECT(findVar(a, b));
-  // eval(a, b);
-  // Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
-  // SEXP c = PROTECT(LCONS(install("force"), list1(a)));
-  // PrintValue(c);
-  // eval(c, b);
-  // Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
-  // SET_PRSEEN(found, 1);
-  // found = PROTECT(findVar(a, b));
-  // PrintValue(found);
-
-  // Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
-  // PrintValue(found);
 
   UNPROTECT(2);
   return(R_NilValue);

@@ -23,10 +23,6 @@ SEXP VALC_process_error(
   // Failure, explain why; two pass process because we first need to determine
   // size of error, allocate, then convert to char
 
-  PrintValue(val_res);
-  PrintValue(val_tag);
-  PrintValue(fun_call);
-  Rprintf("hello %d\n", 23412);
   if(TYPEOF(val_res) != LISTSXP)
     error(
       "Internal Error: unexpected type %s when evaluating test for %s; %s",
