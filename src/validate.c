@@ -92,7 +92,7 @@ SEXP VALC_process_error(
       SEXP new_elt;
       SEXP old_elt = STRING_ELT(str, str_i);
 
-      if(count_top > 1) {
+      if(count_top > 1 && ret_mode != 2) {
         new_elt = PROTECT(
           mkChar(VALC_bullet(CHAR(old_elt), "  - ", "    ", VALC_MAX_CHAR))
         );
