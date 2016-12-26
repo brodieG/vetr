@@ -168,7 +168,7 @@ SEXP VALC_evaluate_recurse(
 
         SEXP err_attrib;
         const char * err_call;
-        err_call = VALC_pad_or_quote(arg_lang, -1, -1);
+        err_call = VALC_pad_or_quote(lang, -1, -1);
 
         // If message attribute defined, this is easy:
 
