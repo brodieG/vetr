@@ -109,7 +109,7 @@ SEXP VALC_process_error(
 
     UNPROTECT(1);
     return(err_vec_res);
-  } else {
+  } else if(has_header) {
     if(count_top == 1) {
       // Here we need to compose the full character value since there is only
       // one correct value for the arg
@@ -139,13 +139,13 @@ SEXP VALC_process_error(
       );
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_head));
     }
-    UNPROTECT(1);  // unprotects vector result
-    if(!stop) {
-      return err_vec_res;
-    } else {
-      char * err_full = CSR_collapse(err_vec_res, "\n", VALC_MAX_CHAR);
-      VALC_stop(fun_call, err_full);
-    }
+  }
+  UNPROTECT(1);  // unprotects vector result
+  if(!stop) {
+    return err_vec_res;
+  } else {
+    char * err_full = CSR_collapse(err_vec_res, "\n", VALC_MAX_CHAR);
+    VALC_stop(fun_call, err_full);
   }
   error("%s",
     "Internal Error: this code should not evaluate; contact maintainer 2745."
