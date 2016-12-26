@@ -114,8 +114,8 @@ SEXP VALC_process_error(
       // Here we need to compose the full character value since there is only
       // one correct value for the arg
 
-      char * err_msg =
-        CSR_strmcpy(CHAR(asChar(CAR(err_vec_res))), VALC_MAX_CHAR);
+      const char * err_msg_orig = CHAR(asChar(err_vec_res));
+      char * err_msg = CSR_strmcpy(err_msg_orig, VALC_MAX_CHAR);
       if(err_msg) err_msg[0] = tolower(err_msg[0]);
 
       const char * err_interim = "";
@@ -130,9 +130,9 @@ SEXP VALC_process_error(
 
       const char * err_interim = "";
       if(ret_mode == 1) {
-        err_interim = " at least one of these should pass:\n";
+        err_interim = " at least one of these should pass:";
       } else if(!ret_mode) {
-        err_interim = "At least one of these should pass:\n";
+        err_interim = "At least one of these should pass:";
       }
       char * err_head = CSR_smprintf4(
         VALC_MAX_CHAR, err_base_msg, err_interim, "", "", ""
