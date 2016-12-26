@@ -103,7 +103,7 @@ validate_args <- function(...)
 validate <- function(target, current, format="text", stop=TRUE)
   .Call(
     VALC_validate, substitute(target), current, substitute(current), 
-    sys.call(), sys.frame(sys.nframe()), format, stop
+    sys.call(), parent.frame(), format, stop
   )
 
 #' @export
