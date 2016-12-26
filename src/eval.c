@@ -168,7 +168,6 @@ SEXP VALC_evaluate_recurse(
 
         SEXP err_attrib;
         const char * err_call;
-        err_call = VALC_pad_or_quote(lang, -1, -1);
 
         // If message attribute defined, this is easy:
 
@@ -179,6 +178,8 @@ SEXP VALC_evaluate_recurse(
               "\"err.msg\" attribute for validation token for argument `%s` must be a one length character vector."
             );
           }
+          err_call = VALC_pad_or_quote(arg_lang, -1, -1);
+
           // Need to make copy of string, modify it, and turn it back into
           // string
 
@@ -191,6 +192,8 @@ SEXP VALC_evaluate_recurse(
         } else {
           // message attribute not defined, must construct error message based
           // on result of evaluation
+
+          err_call = VALC_pad_or_quote(lang, -1, -1);
 
           char * err_str;
           char * err_tok;
