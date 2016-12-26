@@ -40,7 +40,7 @@ SEXP VALC_process_error(
     );
 
   SEXP val_res_cpy;
-  size_t count_top = 0, size = 0;
+  size_t count_top = 0;
   R_xlen_t count_lines = 0;
 
   // Compose optional argument part of message. This ends up being "Argument
@@ -67,7 +67,7 @@ SEXP VALC_process_error(
     val_res_cpy = CDR(val_res_cpy)
   ) {
     count_top++;
-    count_lines += XLENGTH(VAR(val_res_cpy));
+    count_lines += XLENGTH(CAR(val_res_cpy));
   }
   if(!count_top || !count_lines) return VALC_TRUE;
 
@@ -77,7 +77,7 @@ SEXP VALC_process_error(
   // little simpler to handle the rest of the code.
 
   int has_header = ret_mode != 2 && count_top > 1;
-  SEXP err_vec_res = PROTECT(allocVector(STRSXP, count_lines + has_header)));
+  SEXP err_vec_res = PROTECT(allocVector(STRSXP, count_lines + has_header));
   R_xlen_t str_count = 0;
 
   if(has_header) {
@@ -88,22 +88,22 @@ SEXP VALC_process_error(
     val_res_cpy = val_res; val_res_cpy != R_NilValue;
     val_res_cpy = CDR(val_res_cpy)
   ) {
-    SEXP str = CAR(val_res_cpy)
+    SEXP str = CAR(val_res_cpy);
     if(TYPEOF(str) != STRSXP)
       error("Internal Error: did not get chr err msg; contact maintainer");
 
-    for(R_xlen_t str_i = 0; str_len++, str_count++; str_i < XLENGTH(str)) {
+    for(R_xlen_t str_i = 0; str_i < XLENGTH(str); str_i++, str_count++) {
       SEXP new_elt;
       SEXP old_elt = STRING_ELT(str, str_i);
 
       if(count_top > 1) {
         new_elt = PROTECT(
-          mkChar(VALC_bullet(CHAR(old_let), "  - ", "    ", VALC_MAX_CHAR))
-        )
+          mkChar(VALC_bullet(CHAR(old_elt), "  - ", "    ", VALC_MAX_CHAR))
+        );
       } else {
         new_elt = PROTECT(old_elt);
       }
-      SET_STRING_ELT(err_vec_res, str_count, new_let);
+      SET_STRING_ELT(err_vec_res, str_count, new_elt);
       UNPROTECT(1);
     }
   }
@@ -125,7 +125,7 @@ SEXP VALC_process_error(
       const char * err_interim = "";
       if(ret_mode == 1) err_interim = ", ";
 
-      err_full = CSR_smprintf4(
+      char * err_full = CSR_smprintf4(
         VALC_MAX_CHAR, err_base_msg, err_interim, err_msg, "", ""
       );
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_full));
@@ -141,14 +141,13 @@ SEXP VALC_process_error(
       char * err_head = CSR_smprintf4(
         VALC_MAX_CHAR, err_base_msg, err_interim, "", "", ""
       );
-      SET_STRING_ELT(err_vec_res, 0, mkChar(err_head);
+      SET_STRING_ELT(err_vec_res, 0, mkChar(err_head));
     }
-    char * err_full = CSR_collapse(err_vec_res, "\n");
-
     UNPROTECT(1);  // unprotects vector result
     if(!stop) {
       return err_vec_res;
     } else {
+      char * err_full = CSR_collapse(err_vec_res, "\n", VALC_MAX_CHAR);
       VALC_stop(fun_call, err_full);
     }
   }

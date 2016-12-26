@@ -47,6 +47,7 @@ void R_init_validate(DllInfo *info)
     R_GetCCallable("cstringr", "CSR_smprintf4");
   CSR_strmlen = (size_t (*)(const char *, size_t)) R_GetCCallable("cstringr", "CSR_strmlen");
   VALC_bullet = (const char * (*)(const char *, const char *, const char *, size_t )) R_GetCCallable("cstringr", "CSR_bullet");
+  CSR_collapse = (const char * (*)(SEXP, const char *, size_t)) R_GetCCallable("cstringr", "CSR_collapse");
 
 }
 

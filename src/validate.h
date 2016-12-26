@@ -56,6 +56,7 @@ char * (*CSR_smprintf4)(
 );
 char * (*CSR_strmcpy)(const char *, size_t);
 size_t (*CSR_strmlen)(const char *, size_t);
+char * (*CSR_collapse)(SEXP, const char *, size_t);
 
 #ifndef VALC_MAX_CHAR
 # define VALC_MAX_CHAR 10000
