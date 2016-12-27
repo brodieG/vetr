@@ -109,7 +109,7 @@ SEXP VALC_process_error(
 
     UNPROTECT(1);
     return(err_vec_res);
-  } else if(has_header) {
+  } else {
     if(count_top == 1) {
       // Here we need to compose the full character value since there is only
       // one correct value for the arg
@@ -125,7 +125,7 @@ SEXP VALC_process_error(
         VALC_MAX_CHAR, err_base_msg, err_interim, err_msg, "", ""
       );
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_full));
-    } else {
+    } else if(has_header) {
       // Have multiple "or" cases
 
       const char * err_interim = "";
