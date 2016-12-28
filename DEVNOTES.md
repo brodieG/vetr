@@ -85,7 +85,7 @@ It seems like there are no stack imbalance problems when the script finishes wit
 
 ### Promise Evaluation
 
-`eval` in C will cause a promise to be evaluated, even though eventhough `findVar` will keep returning a promise and `PRSEEN` will still return 0.  We tested this by accessing a slow evaluating argument more than once.
+`eval` in C will cause a promise to be evaluated, even though `findVar` will keep returning a promise and `PRSEEN` will still return 0.  We tested this by accessing a slow evaluating argument more than once.
 
 ## Optimization
 
@@ -205,6 +205,37 @@ Unit: microseconds
  fun1b(1:3, FALSE, FALSE) 19.199 20.684 22.361 23.4795 38.313   100
 ```
 
+### vs alternatives
+
+```
+library(validate)
+library(ensurer)
+mean2 <- function(x, ...) {validate_args(numeric()); mean(x, ...)}
+mean3 <- function(x, ...) {ensure_that(x, is.numeric(.)); mean(x, ...)}r
+mean4 <- function(x, ...) {stopifnot(is.numeric(x)); mean(x, ...)}
+
+mean2a <- function(x, ...) {validate_args(INT.1); mean(x, ...)}
+mean4a <- function(x, ...) {
+  stopifnot(
+  is.integer(x) || (is.numeric(x) && all(x == round(x))),
+  length(x) == 1L, !is.na(x));
+  mean(x, ...)
+}
+library(microbenchmark)
+microbenchmark(
+  mean(1:1e4), mean2(1:1e4), mean3(1:1e4), mean4(1:1e4), mean2a(1L),
+  mean4a(1L)
+)
+# Unit: microseconds
+#            expr     min       lq      mean   median       uq     max neval
+#   mean(1:10000)  18.081  19.0440  21.45990  20.3400  21.2840  48.570   100
+#  mean2(1:10000)  31.804  34.9475  40.90450  36.6980  39.2780 121.493   100
+#  mean3(1:10000) 129.214 134.4045 172.52273 139.9375 158.0205 938.026   100
+#  mean4(1:10000)  26.739  29.2570  35.75861  30.4975  32.7875 158.021   100`
+```
+
+```
+```
 ### LISTSXP vs VECSXP
 
 Linked lists seem to be slightly faster, at least for small lists:
@@ -248,27 +279,52 @@ Unit: nanoseconds
 
 ## Usability
 
-### `validate` return values
-
-Unlike `validate_args`, we should have the option not to stop.  Options:
-
-* Return message as is, but that is not super helpful due to the "Argument `current` stuff
-* Return a variation on above, but more anonymous (start with "should..")
-* Return a character vector with the values it could be
-    * prepend "should .." or not?
-* throw an error
-
-Default should be reasonably useful error message as character value, perhaps starting with "should", options are stop, just the message stop uses, default, just the raw values.
-
-One issue with the default mode is that we end up with stuff like:
-```
-should meet at least one of the following:
-  - be length 1 (is 2)
-  - have `current > 4` evaluate to all TRUE values (contains non-TRUE values)
-```
-The problems is the `current` in the scond line.  What would be better?  Just use the `.` syntax?  Not sure.
-
 ### Random output
+
+    Error in fun2a(x = letters[1:3]) :
+      For argument `x` at least one of these should pass:
+      - `names(letters[1:3])` should be type "character" (is "NULL")
+      - `letters[1:3]` should be matrix (is character)
+      - `letters[1:3]` should be type "list" (is "character")
+
+    Error in fun2a(x = letters[1:3]) :
+      Argument `x` fails because none of the following are true:
+      For argument `x` at least one of these should pass:
+      - `names(letters[1:3])` should be type "character" (is "NULL"), OR
+      - `letters[1:3]` should be matrix (is character), OR
+      - `letters[1:3]` should be type "list" (is "character")
+
+    # Problem with this one is it doesn't tell you what it should be:
+
+    Error in fun2a(x = letters[1:3]) :
+      For argument `x` at least one of the following should be true but none are:
+      - `typeof(names(letters[1:3])) == "character"`
+      - `class(letters[1:3]) == "matrix"`
+      - `typeof(letters[1:3]) == "list"`
+
+    #
+
+    Error in fun2a(x = letters[1:3]) :
+      For argument `x` must meet at least one of the following to validate:
+      - `typeof(names(letters[1:3]))` is NULL (expected "character")
+      - `class(letters[1:3])` is character (expected "matrix")
+      - `typeof(letters[1:3])` is character (expected "list")
+
+    # Below is best, but doesn't work when we're subsetting / using accesor funs
+
+    Error in fun2a(x = letters[1:3]) :
+      Argument `x` validation failure: `letters[1:3]` is character, but
+      should be matrix or type list
+
+    Validation Failure in fun2a(x = letters[1:3]) :
+      Argument `x`: `letters[1:3]` is character, but should be matrix or type
+      list
+
+      Argument `x`:
+        letters[1:3]
+      is character, but should be matrix or type list
+
+
 
     Error in validate(INT.1 || NULL, 1:3) :
       Argument `current` must meet at least one of the following, but does not:
@@ -306,7 +362,7 @@ The problems is the `current` in the scond line.  What would be better?  Just us
           all(-1:1 > 0)
         should evaluate to TRUE (is FALSE)
 
-      
+
 
     Error in fun2(x = matrix(c(1:9), nrow = 3), y = -1:1, z = NULL) :
 
@@ -347,65 +403,4 @@ The problems is the `current` in the scond line.  What would be better?  Just us
       - be class "matrix" (is "integer"), OR
       - have `!is.na(current)` all TRUE (is FALSE, contains FALSE, contains NA)
       - inherit from class "foo"
-
-    "Expected at index [[2]][[2]][[2]][[2]]: length 3 (is 1)"
-
-
-    be length 3 (is 1) at index [[2]][[2]][[2]][[2]]
-
-    alike(integer(1L), 1:3)
-    should be length 1 (is 3)
-
-    should be length 1 (is 3)
-    should be length 1 to be alike (is 3)
-    should be length 1 (is 3) to be alike
-
-    Expected length 1, but got 3
-    length 1 (is 3)
-
-    Expected length 1 (is 3)
-
-    must have length 1 (is 3)
-
-
-    # Nope, row.names won't match
-    > alike(df.tpl, df.cur2)
-    Test Failed Because:
-    Value mismatch: 1 string mismatch
-
-    +++ .new:
-    [1] "should be \"one\" at index [[1]] for row.names (is \"uno\")"
-    --- .ref
-    [1] "Expected \"one\" at index [[1]] for row.names, but got \"uno\""
-
-    unitizer>
-
-    # Nope, row.names won't match
-    > alike(df.tpl, df.cur2)
-    Test Failed Because:
-    Value mismatch: 1 string mismatch
-
-    +++ .new: [1] "should be \"one\" at index [[1]] for row.names (is \"uno\")"
-    --- .ref: [1] "Expected \"one\" at index [[1]] for row.names, but got \"uno\""
-
-    unitizer>
-
-    # Nope, row.names won't match
-    > alike(df.tpl, df.cur2)
-    Test Failed Because:
-    Value mismatch: 1 string mismatch
-    + [1] "should be \"one\" at index [[1]] for row.names (is \"uno\")"
-    - [1] "Expected \"one\" at index [[1]] for row.names, but got \"uno\""
-    unitizer>
-
-Argument `x` in `x > 0` should evaluate to all TRUE
-Argument `x` should
-  lead `x > 0` to contain only TRUE
-
-Argument `x` should
-  cause `x > 0` to evaluate to all TRUE
-  have length 3 (is 2)
-
-
-Argument `x` in `x > 0` should evaluate to all TRUE
 
