@@ -97,7 +97,8 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho) {
 
   if(!symb || lang == R_MissingArg) return(lang);
 
-  if(symb && lang != VALC_SYM_one_dot) {  // this could conflict with someone storing an expression in .. or .
+  // this could conflict with someone storing an expression in .. or .
+  if(symb && lang != VALC_SYM_one_dot) {
     if(findVar(lang, rho) != R_UnboundValue) {
       SEXP found_val = eval(lang, rho);
       SEXPTYPE found_val_type = TYPEOF(found_val);

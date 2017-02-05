@@ -4,20 +4,6 @@
 
 SEXP VALC_test(SEXP a, SEXP b) {
   error("stop testing function shouldn't be in use");
-  // SEXP found2 = PROTECT(findVar(install("yy"), b));
-  // SEXP found = PROTECT(findVar(a, b));
-  // eval(a, b);
-  // Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
-  // SEXP c = PROTECT(LCONS(install("force"), list1(a)));
-  // PrintValue(c);
-  // eval(c, b);
-  // Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
-  // SET_PRSEEN(found, 1);
-  // found = PROTECT(findVar(a, b));
-  // PrintValue(found);
-
-  // Rprintf("found type %s seen %d\n", type2char(TYPEOF(found)), PRSEEN(found));
-  // PrintValue(found);
 
   UNPROTECT(2);
   return(R_NilValue);
@@ -39,6 +25,12 @@ SEXP VALC_test3(SEXP a, SEXP b) {
 
 int IS_TRUE(SEXP x) {
   return(TYPEOF(x) == LGLSXP && XLENGTH(x) == 1 && asLogical(x));
+}
+int IS_LANG(SEXP x) {
+  return(
+    TYPEOF(x) != LANGSXP || TYPEOF(x) != SYMSXP ||
+    !(isVectorAtomic(x) || XLENGTH(x) == 1) || x != R_NilValue
+  );
 }
 /*
 Fake `stop`
@@ -77,6 +69,8 @@ void VALC_stop2(SEXP call, const char * msg, SEXP rho) {
 Create simple error for a tag
 */
 void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
+  if(TYPEOF(tag) != SYMSXP)
+    error("Need to implement deparsing of tag since this could be lang now");
   const char * err_tag = CHAR(PRINTNAME(tag));
   char * err_msg = R_alloc(
     strlen(err_base) - 2 + strlen(err_tag) + 1, sizeof(char)

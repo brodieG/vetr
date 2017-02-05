@@ -39,6 +39,14 @@ unitizer_sect("Template and Straight Eval", {
   fun2(matrix(c(1:9), nrow=3), 1:3, NA)
   fun2(matrix(c(1:9), nrow=3), 1:3, TRUE)
 })
+unitizer_sect("Complex OR outcomes", {
+  fun2a <- function(x)
+    validate_args(
+      x=setNames(character(3L), letters[1:3]) || matrix("", 3, 1) ||
+        list(character(), x=integer())
+    )
+  fun2a(letters[1:3])
+})
 unitizer_sect("Errors in Arguments", {
   fun3 <- function(x, y)
     validate_args(x=logical(1L), y=integer(3L))

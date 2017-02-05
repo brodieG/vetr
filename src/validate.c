@@ -3,16 +3,20 @@
  * val_res should be a pairlist containing character vectors in each position
  * and each of those character vectors should be length one
  *
- * ret_mode is the mode of the return value
+ * @param val_res is the return value of VALC_evaluate
+ * @param val_tag is the argument name in questions
+ * @param fun_call (unsure?) is the original function call to use when throwing
+ *   the error
+ * @param ret_mode is the mode of the return value
  * - 0 = default, error message as length 1 character vector with everything
- *   except the "Argument ..." part
+ *   except the introductory part of the error message
  * - 1 = entire error message returned as character(1L)
  * - 2 = pieces of error message returned as character(N)
- * - 3 = error
+ * @param stop if 1 then stop, otherwise return
  */
 
 SEXP VALC_process_error(
-  SEXP val_res, SEXP val_tag, SEXP fun_call, int ret_mode
+  SEXP val_res, SEXP val_tag, SEXP fun_call, int ret_mode, int stop
 ) {
   // - Failure / Validation ----------------------------------------------------
 
@@ -21,161 +25,171 @@ SEXP VALC_process_error(
 
   if(TYPEOF(val_res) != LISTSXP)
     error(
-      "Logic Error: unexpected type %s when evaluating test for %s; contact mainainer.",
-      type2char(TYPEOF(val_res)), CHAR(PRINTNAME(val_tag))
+      "Internal Error: unexpected type %s when evaluating test for %s; %s",
+      type2char(TYPEOF(val_res)), CHAR(PRINTNAME(val_tag)),
+      "contact mainainer."
     );
-  if(ret_mode < 0 || ret_mode > 3)
-    error("Logic Error: arg ret_mode must be between 0 and 4; contact maintainer.");
+  if(ret_mode < 0 || ret_mode > 2)
+    error(
+      "%s%s", "Internal Error: arg ret_mode must be between 0 and 2; ",
+      "contact maintainer."
+    );
 
   SEXP val_res_cpy;
-  size_t count_top = 0, size = 0;
-  const char * err_arg = CHAR(PRINTNAME(val_tag));
-  const char * err_very_base = "Argument `%s` ";
+  size_t count_top = 0;
+  R_xlen_t count_lines = 0;
 
   // Compose optional argument part of message. This ends up being "Argument
   // `x` should %s" where arg and should are optional
 
   char * err_arg_msg = "";
-  if(ret_mode == 1 || ret_mode == 3) {
+  const char * err_arg = CHAR(PRINTNAME(val_tag));
+  const char * err_very_base = "For argument `%s`";
+
+  if(ret_mode == 1) {
     err_arg_msg = CSR_smprintf4(
       VALC_MAX_CHAR, err_very_base, err_arg, "", "", ""
     );
   }
-  const char * err_base = "%s%s%%s";
+  const char * err_base = "%s%%s%%s";
   char * err_base_msg = CSR_smprintf4(
-    VALC_MAX_CHAR, err_base, err_arg_msg, ret_mode != 2 ? "should " : "", "", ""
+    VALC_MAX_CHAR, err_base, err_arg_msg, "", "", ""
   );
-
-  // First pass get sizes; note that prior to commit e3724f9 char vectors with
-  // length greater than one were allowed, but that outcome should not occur
-  // so we no longer support it; look at prior commits for the code to support
-  // that
+  // First count how many items we have as we need different treatment depending
+  // on what we're looking at
 
   for(
     val_res_cpy = val_res; val_res_cpy != R_NilValue;
     val_res_cpy = CDR(val_res_cpy)
   ) {
-    SEXP err_vec = CAR(val_res_cpy);
-    if(TYPEOF(err_vec) != STRSXP)
-      error("Logic Error: did not get character err msg; contact maintainer");
-    if(XLENGTH(err_vec) != 1)
-      error("Logic Error: no longer support err msgs greater than length one; contact maintainer");
-
     count_top++;
-    size += CSR_strmlen(CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR);
+    count_lines += XLENGTH(CAR(val_res_cpy));
   }
-  if(!count_top) return VALC_TRUE;
+  if(!count_top || !count_lines) return VALC_TRUE;
 
-  // Depending on whether there is one error or multiple ones (multiple means
-  // value failed to match any of the OR possibilities), render error; we render
-  // directly into a STRSXP because we might want to return that and it is
-  // simpler to do that even if it turns out in the end we just want to
-  // return the full error.
+  // Transfer to a character vector from list, also convert to bullets if
+  // needed.  Not super efficient because we're writing back to an R vector
+  // instead of just continuing all the processing in C strings, but made it a
+  // little simpler to handle the rest of the code.
 
-  char * err_full;
-  SEXP err_vec_res = PROTECT(
-    allocVector(STRSXP, ret_mode == 2 ? count_top : 1)
-  );
-  // Handle simplest case where we just return the unmodified error messages
-  // by copying to a new string
+  int has_header = ret_mode != 2 && count_top > 1;
+  SEXP err_vec_res = PROTECT(allocVector(STRSXP, count_lines + has_header));
+  R_xlen_t str_count = 0;
 
-  if(ret_mode == 2) {
-    size_t count = 0;
-    for(
-      val_res_cpy = val_res; val_res_cpy != R_NilValue;
-      val_res_cpy = CDR(val_res_cpy)
-    ) {
-      // mkChar/CHAR business may not be necessary; also not protecting since
-      // we're assigning to a protected object (this is a good place to look
-      // if we start getting C crashes...)
+  if(has_header) {
+    SET_STRING_ELT(err_vec_res, 0, mkChar(""));  // will add header later
+    str_count++;
+  }
+  for(
+    val_res_cpy = val_res; val_res_cpy != R_NilValue;
+    val_res_cpy = CDR(val_res_cpy)
+  ) {
+    SEXP str = CAR(val_res_cpy);
+    if(TYPEOF(str) != STRSXP)
+      error("Internal Error: did not get chr err msg; contact maintainer");
 
-      SET_STRING_ELT(
-        err_vec_res, count, mkChar(CHAR(STRING_ELT(CAR(val_res_cpy), 0)))
-      );
-      count++;
+    for(R_xlen_t str_i = 0; str_i < XLENGTH(str); str_i++, str_count++) {
+      SEXP new_elt;
+      SEXP old_elt = STRING_ELT(str, str_i);
+
+      if(count_top > 1 && ret_mode != 2) {
+        new_elt = PROTECT(
+          mkChar(VALC_bullet(CHAR(old_elt), "  - ", "    ", VALC_MAX_CHAR))
+        );
+      } else {
+        new_elt = PROTECT(old_elt);
+      }
+      SET_STRING_ELT(err_vec_res, str_count, new_elt);
+      UNPROTECT(1);
     }
+  }
+  if(!stop && ret_mode == 2) {
+    // In this case we return the actual vector, in all others we need to
+    // generate the string
+
+    UNPROTECT(1);
+    return(err_vec_res);
   } else {
-    // Here we need to compose the full character value
     if(count_top == 1) {
-      char * err_msg = CSR_strmcpy(CHAR(asChar(CAR(val_res))), VALC_MAX_CHAR);
+      // Here we need to compose the full character value since there is only
+      // one correct value for the arg
+
+      const char * err_msg_orig = CHAR(asChar(err_vec_res));
+      char * err_msg = CSR_strmcpy(err_msg_orig, VALC_MAX_CHAR);
       if(err_msg) err_msg[0] = tolower(err_msg[0]);
 
-      err_full = CSR_smprintf4(
-        VALC_MAX_CHAR, err_base_msg, err_msg, "", "", ""
+      const char * err_interim = "";
+      if(ret_mode == 1) err_interim = ", ";
+
+      char * err_full = CSR_smprintf4(
+        VALC_MAX_CHAR, err_base_msg, err_interim, err_msg, "", ""
       );
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_full));
-    } else {
-      char * err_head = CSR_smprintf4(
-        VALC_MAX_CHAR, err_base_msg, "meet at least one of the following:\n",
-        "", "", ""
-      );
-      size += CSR_strmlen(err_head, VALC_MAX_CHAR) + 5 * count_top;
+    } else if(has_header) {
+      // Have multiple "or" cases
 
-      // Need to use base C string manip because we are writing each line
-      // sequentially to the pre-allocated block
-
-      err_full = R_alloc(size + 1, sizeof(char));
-      char * err_full_cpy = err_full;
-
-      sprintf(err_full_cpy, "%s", err_head);
-      err_full_cpy = err_full_cpy + CSR_strmlen(err_full_cpy, VALC_MAX_CHAR);
-
-      // Second pass construct string
-
-      size_t count = 0;
-      for(
-        val_res_cpy = val_res; val_res_cpy != R_NilValue;
-        val_res_cpy = CDR(val_res_cpy)
-      ) {
-        SEXP err_vec = CAR(val_res_cpy);
-
-        char * err_sub = CSR_strmcpy(
-          CHAR(STRING_ELT(err_vec, 0)), VALC_MAX_CHAR
-        );
-        sprintf(err_full_cpy, "  - %s\n", err_sub);
-        err_full_cpy += strlen(err_sub) + 5;
-        count++;
+      const char * err_interim = "";
+      if(ret_mode == 1) {
+        err_interim = " at least one of these should pass:";
+      } else if(!ret_mode) {
+        err_interim = "At least one of these should pass:";
       }
+      char * err_head = CSR_smprintf4(
+        VALC_MAX_CHAR, err_base_msg, err_interim, "", "", ""
+      );
+      SET_STRING_ELT(err_vec_res, 0, mkChar(err_head));
     }
-    SET_STRING_ELT(err_vec_res, 0, mkChar(err_full));
   }
-  // Return TRUE, message, or throw an error depending on user input
-
   UNPROTECT(1);  // unprotects vector result
-  if(ret_mode != 3) {
+  if(!stop) {
     return err_vec_res;
   } else {
+    char * err_full = CSR_collapse(err_vec_res, "\n", VALC_MAX_CHAR);
     VALC_stop(fun_call, err_full);
-    error("Logic Error: this code should not evaluate; contact maintainer 2745.");
   }
+  error("%s",
+    "Internal Error: this code should not evaluate; contact maintainer 2745."
+  );
 }
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 
 SEXP VALC_validate(
-  SEXP target, SEXP current, SEXP par_call, SEXP rho, SEXP ret_mode_sxp
+  SEXP target, SEXP current, SEXP cur_sub, SEXP par_call, SEXP rho,
+  SEXP ret_mode_sxp, SEXP stop
 ) {
   SEXP res;
-  res = PROTECT(VALC_evaluate(target, VALC_SYM_current, current, par_call, rho));
+  res = PROTECT(
+    VALC_evaluate(target, cur_sub, VALC_SYM_current, current, par_call, rho)
+  );
   if(IS_TRUE(res)) {
     UNPROTECT(1);
     return(VALC_TRUE);
   }
   if(TYPEOF(ret_mode_sxp) != STRSXP && XLENGTH(ret_mode_sxp) != 1)
     error("Argument `return.mode` must be character(1L)");
+  int stop_int;
+
+  if(
+    (TYPEOF(stop) != LGLSXP && XLENGTH(stop) != 1) ||
+    ((stop_int = asInteger(stop)) == NA_INTEGER)
+  )
+    error("Argument `stop` must be TRUE or FALSE");
+
   const char * ret_mode_chr = CHAR(asChar(ret_mode_sxp));
   int ret_mode;
 
   if(!strcmp(ret_mode_chr, "text")) {
     ret_mode = 0;
-  } else if(!strcmp(ret_mode_chr, "stop")) {
-    ret_mode = 3;
   } else if(!strcmp(ret_mode_chr, "raw")) {
     ret_mode = 2;
   } else if(!strcmp(ret_mode_chr, "full")) {
     ret_mode = 1;
-  } else error("Argument `return.mode` must be one of \"text\", \"stop\", \"raw\",\"full\"");
-  SEXP out = VALC_process_error(res, VALC_SYM_current, par_call, ret_mode);
+  } else error("Argument `return.mode` must be one of \"text\", \"raw\",\"full\"");
+
+  SEXP out = VALC_process_error(
+    res, VALC_SYM_current, par_call, ret_mode, stop_int
+  );
   UNPROTECT(1);
   return out;
 }
@@ -196,8 +210,8 @@ SEXP VALC_validate_args(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
         chr_exp, R_TRUE, R_TRUE, R_TRUE, one, R_NilValue, sys_frames, sys_calls,
         sys_pars
   ) ) );
-  // Get definition of fun in original call; this unfortunately requires repeating
-  // some of the logic in the step above, but is pretty fast
+  // Get definition of fun in original call; this unfortunately requires
+  // repeating some of the logic in the step above, but is pretty fast
 
   SEXP fun_frame_dat = PROTECT(
     VALC_get_frame_data(sys_frames, sys_calls, sys_pars, 1)
@@ -235,7 +249,7 @@ SEXP VALC_validate_args(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     SEXP arg_tag;
 
     if(TAG(val_call_cpy) != (arg_tag = TAG(fun_call_cpy)))
-      error("Logic Error: tag mismatch between function and validation; contact maintainer.");
+      error("Internal Error: tag mismatch between function and validation; contact maintainer.");
 
     SEXP val_tok, fun_tok;
     val_tok = CAR(val_call_cpy);
@@ -259,14 +273,17 @@ SEXP VALC_validate_args(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     );}
     // Evaluate the validation expression
 
-    SEXP val_res = VALC_evaluate(val_tok, arg_tag, fun_val, val_call, fun_frame);
+    SEXP val_res = VALC_evaluate(
+      val_tok, CAR(fun_call_cpy), arg_tag, fun_val, val_call, fun_frame
+    );
     if(IS_TRUE(val_res)) continue;  // success, check next
-    // fail, produce error message
-    VALC_process_error(val_res, TAG(fun_call_cpy), fun_call, 3);
-    error("Logic Error: should never get here 2487; contact maintainer");
+    // fail, produce error message: NOTE - might change if we try to use full
+    // expression instead of just arg name
+    VALC_process_error(val_res, TAG(fun_call_cpy), fun_call, 1, 1);
+    error("Internal Error: should never get here 2487; contact maintainer");
   }
   if(val_call_cpy != R_NilValue || fun_call_cpy != R_NilValue)
-    error("Logic Error: fun and validation matched calls different lengths; contact maintainer.");
+    error("Internal Error: fun and validation matched calls different lengths; contact maintainer.");
 
   // Match the calls up
   UNPROTECT(4);

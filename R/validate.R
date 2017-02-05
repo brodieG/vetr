@@ -13,6 +13,7 @@
 #' the first argument is the template, and the second the value to check.
 #' \code{validate} uses whatever aspects of the template are defined and
 #' ensures that the value tested
+#'
 #' Each argument to \code{validate_args} is matched to one argument of the
 #' enclosing function following the same rules \code{\link{match.call}} uses.
 #' For example, in:
@@ -79,13 +80,14 @@
 #' @param current a value to validate
 #' @param return.mode character(1L), controls the format of the return value for
 #'   \code{validate}, in case of failure.  One of:\itemize{
-#'     \item "stop": \code{stop} with error message insted of return (default)
-#'     \item "text": character(1L) message for use elsewhere in code
+#'     \item "text": (default) character(1L) message for use elsewhere in code
 #'     \item "full": character(1L) the full error message used in "stop" mode,
 #'       but actually returned instead of thrown as an error
 #'     \item "raw": character(N) least processed version of the error message
 #'       with none of the formatting or surrounding verbiage
 #' }
+#' @param stop logical(1L) whether to call \code{\link{stop}} on failure
+#'   (default) or not
 #' @return TRUE if validation succeeds, otherwise \code{stop} for
 #'   \code{validate_args} and varies for \code{validate} according to value
 #'   chosen in \code{return.mode}
@@ -93,13 +95,15 @@
 validate_args <- function(...)
   .Call(VALC_validate_args, sys.frames(), sys.calls(), sys.parents())
 
+# Do we need both `substitute(target)` and sys.call??
+
 #' @rdname validate
 #' @export
 
-validate <- function(target, current, return.mode="stop")
+validate <- function(target, current, format="text", stop=TRUE)
   .Call(
-    VALC_validate, substitute(target), current, sys.call(),
-    sys.frame(sys.nframe()), return.mode
+    VALC_validate, substitute(target), current, substitute(current), 
+    sys.call(), parent.frame(), format, stop
   )
 
 #' @export

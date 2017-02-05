@@ -68,7 +68,33 @@ unitizer_sect("Compound Expressions", {
 })
 
 unitizer_sect("Other Return Modes", {
-  validate(INT.1 || NULL || LGL, "hello", return.mode="text")
-  validate(INT.1 || NULL || LGL, "hello", return.mode="raw")
-  validate(INT.1 || NULL || LGL, "hello", return.mode="full")
+  validate(INT.1 || NULL || LGL, "hello", format="text")
+  validate(INT.1 || NULL || LGL, "hello", format="raw")
+  validate(INT.1 || NULL || LGL, "hello", format="full")
+})
+
+unitizer_sect("Multi-line Stuff", {
+  # with a validator with message attached
+  validate(
+    NO.NA, 
+    c(234234131431, 123413413413, 1341341341, 12341234134, 562456234, 24624624,
+      2452345234, 2345234524, 23452452, 2243524352, 254254234, 2452452435, NA)
+  )
+  validate(
+    NO.NA || !anyNA(.),
+    c(234234131431, 123413413413, 1341341341, 12341234134, 562456234, 24624624,
+      2452345234, 2345234524, 23452452, 2243524352, 254254234, 2452452435, NA)
+  )
+  # No message
+  validate(
+    !anyNA(.),
+    c(234234131431, 123413413413, 1341341341, 12341234134, 562456234, 24624624,
+      2452345234, 2345234524, 23452452, 2243524352, 254254234, 2452452435, NA)
+  )
+  validate(!anyNA(.), c(234234131431, 123413413413, NA))
+
+  # stored validation
+
+  val.exp <- quote(!anyNA(.))
+  validate(val.exp, c(234234131431, 123413413413, NA))
 })

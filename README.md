@@ -49,3 +49,9 @@ Validation adds overhead, but some overhead is almost always preferable to allow
 library(devtools)
 install_github("brodieg/validate")
 ```
+
+## Similar Packages
+
+* [ensurer](https://github.com/smbache/ensurer)
+* [types](https://github.com/jimhester/types)
+* [argufy](https://github.com/gaborcsardi/argufy)
