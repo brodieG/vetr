@@ -142,13 +142,21 @@ SEXP VALC_evaluate_recurse(
     // Sanity checks
 
     if(
-      (TYPEOF(eval_res) != LGLSXP && TYPEOF(eval_res) != STRSXP) ||
-      XLENGTH(eval_res) != 1L || (
-        TYPEOF(eval_res) == LGLSXP && asInteger(eval_res) == NA_INTEGER
+      !(
+        (
+          TYPEOF(eval_res) == LGLSXP && XLENGTH(eval_res) == 1L &&
+          asInteger(eval_res) != NA_INTEGER
+        )
+        ||
+        (
+          TYPEOF(eval_res) == STRSXP &&
+          (XLENGTH(eval_res) == 5 || XLENGTH(eval_res) == 1)
+        )
       )
     )
-      error("%s (is type: %s), %s",
-        "Internal Error: token eval must be TRUE, FALSE, or character(1L), ",
+      error("%s %s (is type: %s), %s",
+        "Internal Error: token eval must be TRUE, FALSE, character(1L), ",
+        " or character(5L)",
         type2char(TYPEOF(eval_res)), "contact maintainer."
       );
 

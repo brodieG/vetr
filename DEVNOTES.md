@@ -328,12 +328,21 @@ It may make more sense to split up the errors into lists with the following
 components:
 
 * A deparsed expression of the problem element, as a `character(1L)`
-* A `character(1L)` of what it should be, without the 'should be'
+* A `character(1L)` of what it should be, without the 'should be', or more
+  specifically without the `should`, as we need to contend with 'should be' and
+  'should contain', etc.
 * A `character(1L)` of what it is
 
 Then when we get a list of these, we identify which elements are equal in the
 first and last elements, and collapse the "should bes" into one comma/or
 delimited string.
+
+Implementation may be more straightforward than anticipated.  The only thing we
+seem to need to do for `alike` is to break up the `res.message` business into
+`res.target` and `res.actual`.  Some special treatment needed for the language
+results since those have the annoying chr->SEXP->chr translation business going
+on via ALIKEC_lang_alike_internal() (actually, that's probably not going away
+any time soon as there are additional complexities therein).
 
 ### Random output
 
