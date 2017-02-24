@@ -247,11 +247,10 @@ SEXP VALC_evaluate_recurse(
             error("Internal Error: could not construct error message; contact maintainer.");
           SETCAR(err_msg, mkString(err_str));
         }
-        UNPROTECT(1);
       } else { // must have been `alike` eval
         SETCAR(err_msg, eval_res);
       }
-      UNPROTECT(2);
+      UNPROTECT(3);
       return(err_msg);
     }
     UNPROTECT(2);
