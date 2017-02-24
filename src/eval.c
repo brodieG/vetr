@@ -251,7 +251,7 @@ SEXP VALC_evaluate_recurse(
       } else { // must have been `alike` eval
         SETCAR(err_msg, eval_res);
       }
-      UNPROTECT(3);
+      UNPROTECT(2);
       return(err_msg);
     }
     UNPROTECT(2);
