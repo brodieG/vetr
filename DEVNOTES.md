@@ -4,6 +4,11 @@ Main todo is to explore what the various output formats are supposed to be and
 confirm that they work as expected.  Documentation look stale (though maybe the
 source docs are updated and we just haven't regenerated).
 
+## Naming
+
+`vetR`: short, sweet, "better code with vetR" (urgh)
+`safer`
+
 ## NSE?
 
 Is it possible to allow the functions to accept arbitrary language objects and
