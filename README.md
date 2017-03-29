@@ -23,6 +23,7 @@ my_fun <- function(x, y) {
   )
   # ... do stuff
 }
+```
 If the contents of `.(` evaluate to anything other than `TRUE` the test fails.  Note that any `.` inside `.(` are substituted for the corresponding argument name prior to evaluation.
 
 ## Template Comparisons
@@ -52,6 +53,7 @@ install_github("brodieg/validate")
 
 ## Similar Packages
 
+* [valaddin](https://github.com/egnha/valaddin)
 * [ensurer](https://github.com/smbache/ensurer)
 * [types](https://github.com/jimhester/types)
 * [argufy](https://github.com/gaborcsardi/argufy)
