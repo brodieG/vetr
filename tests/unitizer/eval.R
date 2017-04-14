@@ -51,8 +51,10 @@ unitizer_sect("evaluate with sub", {
   mat3 <- LETTERS[1:9]
   validate:::eval_check(   # Fail all
     quote(
-      (matrix(numeric(), ncol=3) || matrix(integer(), nrow=10) || character(10L)) &&
-      .(length(.) < 100)
+      (
+        matrix(numeric(), ncol=3) || matrix(integer(), nrow=10) ||
+        character(10L)
+      ) && .(length(.) < 100)
     ),
     quote(mat3), mat3
   )

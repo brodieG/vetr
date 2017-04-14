@@ -61,6 +61,9 @@ unitizer_sect("Compound Expressions", {
   validate(INT.1 || NULL, 1)    # Pass
   validate(INT.1 || NULL, NULL) # Pass
   validate(INT.1 || NULL, 1.4)  # Fail
+  validate(INT.1 || NULL || character(3L), 1)    # Pass
+  validate(INT.1 || NULL || character(3L), 1.2)  # Fail
+  validate(INT.1 || NULL || character(3L), letters)  # Fail
 
   validate((matrix(integer(), 0) && nrow(.) == ncol(.)) || NULL, matrix(1:16, nrow=4))  # Pass
   validate((matrix(integer(), 0) && nrow(.) == ncol(.)) || NULL, matrix(1:16, nrow=2))  # Fail

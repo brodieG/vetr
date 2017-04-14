@@ -78,7 +78,7 @@
 #'   function formals as with \code{match.call}
 #' @param a template expression
 #' @param current a value to validate
-#' @param return.mode character(1L), controls the format of the return value for
+#' @param format character(1L), controls the format of the return value for
 #'   \code{validate}, in case of failure.  One of:\itemize{
 #'     \item "text": (default) character(1L) message for use elsewhere in code
 #'     \item "full": character(1L) the full error message used in "stop" mode,

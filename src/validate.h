@@ -37,10 +37,12 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho);
 void VALC_install_objs();
 SEXP VALC_evaluate(SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full, SEXP rho);
 void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base);
+void psh(const char * lab);
 
 // - Imported Funs -------------------------------------------------------------
 
 SEXP(*VALC_alike)(SEXP,SEXP,SEXP,SEXP);
+SEXP(*VALC_merge_msg)(SEXP);
 SEXP(*VALC_match_call)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
 SEXP(*VALC_get_frame_data)(SEXP,SEXP,SEXP,int);
 SEXP(*VALC_get_fun)(SEXP,SEXP);

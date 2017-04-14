@@ -37,7 +37,6 @@ SEXP VALC_process_error(
 
   SEXP val_res_cpy;
   size_t count_top = 0;
-  R_xlen_t count_lines = 0;
 
   // Compose optional argument part of message. This ends up being "Argument
   // `x` should %s" where arg and should are optional
@@ -55,6 +54,10 @@ SEXP VALC_process_error(
   char * err_base_msg = CSR_smprintf4(
     VALC_MAX_CHAR, err_base, err_arg_msg, "", "", ""
   );
+  // Translate to VECSXP; need to do so because the merging logic is based on
+  // VECSXP; obviously the translation back and forth isn't optimal and we
+  // should probably change this earlier in the process
+
   // First count how many items we have as we need different treatment depending
   // on what we're looking at
 
@@ -63,54 +66,61 @@ SEXP VALC_process_error(
     val_res_cpy = CDR(val_res_cpy)
   ) {
     count_top++;
-    count_lines += XLENGTH(CAR(val_res_cpy));
   }
-  if(!count_top || !count_lines) return VALC_TRUE;
+  if(!count_top) return VALC_TRUE;
+
+  SEXP err_msg_full = PROTECT(allocVector(VECSXP, count_top));
+  size_t list_ind = 0;
+
+  for(
+    val_res_cpy = val_res; val_res_cpy != R_NilValue;
+    val_res_cpy = CDR(val_res_cpy)
+  ) {
+    SET_VECTOR_ELT(err_msg_full, list_ind++, CAR(val_res_cpy));
+  }
+  // Collapse similar entries into one; from this point on every entry in the
+  // list should be a character(1L)
+
+  SEXP err_msg_c = PROTECT(VALC_merge_msg(err_msg_full));
+  R_xlen_t i, err_len = XLENGTH(err_msg_c);
 
   // Transfer to a character vector from list, also convert to bullets if
   // needed.  Not super efficient because we're writing back to an R vector
   // instead of just continuing all the processing in C strings, but made it a
   // little simpler to handle the rest of the code.
 
-  int has_header = ret_mode != 2 && count_top > 1;
-  SEXP err_vec_res = PROTECT(allocVector(STRSXP, count_lines + has_header));
-  R_xlen_t str_count = 0;
+  int has_header = ret_mode != 2 && err_len > 1;
+  SEXP err_vec_res = PROTECT(allocVector(STRSXP, err_len + has_header));
 
   if(has_header) {
     SET_STRING_ELT(err_vec_res, 0, mkChar(""));  // will add header later
-    str_count++;
   }
-  for(
-    val_res_cpy = val_res; val_res_cpy != R_NilValue;
-    val_res_cpy = CDR(val_res_cpy)
-  ) {
-    SEXP str = CAR(val_res_cpy);
-    if(TYPEOF(str) != STRSXP)
-      error("Internal Error: did not get chr err msg; contact maintainer");
-
-    for(R_xlen_t str_i = 0; str_i < XLENGTH(str); str_i++, str_count++) {
-      SEXP new_elt;
-      SEXP old_elt = STRING_ELT(str, str_i);
-
-      if(count_top > 1 && ret_mode != 2) {
-        new_elt = PROTECT(
-          mkChar(VALC_bullet(CHAR(old_elt), "  - ", "    ", VALC_MAX_CHAR))
-        );
-      } else {
-        new_elt = PROTECT(old_elt);
-      }
-      SET_STRING_ELT(err_vec_res, str_count, new_elt);
-      UNPROTECT(1);
+  for(i = 0; i < err_len; i++) {
+    SEXP str = VECTOR_ELT(err_msg_c, i);
+    if(TYPEOF(str) != STRSXP || XLENGTH(str) != 1L) {
+      error(
+        "Internal Error: did not get character(1L) err msg; contact maintainer"
+      );
     }
+
+    SEXP new_elt;
+    SEXP old_elt = STRING_ELT(str, 0);
+
+    if(err_len > 1 && ret_mode != 2) {
+      new_elt = PROTECT(
+        mkChar(VALC_bullet(CHAR(old_elt), "  - ", "    ", VALC_MAX_CHAR))
+      );
+    } else {
+      new_elt = PROTECT(old_elt);
+    }
+    SET_STRING_ELT(err_vec_res, i + has_header, new_elt);
+    UNPROTECT(1);
   }
   if(!stop && ret_mode == 2) {
     // In this case we return the actual vector, in all others we need to
-    // generate the string
-
-    UNPROTECT(1);
-    return(err_vec_res);
+    // generate the string; this is handled by the !stop bit further down
   } else {
-    if(count_top == 1) {
+    if(err_len == 1) {
       // Here we need to compose the full character value since there is only
       // one correct value for the arg
 
@@ -140,7 +150,7 @@ SEXP VALC_process_error(
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_head));
     }
   }
-  UNPROTECT(1);  // unprotects vector result
+  UNPROTECT(3);  // unprotects vector result
   if(!stop) {
     return err_vec_res;
   } else {

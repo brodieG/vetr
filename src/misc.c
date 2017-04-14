@@ -105,3 +105,13 @@ ext interface for testing
 SEXP VALC_all_ext(SEXP vec) {
   return ScalarInteger(VALC_all(vec));
 }
+
+/*
+print current PROTECT stack height; used for debugging
+*/
+void psh(const char * lab) {
+  PROTECT_INDEX i;
+  PROTECT_WITH_INDEX(R_NilValue, &i);
+  UNPROTECT(1);
+  Rprintf("Protect Stack %s: %d\n", lab, i);
+}
