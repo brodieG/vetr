@@ -19,3 +19,4 @@ Suggests:
     devtools
 License: GPL-3
 LazyData: true
+RoxygenNote: 6.0.1

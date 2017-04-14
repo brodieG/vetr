@@ -186,7 +186,7 @@ on tag name only could be faster; something to think about.
 Using version 0.0.1.9000 and the following functions:
 ```
 fun1 <- function(x, y, z)
-  validate(
+  validate_args(
     x=matrix(integer(), ncol=3) || integer(3L),
     y=integer(2L) || NULL || logical(1L),
     z=logical(1L)
