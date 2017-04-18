@@ -11,6 +11,7 @@ SEXP VALC_evaluate_recurse(
   SEXP lang, SEXP act_codes, SEXP arg_value, SEXP arg_lang, SEXP arg_tag,
   SEXP lang_full, SEXP rho
 ) {
+  psh("Start Recurse\n");
   /*
   check act_codes:
     if 1 or 2
@@ -137,7 +138,12 @@ SEXP VALC_evaluate_recurse(
       eval_res_c = VALC_all(eval_tmp);
       eval_res = PROTECT(ScalarLogical(eval_res_c > 0));
     } else {
+      Rprintf("Running alike\n");
+      psh("alike test stack");
       eval_res = PROTECT(VALC_alike(eval_tmp, arg_value, arg_lang, rho));
+      psh("alike test stack done");
+      PrintValue(eval_res);
+      Rprintf("Done Running alike\n");
     }
     // Sanity checks
 
@@ -254,6 +260,7 @@ SEXP VALC_evaluate_recurse(
       return(err_msg);
     }
     UNPROTECT(2);
+    psh("End Recurse\n");
     return(eval_res);  // this should be `TRUE`
   } else {
     error("Internal Error: unexpected parse mode %d", mode);
@@ -277,17 +284,25 @@ SEXP VALC_evaluate(
   SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
   SEXP rho
 ) {
+  psh("VALC_evaluate start");
   if(!IS_LANG(arg_lang))
     error("Argument `arg_lang` must be language.");
   if(TYPEOF(rho) != ENVSXP)
     error("Argument `rho` must be an environment.");
+  psh("VALC_eval 1");
+  // CLEARLY THERE IS PROBLEM IN VALC_parse with the language input
   SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, rho));
+  psh("VALC_eval 2");
+  Rprintf("Parsed");
   SEXP res = PROTECT(
     VALC_evaluate_recurse(
       VECTOR_ELT(lang_parsed, 0),
       VECTOR_ELT(lang_parsed, 1),
       arg_value, arg_lang, arg_tag, lang_full, rho
   ) );
+  psh("VALC_eval 3");
+  Rprintf("Recursed\n");
+  PrintValue(res);
   // Remove duplicates, if any
 
   switch(TYPEOF(res)) {
@@ -318,6 +333,8 @@ SEXP VALC_evaluate(
         "Internal Error: unexpected evaluating return type; contact maintainer."
       );
   }
+  Rprintf("Done Eval");
   UNPROTECT(2);  // This seems a bit stupid, PROTECT/UNPROTECT
+  psh("VALC_evaluate end");
   return(res);
 }
