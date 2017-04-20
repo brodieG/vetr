@@ -172,9 +172,10 @@ SEXP VALC_validate(
   res = PROTECT(
     VALC_evaluate(target, cur_sub, VALC_SYM_current, current, par_call, rho)
   );
+
   if(IS_TRUE(res)) {
     UNPROTECT(1);
-    return(VALC_TRUE);
+    return(ScalarLogical(1));
   }
   if(TYPEOF(ret_mode_sxp) != STRSXP && XLENGTH(ret_mode_sxp) != 1)
     error("Argument `return.mode` must be character(1L)");
@@ -195,7 +196,8 @@ SEXP VALC_validate(
     ret_mode = 2;
   } else if(!strcmp(ret_mode_chr, "full")) {
     ret_mode = 1;
-  } else error("Argument `return.mode` must be one of \"text\", \"raw\",\"full\"");
+  } else
+    error("Argument `return.mode` must be one of \"text\", \"raw\",\"full\"");
 
   SEXP out = VALC_process_error(
     res, VALC_SYM_current, par_call, ret_mode, stop_int

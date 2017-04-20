@@ -63,7 +63,9 @@ SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name) {
   Don't need paren calls since the parsing already accounted for them
 */
 SEXP VALC_remove_parens(SEXP lang) {
-  SEXP mode, mode_0 = PROTECT(ScalarInteger(0)), mode_1 = PROTECT(ScalarInteger(1));
+  SEXP mode,
+       mode_0 = PROTECT(ScalarInteger(0)),
+       mode_1 = PROTECT(ScalarInteger(1));
   mode = mode_0;
 
   while(TYPEOF(lang) == LANGSXP) {
@@ -105,7 +107,7 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho) {
       if(found_val_type == LANGSXP || found_val_type == SYMSXP) {
         lang = PROTECT(duplicate(found_val));
       } else PROTECT(R_NilValue);  // Balance
-    }
+    } else PROTECT(R_NilValue);  // Balance
     UNPROTECT(1);
   }
   return(lang);
@@ -145,7 +147,8 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
 \* -------------------------------------------------------------------------- */
 
 void VALC_parse_recurse(
-  SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is, SEXP first_fun
+  SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is,
+  SEXP first_fun
 ) {
   /*
   If the object is not a language list, then return it, as part of an R vector

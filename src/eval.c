@@ -281,6 +281,7 @@ SEXP VALC_evaluate(
     error("Argument `arg_lang` must be language.");
   if(TYPEOF(rho) != ENVSXP)
     error("Argument `rho` must be an environment.");
+  // CLEARLY THERE IS PROBLEM IN VALC_parse with the language input
   SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, rho));
   SEXP res = PROTECT(
     VALC_evaluate_recurse(

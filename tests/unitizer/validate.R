@@ -101,3 +101,12 @@ unitizer_sect("Multi-line Stuff", {
   val.exp <- quote(!anyNA(.))
   validate(val.exp, c(234234131431, 123413413413, NA))
 })
+
+unitizer_sect("Language", {
+  # Note issue #18; not 100% sure this is correct
+  validate(quote(quote(a + b)), quote(x2 + x3))
+  x <- quote(quote(a + b))
+  validate(x, quote(x2 + x3))
+  validate(quote(a + b), quote(2 + x3))
+  validate(quote(a + b), quote(x1 + x2 + x3))
+})
