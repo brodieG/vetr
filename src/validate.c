@@ -169,30 +169,23 @@ SEXP VALC_validate(
   SEXP ret_mode_sxp, SEXP stop
 ) {
   SEXP res;
-  Rprintf("evaluate");
   res = PROTECT(
     VALC_evaluate(target, cur_sub, VALC_SYM_current, current, par_call, rho)
   );
-  Rprintf("res type: %s", type2char(TYPEOF(res)));
-  PrintValue(res);
 
   if(IS_TRUE(res)) {
-    Rprintf("return true");
     UNPROTECT(1);
     return(ScalarLogical(1));
   }
   if(TYPEOF(ret_mode_sxp) != STRSXP && XLENGTH(ret_mode_sxp) != 1)
     error("Argument `return.mode` must be character(1L)");
   int stop_int;
-  Rprintf("interim 0");
 
   if(
     (TYPEOF(stop) != LGLSXP && XLENGTH(stop) != 1) ||
     ((stop_int = asInteger(stop)) == NA_INTEGER)
   )
     error("Argument `stop` must be TRUE or FALSE");
-
-  Rprintf("interim 1");
 
   const char * ret_mode_chr = CHAR(asChar(ret_mode_sxp));
   int ret_mode;
@@ -203,14 +196,13 @@ SEXP VALC_validate(
     ret_mode = 2;
   } else if(!strcmp(ret_mode_chr, "full")) {
     ret_mode = 1;
-  } else error("Argument `return.mode` must be one of \"text\", \"raw\",\"full\"");
-  Rprintf("process");
+  } else
+    error("Argument `return.mode` must be one of \"text\", \"raw\",\"full\"");
 
   SEXP out = VALC_process_error(
     res, VALC_SYM_current, par_call, ret_mode, stop_int
   );
   UNPROTECT(1);
-  Rprintf("done");
   return out;
 }
 
