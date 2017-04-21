@@ -67,6 +67,18 @@
 #'
 #' If you find yourself using particular custom validation expressions
 #'
+#' @section Validation Expressions:
+#'
+#' Validation expressions are subject to non-standard evaluation.  They are
+#' recursively substituted until all symbols in the initially substituted call
+#' that point to language objects no longer point to language.  For example, in:
+#' \preformat{
+#' a <- b <- c <- TRUE   # these are non-language objects
+#' x <- quote(a && b)    # this is a language object
+#' validate(target=x || c, current=z)
+#' }
+#' \code{target} will be expanded into \code{(a && b) || c}.
+#'
 #' @useDynLib validate, .registration=TRUE, .fixes="VALC_"
 #' @note Will force evaluation of any arguments that are being checked (you may
 #'   omit arguments that should not be evaluate from \code{validate_args})

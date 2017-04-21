@@ -103,7 +103,9 @@ unitizer_sect("Multi-line Stuff", {
 })
 
 unitizer_sect("Language", {
-  # Note issue #18; not 100% sure this is correct
+  # Note issue #18; not 100% sure this is correct, actually it should be, the
+  # validator expression is always substituted, and any symbols pointing to
+  # language are used as language.
   validate(quote(quote(a + b)), quote(x2 + x3))
   x <- quote(quote(a + b))
   validate(x, quote(x2 + x3))
