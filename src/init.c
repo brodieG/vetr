@@ -17,7 +17,7 @@ R_CallMethodDef callMethods[] = {
   {NULL, NULL, 0}
 };
 
-void R_init_validate(DllInfo *info)
+void R_init_vetr(DllInfo *info)
 {
  /* Register the .C and .Call routines.
     No .Fortran() or .External() routines,
