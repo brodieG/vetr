@@ -182,7 +182,7 @@ If you need `&&` or `||` to be interpreted literally you can wrap the call in `i
 identity(length(a) == length(b) && . %in% 0:1)
 ```
 
-which will be treated as a single custom validation token.  `validate` will not recurse into calls other than to `(`, `&&`, and `||`.  The `identity` example here is just an example of this behavior.  Note that an implication of this is you should not nest template tokens inside functions as `validate` will not identify them as templates and you may get unexpected results as a result.  For example:
+which will be treated as a single custom validation token.  `validate` will not recurse into calls other than to `(`, `&&`, and `||`.  The use of `identity` here is just an example of this behavior.  Note that an implication of this is you should not nest template tokens inside functions as `validate` will not identify them as templates and you may get unexpected results as a result.  For example:
 
 ```{r, eval=FALSE}
 identity(logical(1L) && my_special_fun(.))
@@ -214,7 +214,7 @@ You can also provide more helpful error messages with `mk_val_token` for specifi
 
 ```{r}
 NONA <- mk_val_token(!is.na(.), "not contain NAs")
-TF <- quote(logical(1L) && NOT.NA)
+TF <- quote(logical(1L) && NONA)
 validate(TF, NA)
 ```
 

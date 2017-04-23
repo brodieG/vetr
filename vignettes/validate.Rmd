@@ -34,7 +34,10 @@ Notice how we provide our structural requirements encoded as R objects instead o
 
 ```{r}
 fun_traditional <- function(a, b) {
-  stopifnot(is.numeric(a), is.matrix(a), ncol(a) == 3, is.logical(b), length(b) == 1)
+  stopifnot(
+    is.numeric(a), is.matrix(a), ncol(a) == 3,
+    is.logical(b), length(b) == 1
+  )
   TRUE
 }
 ```
@@ -214,7 +217,7 @@ You can also provide more helpful error messages with `mk_val_token` for specifi
 
 ```{r}
 NONA <- mk_val_token(!is.na(.), "not contain NAs")
-TF <- quote(logical(1L) && NOT.NA)
+TF <- quote(logical(1L) && NONA)
 validate(TF, NA)
 ```
 

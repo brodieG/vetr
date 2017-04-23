@@ -103,7 +103,7 @@ validate(TF_ish, "0")
 
 ## -----------------------------------------------------------------------------
 NONA <- mk_val_token(!is.na(.), "not contain NAs")
-TF <- quote(logical(1L) && NOT.NA)
+TF <- quote(logical(1L) && NONA)
 validate(TF, NA)
 
 ## -----------------------------------------------------------------------------
