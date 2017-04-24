@@ -1,5 +1,5 @@
 ---
-title: "validate - Keep the Garbage Out"
+title: "vetR - Keep the Garbage Out"
 author: "Brodie Gaslam"
 output:
     rmarkdown::html_vignette:
@@ -7,113 +7,66 @@ output:
         css: styles.css
 
 vignette: >
-  %\VignetteIndexEntry{validate}
+  %\VignetteIndexEntry{vetr}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---
 
 ```{r global_options, echo=FALSE}
 knitr::opts_chunk$set(error=TRUE)
-options(width=80)
+options(width=60)
 ```
 
-## Overview
+## Garbage In
 
-### Validating Function Arguments
+R is particularly flexible about data structures so any user-facing code you
+write must vet inputs.  If you rigorously enforce structural requirements for
+function parameters your code will be more robust and easier to
+write.  It will also be easier to use since errors will be reported by
+documented functions and not from deep in the bowels of un-exported code.
 
-This package provides functions that simplify testing R objects for structural requirements.  For example, here we use `validate_args` to require that a function have a 3 column numeric matrix as the first argument and a scalar logical as the second:
+`vetr` lets you vet your inputs with minimal overhead:
 
-```{r}
-fun <- function(a, b) {
-  validate_args(matrix(numeric(), ncol=3), logical(1))
-  TRUE
-}
-```
-
-Notice how we provide our structural requirements encoded as R objects instead of as a sequence of assertions.  The traditional version of the above code would be:
-
-```{r}
-fun_traditional <- function(a, b) {
-  stopifnot(
-    is.numeric(a), is.matrix(a), ncol(a) == 3,
-    is.logical(b), length(b) == 1
-  )
-  TRUE
-}
-```
-
-`validate_args` also provides more contextual information in the event of validation failure:
-
-```{r}
-fun(matrix(1:6, ncol=2), TRUE)                # Fail
-fun_traditional(matrix(1:6, ncol=2), TRUE)    # Fail
-```
-
-Some more examples of `validate_args`:
-
-```{r}
-fun(matrix(1:6, ncol=3), "hello")              # Fail
-fun(matrix(1:6, ncol=3), TRUE)                 # Success
-```
-
-**Note**: if you want to accept any dimension matrix you must use `matrix(numeric(), 0, 0)` since `matrix(numeric())` actually produces a one column matrix.
-
-### Validating Objects
-
-`validate` is a utility function that allows you to validate a user specified object instead of automatically matching to a function's arguments:
-
-```{r}
-my.obj <- 1.5
-validate(matrix(numeric(), ncol=3), my.obj)
-```
-
-Validation expressions are used identically in `validate` and `validate_args`.  Unlike with `validate_args`, `validate` can optionally return the error message instead of `stop`ing:
-
-```{r}
-validate(matrix(numeric(), ncol=3), my.obj, return.mode="text")
-```
+* Structural requirements expressed with minimal code via templates
+* Friendly auto-generated errors explain why an error occurred
+* Written completely in C to minimize computation cost
 
 ## Templates
 
-`validate` and `validate_args` use templates to define structural requirements that we wish to enforce.  Templates are "partially specified" R objects.  We check the value we want to test against the aspects of our template that are defined, and ignore all others.  Consider:
+It is easier to express structural requirements by creating an R object
+that embodies them than by writing code that checks them explicitly.  For
+example, if we want a scalar numeric we would normally use:
 
 ```{r}
-validate(numeric(), runif(10))
-validate(numeric(), matrix(runif(9), 3))
-validate(numeric(), letters)
+getOption("width")
+cat(rep('x', 60), "\n", sep="")
+x <- 1:3
+stopifnot(is.numeric(x), length(x) == 1L)
 ```
 
-`validate` follows the same convention as `all.equal`, with the first argument the reference object to match (`target`) and the second the value to test (`current`).  In this case our `target` template is a zero (undefined) length numeric vector, so any numeric vector will satisfy it, including a numeric matrix, but not a character vector.  We can easily add more constraints by specifying more structure:
+With `vetr`, the equivalent code is :
 
 ```{r}
-validate(numeric(3), runif(10))
-validate(numeric(3), runif(3))
+my_fun <- function() stop("Testing what happens with\nnewlines in knitr")
+my_fun()
+library(vetr)
+vet(numeric(1L), x)
 ```
 
-In the [overview](#overview) we added dimension attributes with `matrix` to test for the presence of three columns.
-
-Templates can be recursive objects.  We illustrate here with an S3 object that could be used to analyze car test drives on race tracks:
+`vetr` handles recursive objects, and as such is particularly well suited to
+enforce structural requirements for S3 objects.  Take our "laps" S3 object that
+we use to analyze car test drives on race tracks:
 
 ```{r}
 laps.template <- structure(
+  class="laps",
   list(
     car=character(1),
     data=data.frame(lap=numeric(), time=Sys.time()[0])
-  ),
-  class="laps"
-)
+) )
 ```
 
-Our template is a list that contains a character car identifier and a data frame with lap timestamp data.  We can then write functions that require our "laps" class objects to conform to that structure:
-
-```{r}
-analyze <- function(x) {
-  validate_args(laps.template)
-  TRUE # stand-in for really meaningful code
-}
-```
-
-and we create several objects to run our tests with:
+We create several objects to run our tests with:
 
 ```{r}
 lap.times <- data.frame(lap=1:10, time=cumsum(rnorm(10, 120, 3)))
@@ -123,102 +76,174 @@ laps.3 <- laps.4 <- setNames(laps.2, c("car", "data"))
 laps.4$data <- transform(laps.4$data, time=Sys.time() + time)
 ```
 
-and call our `analyze` function with them:
+Finally, we vet:
 
 ```{r}
-analyze(laps.1)   # Forgot to include car
-analyze(laps.2)   # Missing names
-analyze(laps.3)   # Lap times should be in POSIXct
-analyze(laps.4)   # Valid object
+vet(laps.template, laps.1)   # Forgot to include car
+vet(laps.template, laps.2)   # Missing names
+vet(laps.template, laps.3)   # Lap times should be in POSIXct
+vet(laps.template, laps.4)   # Correct!
 ```
 
-Notice how `validate_args` checks that the class of the columns of the data frame nested inside our object matches expectations.
+Our template is an S3 object that contains a character car identifier and a data
+frame with lap timestamp data.  We can then write functions that require our
+"laps" class objects to conform to that structure:
 
-Internally `validate` uses `alike` to compare the template to the test value.  See the [alike vignette](http://htmlpreview.github.io/?https://raw.githubusercontent.com/brodieG/alike/master/inst/doc/alike.html) for extensive details on how templates work.
+Notice how `vet` checks that the class of the columns of the data frame nested
+inside our object matches expectations.  Attributes are also checked
+recursively.
 
-## Complex Validation
+For reference, the same set of checks would look like:
 
-### Matching Multiple Elements
+```{r, eval=FALSE}
+stopifnot(
+  is.list(laps.1),
+  inherits(laps.1, "laps"),
+  length(laps.1) == 2L,
+  identical(names(laps.1), c("car", "data")),
+  is.character(laps.1$car),
+  length(laps.1$car) == 1L,
+  is.data.frame(laps.1$data),
+  identical(names(laps.1$data), c("lap", "time")),
+  is.numeric(laps.1$lap),
+  identical(mode(laps.1$time), "numeric"),
+  inherits(laps.1$time, c("POSIXct", "POSIXt"))
+)
+```
 
-Sometimes we want to allow an object to match different types of variables:
+and this does not even include the possibility of additional attributes to
+check.
+
+Internally `vet` uses `alike` to compare the template to the test value.  See
+the [alike
+vignette](http://htmlpreview.github.io/?https://raw.githubusercontent.com/brodieG/alike/master/inst/doc/alike.html)
+for extensive details on how templates work.
+
+## Custom Expressions
+
+Templates alone will no let you check data values, or structural aspects that
+vary at runtime (e.g. two arguments must be the same length as each other).
+To address this `vetr` allows custom expressions:
 
 ```{r}
-validate(integer(1) || character(1), 2)
-validate(integer(1) || character(1), "hello")
-validate(integer(1) || character(1), TRUE)
+x <- 1:2
+y <- c(1, NA)
+vet(!anyNA(.), x)
+vet(!anyNA(.), y)
 ```
 
-We constructed a compound **validation expression** by combining two **validation tokens** with the `||` operator.
+Any vetting expressions that contain a `.` will be evaluated and vetting
+will pass if the result of evaluating the custom expression with the value
+substituted for the `.` is a logical vector containing only TRUE.
 
-### Custom Validation Tokens
+## Compound Expressions
 
-Templates only allow us to verify object structure, but it is often desirable to place some constraints on object values as well.  For example, we may want to require that our inputs have all positive values.  To achieve this we can supplement template tokens with custom validation tokens:
+You can combine any number of templates and custom expressions.  Here, we
+combine a template (`numeric(2L)`) with a varying number of custom expressions:
 
 ```{r}
-validate(numeric(3) && all(. > 0), c(1, 2, 3))
-validate(numeric(3) && all(. > 0), c(1, -2, 3))
+vet(numeric(2L) && !anyNA(.), x)
+vet(numeric(2L) && !anyNA(.), y)
+vet(numeric(2L) && !anyNA(.), 1:10)
+vet(numeric(2L) && !anyNA(.) && . > 0L, -(1:2))
 ```
 
-The `.` represents the object or argument being tested.  By using a `.` as part of a token, we indicate to `validate` / `validate_args` that that token should be interpreted as an expression to evaluate instead of a template.  The `.` is substituted with the corresponding object / argument name and the expression is evaluated.  If the evaluation returns `TRUE` or a vector that is all `TRUE`, the validation token passes, otherwise it fails.
+It is common to allow arguments of varying types.  For example, often times we
+allow secondary arguments to be NULL:
 
-### Non Standard Evaluation of Validation Expressions
+```{r}
+vet((numeric(2L) && !anyNA(.)) || NULL, 1:2)
+vet((numeric(2L) && !anyNA(.)) || NULL, NULL)
+vet((numeric(2L) && !anyNA(.)) || NULL, letters)
+```
 
-Validation expressions combine templates and custom tokens delimited by `&&` and `||`. While superficially validation expressions look like R expressions, they are never run through the R evaluator.  Instead, they are recursively parsed into tokens and each token is examined to determine whether it should be treated as a template or as a validation expression.  For example:
+We constructed a compound **validation expression** by combining two **validation tokens** with the `&&` and `||` operators.
+
+## Non Standard Evaluation of Vetting Expressions
+
+### Parsing Vetting Expressions
+
+Vetting expressions combine templates and custom tokens delimited by `&&` and
+`||`. While superficially vetting expressions look like R expressions, they
+are never run through the R evaluator.  Instead, they are substituted
+and recursively parsed into tokens.  Each token is then examined to determine
+whether it should be treated as a template or as a validation expression.  For
+example:
 
 ```{r, eval=FALSE}
 logical(1) || (numeric(1) && . %in% 0:1)
 ```
 
-is parsed as three tokens: `logical(1)`, `numeric(1)`, and `. %in% 0:1`.  Tokens that contain `.` are interpreted as custom expressions, and tokens that don't are treated as templates.  In this case the first two tokens are considered templates, and the last is a custom expression, so the overall validation expression will accept scalar logicals, or 0 or 1:
+is parsed as three tokens: `logical(1)`, `numeric(1)`, and `. %in% 0:1`.  Tokens
+that contain `.` are interpreted as custom expressions, and tokens that do not
+are treated as templates.  In this case the first two tokens are considered
+templates, and the last is a custom expression, so the overall validation
+expression will accept scalar logicals, or 0 or 1:
 
 ```{r}
-validate(logical(1) || (numeric(1) && . %in% 0:1), TRUE)
-validate(logical(1) || (numeric(1) && . %in% 0:1), 0)
-validate(logical(1) || (numeric(1) && . %in% 0:1), "1")
+vet(logical(1) || (numeric(1) && . %in% 0:1), TRUE)
+vet(logical(1) || (numeric(1) && . %in% 0:1), 0)
+vet(logical(1) || (numeric(1) && . %in% 0:1), "1")
 ```
 
-If you need to reference a literal dot (`.`) in a template, you can escape it by adding another dot so that `.` becomes `..`.  If you want to reference `...` you'll need to use `....`.  If you have a validation expression that doesn't reference the validation object (i.e. doesn't use `.`) you can mark it as a validation expression by wrapping it in `.()` (if you want to use a literal `.()` you can use `..()`).
+If you need to reference a literal dot (`.`) in a template, you can escape it by
+adding another dot so that `.` becomes `..`.  If you want to reference `...`
+you'll need to use `....`.  If you have a validation expression that does not
+reference the validation object (i.e. does not use `.`) you can mark it as a
+validation expression by wrapping it in `.()` (if you want to use a literal
+`.()` you can use `..()`).
 
-If you need `&&` or `||` to be interpreted literally you can wrap the call in `identity` to tell `validate` not to recursively parse the expression:
+If you need `&&` or `||` to be interpreted literally you can wrap the call in
+`I` to tell `validate` not to recursively parse the expression:
 
 ```{r, eval=FALSE}
-identity(length(a) == length(b) && . %in% 0:1)
+I(length(a) == length(b) && . %in% 0:1)
 ```
 
-which will be treated as a single custom validation token.  `validate` will not recurse into calls other than to `(`, `&&`, and `||`.  The use of `identity` here is just an example of this behavior.  Note that an implication of this is you should not nest template tokens inside functions as `validate` will not identify them as templates and you may get unexpected results as a result.  For example:
+which will be treated as a single custom validation token.  `validate` will not
+recurse into calls other than to `(`, `&&`, and `||`.  The use of `I`
+here is just an example of this behavior and convenient since `I` does not
+change the meaning of the vetting token.  Note that an implication of this is
+you should not nest template tokens inside functions as `validate` will not
+identify them as templates and you may get unexpected results as a result.  For
+example:
 
 ```{r, eval=FALSE}
-identity(logical(1L) && my_special_fun(.))
+I(logical(1L) && my_special_fun(.))
 ```
 
-will always fail because `logical(1L)` will be interpreted as `FALSE` rather than as a template token.
+will always fail because `logical(1L)` will be interpreted as `FALSE` rather
+than as a template token requiring a scalar logical.
 
-### Pre-defining Validation Tokens
+### Pre-defining Vetting Tokens
 
-`validate` uses complex rules to parse and evaluate validation expressions, but they resolve to mostly intuitive outcomes.  One upside of the complexity is that you can actually store validation tokens, whether templates or custom, in variables:
+Vetting expressions are interpreted as language objects, so you can save them to
+variables by quoting them:
 
 ```{r}
-TF <- quote(logical(1) && !is.na(.))  # note `quote`
-validate(TF, TRUE)
-validate(TF, NA)
-validate(TF, 1)
+TF <- quote(logical(1) && !anyNA(.))  # note `quote`
+vet(TF, TRUE)
+vet(TF, NA)
+vet(TF, 1)
 ```
 
-Since validate parses and evaluates tokens recursively, you can even combine pre-stored tokens:
+Since `vetr` parses and evaluates tokens recursively, you can even combine
+pre-stored tokens:
 
 ```{r}
 ZERO_OR_ONE <- quote(numeric(1) && !is.na(.) && . %in% 0:1)
 TF_ish <- quote(TF || ZERO_OR_ONE)
-validate(TF_ish, 1)
-validate(TF_ish, "0")
+vet(TF_ish, 1)
+vet(TF_ish, "0")
 ```
 
-You can also provide more helpful error messages with `mk_val_token` for specific tokens:
+You can also provide more helpful error messages with `mk_val_token` for
+specific tokens:
 
 ```{r}
 NONA <- mk_val_token(!is.na(.), "not contain NAs")
 TF <- quote(logical(1L) && NONA)
-validate(TF, NA)
+vet(TF, NA)
 ```
 
 See `?mk_val_token` for more details.
@@ -236,40 +261,14 @@ AUTHNOTE: more details on which exact parent frame is used.
 `validate` comes with many predifined validation tokens for common cases:
 
 ```{r}
-validate(NUM.1.POS, 5)
-validate(NUM.1.POS, -3)
-validate(NUM.1.POS, runif(5))
-validate(CHR, letters)
-validate(CHR, factor(letters))
+vet(NUM.1.POS, 5)
+vet(NUM.1.POS, -3)
+vet(NUM.1.POS, runif(5))
+vet(CHR, letters)
+vet(CHR, factor(letters))
 ```
 
 See `?validation_tokens` for more details about what predefined tokens are available.
-
-## Alternatives
-
-### `stopifnot`
-
-A simple built-in alternative is to use `stopifnot`.  Here are the equivalent for our S3 lap object checks with `stopifnot`:
-
-```{r}
-analyze2 <- function(x, ...) {
-  stopifnot(
-    is.list(x), inherits(x, "laps"), identical(names(x), names(laps.template)),
-    is.character(x$car), length(x$car) == 1, is.data.frame(x$data),
-    identical(names(x$data), names(laps.template$data)),
-    identical(attributes(x$data$lap), attributes(laps.template$data$lap)),
-    identical(attributes(x$data$time), attributes(laps.template$data$time))
-  )
-  TRUE
-}
-analyze2(laps.1)   # Forgot to include car
-```
-
-compare to:
-
-```{r}
-analyze(laps.1)    # Forgot to include car
-```
 
 ### S4 Classes
 

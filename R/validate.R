@@ -117,7 +117,7 @@ vetr <- function(...)
 #' @rdname vet
 #' @export
 
-vet <- function(target, current, format="text", stop=TRUE)
+vet <- function(target, current, format="text", stop=FALSE)
   .Call(
     VALC_validate, substitute(target), current, substitute(current), 
     sys.call(), parent.frame(), format, stop

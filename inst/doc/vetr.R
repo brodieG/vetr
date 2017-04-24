@@ -46,7 +46,8 @@ stopifnot(
   is.data.frame(laps.1$data),
   identical(names(laps.1$data), c("lap", "time")),
   is.numeric(laps.1$lap),
-  is.POSIXct(laps.1$time)
+  identical(mode(laps.1$time), "numeric"),
+  inherits(laps.1$time, c("POSIXct", "POSIXt"))
 )
 
 ## ---------------------------------------------------------
