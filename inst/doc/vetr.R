@@ -3,14 +3,10 @@ knitr::opts_chunk$set(error=TRUE)
 options(width=60)
 
 ## ---------------------------------------------------------
-getOption("width")
-cat(rep('x', 60), "\n", sep="")
 x <- 1:3
 stopifnot(is.numeric(x), length(x) == 1L)
 
 ## ---------------------------------------------------------
-my_fun <- function() stop("Testing what happens with\nnewlines in knitr")
-my_fun()
 library(vetr)
 vet(numeric(1L), x)
 
@@ -33,22 +29,22 @@ laps.4$data <- transform(laps.4$data, time=Sys.time() + time)
 vet(laps.template, laps.1)   # Forgot to include car
 vet(laps.template, laps.2)   # Missing names
 vet(laps.template, laps.3)   # Lap times should be in POSIXct
-vet(laps.template, laps.4)   # Correct!
+vet(laps.template, laps.4)   # works
 
-## ---------------------------------------------------------
-stopifnot(
-  is.list(laps.1),
-  inherits(laps.1, "laps"),
-  length(laps.1) == 2L,
-  identical(names(laps.1), c("car", "data")),
-  is.character(laps.1$car),
-  length(laps.1$car) == 1L,
-  is.data.frame(laps.1$data),
-  identical(names(laps.1$data), c("lap", "time")),
-  is.numeric(laps.1$lap),
-  identical(mode(laps.1$time), "numeric"),
-  inherits(laps.1$time, c("POSIXct", "POSIXt"))
-)
+## ---- eval=FALSE------------------------------------------
+#  stopifnot(
+#    is.list(laps.1),
+#    inherits(laps.1, "laps"),
+#    length(laps.1) == 2L,
+#    identical(names(laps.1), c("car", "data")),
+#    is.character(laps.1$car),
+#    length(laps.1$car) == 1L,
+#    is.data.frame(laps.1$data),
+#    identical(names(laps.1$data), c("lap", "time")),
+#    is.numeric(laps.1$lap),
+#    identical(mode(laps.1$time), "numeric"),
+#    inherits(laps.1$time, c("POSIXct", "POSIXt"))
+#  )
 
 ## ---------------------------------------------------------
 x <- 1:2

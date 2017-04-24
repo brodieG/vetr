@@ -105,18 +105,10 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="templates" class="section level2">
 <h2>Templates</h2>
 <p>It is easier to express structural requirements by creating an R object that embodies them than by writing code that checks them explicitly. For example, if we want a scalar numeric we would normally use:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">getOption</span>(<span class="st">&quot;width&quot;</span>)</code></pre></div>
-<pre><code>## [1] 60</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">rep</span>(<span class="st">'x'</span>, <span class="dv">60</span>), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)</code></pre></div>
-<pre><code>## xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x &lt;-<span class="st"> </span><span class="dv">1</span>:<span class="dv">3</span>
 <span class="kw">stopifnot</span>(<span class="kw">is.numeric</span>(x), <span class="kw">length</span>(x) ==<span class="st"> </span>1L)</code></pre></div>
 <pre><code>## Error: length(x) == 1L is not TRUE</code></pre>
 <p>With <code>vetr</code>, the equivalent code is :</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">my_fun &lt;-<span class="st"> </span>function() <span class="kw">stop</span>(<span class="st">&quot;Testing what happens with</span><span class="ch">\n</span><span class="st">newlines in knitr&quot;</span>)
-<span class="kw">my_fun</span>()</code></pre></div>
-<pre><code>## Error in my_fun(): Testing what happens with
-## newlines in knitr</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(vetr)
 <span class="kw">vet</span>(<span class="kw">numeric</span>(1L), x)</code></pre></div>
 <pre><code>## [1] &quot;`x` should be length 1 (is 3)&quot;</code></pre>
@@ -140,10 +132,13 @@ laps<span class="fl">.4</span>$data &lt;-<span class="st"> </span><span class="k
 <pre><code>## [1] &quot;`names(laps.2)` should be type \&quot;character\&quot; (is \&quot;NULL\&quot;)&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(laps.template, laps<span class="fl">.3</span>)   <span class="co"># Lap times should be in POSIXct</span></code></pre></div>
 <pre><code>## [1] &quot;`laps.3$data$time` should be class \&quot;POSIXct\&quot; (is \&quot;numeric\&quot;)&quot;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(laps.template, laps<span class="fl">.4</span>)   <span class="co"># Correct!</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(laps.template, laps<span class="fl">.4</span>)   <span class="co"># works</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<p>Our template is an S3 object that contains a character car identifier and a data frame with lap timestamp data. We can then write functions that require our “laps” class objects to conform to that structure:</p>
-<p>Notice how <code>vet</code> checks that the class of the columns of the data frame nested inside our object matches expectations. Attributes are also checked recursively.</p>
+<p>Worth noting:</p>
+<ul>
+<li><code>vet</code> recursively checks that the class of the data frame columns</li>
+<li>The leading portion of the message (e.g. <code>laps.3$data$time</code>) points you to the exact location of the problem, and gives you a snippet you can copy and paste into the prompt for further scrutiny (e.g. <code>str(laps.3$data$time)</code>)</li>
+</ul>
 <p>For reference, the same set of checks would look like:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">stopifnot</span>(
   <span class="kw">is.list</span>(laps<span class="fl">.1</span>),
@@ -158,8 +153,6 @@ laps<span class="fl">.4</span>$data &lt;-<span class="st"> </span><span class="k
   <span class="kw">identical</span>(<span class="kw">mode</span>(laps<span class="fl">.1</span>$time), <span class="st">&quot;numeric&quot;</span>),
   <span class="kw">inherits</span>(laps<span class="fl">.1</span>$time, <span class="kw">c</span>(<span class="st">&quot;POSIXct&quot;</span>, <span class="st">&quot;POSIXt&quot;</span>))
 )</code></pre></div>
-<pre><code>## Error: identical(names(laps.1), c(&quot;car&quot;, &quot;data&quot;)) is not TRUE</code></pre>
-<p>and this does not even include the possibility of additional attributes to check.</p>
 <p>Internally <code>vet</code> uses <code>alike</code> to compare the template to the test value. See the <a href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/brodieG/alike/master/inst/doc/alike.html">alike vignette</a> for extensive details on how templates work.</p>
 </div>
 <div id="custom-expressions" class="section level2">
@@ -273,7 +266,7 @@ TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">
   <span class="kw">analyze2</span>(laps<span class="fl">.4</span>), <span class="co"># stopifnot version</span>
   <span class="kw">analyze</span>(laps<span class="fl">.4</span>)   <span class="co"># validate version</span>
 )</code></pre></div>
-<pre><code>## Error in microbenchmark(analyze2(laps.4), analyze(laps.4)): could not find function &quot;analyze2&quot;</code></pre>
+<pre><code>## Error in microbenchmark(analyze2(laps.4), analyze(laps.4)): could not find function &quot;analyze&quot;</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -282,10 +275,10 @@ TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">microbenchmark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
 <pre><code>## Unit: microseconds
-##                       expr   min      lq     mean   median
-##  data.frame(a = numeric()) 132.8 134.891 145.3411 139.2625
-##       uq     max neval
-##  147.025 338.986   100</code></pre>
+##                       expr     min      lq     mean
+##  data.frame(a = numeric()) 133.823 139.944 168.4363
+##    median       uq     max neval
+##  148.6025 160.5445 385.378   100</code></pre>
 <p>This is slower than the entire validation process show in our prior examples.</p>
 </div>
 </div>
