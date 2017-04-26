@@ -82,11 +82,16 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li><a href="#pre-defining-vetting-tokens">Pre-defining Vetting Tokens</a></li>
 <li><a href="#validation-expression-parsing-and-evaluation-rules">Validation Expression Parsing and Evaluation Rules</a></li>
 <li><a href="#predefined-tokens">Predefined Tokens</a></li>
-<li><a href="#s4-classes">S4 Classes</a></li>
 </ul></li>
 <li><a href="#performance-considerations">Performance Considerations</a><ul>
 <li><a href="#benchmarks">Benchmarks</a></li>
 <li><a href="#templates-and-performance">Templates and Performance</a></li>
+</ul></li>
+<li><a href="#alternatives">Alternatives</a><ul>
+<li><a href="#stopifnot"><code>stopifnot</code></a></li>
+<li><a href="#s4-classes">S4 Classes</a></li>
+<li><a href="#valaddin">Valaddin</a></li>
+<li><a href="#other-third-party-packages">Other Third Party Packages</a></li>
 </ul></li>
 <li><a href="#acknowledgements">Acknowledgements</a></li>
 </ul>
@@ -109,10 +114,19 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="kw">stopifnot</span>(<span class="kw">is.numeric</span>(x), <span class="kw">length</span>(x) ==<span class="st"> </span>1L)</code></pre></div>
 <pre><code>## Error: length(x) == 1L is not TRUE</code></pre>
 <p>With <code>vetr</code>, the equivalent code is :</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(vetr)
-<span class="kw">vet</span>(<span class="kw">numeric</span>(1L), x)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L), x)</code></pre></div>
 <pre><code>## [1] &quot;`x` should be length 1 (is 3)&quot;</code></pre>
-<p><code>vetr</code> handles recursive objects, and as such is particularly well suited to enforce structural requirements for S3 objects. Take our “laps” S3 object that we use to analyze car test drives on race tracks:</p>
+<p>If you are vetting function inputs, you can use the <code>vetr</code> function, which works just like <code>vet</code> except that is streamlined for use within functions:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fun &lt;-<span class="st"> </span>function(x, y) {
+  <span class="kw">vetr</span>(<span class="kw">numeric</span>(1L), <span class="kw">logical</span>(1L))
+  <span class="co"># ... function code goes here</span>
+}
+<span class="kw">fun</span>(<span class="dv">1</span>:<span class="dv">2</span>, <span class="st">&quot;hello&quot;</span>)</code></pre></div>
+<pre><code>## Error in fun(x = 1:2, y = &quot;hello&quot;): For argument `x`, `1:2` should be length 1 (is 2)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fun</span>(<span class="dv">1</span>, <span class="st">&quot;hello&quot;</span>)</code></pre></div>
+<pre><code>## Error in fun(x = 1, y = &quot;hello&quot;): For argument `y`, `&quot;hello&quot;` should be type &quot;logical&quot; (is &quot;character&quot;)</code></pre>
+<p>For more details on the <code>vetr</code> function see the <a href="#function-arguments">Function Arguments</a> section. For exposition purposes we will mostly focus on the <code>vet</code> function rather than <code>vetr</code> since almost everything that applies to <code>vet</code> applies equally to <code>vetr</code>.</p>
+<p><code>vet</code> handles recursive objects, and as such is particularly well suited to enforce structural requirements for S3 objects. Take this “laps” S3 object that we use to analyze car test drives on race tracks:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">laps.template &lt;-<span class="st"> </span><span class="kw">structure</span>(
   <span class="dt">class=</span><span class="st">&quot;laps&quot;</span>,
   <span class="kw">list</span>(
@@ -136,28 +150,29 @@ laps<span class="fl">.4</span>$data &lt;-<span class="st"> </span><span class="k
 <pre><code>## [1] TRUE</code></pre>
 <p>Worth noting:</p>
 <ul>
-<li><code>vet</code> recursively checks that the class of the data frame columns</li>
+<li><code>vet</code> recursively checks that the class of the data frame columns (in fact, it will recursively check any attribute defined in the template)</li>
 <li>The leading portion of the message (e.g. <code>laps.3$data$time</code>) points you to the exact location of the problem, and gives you a snippet you can copy and paste into the prompt for further scrutiny (e.g. <code>str(laps.3$data$time)</code>)</li>
 </ul>
-<p>For reference, the same set of checks would look like:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">stopifnot</span>(
-  <span class="kw">is.list</span>(laps<span class="fl">.1</span>),
-  <span class="kw">inherits</span>(laps<span class="fl">.1</span>, <span class="st">&quot;laps&quot;</span>),
-  <span class="kw">length</span>(laps<span class="fl">.1</span>) ==<span class="st"> </span>2L,
-  <span class="kw">identical</span>(<span class="kw">names</span>(laps<span class="fl">.1</span>), <span class="kw">c</span>(<span class="st">&quot;car&quot;</span>, <span class="st">&quot;data&quot;</span>)),
-  <span class="kw">is.character</span>(laps<span class="fl">.1</span>$car),
-  <span class="kw">length</span>(laps<span class="fl">.1</span>$car) ==<span class="st"> </span>1L,
-  <span class="kw">is.data.frame</span>(laps<span class="fl">.1</span>$data),
-  <span class="kw">identical</span>(<span class="kw">names</span>(laps<span class="fl">.1</span>$data), <span class="kw">c</span>(<span class="st">&quot;lap&quot;</span>, <span class="st">&quot;time&quot;</span>)),
-  <span class="kw">is.numeric</span>(laps<span class="fl">.1</span>$lap),
-  <span class="kw">identical</span>(<span class="kw">mode</span>(laps<span class="fl">.1</span>$time), <span class="st">&quot;numeric&quot;</span>),
-  <span class="kw">inherits</span>(laps<span class="fl">.1</span>$time, <span class="kw">c</span>(<span class="st">&quot;POSIXct&quot;</span>, <span class="st">&quot;POSIXt&quot;</span>))
-)</code></pre></div>
+<p>For reference, the same set of checks would look like, and these would get even more complicated if the nested objects had attributes (e.g. factor levels):</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vet_stopifnot &lt;-<span class="st"> </span>function(x)
+  <span class="kw">stopifnot</span>(
+    <span class="kw">is.list</span>(x),
+    <span class="kw">inherits</span>(x, <span class="st">&quot;laps&quot;</span>),
+    <span class="kw">length</span>(x) ==<span class="st"> </span>2L,
+    <span class="kw">identical</span>(<span class="kw">names</span>(x), <span class="kw">c</span>(<span class="st">&quot;car&quot;</span>, <span class="st">&quot;data&quot;</span>)),
+    <span class="kw">is.character</span>(x$car),
+    <span class="kw">length</span>(x$car) ==<span class="st"> </span>1L,
+    <span class="kw">is.data.frame</span>(x$data),
+    <span class="kw">identical</span>(<span class="kw">names</span>(x$data), <span class="kw">c</span>(<span class="st">&quot;lap&quot;</span>, <span class="st">&quot;time&quot;</span>)),
+    <span class="kw">is.numeric</span>(x$data$lap),
+    <span class="kw">identical</span>(<span class="kw">mode</span>(x$data$time), <span class="st">&quot;numeric&quot;</span>),
+    <span class="kw">inherits</span>(x$data$time, <span class="kw">c</span>(<span class="st">&quot;POSIXct&quot;</span>, <span class="st">&quot;POSIXt&quot;</span>))
+  )</code></pre></div>
 <p>Internally <code>vet</code> uses <code>alike</code> to compare the template to the test value. See the <a href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/brodieG/alike/master/inst/doc/alike.html">alike vignette</a> for extensive details on how templates work.</p>
 </div>
 <div id="custom-expressions" class="section level2">
 <h2>Custom Expressions</h2>
-<p>Templates alone will no let you check data values, or structural aspects that vary at runtime (e.g. two arguments must be the same length as each other). To address this <code>vetr</code> allows custom expressions:</p>
+<p>Templates alone will not let you check data values, or structural aspects that vary at runtime (e.g. two arguments must be the same length as each other). To address this <code>vetr</code> allows custom expressions:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x &lt;-<span class="st"> </span><span class="dv">1</span>:<span class="dv">2</span>
 y &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span>, <span class="ot">NA</span>)
 <span class="kw">vet</span>(!<span class="kw">anyNA</span>(.), x)</code></pre></div>
@@ -251,22 +266,24 @@ TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">
 <pre><code>## [1] &quot;`factor(letters)` should be type \&quot;character\&quot; (is \&quot;integer\&quot;)&quot;</code></pre>
 <p>See <code>?validation_tokens</code> for more details about what predefined tokens are available.</p>
 </div>
-<div id="s4-classes" class="section level3">
-<h3>S4 Classes</h3>
-<p>The natural solution to enforcing structural requirements in R objects is to use S4 classes. Unfortunately S3 objects are so prevalent in R that a “backwards compatible” mechanism for enforcing structure requirement is warranted.</p>
-</div>
 </div>
 <div id="performance-considerations" class="section level2">
 <h2>Performance Considerations</h2>
 <div id="benchmarks" class="section level3">
 <h3>Benchmarks</h3>
-<p>Both <code>validate</code> and <code>alike</code> are written primarily in C to minimize the performance impact of adding validation checks to your functions. Performance is comparable to or faster better than using <code>stopifnot</code>. Here we run our checks on valid “laps” objects we used to illustrate <a href="#complex-s3-objects">validation with complex S3 objects</a>:</p>
+<p>Both <code>validate</code> and <code>alike</code> are written primarily in C to minimize the performance impact of adding validation checks to your functions. Performance is comparable to or faster better than using <code>stopifnot</code>. Here we run our checks on valid “laps” objects we used to illustrate <a href="#complex-s3-objects">vet with complex S3 objects</a>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(microbenchmark)
 <span class="kw">microbenchmark</span>(
-  <span class="kw">analyze2</span>(laps<span class="fl">.4</span>), <span class="co"># stopifnot version</span>
-  <span class="kw">analyze</span>(laps<span class="fl">.4</span>)   <span class="co"># validate version</span>
+  <span class="kw">vet</span>(laps.template, laps<span class="fl">.4</span>), <span class="co"># vet version</span>
+  <span class="kw">vet_stopifnot</span>(laps<span class="fl">.4</span>)       <span class="co"># validate version</span>
 )</code></pre></div>
-<pre><code>## Error in microbenchmark(analyze2(laps.4), analyze(laps.4)): could not find function &quot;analyze&quot;</code></pre>
+<pre><code>## Unit: microseconds
+##                        expr    min      lq     mean  median
+##  vet(laps.template, laps.4)  6.446  7.6695  9.00055  9.0160
+##       vet_stopifnot(laps.4) 73.647 76.5170 84.43213 78.8045
+##       uq     max neval
+##   9.6415  27.796   100
+##  88.6735 189.217   100</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -275,16 +292,82 @@ TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">microbenchmark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
 <pre><code>## Unit: microseconds
-##                       expr     min      lq     mean
-##  data.frame(a = numeric()) 133.823 139.944 168.4363
-##    median       uq     max neval
-##  148.6025 160.5445 385.378   100</code></pre>
-<p>This is slower than the entire validation process show in our prior examples.</p>
+##                       expr     min      lq    mean   median
+##  data.frame(a = numeric()) 132.382 139.673 160.931 148.1135
+##       uq     max neval
+##  161.388 320.414   100</code></pre>
+</div>
+</div>
+<div id="alternatives" class="section level2">
+<h2>Alternatives</h2>
+<div id="stopifnot" class="section level3">
+<h3><code>stopifnot</code></h3>
+<p><code>stopifnot</code> is a fine solution in many cases, but the error messages that result from it can be cryptic, and it can take a fair bit of effort to set-up comprehensive tests for complex objects. One alternative is to use <code>if/else</code> statements in conjunction with <code>stop</code> and custom error messages, but that ends up being even more work still.</p>
+</div>
+<div id="s4-classes" class="section level3">
+<h3>S4 Classes</h3>
+<p>The natural solution to enforcing structural requirements in R objects is to use S4 classes. Unfortunately S3 objects are so prevalent in R that a “backwards compatible” mechanism for enforcing structure requirement is warranted.</p>
+</div>
+<div id="valaddin" class="section level3">
+<h3>Valaddin</h3>
+<p><a href="https://github.com/egnha/valaddin">valaddin</a> is a great package by <a href="https://github.com/egnha">Eugene Ha</a>. Both <code>valaddin</code> and <code>vetr</code> are primarily intended for function input validation.</p>
+<p><code>valaddin</code> works by modifying function objects, which makes it easy to add validation to existing functions in the workspace or functions from packages you do not control. The interface is very flexible and allows you to specify pretty much any validation requirement you wish.</p>
+<p><code>vetr</code> requires you to modify the source of a function or to explicitly wrap a function in another. <code>vetr</code> does have some advantages though:</p>
+<ul>
+<li>Template based validation</li>
+<li>Auto-composition of helpful error messages</li>
+<li>Minimal computational overhead</li>
+</ul>
+<p>Here we borrow an example from the <code>valaddin</code> vignette to illustrate the last point:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">secant &lt;-<span class="st"> </span>function(f, x, dx) (<span class="kw">f</span>(x +<span class="st"> </span>dx) -<span class="st"> </span><span class="kw">f</span>(x)) /<span class="st"> </span>dx
+
+secant_valaddin &lt;-<span class="st"> </span>valaddin::<span class="kw">firmly</span>(secant, <span class="kw">list</span>(~x, ~dx) ~<span class="st"> </span>is.numeric)
+secant_stopifnot &lt;-<span class="st"> </span>function(f, x, dx) {
+  <span class="kw">stopifnot</span>(<span class="kw">is.numeric</span>(x), <span class="kw">is.numeric</span>(dx))
+  <span class="kw">secant</span>(f, x, dx)
+}
+secant_vetr &lt;-<span class="st"> </span>function(f, x, dx) {
+  <span class="kw">vetr</span>(<span class="dt">x=</span><span class="kw">numeric</span>(), <span class="dt">dx=</span><span class="kw">numeric</span>())
+  <span class="kw">secant</span>(f, x, dx)
+}
+<span class="kw">microbenchmark</span>(
+  <span class="kw">secant_valaddin</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>),
+  <span class="kw">secant_stopifnot</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>),
+  <span class="kw">secant_vetr</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>)
+)</code></pre></div>
+<pre><code>## Unit: microseconds
+##                           expr     min      lq      mean
+##   secant_valaddin(log, 1, 0.1) 123.349 132.661 164.28647
+##  secant_stopifnot(log, 1, 0.1)  10.436  12.739  15.89354
+##       secant_vetr(log, 1, 0.1)  30.702  35.059  43.31964
+##    median      uq     max neval
+##  141.0875 158.767 514.594   100
+##   14.1515  15.122  34.805   100
+##   37.3650  42.677 107.279   100</code></pre>
+<p>In many cases ~100us is not enough of a difference to be concerned with, but if an R function must be applied repeatedly (e.g. split-apply-combine analysis with many groups) then it becomes meaningful.</p>
+<p>Also, here we illustrate the power of template validation by adding a check to make sure our function accepts two arguments:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">f.tpl &lt;-<span class="st"> `</span><span class="dt">attributes&lt;-</span><span class="st">`</span>(function(x, y) <span class="ot">NULL</span>, <span class="ot">NULL</span>)
+secant_vetr2 &lt;-<span class="st"> </span>function(f, x, dx) {
+  <span class="kw">vetr</span>(f.tpl, <span class="kw">numeric</span>(), <span class="kw">numeric</span>())
+  <span class="kw">secant</span>(f, x, dx)
+}
+<span class="kw">secant_vetr2</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>)</code></pre></div>
+<pre><code>## [1] 0.9531018</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">secant_vetr2</span>(sin, <span class="dv">1</span>, .<span class="dv">1</span>)</code></pre></div>
+<pre><code>## [1] 0.4973638</code></pre>
+</div>
+<div id="other-third-party-packages" class="section level3">
+<h3>Other Third Party Packages</h3>
+<ul>
+<li><a href="https://github.com/smbache/ensurer">ensurer</a></li>
+<li><a href="https://github.com/jimhester/types">types</a></li>
+<li><a href="https://github.com/gaborcsardi/argufy">argufy</a></li>
+</ul>
 </div>
 </div>
 <div id="acknowledgements" class="section level2">
 <h2>Acknowledgements</h2>
-<p>Thanks to <a href="https://github.com/smbache">smbache</a> for some ideas I borrowed from his package <a href="https://github.com/smbache/ensurer">ensurer</a>, in particular for providing a function to validate objects other than function arguments. Thanks also to Hadley Wickham for pointing me to smbache when I asked him about object validation.</p>
+<p>Thanks to <a href="https://github.com/smbache">smbache</a> for some ideas I borrowed from his package <a href="https://github.com/smbache/ensurer">ensurer</a>, in particular for providing a function to vet objects other than function arguments. Thanks also to Hadley Wickham for pointing me to smbache when I asked him about object vetting.</p>
 </div>
 
 

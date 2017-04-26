@@ -15,6 +15,7 @@ vignette: >
 ```{r global_options, echo=FALSE}
 knitr::opts_chunk$set(error=TRUE)
 options(width=60)
+library(vetr)
 ```
 
 ## Garbage In
@@ -45,12 +46,28 @@ stopifnot(is.numeric(x), length(x) == 1L)
 With `vetr`, the equivalent code is :
 
 ```{r}
-library(vetr)
 vet(numeric(1L), x)
 ```
 
-`vetr` handles recursive objects, and as such is particularly well suited to
-enforce structural requirements for S3 objects.  Take our "laps" S3 object that
+If you are vetting function inputs, you can use the `vetr` function, which works
+just like `vet` except that is streamlined for use within functions:
+
+```{r}
+fun <- function(x, y) {
+  vetr(numeric(1L), logical(1L))
+  # ... function code goes here
+}
+fun(1:2, "hello")
+fun(1, "hello")
+```
+
+For more details on the `vetr` function see the [Function
+Arguments](#function-arguments) section.  For exposition purposes we
+will mostly focus on the `vet` function rather than `vetr` since almost
+everything that applies to `vet` applies equally to `vetr`.
+
+`vet` handles recursive objects, and as such is particularly well suited to
+enforce structural requirements for S3 objects.  Take this "laps" S3 object that
 we use to analyze car test drives on race tracks:
 
 ```{r}
@@ -83,27 +100,30 @@ vet(laps.template, laps.4)   # works
 
 Worth noting:
 
-* `vet` recursively checks that the class of the data frame columns
+* `vet` recursively checks that the class of the data frame columns (in fact, it
+  will recursively check any attribute defined in the template)
 * The leading portion of the message (e.g. `laps.3$data$time`) points
   you to the exact location of the problem, and gives you a snippet you can copy
   and paste into the prompt for further scrutiny (e.g. `str(laps.3$data$time)`)
 
-For reference, the same set of checks would look like:
+For reference, the same set of checks would look like, and these would get even
+more complicated if the nested objects had attributes (e.g. factor levels):
 
-```{r, eval=FALSE}
-stopifnot(
-  is.list(laps.1),
-  inherits(laps.1, "laps"),
-  length(laps.1) == 2L,
-  identical(names(laps.1), c("car", "data")),
-  is.character(laps.1$car),
-  length(laps.1$car) == 1L,
-  is.data.frame(laps.1$data),
-  identical(names(laps.1$data), c("lap", "time")),
-  is.numeric(laps.1$lap),
-  identical(mode(laps.1$time), "numeric"),
-  inherits(laps.1$time, c("POSIXct", "POSIXt"))
-)
+```{r}
+vet_stopifnot <- function(x)
+  stopifnot(
+    is.list(x),
+    inherits(x, "laps"),
+    length(x) == 2L,
+    identical(names(x), c("car", "data")),
+    is.character(x$car),
+    length(x$car) == 1L,
+    is.data.frame(x$data),
+    identical(names(x$data), c("lap", "time")),
+    is.numeric(x$data$lap),
+    identical(mode(x$data$time), "numeric"),
+    inherits(x$data$time, c("POSIXct", "POSIXt"))
+  )
 ```
 
 Internally `vet` uses `alike` to compare the template to the test value.  See
@@ -262,38 +282,124 @@ vet(CHR, factor(letters))
 
 See `?validation_tokens` for more details about what predefined tokens are available.
 
-### S4 Classes
-
-The natural solution to enforcing structural requirements in R objects is to use S4 classes.  Unfortunately S3 objects are so prevalent in R that a "backwards compatible" mechanism for enforcing structure requirement is warranted.
 
 ## Performance Considerations
 
 ### Benchmarks
 
-Both `validate` and `alike` are written primarily in C to minimize the performance impact of adding validation checks to your functions.  Performance is comparable to or faster better than using `stopifnot`.  Here we run our checks on valid "laps" objects we used to illustrate [validation with complex S3 objects](#complex-s3-objects):
+Both `validate` and `alike` are written primarily in C to minimize the
+performance impact of adding validation checks to your functions.  Performance
+is comparable to or faster better than using `stopifnot`.  Here we run our
+checks on valid "laps" objects we used to illustrate [vet with complex S3
+objects](#complex-s3-objects):
 
 ```{r}
 library(microbenchmark)
 microbenchmark(
-  analyze2(laps.4), # stopifnot version
-  analyze(laps.4)   # validate version
+  vet(laps.template, laps.4), # vet version
+  vet_stopifnot(laps.4)       # validate version
 )
 ```
 
-Performance is optimized for the success case.  Failure cases should still perform reasonably well, but will be slower than most success cases.
+Performance is optimized for the success case.  Failure cases should still
+perform reasonably well, but will be slower than most success cases.
 
 ### Templates and Performance
 
-Complex templates will be slower to evalute than simple ones, particularly for lists with lots of nested elements since `alike` recurses through all template list elements.
+Complex templates will be slower to evalute than simple ones, particularly for
+lists with lots of nested elements since `alike` recurses through all template
+list elements.
 
-We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:
+We recommend that you predefine templates in your package and not in the
+validation expression since some seemingly innocuous template creation
+expressions carry substantial overhead:
 
 ```{r}
 microbenchmark(data.frame(a=numeric()))
 ```
+## Alternatives
 
-This is slower than the entire validation process show in our prior examples.
+### `stopifnot`
+
+`stopifnot` is a fine solution in many cases, but the error messages that result
+from it can be cryptic, and it can take a fair bit of effort to set-up
+comprehensive tests for complex objects.  One alternative is to use `if/else`
+statements in conjunction with `stop` and custom error messages, but that ends
+up being even more work still.
+
+### S4 Classes
+
+The natural solution to enforcing structural requirements in R objects is to use
+S4 classes.  Unfortunately S3 objects are so prevalent in R that a "backwards
+compatible" mechanism for enforcing structure requirement is warranted.
+
+### Valaddin
+
+[valaddin](https://github.com/egnha/valaddin) is a great package by [Eugene
+Ha](https://github.com/egnha).  Both `valaddin` and `vetr` are primarily
+intended for function input validation.
+
+`valaddin` works by modifying function objects, which makes it easy to add
+validation to existing functions in the workspace or functions from packages you
+do not control.  The interface is very flexible and allows you to specify pretty
+much any validation requirement you wish.
+
+`vetr` requires you to modify the source of a function or to explicitly wrap a
+function in another.  `vetr` does have some advantages though:
+
+* Template based validation
+* Auto-composition of helpful error messages
+* Minimal computational overhead
+
+Here we borrow an example from the `valaddin` vignette to illustrate the
+last point:
+
+```{r}
+secant <- function(f, x, dx) (f(x + dx) - f(x)) / dx
+
+secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
+secant_stopifnot <- function(f, x, dx) {
+  stopifnot(is.numeric(x), is.numeric(dx))
+  secant(f, x, dx)
+}
+secant_vetr <- function(f, x, dx) {
+  vetr(x=numeric(), dx=numeric())
+  secant(f, x, dx)
+}
+microbenchmark(
+  secant_valaddin(log, 1, .1),
+  secant_stopifnot(log, 1, .1),
+  secant_vetr(log, 1, .1)
+)
+```
+
+In many cases ~100us is not enough of a difference to be concerned with, but
+if an R function must be applied repeatedly (e.g. split-apply-combine analysis
+with many groups) then it becomes meaningful.
+
+Also, here we illustrate the power of template validation by adding a check to
+make sure our function accepts two arguments:
+
+```{r}
+f.tpl <- `attributes<-`(function(x, y) NULL, NULL)
+secant_vetr2 <- function(f, x, dx) {
+  vetr(f.tpl, numeric(), numeric())
+  secant(f, x, dx)
+}
+secant_vetr2(log, 1, .1)
+secant_vetr2(sin, 1, .1)
+```
+
+### Other Third Party Packages
+
+* [ensurer](https://github.com/smbache/ensurer)
+* [types](https://github.com/jimhester/types)
+* [argufy](https://github.com/gaborcsardi/argufy)
 
 ## Acknowledgements
 
-Thanks to [smbache](https://github.com/smbache) for some ideas I borrowed from his package [ensurer](https://github.com/smbache/ensurer), in particular for providing a function to validate objects other than function arguments.  Thanks also to Hadley Wickham for pointing me to smbache when I asked him about object validation.
+Thanks to [smbache](https://github.com/smbache) for some ideas I borrowed from
+his package [ensurer](https://github.com/smbache/ensurer), in particular for
+providing a function to vet objects other than function arguments.  Thanks
+also to Hadley Wickham for pointing me to smbache when I asked him about object
+vetting.

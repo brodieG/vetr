@@ -1,14 +1,22 @@
 ## ----global_options, echo=FALSE---------------------------
 knitr::opts_chunk$set(error=TRUE)
 options(width=60)
+library(vetr)
 
 ## ---------------------------------------------------------
 x <- 1:3
 stopifnot(is.numeric(x), length(x) == 1L)
 
 ## ---------------------------------------------------------
-library(vetr)
 vet(numeric(1L), x)
+
+## ---------------------------------------------------------
+fun <- function(x, y) {
+  vetr(numeric(1L), logical(1L))
+  # ... function code goes here
+}
+fun(1:2, "hello")
+fun(1, "hello")
 
 ## ---------------------------------------------------------
 laps.template <- structure(
@@ -31,20 +39,21 @@ vet(laps.template, laps.2)   # Missing names
 vet(laps.template, laps.3)   # Lap times should be in POSIXct
 vet(laps.template, laps.4)   # works
 
-## ---- eval=FALSE------------------------------------------
-#  stopifnot(
-#    is.list(laps.1),
-#    inherits(laps.1, "laps"),
-#    length(laps.1) == 2L,
-#    identical(names(laps.1), c("car", "data")),
-#    is.character(laps.1$car),
-#    length(laps.1$car) == 1L,
-#    is.data.frame(laps.1$data),
-#    identical(names(laps.1$data), c("lap", "time")),
-#    is.numeric(laps.1$lap),
-#    identical(mode(laps.1$time), "numeric"),
-#    inherits(laps.1$time, c("POSIXct", "POSIXt"))
-#  )
+## ---------------------------------------------------------
+vet_stopifnot <- function(x)
+  stopifnot(
+    is.list(x),
+    inherits(x, "laps"),
+    length(x) == 2L,
+    identical(names(x), c("car", "data")),
+    is.character(x$car),
+    length(x$car) == 1L,
+    is.data.frame(x$data),
+    identical(names(x$data), c("lap", "time")),
+    is.numeric(x$data$lap),
+    identical(mode(x$data$time), "numeric"),
+    inherits(x$data$time, c("POSIXct", "POSIXt"))
+  )
 
 ## ---------------------------------------------------------
 x <- 1:2
@@ -104,10 +113,37 @@ vet(CHR, factor(letters))
 ## ---------------------------------------------------------
 library(microbenchmark)
 microbenchmark(
-  analyze2(laps.4), # stopifnot version
-  analyze(laps.4)   # validate version
+  vet(laps.template, laps.4), # vet version
+  vet_stopifnot(laps.4)       # validate version
 )
 
 ## ---------------------------------------------------------
 microbenchmark(data.frame(a=numeric()))
+
+## ---------------------------------------------------------
+secant <- function(f, x, dx) (f(x + dx) - f(x)) / dx
+
+secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
+secant_stopifnot <- function(f, x, dx) {
+  stopifnot(is.numeric(x), is.numeric(dx))
+  secant(f, x, dx)
+}
+secant_vetr <- function(f, x, dx) {
+  vetr(x=numeric(), dx=numeric())
+  secant(f, x, dx)
+}
+microbenchmark(
+  secant_valaddin(log, 1, .1),
+  secant_stopifnot(log, 1, .1),
+  secant_vetr(log, 1, .1)
+)
+
+## ---------------------------------------------------------
+f.tpl <- `attributes<-`(function(x, y) NULL, NULL)
+secant_vetr2 <- function(f, x, dx) {
+  vetr(f.tpl, numeric(), numeric())
+  secant(f, x, dx)
+}
+secant_vetr2(log, 1, .1)
+secant_vetr2(sin, 1, .1)
 
