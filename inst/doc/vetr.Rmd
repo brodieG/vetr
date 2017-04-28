@@ -366,10 +366,29 @@ secant_vetr <- function(f, x, dx) {
   vetr(x=numeric(), dx=numeric())
   secant(f, x, dx)
 }
+secant_vetr3 <- function(f, x, dx) {
+  vet(numeric(), x)
+  vet(numeric(), dx)
+  secant(f, x, dx)
+}
+mc <- function() {
+  match.call(
+    definition=sys.function(sys.parent(1)),
+    call=sys.call(sys.parent(1)),
+    expand.dots=FALSE,
+    envir=parent.frame(2L)
+  )
+}
+secant_mc <- function(f, x, dx) {
+  mc()
+}
 microbenchmark(
   secant_valaddin(log, 1, .1),
   secant_stopifnot(log, 1, .1),
-  secant_vetr(log, 1, .1)
+  secant_vetr(log, 1, .1),
+  secant_vetr3(log, 1, .1),
+  secant_mc(),
+  list(sys.frames(), sys.calls(), sys.parents())
 )
 ```
 

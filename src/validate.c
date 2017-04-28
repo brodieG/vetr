@@ -209,66 +209,44 @@ SEXP VALC_validate(
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 
-SEXP VALC_validate_args(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
-  SEXP R_TRUE = PROTECT(ScalarLogical(1)),
-    chr_exp = PROTECT(ScalarString(mkChar("expand"))),
-    one=PROTECT(ScalarInteger(1)), zero=PROTECT(ScalarInteger(0));
-
-  // Get calls from function to validate and validator call
-
-  SEXP fun_call = PROTECT(
-    CAR(
-      VALC_match_call(
-        chr_exp, R_TRUE, R_TRUE, R_TRUE, one, R_NilValue, sys_frames, sys_calls,
-        sys_pars
-  ) ) );
-  // Get definition of fun in original call; this unfortunately requires
-  // repeating some of the logic in the step above, but is pretty fast
-
-  SEXP fun_frame_dat = PROTECT(
-    VALC_get_frame_data(sys_frames, sys_calls, sys_pars, 1)
-  );
-  SEXP fun_dyn_par_frame = CADR(fun_frame_dat);
-  SEXP fun_frame = CADDR(fun_frame_dat);
-  SEXP fun = PROTECT(
-    VALC_get_fun(fun_dyn_par_frame, CAR(fun_frame_dat))
-  );
-  // Now get matching call (could save up to 1.9us if we used different method,
-  // but nice thing of doing it this way is this is guaranteed to match to
-  // fun_call)
-
-  SEXP val_call_data = PROTECT(
-    VALC_match_call(
-      chr_exp, R_TRUE, R_TRUE, R_TRUE, zero, fun, sys_frames, sys_calls,
-      sys_pars
-  ) );
-  SEXP val_call = CAR(val_call_data);
-  SEXP val_call_types = CADR(val_call_data);
+SEXP VALC_validate_args(SEXP fun_call, SEXP val_call, SEXP fun_frame) {
 
   // For the elements with validation call setup, check for errors;  Note that
   // we need to skip the first element of the calls since we only care about the
   // args.
 
-  SEXP val_call_cpy, fun_call_cpy, val_call_types_cpy;
+  SEXP val_call_cpy, fun_call_cpy;
 
   for(
-    val_call_cpy = CDR(val_call), fun_call_cpy = CDR(fun_call),
-    val_call_types_cpy = val_call_types;
+    val_call_cpy = CDR(val_call), fun_call_cpy = CDR(fun_call);
     val_call_cpy != R_NilValue;
-    val_call_cpy = CDR(val_call_cpy), fun_call_cpy = CDR(fun_call_cpy),
-    val_call_types_cpy = CDR(val_call_types_cpy)
+    val_call_cpy = CDR(val_call_cpy), fun_call_cpy = CDR(fun_call_cpy)
   ) {
-    SEXP arg_tag;
+    SEXP arg_tag, val_tag;
+    val_tag = TAG(val_call_cpy);
 
-    if(TAG(val_call_cpy) != (arg_tag = TAG(fun_call_cpy)))
-      error("Internal Error: tag mismatch between function and validation; contact maintainer.");
+    // It is possible for the function call to have more arguments than the
+    // validation call, but for both the arguments should be in the same order
+
+    while(
+      fun_call_cpy != R_NilValue && val_tag != (arg_tag = TAG(fun_call_cpy))
+    )
+      fun_call_cpy = CDR(fun_call_cpy);
+
+    if(fun_call_cpy == R_NilValue)
+      VALC_arg_error(TAG(fun_call_cpy), fun_call, "Argument `%s` is missing");
 
     SEXP val_tok, fun_tok;
     val_tok = CAR(val_call_cpy);
-    if(val_tok == R_MissingArg) continue;
+    if(val_tok == R_MissingArg)
+      error(
+        "Internal Error: vetting expression unmatched; contact maintainer."
+      );
+
     fun_tok = CAR(fun_call_cpy);
     if(fun_tok == R_MissingArg)
       VALC_arg_error(TAG(fun_call_cpy), fun_call, "Argument `%s` is missing");
+
     // Need to evaluate the argument
 
     int err_val = 0;
@@ -285,20 +263,20 @@ SEXP VALC_validate_args(SEXP sys_frames, SEXP sys_calls, SEXP sys_pars) {
     );}
     // Evaluate the validation expression
 
-    SEXP val_res = VALC_evaluate(
+    SEXP val_res = PROTECT(
+      VALC_evaluate(
       val_tok, CAR(fun_call_cpy), arg_tag, fun_val, val_call, fun_frame
-    );
-    if(IS_TRUE(val_res)) continue;  // success, check next
-    // fail, produce error message: NOTE - might change if we try to use full
-    // expression instead of just arg name
-    VALC_process_error(val_res, TAG(fun_call_cpy), fun_call, 1, 1);
-    error("Internal Error: should never get here 2487; contact maintainer");
+    ) );
+    if(!IS_TRUE(val_res)) {
+      // fail, produce error message: NOTE - might change if we try to use full
+      // expression instead of just arg name
+      VALC_process_error(val_res, TAG(fun_call_cpy), fun_call, 1, 1);
+      error("Internal Error: should never get here 2487; contact maintainer");
+    }
+    UNPROTECT(1);
   }
   if(val_call_cpy != R_NilValue || fun_call_cpy != R_NilValue)
     error("Internal Error: fun and validation matched calls different lengths; contact maintainer.");
 
-  // Match the calls up
-  UNPROTECT(4);
-  UNPROTECT(4); // SEXPs used as arguments for match_call
   return VALC_TRUE;
 }

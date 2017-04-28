@@ -6,7 +6,7 @@
 #'
 #' @section Vetting with Templates:
 #'
-#' 
+#'
 #'
 #'
 #' The \code{vet} functions use R objects as templates that the values
@@ -110,7 +110,16 @@
 #'   \code{return.mode}
 
 vetr <- function(...)
-  .Call(VALC_validate_args, sys.frames(), sys.calls(), sys.parents())
+  .Call(
+    VALC_validate_args,
+    match.call(
+      definition=(fun.match <- sys.function(sys.parent(1))),
+      call=sys.call(sys.parent(1)),
+      envir=parent.frame(2L)
+    ),
+    match.call(definition=fun.match, envir=(par.frame <- parent.frame())),
+    par.frame
+  )
 
 # Do we need both `substitute(target)` and sys.call??
 
@@ -119,7 +128,7 @@ vetr <- function(...)
 
 vet <- function(target, current, format="text", stop=FALSE)
   .Call(
-    VALC_validate, substitute(target), current, substitute(current), 
+    VALC_validate, substitute(target), current, substitute(current),
     sys.call(), parent.frame(), format, stop
   )
 
