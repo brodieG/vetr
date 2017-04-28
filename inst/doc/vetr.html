@@ -278,12 +278,12 @@ TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">
   <span class="kw">vet_stopifnot</span>(laps<span class="fl">.4</span>)       <span class="co"># validate version</span>
 )</code></pre></div>
 <pre><code>## Unit: microseconds
-##                        expr    min      lq     mean median
-##  vet(laps.template, laps.4)  6.249  7.6205  9.56625  9.388
-##       vet_stopifnot(laps.4) 74.949 78.9165 88.40820 81.300
-##       uq     max neval
-##  10.2660  26.507   100
-##  91.1795 199.893   100</code></pre>
+##                        expr    min      lq      mean
+##  vet(laps.template, laps.4)  6.497  8.0335  12.05863
+##       vet_stopifnot(laps.4) 78.211 81.5190 112.02297
+##   median       uq     max neval
+##  10.0125  13.0915  44.165   100
+##  92.9220 135.6730 324.543   100</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -293,9 +293,9 @@ TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">microbenchmark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
 <pre><code>## Unit: microseconds
 ##                       expr     min       lq     mean
-##  data.frame(a = numeric()) 145.141 164.9115 231.7277
-##   median       uq     max neval
-##  215.493 272.7915 530.463   100</code></pre>
+##  data.frame(a = numeric()) 132.815 136.4935 156.5128
+##    median       uq     max neval
+##  145.1145 156.5835 317.932   100</code></pre>
 </div>
 </div>
 <div id="alternatives" class="section level2">
@@ -356,19 +356,19 @@ secant_mc &lt;-<span class="st"> </span>function(f, x, dx) {
 )</code></pre></div>
 <pre><code>## Unit: microseconds
 ##                                            expr     min
-##                    secant_valaddin(log, 1, 0.1) 126.910
-##                   secant_stopifnot(log, 1, 0.1)  10.712
-##                        secant_vetr(log, 1, 0.1)  31.615
-##                       secant_vetr3(log, 1, 0.1)  10.217
-##                                     secant_mc()   5.224
-##  list(sys.frames(), sys.calls(), sys.parents())  10.980
-##        lq      mean  median       uq     max neval
-##  134.2795 154.04370 141.208 151.3695 382.939   100
-##   12.4145  14.62415  13.631  14.8050  34.710   100
-##   34.5925  41.29116  36.957  41.5315 182.245   100
-##   12.3750  15.38831  13.714  15.8205  44.584   100
-##    6.3130   8.28699   7.006   7.8995  81.870   100
-##   13.2605  15.41171  14.328  15.2730  44.163   100</code></pre>
+##                    secant_valaddin(log, 1, 0.1) 127.041
+##                   secant_stopifnot(log, 1, 0.1)  10.159
+##                        secant_vetr(log, 1, 0.1)  15.093
+##                       secant_vetr3(log, 1, 0.1)  10.074
+##                                     secant_mc()   4.931
+##  list(sys.frames(), sys.calls(), sys.parents())  11.707
+##        lq      mean   median       uq     max neval
+##  133.4550 150.86022 141.6435 147.9830 364.747   100
+##   12.3520  14.47555  13.5755  14.5940  30.064   100
+##   18.4575  21.36341  19.8285  22.1270  44.333   100
+##   12.0470  15.60366  13.6490  15.6065  53.585   100
+##    5.9765   7.18472   6.7930   7.8295  17.034   100
+##   13.4570  15.55815  14.3110  15.3880  50.442   100</code></pre>
 <p>In many cases ~100us is not enough of a difference to be concerned with, but if an R function must be applied repeatedly (e.g. split-apply-combine analysis with many groups) then it becomes meaningful.</p>
 <p>Also, here we illustrate the power of template validation by adding a check to make sure our function accepts two arguments:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">f.tpl &lt;-<span class="st"> `</span><span class="dt">attributes&lt;-</span><span class="st">`</span>(function(x, y) <span class="ot">NULL</span>, <span class="ot">NULL</span>)
