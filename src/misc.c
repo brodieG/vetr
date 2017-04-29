@@ -69,7 +69,6 @@ void VALC_stop2(SEXP call, const char * msg, SEXP rho) {
 Create simple error for a tag
 */
 void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
-  PrintValue(tag);
   if(TYPEOF(tag) != SYMSXP)
     error("Need to implement deparsing of tag since this could be lang now");
 

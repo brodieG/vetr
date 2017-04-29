@@ -219,7 +219,6 @@ SEXP VALC_validate_args(
   SEXP val_call_cpy, fun_call_cpy, fun_form_cpy;
   // note `fun` will always be a closure
   SEXP fun_form = FORMALS(fun);
-  PrintValue(fun_form);
   // `fun_form` is only the formals so we don't need to skip the first value
   fun_form_cpy = fun_form;
   for(
@@ -262,6 +261,7 @@ SEXP VALC_validate_args(
     SEXP val_tok, fun_tok;
     if(arg_tag != frm_tag) {
       if(CAR(fun_form_cpy) != R_MissingArg) {
+        arg_tag = frm_tag;
         fun_tok = CAR(fun_form_cpy);
       } else {
         VALC_arg_error(
@@ -292,7 +292,6 @@ SEXP VALC_validate_args(
 
     SEXP fun_val = R_tryEval(arg_tag, fun_frame, err_point);
     if(* err_point) {
-      Rprintf("hello 23\n");
       VALC_arg_error(
         arg_tag, fun_call,
         "Argument `%s` produced error during evaluation; see previous error."

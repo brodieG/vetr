@@ -30,9 +30,6 @@ SEXP VALC_evaluate_recurse(
       if returns FALSE deparse into something like (`x` does not eval to TRUE`)
     if 999, eval as alike
   */
-  Rprintf("in recurse\n");
-  PrintValue(arg_tag);
-  PrintValue(lang);
   int mode;
 
   if(TYPEOF(act_codes) == LISTSXP) {
@@ -131,9 +128,6 @@ SEXP VALC_evaluate_recurse(
     int * err_point = &err_val;
     eval_tmp = PROTECT(R_tryEval(lang, rho, err_point));
     if(* err_point) {
-      Rprintf("Error 1\n");
-      PrintValue(lang);
-      PrintValue(arg_tag);
       VALC_arg_error(
         arg_tag, lang_full,
         "Validation expression for argument `%s` produced an error (see previous error)."
@@ -289,8 +283,6 @@ SEXP VALC_evaluate(
     error("Argument `rho` must be an environment.");
 
   SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, rho));
-  Rprintf("In eval\n");
-  PrintValue(arg_tag);
   SEXP res = PROTECT(
     VALC_evaluate_recurse(
       VECTOR_ELT(lang_parsed, 0),
