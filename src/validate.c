@@ -225,7 +225,8 @@ SEXP VALC_validate_args(
     val_call_cpy = CDR(val_call),
     fun_call_cpy = CDR(fun_call);
     fun_form_cpy != R_NilValue;
-    fun_form_cpy = CDR(fun_form),  val_call_cpy = CDR(val_call_cpy),
+    fun_form_cpy = CDR(fun_form_cpy),
+    val_call_cpy = CDR(val_call_cpy),
     fun_call_cpy = CDR(fun_call_cpy)
   ) {
     SEXP arg_tag, val_tag, frm_tag;
