@@ -32,7 +32,6 @@ void R_init_vetr(DllInfo *info)
   VALC_SYM_errmsg = install("err.msg");
   VALC_TRUE = ScalarLogical(1);
 
-  VALC_match_call = (SEXP(*)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP)) R_GetCCallable("matchcall", "MC_match_call_internal");
   VALC_alike = (SEXP(*)(SEXP, SEXP, SEXP, SEXP)) R_GetCCallable(
     "alike", "ALIKEC_alike_ext2"
   );
