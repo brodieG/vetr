@@ -20,7 +20,7 @@ SEXP VALC_validate(
   SEXP ret_mode_sxp, SEXP stop
 );
 
-SEXP VALC_validate_args(SEXP fun_call, SEXP val_call, SEXP fun_frame);
+SEXP VALC_validate_args(SEXP fun, SEXP fun_call, SEXP val_call, SEXP fun_frame);
 SEXP VALC_remove_parens(SEXP lang);
 SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name);
 SEXP VALC_test(SEXP a, SEXP b);

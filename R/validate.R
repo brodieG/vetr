@@ -112,8 +112,9 @@
 vetr <- function(...)
   .Call(
     VALC_validate_args,
+    fun.match <- sys.function(sys.parent(1)),
     match.call(
-      definition=(fun.match <- sys.function(sys.parent(1))),
+      definition=fun.match,
       call=sys.call(sys.parent(1)),
       envir=parent.frame(2L)
     ),
