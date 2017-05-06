@@ -77,11 +77,11 @@ unitizer_sect("Args evaled in correct env?", {
   fun8a <- function(x, y=z + 2) { a <- b <- NULL; vetr(x=TRUE, y=1L) }
   a <- NULL
   b <- TRUE
-  fun8(a && b)   # fail because a in parent is list
+  fun8(a && b)   # fail because a in parent is NULL
   a <- TRUE
   fun8a(a && b)  # works despite NULLs in function
 
-  # Make sure we can access 
+  # Make sure we can access defined templates in lexical parents
 
   fun_make <- function() {
     a <- matrix(1:9, 3)
@@ -103,4 +103,14 @@ unitizer_sect("Args evaled in correct env?", {
     b <- character()
     fun(b)
   })
+})
+unitizer_sect("Compound Expression Scope Issues", {
+  a <- quote(!anyNA(.))
+  fun <- function(x) {
+    a <- quote(all(. > 0))
+    b <- quote(is.vector(.))
+    vetr(a && b)
+    TRUE
+  }
+  fun(-(1:3))
 })

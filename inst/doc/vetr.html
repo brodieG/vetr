@@ -278,12 +278,12 @@ TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">
   <span class="kw">vet_stopifnot</span>(laps<span class="fl">.4</span>)       <span class="co"># validate version</span>
 )</code></pre></div>
 <pre><code>## Unit: microseconds
-##                        expr    min      lq      mean
-##  vet(laps.template, laps.4)  6.497  8.0335  12.05863
-##       vet_stopifnot(laps.4) 78.211 81.5190 112.02297
-##   median       uq     max neval
-##  10.0125  13.0915  44.165   100
-##  92.9220 135.6730 324.543   100</code></pre>
+##                        expr    min      lq     mean  median
+##  vet(laps.template, laps.4)  6.818  7.8055  9.83313  9.1545
+##       vet_stopifnot(laps.4) 76.712 80.4415 88.28113 82.8590
+##       uq     max neval
+##  10.4190  41.299   100
+##  92.7845 164.312   100</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -292,10 +292,10 @@ TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">microbenchmark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
 <pre><code>## Unit: microseconds
-##                       expr     min       lq     mean
-##  data.frame(a = numeric()) 132.815 136.4935 156.5128
-##    median       uq     max neval
-##  145.1145 156.5835 317.932   100</code></pre>
+##                       expr     min      lq     mean  median
+##  data.frame(a = numeric()) 131.856 134.943 150.5719 139.804
+##        uq     max neval
+##  149.7625 347.079   100</code></pre>
 </div>
 </div>
 <div id="alternatives" class="section level2">
@@ -330,45 +330,20 @@ secant_vetr &lt;-<span class="st"> </span>function(f, x, dx) {
   <span class="kw">vetr</span>(<span class="dt">x=</span><span class="kw">numeric</span>(), <span class="dt">dx=</span><span class="kw">numeric</span>())
   <span class="kw">secant</span>(f, x, dx)
 }
-secant_vetr3 &lt;-<span class="st"> </span>function(f, x, dx) {
-  <span class="kw">vet</span>(<span class="kw">numeric</span>(), x)
-  <span class="kw">vet</span>(<span class="kw">numeric</span>(), dx)
-  <span class="kw">secant</span>(f, x, dx)
-}
-mc &lt;-<span class="st"> </span>function() {
-  <span class="kw">match.call</span>(
-    <span class="dt">definition=</span><span class="kw">sys.function</span>(<span class="kw">sys.parent</span>(<span class="dv">1</span>)),
-    <span class="dt">call=</span><span class="kw">sys.call</span>(<span class="kw">sys.parent</span>(<span class="dv">1</span>)),
-    <span class="dt">expand.dots=</span><span class="ot">FALSE</span>,
-    <span class="dt">envir=</span><span class="kw">parent.frame</span>(2L)
-  )
-}
-secant_mc &lt;-<span class="st"> </span>function(f, x, dx) {
-  <span class="kw">mc</span>()
-}
 <span class="kw">microbenchmark</span>(
   <span class="kw">secant_valaddin</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>),
   <span class="kw">secant_stopifnot</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>),
-  <span class="kw">secant_vetr</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>),
-  <span class="kw">secant_vetr3</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>),
-  <span class="kw">secant_mc</span>(),
-  <span class="kw">list</span>(<span class="kw">sys.frames</span>(), <span class="kw">sys.calls</span>(), <span class="kw">sys.parents</span>())
+  <span class="kw">secant_vetr</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>)
 )</code></pre></div>
 <pre><code>## Unit: microseconds
-##                                            expr     min
-##                    secant_valaddin(log, 1, 0.1) 127.041
-##                   secant_stopifnot(log, 1, 0.1)  10.159
-##                        secant_vetr(log, 1, 0.1)  15.093
-##                       secant_vetr3(log, 1, 0.1)  10.074
-##                                     secant_mc()   4.931
-##  list(sys.frames(), sys.calls(), sys.parents())  11.707
-##        lq      mean   median       uq     max neval
-##  133.4550 150.86022 141.6435 147.9830 364.747   100
-##   12.3520  14.47555  13.5755  14.5940  30.064   100
-##   18.4575  21.36341  19.8285  22.1270  44.333   100
-##   12.0470  15.60366  13.6490  15.6065  53.585   100
-##    5.9765   7.18472   6.7930   7.8295  17.034   100
-##   13.4570  15.55815  14.3110  15.3880  50.442   100</code></pre>
+##                           expr     min       lq      mean
+##   secant_valaddin(log, 1, 0.1) 121.085 128.9405 141.53774
+##  secant_stopifnot(log, 1, 0.1)  10.341  11.6950  14.91819
+##       secant_vetr(log, 1, 0.1)  15.117  17.2640  21.72325
+##    median       uq     max neval
+##  136.9590 144.3110 288.560   100
+##   13.4750  14.6705  53.861   100
+##   20.1985  21.8505  71.345   100</code></pre>
 <p>In many cases ~100us is not enough of a difference to be concerned with, but if an R function must be applied repeatedly (e.g. split-apply-combine analysis with many groups) then it becomes meaningful.</p>
 <p>Also, here we illustrate the power of template validation by adding a check to make sure our function accepts two arguments:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">f.tpl &lt;-<span class="st"> `</span><span class="dt">attributes&lt;-</span><span class="st">`</span>(function(x, y) <span class="ot">NULL</span>, <span class="ot">NULL</span>)

@@ -26,11 +26,11 @@ function parameters your code will be more robust and easier to
 write.  It will also be easier to use since errors will be reported by
 documented functions and not from deep in the bowels of un-exported code.
 
-`vetr` lets you vet your inputs with minimal overhead:
+`vetr` lets you vet your inputs with minimal human and machine overhead:
 
 * Structural requirements expressed with minimal code via templates
 * Friendly auto-generated errors explain why an error occurred
-* Written completely in C to minimize computation cost
+* Fast, it is written completely in C to minimize computation cost
 
 ## Templates
 
@@ -101,7 +101,7 @@ vet(laps.template, laps.4)   # works
 Worth noting:
 
 * `vet` recursively checks that the class of the data frame columns (in fact, it
-  will recursively check any attribute defined in the template)
+  will recursively check any value or attribute defined in the template)
 * The leading portion of the message (e.g. `laps.3$data$time`) points
   you to the exact location of the problem, and gives you a snippet you can copy
   and paste into the prompt for further scrutiny (e.g. `str(laps.3$data$time)`)
@@ -131,7 +131,9 @@ the [alike
 vignette](http://htmlpreview.github.io/?https://raw.githubusercontent.com/brodieG/alike/master/inst/doc/alike.html)
 for extensive details on how templates work.
 
-## Custom Expressions
+## Vetting Expressions
+
+### Test Values with `.`
 
 Templates alone will not let you check data values, or structural aspects that
 vary at runtime (e.g. two arguments must be the same length as each other).
@@ -148,7 +150,7 @@ Any vetting expressions that contain a `.` will be evaluated and vetting
 will pass if the result of evaluating the custom expression with the value
 substituted for the `.` is a logical vector containing only TRUE.
 
-## Compound Expressions
+### Compound Expressions
 
 You can combine any number of templates and custom expressions.  Here, we
 combine a template (`numeric(2L)`) with a varying number of custom expressions:
@@ -260,11 +262,22 @@ vet(TF, NA)
 
 See `?mk_val_token` for more details.
 
-### Validation Expression Parsing and Evaluation Rules
+### Vetting Expression Parsing and Evaluation Rules
 
-Hopefully you were able to get an intuitive sense of how validation expressions work.  If you are interested in the actual rules, read on, otherwise skip to the next section.
+Hopefully you were able to get an intuitive sense of how vetting expressions
+work.  If you are interested in the actual rules, read on, otherwise skip to the
+next section.
 
-After parsing the validation expression, `validate` examines each token for the presence of `.` or `.()`.  If either are present then the `.` values are substituted for the corresponding variable name (`current` for `validate`, and whatever variable is matched to the validation expression for `validate_args`).  Then each token is evaluted in the parent frame.  If the token evaluated was a custom expression then it is checked for truth.  If not, the result of evaluating the token is used as a template for an `alike` check against the object being tested, except for the special case when the template evaluates to a quoted language object.  In that case `validate` recursively applies the same logic to the language object as described above.
+After parsing the vetting expression, `vet` examines each token for the presence
+of `.` or `.()`.  If either are present then the `.` values are substituted for
+the corresponding variable name (`current` for `vet`, and whatever variable
+is matched to the vetting expression for `vetr`).  Then each token
+is evaluted in the parent frame.  If the token evaluated was a custom expression
+then it is checked for truth.  If not, the result of evaluating the token is
+used as a template for an `alike` check against the object being tested, except
+for the special case when the template evaluates to a quoted language object.
+In that case `vet` recursively applies the same logic to the language
+object as described above.
 
 AUTHNOTE: more details on which exact parent frame is used.
 
@@ -317,6 +330,9 @@ expressions carry substantial overhead:
 ```{r}
 microbenchmark(data.frame(a=numeric()))
 ```
+
+In this case the `data.frame` call alone take over 100us.
+
 ## Alternatives
 
 ### `stopifnot`
@@ -366,29 +382,10 @@ secant_vetr <- function(f, x, dx) {
   vetr(x=numeric(), dx=numeric())
   secant(f, x, dx)
 }
-secant_vetr3 <- function(f, x, dx) {
-  vet(numeric(), x)
-  vet(numeric(), dx)
-  secant(f, x, dx)
-}
-mc <- function() {
-  match.call(
-    definition=sys.function(sys.parent(1)),
-    call=sys.call(sys.parent(1)),
-    expand.dots=FALSE,
-    envir=parent.frame(2L)
-  )
-}
-secant_mc <- function(f, x, dx) {
-  mc()
-}
 microbenchmark(
   secant_valaddin(log, 1, .1),
   secant_stopifnot(log, 1, .1),
-  secant_vetr(log, 1, .1),
-  secant_vetr3(log, 1, .1),
-  secant_mc(),
-  list(sys.frames(), sys.calls(), sys.parents())
+  secant_vetr(log, 1, .1)
 )
 ```
 
