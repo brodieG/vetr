@@ -1,6 +1,7 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <ctype.h>
+#include "alike.h"
 
 // - Objects We Install Once ---------------------------------------------------
 
@@ -41,15 +42,6 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base);
 void psh(const char * lab);
 
 // - Imported Funs -------------------------------------------------------------
-
-SEXP(*VALC_alike)(SEXP,SEXP,SEXP,SEXP);
-SEXP(*VALC_merge_msg)(SEXP);
-SEXP(*VALC_get_frame_data)(SEXP,SEXP,SEXP,int);
-SEXP(*VALC_get_fun)(SEXP,SEXP);
-SEXP(*VALC_deparse)(SEXP,int);
-const char * (*VALC_pad)(SEXP,int,int);
-const char * (*VALC_bullet)(const char *, const char *, const char *, size_t);
-const char * (*VALC_pad_or_quote)(SEXP,int,int);
 
 // String Maniip
 

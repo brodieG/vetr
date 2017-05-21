@@ -137,7 +137,7 @@ SEXP VALC_evaluate_recurse(
       eval_res_c = VALC_all(eval_tmp);
       eval_res = PROTECT(ScalarLogical(eval_res_c > 0));
     } else {
-      eval_res = PROTECT(VALC_alike(eval_tmp, arg_value, arg_lang, rho));
+      eval_res = PROTECT(ALIKEC_alike_ext2(eval_tmp, arg_value, arg_lang, rho));
     }
     // Sanity checks
 
@@ -186,7 +186,7 @@ SEXP VALC_evaluate_recurse(
               "\"err.msg\" attribute for validation token for argument `%s` must be a one length character vector."
             );
           }
-          err_call = VALC_pad_or_quote(arg_lang, -1, -1);
+          err_call = ALIKEC_pad_or_quote(arg_lang, -1, -1);
 
           // Need to make copy of string, modify it, and turn it back into
           // string
@@ -201,7 +201,7 @@ SEXP VALC_evaluate_recurse(
           // message attribute not defined, must construct error message based
           // on result of evaluation
 
-          err_call = VALC_pad_or_quote(lang, -1, -1);
+          err_call = ALIKEC_pad_or_quote(lang, -1, -1);
 
           char * err_str;
           char * err_tok;

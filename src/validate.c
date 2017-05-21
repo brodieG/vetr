@@ -81,7 +81,7 @@ SEXP VALC_process_error(
   // Collapse similar entries into one; from this point on every entry in the
   // list should be a character(1L)
 
-  SEXP err_msg_c = PROTECT(VALC_merge_msg(err_msg_full));
+  SEXP err_msg_c = PROTECT(ALIKEC_merge_msg(err_msg_full));
   R_xlen_t i, err_len = XLENGTH(err_msg_c);
 
   // Transfer to a character vector from list, also convert to bullets if
@@ -108,7 +108,7 @@ SEXP VALC_process_error(
 
     if(err_len > 1 && ret_mode != 2) {
       new_elt = PROTECT(
-        mkChar(VALC_bullet(CHAR(old_elt), "  - ", "    ", VALC_MAX_CHAR))
+        mkChar(ALIKEC_bullet(CHAR(old_elt), "  - ", "    ", VALC_MAX_CHAR))
       );
     } else {
       new_elt = PROTECT(old_elt);
