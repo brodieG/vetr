@@ -4,7 +4,7 @@
 static const
 R_CallMethodDef callMethods[] = {
   {"validate", (DL_FUNC) &VALC_validate, 7},
-  {"validate_args", (DL_FUNC) &VALC_validate_args, 3},
+  {"validate_args", (DL_FUNC) &VALC_validate_args, 4},
   {"test", (DL_FUNC) &VALC_test, 2},
   {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
   {"symb_sub", (DL_FUNC) &VALC_sub_symbol, 2},
@@ -17,7 +17,7 @@ R_CallMethodDef callMethods[] = {
   {NULL, NULL, 0}
 };
 
-void R_init_validate(DllInfo *info)
+void R_init_vetr(DllInfo *info)
 {
  /* Register the .C and .Call routines.
     No .Fortran() or .External() routines,
@@ -32,7 +32,6 @@ void R_init_validate(DllInfo *info)
   VALC_SYM_errmsg = install("err.msg");
   VALC_TRUE = ScalarLogical(1);
 
-  VALC_match_call = (SEXP(*)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP)) R_GetCCallable("matchcall", "MC_match_call_internal");
   VALC_alike = (SEXP(*)(SEXP, SEXP, SEXP, SEXP)) R_GetCCallable(
     "alike", "ALIKEC_alike_ext2"
   );

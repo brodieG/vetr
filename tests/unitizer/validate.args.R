@@ -1,8 +1,8 @@
-library(validate)
+library(vetr)
 
 unitizer_sect("Single template validation", {
   fun0 <- function(x, y, z)
-    validate_args(x=matrix(integer(), ncol=3), y=integer(2L), z=logical(1L))
+    vetr(x=matrix(integer(), ncol=3), y=integer(2L), z=logical(1L))
   fun0(1, 2, 3)
   fun0(matrix(1), 2, 3)
   fun0(matrix(1:3, nrow=1), 2, 3)
@@ -12,7 +12,7 @@ unitizer_sect("Single template validation", {
 })
 unitizer_sect("Multi-template validation", {
   fun1 <- function(x, y, z)
-    validate_args(
+    vetr(
       x=matrix(integer(), ncol=3) || integer(3L),
       y=integer(2L) || NULL || logical(1L),
       z=logical(1L)
@@ -29,7 +29,7 @@ unitizer_sect("Multi-template validation", {
 })
 unitizer_sect("Template and Straight Eval", {
   fun2 <- function(x, y, z)
-    validate_args(
+    vetr(
       x=(matrix(integer(), ncol=3) || integer(3L)) && .(!any(is.na(.))),
       y=integer(3L) && .(all(. > 0)),
       z=logical(1L) && .(!is.na(.))
@@ -41,7 +41,7 @@ unitizer_sect("Template and Straight Eval", {
 })
 unitizer_sect("Complex OR outcomes", {
   fun2a <- function(x)
-    validate_args(
+    vetr(
       x=setNames(character(3L), letters[1:3]) || matrix("", 3, 1) ||
         list(character(), x=integer())
     )
@@ -49,35 +49,68 @@ unitizer_sect("Complex OR outcomes", {
 })
 unitizer_sect("Errors in Arguments", {
   fun3 <- function(x, y)
-    validate_args(x=logical(1L), y=integer(3L))
+    vetr(x=logical(1L), y=integer(3L))
   fun3(stop("boom"))
   fun3(TRUE, stop("boomBOOM"))
   fun3(1:3, stop("boomBOOM"))
 
   fun4 <- function(x, y)
-    validate_args(x=stop("BOOM"), y=integer(3L))
+    vetr(x=stop("BOOM"), y=integer(3L))
   fun4(NULL, 1:3)
 
   fun5 <- function(x, y)
-    validate_args(x=integer(3L), y=NULL || .(stop("hah")))
+    vetr(x=integer(3L), y=NULL || .(stop("hah")))
   fun5(1:3, NULL)
   fun5(1:2, NULL)
 
   fun6 <- function(x, y)
-    validate_args(x=integer(3L), y=NULL && .(stop("hah")))
+    vetr(x=integer(3L), y=NULL && .(stop("hah")))
   fun6(1:3, NULL)
 })
 unitizer_sect("Args evaled in correct env?", {
-  fun7 <- function(x, y=z + 2) { z <- "boom"; validate_args(x=TRUE, y=1L) }
-  fun7a <- function(x, y=z + 2) { z <- 40; validate_args(x=TRUE, y=1L) }
+  fun7 <- function(x, y=z + 2) { z <- "boom"; vetr(x=TRUE, y=1L) }
+  fun7a <- function(x, y=z + 2) { z <- 40; vetr(x=TRUE, y=1L) }
   z <- 1
   fun7(TRUE)     # fail because z in fun is character
   fun7a(TRUE)    # works
-  fun8 <- function(x, y=z + 2) { a <- b <- TRUE; validate_args(x=TRUE, y=1L) }
-  fun8a <- function(x, y=z + 2) { a <- b <- NULL; validate_args(x=TRUE, y=1L) }
+  fun8 <- function(x, y=z + 2) { a <- b <- TRUE; vetr(x=TRUE, y=1L) }
+  fun8a <- function(x, y=z + 2) { a <- b <- NULL; vetr(x=TRUE, y=1L) }
   a <- NULL
   b <- TRUE
-  fun8(a && b)   # fail because a in parent is list
+  fun8(a && b)   # fail because a in parent is NULL
   a <- TRUE
   fun8a(a && b)  # works despite NULLs in function
+
+  # Make sure we can access defined templates in lexical parents
+
+  fun_make <- function() {
+    a <- matrix(1:9, 3)
+    tpl <- matrix(numeric(), 3)
+
+    function(x) {
+      vetr(tpl)
+      TRUE
+    }
+  }
+  fun <- fun_make()
+  a <- b <- 1:9
+  local({
+    NULL
+    a <- character()
+    fun(a)
+  })
+  local({
+    b <- character()
+    fun(b)
+  })
+})
+unitizer_sect("Compound Expression Scope Issues", {
+  a <- quote(!anyNA(.))
+  fun <- function(x) {
+    a <- quote(all(. > 0))
+    b <- quote(is.vector(.))
+    vetr(a && b)
+    TRUE
+  }
+  fun(-(1:3))
 })
