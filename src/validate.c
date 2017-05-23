@@ -108,7 +108,7 @@ SEXP VALC_process_error(
 
     if(err_len > 1 && ret_mode != 2) {
       new_elt = PROTECT(
-        mkChar(ALIKEC_bullet(CHAR(old_elt), "  - ", "    ", VALC_MAX_CHAR))
+        mkChar(CSR_bullet(CHAR(old_elt), "  - ", "    ", VALC_MAX_CHAR))
       );
     } else {
       new_elt = PROTECT(old_elt);

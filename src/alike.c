@@ -747,7 +747,7 @@ SEXP ALIKEC_alike_ext2(
     error(
       "Internal Error; %s%d%s",
       "`env` argument should be environment, is ", TYPEOF(env),
-      ". contact maintainer.",
+      ". contact maintainer."
     );
     // nocov end
   }

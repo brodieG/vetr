@@ -25,6 +25,4 @@ Suggests:
     unitizer,
     covr,
     microbenchmark
-Imports:
-    cstringr
 RoxygenNote: 6.0.1

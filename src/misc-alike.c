@@ -3,17 +3,7 @@
 #include <time.h>
 
 // - Helper Functions ----------------------------------------------------------
-/*
-print current PROTECT stack height; used for debugging
-*/
-// nocov start
-void psh(const char * lab) {
-  PROTECT_INDEX i;
-  PROTECT_WITH_INDEX(R_NilValue, &i);
-  UNPROTECT(1);
-  Rprintf("Protect Stack %s: %d\n", lab, i);
-}
-// nocov end
+
 /* equivalent to `mode` in R, note this is a bit approximate and just trying to
 hit the obvious corner cases between `typeof` and `mode`*/
 

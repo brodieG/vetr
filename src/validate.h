@@ -1,7 +1,6 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <ctype.h>
-#include "cstringr.h"
 #include "alike.h"
 
 // - Objects We Install Once ---------------------------------------------------
@@ -41,17 +40,6 @@ void VALC_install_objs();
 SEXP VALC_evaluate(SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full, SEXP rho);
 void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base);
 void psh(const char * lab);
-
-// - Imported Funs -------------------------------------------------------------
-
-// String Maniip
-
-char * (*CSR_smprintf4)(
-  size_t, const char *, const char *, const char *, const char *, const char *
-);
-char * (*CSR_strmcpy)(const char *, size_t);
-size_t (*CSR_strmlen)(const char *, size_t);
-char * (*CSR_collapse)(SEXP, const char *, size_t);
 
 #ifndef VALC_MAX_CHAR
 # define VALC_MAX_CHAR 10000

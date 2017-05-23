@@ -1,4 +1,4 @@
-#include "alike.h"
+#include "cstringr.h"
 #include "pfhash.h"
 #include <wchar.h>
 
@@ -217,20 +217,6 @@
   SEXP ALIKEC_sort_msg(SEXP msgs);
   SEXP ALIKEC_merge_msg(SEXP msgs);
   SEXP ALIKEC_merge_msg_ext(SEXP msgs);
-
-  // - Imported Funs ----------------------------------------------------------
-
-  char * (*CSR_smprintf4)(
-    size_t, const char *, const char *, const char *, const char *, const char *
-  );
-  char * (*CSR_smprintf6)(
-    size_t, const char *, const char *, const char *, const char *, const char *,
-    const char *, const char *
-  );
-  char * (*CSR_len_as_chr)(R_xlen_t);
-  size_t (*CSR_strmlen)(const char *, size_t);
-  size_t (*CSR_len_chr_len)(R_xlen_t);
-  char * (*CSR_strmcpy)(const char * str, size_t maxlen);
 
   // - Init and pre-install Symbols -------------------------------------------
 
