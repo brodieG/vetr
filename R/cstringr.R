@@ -7,7 +7,7 @@
 #' @return integer(1L)
 #' @export
 
-len_chr_len <- function(x) .Call(CSR_len_chr_len_ext, x)
+len_chr_len <- function(x) .Call(VALC_len_chr_len_ext, x)
 
 #' Number Converted To character
 #'
@@ -17,7 +17,7 @@ len_chr_len <- function(x) .Call(CSR_len_chr_len_ext, x)
 #' @return character(1L)
 #' @export
 
-len_as_chr <-function(x) .Call(CSR_len_as_chr_ext, x)
+len_as_chr <-function(x) .Call(VALC_len_as_chr_ext, x)
 
 #' "Safe" String Manipulation Functions
 #'
@@ -74,48 +74,48 @@ len_as_chr <-function(x) .Call(CSR_len_as_chr_ext, x)
 #' @return integer(1L) for \code{strmlen}, character(1L) for \code{strmcpy}
 #'   and \code{smprintf2}
 
-strmlen <- function(str, maxlen=10000L) .Call(CSR_strmlen_ext, str, maxlen)
+strmlen <- function(str, maxlen=10000L) .Call(VALC_strmlen_ext, str, maxlen)
 
 #' @rdname strmlen
 #' @export
 
-strmcpy <- function(str, maxlen=10000L) .Call(CSR_strmcpy_ext, str, maxlen)
+strmcpy <- function(str, maxlen=10000L) .Call(VALC_strmcpy_ext, str, maxlen)
 
 #' @rdname strmlen
 #' @export
 
 smprintf2 <- function(format, a, b, maxlen=10000L)
-  .Call(CSR_smprintf2_ext, maxlen, format, a, b)
+  .Call(VALC_smprintf2_ext, maxlen, format, a, b)
 
 #' @rdname strmlen
 #' @export
 
-ucfirst <- function(str, maxlen=10000L) .Call(CSR_ucfirst_ext, str, maxlen)
+ucfirst <- function(str, maxlen=10000L) .Call(VALC_ucfirst_ext, str, maxlen)
 
 #' @rdname strmlen
 #' @export
 
-lcfirst <- function(str, maxlen=10000L) .Call(CSR_lcfirst_ext, str, maxlen)
+lcfirst <- function(str, maxlen=10000L) .Call(VALC_lcfirst_ext, str, maxlen)
 
 #' @rdname strmlen
 #' @export
 
 strbullet <- function(str, bullet="- ", ctd="  ", maxlen=10000L)
-  .Call(CSR_bullet_ext, str, bullet, ctd, maxlen)
+  .Call(VALC_bullet_ext, str, bullet, ctd, maxlen)
 
 #' @rdname strmlen
 #' @export
 
 collapse <- function(str, sep="", maxlen=10000L)
-  .Call(CSR_collapse_ext, str, sep, maxlen)
+  .Call(VALC_collapse_ext, str, sep, maxlen)
 
 ## Purely internal funs for testing
 
-test1 <- function() .Call(CSR_test_strmcpy)
-test2 <- function() .Call(CSR_test_strappend)
-test3 <- function() .Call(CSR_test_add_szt)
+test1 <- function() .Call(VALC_test_strmcpy)
+test2 <- function() .Call(VALC_test_strappend)
+test3 <- function() .Call(VALC_test_add_szt)
 
-test4 <- function() .Call(CSR_test_smprintfx)
+test4 <- function() .Call(VALC_test_smprintfx)
 
-test5 <- function() .Call(CSR_test_strappend2)
+test5 <- function() .Call(VALC_test_strappend2)
 
