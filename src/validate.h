@@ -1,6 +1,7 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <ctype.h>
+#include "cstringr.h"
 #include "alike.h"
 
 // - Objects We Install Once ---------------------------------------------------

@@ -1,3 +1,4 @@
+#include "alike.h"
 #include "pfhash.h"
 #include <wchar.h>
 

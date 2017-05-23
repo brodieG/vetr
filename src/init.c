@@ -14,6 +14,7 @@ R_CallMethodDef callMethods[] = {
   {"test1", (DL_FUNC) &VALC_test1, 1},
   {"test2", (DL_FUNC) &VALC_test2, 2},
   {"all", (DL_FUNC) &VALC_all_ext, 1},
+
   {"alike_ext", (DL_FUNC) &ALIKEC_alike_ext, 4},
   {"alike_fast1", (DL_FUNC) &ALIKEC_alike_fast1, 4},
   {"typeof", (DL_FUNC) &ALIKEC_typeof, 1},
@@ -45,6 +46,22 @@ R_CallMethodDef callMethods[] = {
   {"msg_merge_ext", (DL_FUNC) &ALIKEC_merge_msg_ext, 1},
   {"hash_test", (DL_FUNC) &pfHashTest, 2},
   {"find_fun", (DL_FUNC) &ALIKEC_findFun_ext, 2},
+
+  {"len_chr_len_ext", (DL_FUNC) &CSR_len_chr_len_ext, 1},
+  {"len_as_chr_ext", (DL_FUNC) &CSR_len_as_chr_ext, 1},
+  {"strmlen_ext", (DL_FUNC) &CSR_strmlen_ext, 2},
+  {"strmcpy_ext", (DL_FUNC) &CSR_strmcpy_ext, 2},
+  {"collapse_ext", (DL_FUNC) &CSR_collapse_ext, 3},
+  {"bullet_ext", (DL_FUNC) &CSR_bullet_ext, 4},
+  {"smprintf2_ext", (DL_FUNC) &CSR_smprintf2_ext, 4},
+  {"ucfirst_ext", (DL_FUNC) &CSR_ucfirst_ext, 2},
+  {"lcfirst_ext", (DL_FUNC) &CSR_lcfirst_ext, 2},
+  {"test_strmcpy", (DL_FUNC) &CSR_test_strmcpy, 0},
+  {"test_strappend", (DL_FUNC) &CSR_test_strappend, 0},
+  {"test_add_szt", (DL_FUNC) &CSR_test_add_szt, 0},
+  {"test_smprintfx", (DL_FUNC) &CSR_test_smprintfx, 0},
+  {"test_strappend2", (DL_FUNC) &CSR_test_strappend2, 0},
+
   {NULL, NULL, 0}
 };
 
@@ -81,18 +98,5 @@ void R_init_vetr(DllInfo *info)
   ALIKEC_SYM_colnames = install("colnames");
   ALIKEC_SYM_length = install("length");
   ALIKEC_SYM_syntacticnames = install("syntacticnames");
-
-  CSR_strmcpy = (char * (*)(const char *, size_t))
-    R_GetCCallable("cstringr", "CSR_strmcpy");
-  CSR_smprintf4 = (
-    char * (*)(
-      size_t, const char *, const char *, const char *, const char *,
-      const char *
-  ) )
-    R_GetCCallable("cstringr", "CSR_smprintf4");
-  CSR_strmlen = (size_t (*)(const char *, size_t))
-    R_GetCCallable("cstringr", "CSR_strmlen");
-  CSR_collapse = (char * (*)(SEXP, const char *, size_t))
-    R_GetCCallable("cstringr", "CSR_collapse");
 }
 
