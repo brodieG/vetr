@@ -1,4 +1,4 @@
-library(alike)
+library(vetr)
 
 unitizer_sect("Atomic", {
   alike(integer(), 1:3)    # TRUE

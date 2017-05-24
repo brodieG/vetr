@@ -1,7 +1,7 @@
 # redefine funs to give us flexibility if we change packages without having
 # to export the internal functions
 
-library(alike)
+library(vetr)
 
 unitizer_sect("Name like attributes", {
   vetr:::name_compare(c("", "hello"), c("abc", "hello"))

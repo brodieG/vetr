@@ -1,4 +1,4 @@
-library(alike)
+library(vetr)
 
 unitizer_sect("Standard Methods", {
   abstract(1:10)

@@ -1,4 +1,4 @@
-library(alike)
+library(vetr)
 
 unitizer_sect("Class Matching", {
   obj2 <- structure(numeric())

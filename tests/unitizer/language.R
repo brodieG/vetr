@@ -1,7 +1,7 @@
 # redefine funs to give us flexibility if we change packages without having
 # to export the internal functions
 
-library(alike)
+library(vetr)
 
 unitizer_sect("Match Calls", {
   vetr:::match_call_alike(quote(var(y=1:10, runif(10))), baseenv())

@@ -1,4 +1,4 @@
-library(validate)
+library(vetr)
 
 unitizer_sect("name_sub", {
   validate:::name_sub(quote(.), quote(xyz))
