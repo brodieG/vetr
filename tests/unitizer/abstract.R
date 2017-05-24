@@ -22,7 +22,7 @@ unitizer_sect("Time Series", {
   # Errors
 
   abstract(y, "boom")
-  alike:::abstract.ts(1:12)
+  vetr:::abstract.ts(1:12)
 })
 unitizer_sect("lm", {
   set.seed(1)

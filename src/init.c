@@ -22,8 +22,6 @@ R_CallMethodDef callMethods[] = {
   {"type_alike", (DL_FUNC) &ALIKEC_type_alike, 4},
   {"syntactic_names", (DL_FUNC) &ALIKEC_syntactic_names_exp, 1},
   {"compare_attributes", (DL_FUNC) &ALIKEC_compare_attributes, 3},
-  {"test", (DL_FUNC) &ALIKEC_test, 1},
-  {"test2", (DL_FUNC) &ALIKEC_test2, 2},
   {"is_valid_name_ext", (DL_FUNC) &ALIKEC_is_valid_name_ext, 1},
   {"is_dfish", (DL_FUNC) &ALIKEC_is_dfish_ext, 1},
   {"compare_names", (DL_FUNC) &ALIKEC_compare_special_char_attrs, 2},
