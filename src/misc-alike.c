@@ -465,6 +465,23 @@ SEXP ALIKEC_string_or_true(struct ALIKEC_res_fin res) {
   return(ScalarLogical(1));
 }
 /*
+ * variation on ALIKEC_string_or_true that returns the full vector so we can use
+ * it with ALIKEC_merge_msg
+ */
+
+SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res_fin res) {
+  if(res.target[0]) {
+    SEXP res_fin = PROTECT(allocVector(STRSXP, 5));
+    SET_STRING_ELT(res_fin, 0, mkChar(res.call));
+    SET_STRING_ELT(res_fin, 1, mkChar(res.tar_pre));
+    SET_STRING_ELT(res_fin, 2, mkChar(res.target));
+    SET_STRING_ELT(res_fin, 3, mkChar(res.act_pre));
+    SET_STRING_ELT(res_fin, 4, mkChar(res.actual));
+    UNPROTECT(1);
+    return(res_fin);
+  } else return(ScalarLogical(1));
+}
+/*
 Basic checks that `obj` could be a data frame; does not check class, only that
 object is list and that contents are all same length
 unfortunately, may not be actually used due to how compare_class is structured

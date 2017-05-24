@@ -31,7 +31,6 @@
 #'   for(i in 1e5) .alike(x[[i]], y[[i]], sets)   # re-use settings 1e5 times
 #' }
 #' @export
-#' @import cstringr
 #' @seealso \code{\link{type_alike}}, \code{\link{type_of}},
 #'   \code{\link{abstract}}
 #' @param target the template to compare the object to

@@ -761,7 +761,7 @@ SEXP ALIKEC_alike_ext2(
     );
   struct ALIKEC_settings set = ALIKEC_set_def("");
   set.env = env;
-  return ALIKEC_string_or_true(
+  return ALIKEC_strsxp_or_true(
     ALIKEC_alike_wrap(target, current, curr_sub, set)
   );
 }
