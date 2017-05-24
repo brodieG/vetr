@@ -54,15 +54,15 @@ unitizer_sect("Corner Cases", {
 
   # these are all supposed to fail
 
-  cstringr:::test1()
-  cstringr:::test2()
-  cstringr:::test3()
+  vetr:::test1()
+  vetr:::test2()
+  vetr:::test3()
 
   strmlen(list(), 100L)
 
   # quickly confirm the other smprintfs work correctly
 
-  cstringr:::test4()
+  vetr:::test4()
 
-  cstringr:::test5()   # warning
+  vetr:::test5()   # warning
 })
