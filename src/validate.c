@@ -81,7 +81,7 @@ SEXP VALC_process_error(
   // Collapse similar entries into one; from this point on every entry in the
   // list should be a character(1L)
 
-  SEXP err_msg_c = PROTECT(ALIKEC_merge_msg(err_msg_full));
+  SEXP err_msg_c = PROTECT(ALIKEC_merge_msg_ext(err_msg_full));
   R_xlen_t i, err_len = XLENGTH(err_msg_c);
 
   // Transfer to a character vector from list, also convert to bullets if

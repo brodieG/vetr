@@ -1,4 +1,4 @@
-library(alike)
+library(vetr)
 
 # Redefine names; necessary because we renamed functions when moving to C
 # versions
