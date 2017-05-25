@@ -75,12 +75,14 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <ul>
 <li><a href="#garbage-in">Garbage In</a></li>
 <li><a href="#templates">Templates</a></li>
-<li><a href="#custom-expressions">Custom Expressions</a></li>
+<li><a href="#vetting-expressions">Vetting Expressions</a><ul>
+<li><a href="#test-values-with-.">Test Values with <code>.</code></a></li>
 <li><a href="#compound-expressions">Compound Expressions</a></li>
+</ul></li>
 <li><a href="#non-standard-evaluation-of-vetting-expressions">Non Standard Evaluation of Vetting Expressions</a><ul>
 <li><a href="#parsing-vetting-expressions">Parsing Vetting Expressions</a></li>
 <li><a href="#pre-defining-vetting-tokens">Pre-defining Vetting Tokens</a></li>
-<li><a href="#validation-expression-parsing-and-evaluation-rules">Validation Expression Parsing and Evaluation Rules</a></li>
+<li><a href="#vetting-expression-parsing-and-evaluation-rules">Vetting Expression Parsing and Evaluation Rules</a></li>
 <li><a href="#predefined-tokens">Predefined Tokens</a></li>
 </ul></li>
 <li><a href="#performance-considerations">Performance Considerations</a><ul>
@@ -100,11 +102,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="garbage-in" class="section level2">
 <h2>Garbage In</h2>
 <p>R is particularly flexible about data structures so any user-facing code you write must vet inputs. If you rigorously enforce structural requirements for function parameters your code will be more robust and easier to write. It will also be easier to use since errors will be reported by documented functions and not from deep in the bowels of un-exported code.</p>
-<p><code>vetr</code> lets you vet your inputs with minimal overhead:</p>
+<p><code>vetr</code> lets you vet your inputs with minimal human and machine overhead:</p>
 <ul>
 <li>Structural requirements expressed with minimal code via templates</li>
 <li>Friendly auto-generated errors explain why an error occurred</li>
-<li>Written completely in C to minimize computation cost</li>
+<li>Fast, it is written completely in C to minimize computation cost</li>
 </ul>
 </div>
 <div id="templates" class="section level2">
@@ -150,7 +152,7 @@ laps<span class="fl">.4</span>$data &lt;-<span class="st"> </span><span class="k
 <pre><code>## [1] TRUE</code></pre>
 <p>Worth noting:</p>
 <ul>
-<li><code>vet</code> recursively checks that the class of the data frame columns (in fact, it will recursively check any attribute defined in the template)</li>
+<li><code>vet</code> recursively checks that the class of the data frame columns (in fact, it will recursively check any value or attribute defined in the template)</li>
 <li>The leading portion of the message (e.g. <code>laps.3$data$time</code>) points you to the exact location of the problem, and gives you a snippet you can copy and paste into the prompt for further scrutiny (e.g. <code>str(laps.3$data$time)</code>)</li>
 </ul>
 <p>For reference, the same set of checks would look like, and these would get even more complicated if the nested objects had attributes (e.g. factor levels):</p>
@@ -170,8 +172,10 @@ laps<span class="fl">.4</span>$data &lt;-<span class="st"> </span><span class="k
   )</code></pre></div>
 <p>Internally <code>vet</code> uses <code>alike</code> to compare the template to the test value. See the <a href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/brodieG/alike/master/inst/doc/alike.html">alike vignette</a> for extensive details on how templates work.</p>
 </div>
-<div id="custom-expressions" class="section level2">
-<h2>Custom Expressions</h2>
+<div id="vetting-expressions" class="section level2">
+<h2>Vetting Expressions</h2>
+<div id="test-values-with-." class="section level3">
+<h3>Test Values with <code>.</code></h3>
 <p>Templates alone will not let you check data values, or structural aspects that vary at runtime (e.g. two arguments must be the same length as each other). To address this <code>vetr</code> allows custom expressions:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x &lt;-<span class="st"> </span><span class="dv">1</span>:<span class="dv">2</span>
 y &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span>, <span class="ot">NA</span>)
@@ -181,8 +185,8 @@ y &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</sp
 <pre><code>## [1] &quot;`!anyNA(y)` is not TRUE (FALSE)&quot;</code></pre>
 <p>Any vetting expressions that contain a <code>.</code> will be evaluated and vetting will pass if the result of evaluating the custom expression with the value substituted for the <code>.</code> is a logical vector containing only TRUE.</p>
 </div>
-<div id="compound-expressions" class="section level2">
-<h2>Compound Expressions</h2>
+<div id="compound-expressions" class="section level3">
+<h3>Compound Expressions</h3>
 <p>You can combine any number of templates and custom expressions. Here, we combine a template (<code>numeric(2L)</code>) with a varying number of custom expressions:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(2L) &amp;&amp;<span class="st"> </span>!<span class="kw">anyNA</span>(.), x)</code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
@@ -198,8 +202,9 @@ y &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</sp
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>((<span class="kw">numeric</span>(2L) &amp;&amp;<span class="st"> </span>!<span class="kw">anyNA</span>(.)) ||<span class="st"> </span><span class="ot">NULL</span>, <span class="ot">NULL</span>)</code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>((<span class="kw">numeric</span>(2L) &amp;&amp;<span class="st"> </span>!<span class="kw">anyNA</span>(.)) ||<span class="st"> </span><span class="ot">NULL</span>, letters)</code></pre></div>
-<pre><code>## [1] &quot;`letters` should be type \&quot;numeric\&quot;, or \&quot;NULL\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
+<pre><code>## [1] &quot;`letters` should be \&quot;NULL\&quot;, or type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
 <p>We constructed a compound <strong>validation expression</strong> by combining two <strong>validation tokens</strong> with the <code>&amp;&amp;</code> and <code>||</code> operators.</p>
+</div>
 </div>
 <div id="non-standard-evaluation-of-vetting-expressions" class="section level2">
 <h2>Non Standard Evaluation of Vetting Expressions</h2>
@@ -245,10 +250,10 @@ TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">
 <pre><code>## [1] &quot;not contain NAs&quot;</code></pre>
 <p>See <code>?mk_val_token</code> for more details.</p>
 </div>
-<div id="validation-expression-parsing-and-evaluation-rules" class="section level3">
-<h3>Validation Expression Parsing and Evaluation Rules</h3>
-<p>Hopefully you were able to get an intuitive sense of how validation expressions work. If you are interested in the actual rules, read on, otherwise skip to the next section.</p>
-<p>After parsing the validation expression, <code>validate</code> examines each token for the presence of <code>.</code> or <code>.()</code>. If either are present then the <code>.</code> values are substituted for the corresponding variable name (<code>current</code> for <code>validate</code>, and whatever variable is matched to the validation expression for <code>validate_args</code>). Then each token is evaluted in the parent frame. If the token evaluated was a custom expression then it is checked for truth. If not, the result of evaluating the token is used as a template for an <code>alike</code> check against the object being tested, except for the special case when the template evaluates to a quoted language object. In that case <code>validate</code> recursively applies the same logic to the language object as described above.</p>
+<div id="vetting-expression-parsing-and-evaluation-rules" class="section level3">
+<h3>Vetting Expression Parsing and Evaluation Rules</h3>
+<p>Hopefully you were able to get an intuitive sense of how vetting expressions work. If you are interested in the actual rules, read on, otherwise skip to the next section.</p>
+<p>After parsing the vetting expression, <code>vet</code> examines each token for the presence of <code>.</code> or <code>.()</code>. If either are present then the <code>.</code> values are substituted for the corresponding variable name (<code>current</code> for <code>vet</code>, and whatever variable is matched to the vetting expression for <code>vetr</code>). Then each token is evaluted in the parent frame. If the token evaluated was a custom expression then it is checked for truth. If not, the result of evaluating the token is used as a template for an <code>alike</code> check against the object being tested, except for the special case when the template evaluates to a quoted language object. In that case <code>vet</code> recursively applies the same logic to the language object as described above.</p>
 <p>AUTHNOTE: more details on which exact parent frame is used.</p>
 </div>
 <div id="predefined-tokens" class="section level3">
@@ -278,12 +283,12 @@ TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">
   <span class="kw">vet_stopifnot</span>(laps<span class="fl">.4</span>)       <span class="co"># validate version</span>
 )</code></pre></div>
 <pre><code>## Unit: microseconds
-##                        expr    min      lq     mean  median
-##  vet(laps.template, laps.4)  6.818  7.8055  9.83313  9.1545
-##       vet_stopifnot(laps.4) 76.712 80.4415 88.28113 82.8590
+##                        expr    min     lq     mean median
+##  vet(laps.template, laps.4)  6.212  7.359  9.68411  8.495
+##       vet_stopifnot(laps.4) 77.172 82.974 95.49599 85.144
 ##       uq     max neval
-##  10.4190  41.299   100
-##  92.7845 164.312   100</code></pre>
+##  10.1215  45.949   100
+##  99.0140 212.808   100</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -292,10 +297,11 @@ TF &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">microbenchmark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
 <pre><code>## Unit: microseconds
-##                       expr     min      lq     mean  median
-##  data.frame(a = numeric()) 131.856 134.943 150.5719 139.804
-##        uq     max neval
-##  149.7625 347.079   100</code></pre>
+##                       expr     min       lq     mean
+##  data.frame(a = numeric()) 136.239 139.8055 172.1129
+##    median      uq     max neval
+##  149.8805 165.382 356.322   100</code></pre>
+<p>In this case the <code>data.frame</code> call alone take over 100us.</p>
 </div>
 </div>
 <div id="alternatives" class="section level2">
@@ -337,13 +343,13 @@ secant_vetr &lt;-<span class="st"> </span>function(f, x, dx) {
 )</code></pre></div>
 <pre><code>## Unit: microseconds
 ##                           expr     min       lq      mean
-##   secant_valaddin(log, 1, 0.1) 121.085 128.9405 141.53774
-##  secant_stopifnot(log, 1, 0.1)  10.341  11.6950  14.91819
-##       secant_vetr(log, 1, 0.1)  15.117  17.2640  21.72325
+##   secant_valaddin(log, 1, 0.1) 127.526 132.5725 157.38247
+##  secant_stopifnot(log, 1, 0.1)  10.489  12.4295  15.63400
+##       secant_vetr(log, 1, 0.1)  15.487  17.7965  24.34542
 ##    median       uq     max neval
-##  136.9590 144.3110 288.560   100
-##   13.4750  14.6705  53.861   100
-##   20.1985  21.8505  71.345   100</code></pre>
+##  146.0785 151.4715 325.070   100
+##   14.0210  14.9860  42.573   100
+##   20.6400  23.3405  77.577   100</code></pre>
 <p>In many cases ~100us is not enough of a difference to be concerned with, but if an R function must be applied repeatedly (e.g. split-apply-combine analysis with many groups) then it becomes meaningful.</p>
 <p>Also, here we illustrate the power of template validation by adding a check to make sure our function accepts two arguments:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">f.tpl &lt;-<span class="st"> `</span><span class="dt">attributes&lt;-</span><span class="st">`</span>(function(x, y) <span class="ot">NULL</span>, <span class="ot">NULL</span>)
@@ -352,9 +358,9 @@ secant_vetr2 &lt;-<span class="st"> </span>function(f, x, dx) {
   <span class="kw">secant</span>(f, x, dx)
 }
 <span class="kw">secant_vetr2</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>)</code></pre></div>
-<pre><code>## [1] 0.9531018</code></pre>
+<pre><code>## Error in secant_vetr2(f = log, x = 1, dx = 0.1): For argument `f`, `log` should have argument `y` after argument `x` ( )</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">secant_vetr2</span>(sin, <span class="dv">1</span>, .<span class="dv">1</span>)</code></pre></div>
-<pre><code>## [1] 0.4973638</code></pre>
+<pre><code>## Error in secant_vetr2(f = sin, x = 1, dx = 0.1): For argument `f`, `sin` should have argument `y` after argument `x` ( )</code></pre>
 </div>
 <div id="other-third-party-packages" class="section level3">
 <h3>Other Third Party Packages</h3>
