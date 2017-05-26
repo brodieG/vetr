@@ -34,20 +34,28 @@ SEXP VALC_evaluate_recurse(
 
   if(TYPEOF(act_codes) == LISTSXP) {
     if(TYPEOF(lang) != LANGSXP && TYPEOF(lang) != LISTSXP) {
+      // nocov start
       error("%s%s"
         "Internal Error: mismatched language and eval type tracking 1; contact ",
         "maintainer."
       );
+      // nocov end
     }
     if(TYPEOF(CAR(act_codes)) != INTSXP) {
       if(TYPEOF(CAR(lang)) != LANGSXP) {
+        // nocov start
         error("%s%s",
-          "Logic error: call should have been evaluated at previous level; ",
+          "Internal error: call should have been evaluated at previous level; ",
           "contact maintainer."
         );
+        // nocov end
       }
       if(TYPEOF(CAR(act_codes)) != LISTSXP || TYPEOF(CAAR(act_codes)) != INTSXP) {
-        error("Logic error: unexpected act_code structure; contact maintainer");
+        // nocov start
+        error(
+          "Internal error: unexpected act_code structure; contact maintainer"
+        );
+        // nocov end
       }
       mode=asInteger(CAAR(act_codes));
     } else {
@@ -55,10 +63,12 @@ SEXP VALC_evaluate_recurse(
     }
   } else {
     if(TYPEOF(lang) == LANGSXP || TYPEOF(lang) == LISTSXP) {
+      // nocov start
       error("%s%s",
         "Internal Error: mismatched language and eval type tracking 2; contact ",
         "maintainer."
       );
+      // nocov end
     }
     mode = asInteger(act_codes);
   }
@@ -93,21 +103,26 @@ SEXP VALC_evaluate_recurse(
             return(ScalarLogical(1)); // At least one TRUE value in or mode
           }
         } else {
+          // nocov start
           error("%s%s",
             "Internal Error: unexpected return value when recursively ",
             "evaluating parse; contact maintainer."
           );
+          // nocov end
         }
         lang = CDR(lang);
         act_codes = CDR(act_codes);
         parse_count++;
         UNPROTECT(1);
       }
-      if(parse_count != 2)
+      if(parse_count != 2) {
+        // nocov start
         error("%s%s",
           "Internal Error: unexpected language structure for modes 1/2; ",
           "contact maintainer."
         );
+        // nocov end
+      }
       UNPROTECT(1);
       // Only way to get here is if none of previous actually returned TRUE and
       // mode is OR
@@ -116,11 +131,13 @@ SEXP VALC_evaluate_recurse(
       }
       return(eval_res);  // Or if all returned TRUE and mode is AND
     } else {
+      // nocov start
       error(
         "%s%s",
         "Internal Error: in mode c(1, 2), but not a language object; ",
         "contact maintainer."
       );
+      // nocov end
     }
   } else if(mode == 10 || mode == 999) {
     SEXP eval_res, eval_tmp;
@@ -141,25 +158,19 @@ SEXP VALC_evaluate_recurse(
     }
     // Sanity checks
 
-    if(
-      !(
-        (
-          TYPEOF(eval_res) == LGLSXP && XLENGTH(eval_res) == 1L &&
-          asInteger(eval_res) != NA_INTEGER
-        )
-        ||
-        (
-          TYPEOF(eval_res) == STRSXP &&
-          (XLENGTH(eval_res) == 5 || XLENGTH(eval_res) == 1)
-        )
-      )
-    )
+    int is_tf = TYPEOF(eval_res) == LGLSXP && XLENGTH(eval_res) == 1L &&
+      asInteger(eval_res) != NA_INTEGER;
+    int is_val_string = TYPEOF(eval_res) == STRSXP &&
+      (XLENGTH(eval_res) == 5 || XLENGTH(eval_res) == 1);
+
+    if(!(is_tf || is_val_string)) {
+      // nocov start
       error("%s %s (is type: %s), %s",
         "Internal Error: token eval must be TRUE, FALSE, character(1L), ",
-        " or character(5L)",
-        type2char(TYPEOF(eval_res)), "contact maintainer."
+        " or character(5L)", type2char(TYPEOF(eval_res)), "contact maintainer."
       );
-
+      // nocov end
+    }
     // Note we're handling both user exp and template eval here
 
     if(
@@ -213,9 +224,11 @@ SEXP VALC_evaluate_recurse(
                 strlen(err_tok_tmp) + strlen(err_tok_base), sizeof(char)
               );
               if(sprintf(err_tok, err_tok_base, err_tok_tmp) < 0)
+                // nocov start
                 error(
-                  "Logic error: could not build token error; contact maintainer"
+                  "Internal error: build token error failure; contact maintainer"
                 );
+                // nocov end
               }
               break;
             case -1: err_tok = "FALSE"; break;
@@ -223,11 +236,14 @@ SEXP VALC_evaluate_recurse(
             case -4: err_tok = "contains NAs"; break;
             case -5: err_tok = "zero length"; break;
             case 0: err_tok = "contains non-TRUE values"; break;
-            default:
+            default: {
+              // nocov start
               error(
                 "Internal Error: %s %d; contact maintainer.",
                 "unexpected user exp eval value", eval_res_c
               );
+              // nocov end
+            }
           }
           const char * err_extra_a = "is not all TRUE";
           const char * err_extra_b = "is not TRUE"; // must be shorter than _a
@@ -243,8 +259,14 @@ SEXP VALC_evaluate_recurse(
             strlen(err_extra), sizeof(char)
           );
           // not sure why we're not using cstringr here
-          if(sprintf(err_str, err_base, err_call, err_extra, err_tok) < 0)
-            error("Internal Error: could not construct error message; contact maintainer.");
+          if(sprintf(err_str, err_base, err_call, err_extra, err_tok) < 0) {
+            // nocov start
+            error(
+              "%s%s", "Internal Error: could not construct error message; ",
+              "contact maintainer."
+            );
+            // nocov end
+          }
           SETCAR(err_msg, mkString(err_str));
         }
       } else { // must have been `alike` eval
@@ -256,10 +278,10 @@ SEXP VALC_evaluate_recurse(
     UNPROTECT(2);
     return(eval_res);  // this should be `TRUE`
   } else {
-    error("Internal Error: unexpected parse mode %d", mode);
+    error("Internal Error: unexpected parse mode %d", mode);  // nocov
   }
-  error("Internal Error: should never get here");
-  return(R_NilValue);  // Should never get here
+  error("Internal Error: should never get here");             // nocov
+  return(R_NilValue);  // nocov Should never get here
 }
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
@@ -301,12 +323,15 @@ SEXP VALC_evaluate(
       ) {
         res_next = CDR(res_cpy);
         res_val = CAR(res_cpy);
-        if(TYPEOF(res_val) != STRSXP)
+        if(TYPEOF(res_val) != STRSXP) {
+          // nocov start
           error(
             "%s%s",
             "Internal Error: non string value in return pairlist; contact ",
             "maintainer."
           );
+          // nocov end
+        }
         if(res_next == R_NilValue) break;
         // Need to remove res_next
         if(R_compute_identical(CAR(res_next), res_val, 16)) {
@@ -314,10 +339,13 @@ SEXP VALC_evaluate(
           SETCDR(res_cpy, res_next_next);
       } }
     } break;
-    default:
+    default: {
+      // nocov start
       error(
         "Internal Error: unexpected evaluating return type; contact maintainer."
       );
+      // nocov end
+    }
   }
   UNPROTECT(2);  // This seems a bit stupid, PROTECT/UNPROTECT
   return(res);

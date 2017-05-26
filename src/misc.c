@@ -28,8 +28,8 @@ int IS_TRUE(SEXP x) {
 }
 int IS_LANG(SEXP x) {
   return(
-    TYPEOF(x) != LANGSXP || TYPEOF(x) != SYMSXP ||
-    !(isVectorAtomic(x) || XLENGTH(x) == 1) || x != R_NilValue
+    TYPEOF(x) == LANGSXP || TYPEOF(x) == SYMSXP ||
+    (isVectorAtomic(x) && XLENGTH(x) == 1) || x == R_NilValue
   );
 }
 /*

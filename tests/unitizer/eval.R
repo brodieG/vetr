@@ -11,11 +11,21 @@ unitizer_sect("evaluate", {
   vetr:::eval_check(quote(logical(2L) || NULL), quote(xyz), NULL)
   vetr:::eval_check(quote(logical(2L) || NULL), quote(xyz), c(TRUE, TRUE))
 
-  vetr:::eval_check(quote(matrix(integer(), nrow=3) || NULL), quote(xyz), matrix(1:21, ncol=7))
+  vetr:::eval_check(
+    quote(matrix(integer(), nrow=3) || NULL), quote(xyz), matrix(1:21, ncol=7)
+  )
   vetr:::eval_check(quote(matrix(integer(), nrow=3) || NULL), quote(xyz), 1:21)
-  vetr:::eval_check(quote(matrix(integer(), nrow=3) || vector("list", 2L)), quote(xyz), list("hello"))
-  vetr:::eval_check(quote(matrix(integer(), nrow=3) || vector("list", 2L)), quote(xyz), list("hello", "goodbye"))
-  vetr:::eval_check(quote(matrix(integer(), nrow=3) || list(character(1L), 1L)), quote(xyz), list("hello", "goodbye"))
+  vetr:::eval_check(
+    quote(matrix(integer(), nrow=3) || vector("list", 2L)),
+    quote(xyz), list("hello")
+  )
+  vetr:::eval_check(
+    quote(matrix(integer(), nrow=3) || vector("list", 2L)),
+    quote(xyz), list("hello", "goodbye")
+  )
+  vetr:::eval_check(
+    quote(matrix(integer(), nrow=3) || list(character(1L), 1L)),
+    quote(xyz), list("hello", "goodbye"))
 })
 unitizer_sect("evaluate with sub", {
   xyz <- c(TRUE, TRUE)
@@ -28,22 +38,31 @@ unitizer_sect("evaluate with sub", {
   vetr:::eval_check(quote(logical(2L) && .(!any(is.na(.)))), quote(xyz), xyz)
 
   abc1 <- letters[1:5]
-  vetr:::eval_check(quote(character(5L) && .(all(. %in% letters[1:3]))), quote(abc1), abc1)
+  vetr:::eval_check(
+    quote(character(5L) && .(all(. %in% letters[1:3]))), quote(abc1), abc1
+  )
   abc2 <- rep("a", 5)
-  vetr:::eval_check(quote(character(5L) && .(all(. %in% letters[1:3]))), quote(abc2), abc2)
+  vetr:::eval_check(
+    quote(character(5L) && .(all(. %in% letters[1:3]))), quote(abc2), abc2
+  )
 
   mat1 <- matrix(1:30, ncol=3)
   vetr:::eval_check(
     quote(
-      (matrix(numeric(), ncol=3) || matrix(integer(), nrow=10) || character(10L)) &&
-      .(length(.) < 100)
+      (
+        matrix(numeric(), ncol=3) || matrix(integer(), nrow=10) ||
+        character(10L)
+      ) && .(length(.) < 100)
     ),
     quote(mat1), mat1
   )
   mat2 <- matrix(1:120, ncol=3)
   vetr:::eval_check(
     quote(
-      (matrix(numeric(), ncol=3) || matrix(integer(), nrow=10) || character(10L)) &&
+      (
+        matrix(numeric(), ncol=3) || matrix(integer(), nrow=10) ||
+        character(10L)
+      ) &&
       .(length(.) < 100)
     ),
     quote(mat2), mat2
@@ -79,4 +98,8 @@ unitizer_sect("custom expressions", {
   vetr:::eval_check(quote(. > 0), quote(t), t)
   vetr:::eval_check(quote(. > 0), quote(w), w)
   vetr:::eval_check(quote(. > 0), quote(u), u)
+})
+unitizer_sect("Errors", {
+  vetr:::eval_check(1:3, 1:3, TRUE, env=list(1:3))
+  vetr:::eval_check(quote(y), quote(x), TRUE, env=list(1:3))
 })

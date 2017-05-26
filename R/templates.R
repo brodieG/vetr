@@ -1,10 +1,10 @@
 
 #' Data Frame Constructor
 #'
-#' A lighter weight constructor for data frames to use in \code{\link{validate}}.
-#' Arguments are not checked or modified at all; constructing something that is
-#' a reasonable template for a real data frame is solely the responsibility of
-#' the user.
+#' A lighter weight constructor for data frames to use in
+#' \code{\link{validate}}.  Arguments are not checked or modified at all;
+#' constructing something that is a reasonable template for a real data frame is
+#' solely the responsibility of the user.
 #'
 #' @note characters are not coerced to factors, etc.
 #'
