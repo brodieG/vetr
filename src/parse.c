@@ -17,7 +17,9 @@ SEXP VALC_name_sub(SEXP symb, SEXP arg_name) {
   if(TYPEOF(symb) != SYMSXP){
     return(symb);
   }
-  const char * symb_char = CHAR(PRINTNAME(symb));  // this comes out as const, but we use it as non-const, could this cause problems?
+  // this comes out as const, but we use it as non-const, could this cause
+  // problems?
+  const char * symb_char = CHAR(PRINTNAME(symb));
 
   int i = 0, non_dot = 0;
 
@@ -27,8 +29,15 @@ SEXP VALC_name_sub(SEXP symb, SEXP arg_name) {
       break;
     }
     i++;
-    if(i > 15000)
-      error("Logic Error: unexpectedly large symbol name (>15000, shouldn't happen); contact maintainer.");
+    if(i > 15000) {
+      // nocov start
+      error(
+        "Intenral Error: %s%s",
+        "unexpectedly large symbol name (>15000, shouldn't happen); ",
+        "contact maintainer."
+      );
+      // nocov end
+    }
   }
   if(!non_dot && i > 0) {  // Name is only dots, and at least one
     if (i == 1) {  // one dot and an arg
@@ -41,9 +50,10 @@ SEXP VALC_name_sub(SEXP symb, SEXP arg_name) {
       size_t name_len;
       name_len = strlen(symb_char);
       char * symb_char_cpy;
-      symb_char_cpy = R_alloc(name_len, sizeof(char));  // Could allocate one less than this
-      strcpy(symb_char_cpy, symb_char);                 // copy to make non const
-      symb_char_cpy[i - 1] = '\0';                      // shorten by one
+      // Could allocate one less than this
+      symb_char_cpy = R_alloc(name_len, sizeof(char));
+      strcpy(symb_char_cpy, symb_char);               // copy to make non const
+      symb_char_cpy[i - 1] = '\0';                    // shorten by one
       return(install(symb_char_cpy));
   } }
   return(symb);
@@ -71,7 +81,12 @@ SEXP VALC_remove_parens(SEXP lang) {
   while(TYPEOF(lang) == LANGSXP) {
     if(!strcmp(CHAR(PRINTNAME(CAR(lang))), "(")) {
       if(length(lang) != 2) {
-        error("Logic Error: `(` call with more than one argument; contact maintainer.");
+        // nocov start
+        error(
+          "Internal Error: %s",
+          "`(` call with more than one argument; contact maintainer."
+        );
+        // nocov end
       }
     } else if(!strcmp(CHAR(PRINTNAME(CAR(lang))), ".")) {
       if(length(lang) != 2)
@@ -187,7 +202,7 @@ void VALC_parse_recurse(
   } else if(!strcmp(call_symb, "||")) {
     call_type = 2;
   }
-  SETCAR(lang_track, ScalarInteger(call_type));             // Track type of call
+  SETCAR(lang_track, ScalarInteger(call_type));           // Track type of call
 
   if(first_fun == R_NilValue && call_type >= 10) {
     // First time we're no longer parsing && / ||, record so that we can then
@@ -240,7 +255,12 @@ void VALC_parse_recurse(
     lang_track = CDR(lang_track);
   }
   if(lang == R_NilValue && lang_track != R_NilValue) {
-    error("Logic Error: unsychronized call tree and call tracking tree; contact maintainer.");
+    // nocov start
+    error(
+      "Internal Error: %s",
+      "unsychronized call tree and call tracking tree; contact maintainer."
+    );
+    // nocov end
   }
   counter--;
 

@@ -42,22 +42,12 @@ SEXP VALC_evaluate_recurse(
       // nocov end
     }
     if(TYPEOF(CAR(act_codes)) != INTSXP) {
-      if(TYPEOF(CAR(lang)) != LANGSXP) {
-        // nocov start
-        error("%s%s",
-          "Internal error: call should have been evaluated at previous level; ",
-          "contact maintainer."
-        );
-        // nocov end
-      }
-      if(TYPEOF(CAR(act_codes)) != LISTSXP || TYPEOF(CAAR(act_codes)) != INTSXP) {
-        // nocov start
-        error(
-          "Internal error: unexpected act_code structure; contact maintainer"
-        );
-        // nocov end
-      }
-      mode=asInteger(CAAR(act_codes));
+      // nocov start
+      error("%s%s",
+        "Internal error: no integer codes produced by parsing process, which ",
+        "should not happen; contact maintainer."
+      );
+      // nocov end
     } else {
       mode=asInteger(CAR(act_codes));
     }
