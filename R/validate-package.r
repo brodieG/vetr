@@ -1,10 +1,7 @@
-#' validate
+#' vetr
 #'
 #' Check your function's arguments
-#' @import alike
-#' @import matchcall
-#' @import cstringr
-#' @name validate
+#' @name vetr
 #' @docType package
 
 NULL

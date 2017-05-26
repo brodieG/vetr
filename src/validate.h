@@ -1,6 +1,7 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <ctype.h>
+#include "alike.h"
 
 // - Objects We Install Once ---------------------------------------------------
 
@@ -39,26 +40,6 @@ void VALC_install_objs();
 SEXP VALC_evaluate(SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full, SEXP rho);
 void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base);
 void psh(const char * lab);
-
-// - Imported Funs -------------------------------------------------------------
-
-SEXP(*VALC_alike)(SEXP,SEXP,SEXP,SEXP);
-SEXP(*VALC_merge_msg)(SEXP);
-SEXP(*VALC_get_frame_data)(SEXP,SEXP,SEXP,int);
-SEXP(*VALC_get_fun)(SEXP,SEXP);
-SEXP(*VALC_deparse)(SEXP,int);
-const char * (*VALC_pad)(SEXP,int,int);
-const char * (*VALC_bullet)(const char *, const char *, const char *, size_t);
-const char * (*VALC_pad_or_quote)(SEXP,int,int);
-
-// String Maniip
-
-char * (*CSR_smprintf4)(
-  size_t, const char *, const char *, const char *, const char *, const char *
-);
-char * (*CSR_strmcpy)(const char *, size_t);
-size_t (*CSR_strmlen)(const char *, size_t);
-char * (*CSR_collapse)(SEXP, const char *, size_t);
 
 #ifndef VALC_MAX_CHAR
 # define VALC_MAX_CHAR 10000

@@ -8,7 +8,7 @@
 \usage{
 vetr(...)
 
-vet(target, current, format = "text", stop = TRUE)
+vet(target, current, format = "text", stop = FALSE)
 }
 \arguments{
 \item{...}{arguments to vetr; they will be matched to the enclosing
