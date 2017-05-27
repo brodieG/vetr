@@ -57,6 +57,7 @@ eval_check <- function(lang, arg_name, arg_value, env=parent.frame())
     VALC_eval_check, lang, arg_name, arg_name, arg_value, sys.call(), env
   )
 
+# nocov start
 valtest <- function(a, b)
   .Call(VALC_test, a, b)
 
@@ -69,6 +70,7 @@ valtest2 <- function(a) {
 valtest3 <- function(a) {
   .Call(VALC_test2, a, parent.frame())
 }
+# nocov end
 
 ## Internal version of `all`
 ##

@@ -53,8 +53,10 @@ void VALC_stop(SEXP call, const char * msg) {
   SET_TYPEOF(err_call, LANGSXP);
   UNPROTECT(3);
   eval(err_call, R_GlobalEnv);
-  error("Logic Error: should never get here; contact maintainer.");
-}
+  // nocov start
+  error("Internal Error: 3423; contact maintainer.");
+} // nocov end
+
 /*
 Create simple error for a tag
 */
@@ -75,8 +77,9 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
   );
   sprintf(err_msg, err_base, err_tag);
   VALC_stop(fun_call, err_msg);
+  // nocov start
   error("Internal Error: shouldn't get here 181; contact maintainer.");// nocov
-}
+} // nocov end
 /*
 return 2 if isTRUE, 1 if every element is TRUE, 0 if there is at least one
 FALSE, -1 if identical to FALSE, -2 if not logical, -3 if NA, -4 if length

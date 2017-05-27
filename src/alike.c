@@ -755,10 +755,13 @@ SEXP ALIKEC_alike_ext2(
     TYPEOF(curr_sub) != LANGSXP && TYPEOF(curr_sub) != SYMSXP &&
     !(isVectorAtomic(curr_sub) && XLENGTH(curr_sub) == 1) &&
     curr_sub != R_NilValue
-  )
+  ) {
+    // nocov start
     error(
-      "Intenral Error; `curr_sub` must be language."
+      "Internal Error; `curr_sub` must be language."
     );
+    // nocov end
+  }
   struct ALIKEC_settings set = ALIKEC_set_def("");
   set.env = env;
   return ALIKEC_strsxp_or_true(

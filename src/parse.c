@@ -1,12 +1,4 @@
 #include "validate.h"
-/* -------------------------------------------------------------------------- *\
-\* -------------------------------------------------------------------------- */
-/*
-Takes multi-dot and removes extra dots
-*/
-SEXP VALC_remove_dots(SEXP symb) {
-  return R_NilValue;
-}
 
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
@@ -187,7 +179,9 @@ void VALC_parse_recurse(
 
 
   if(TYPEOF(lang) != LANGSXP) {  // Not a language expression
-    error("Logic Error: unexpectedly encountered a non-language object");
+    // nocov start
+    error("Internal Error: unexpectedly encountered a non-language object");
+    // nocov end
   }
   const char * call_symb;
 

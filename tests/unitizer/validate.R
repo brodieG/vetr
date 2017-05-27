@@ -65,6 +65,7 @@ unitizer_sect("Custom expressions", {
 
   vet(.(c(TRUE, NA, TRUE)), 1:5)
   vet(.(1:5), 1:5)
+  vet(.(1:5, 1:5), 1:5) # error
 })
 unitizer_sect("Compound Expressions", {
   vet(INT.1 || NULL, 1)    # Pass
