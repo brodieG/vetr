@@ -2,6 +2,8 @@
 
 // - Testing Function ----------------------------------------------------------
 
+// nocov start
+
 SEXP VALC_test(SEXP a, SEXP b) {
   error("stop testing function shouldn't be in use");
 
@@ -14,13 +16,15 @@ SEXP VALC_test1(SEXP a) {
   return(a);
 }
 SEXP VALC_test2(SEXP a, SEXP b) {
-  VALC_stop2(a, "error!", b);
+  VALC_stop(a, "error!", b);
   return(a);
 }
 SEXP VALC_test3(SEXP a, SEXP b) {
-  VALC_stop2(a, "error!", b);
+  VALC_stop(a, "error!", b);
   return(a);
 }
+// nocov end
+
 // - Helper Functions ----------------------------------------------------------
 
 int IS_TRUE(SEXP x) {
@@ -51,26 +55,19 @@ void VALC_stop(SEXP call, const char * msg) {
   eval(err_call, R_GlobalEnv);
   error("Logic Error: should never get here; contact maintainer.");
 }
-void VALC_stop2(SEXP call, const char * msg, SEXP rho) {
-  SEXP quot_call = list2(VALC_SYM_quote, call);
-  SET_TYPEOF(quot_call, LANGSXP);
-  SEXP cond_call = PROTECT(
-    list3(install("simpleError"), ScalarString(mkChar(msg)), quot_call)
-  );
-  SET_TYPEOF(cond_call, LANGSXP);
-  SEXP cond = PROTECT(eval(cond_call, rho));
-  SEXP err_call = PROTECT(list2(install("stop"), cond));
-  SET_TYPEOF(err_call, LANGSXP);
-  UNPROTECT(3);
-  eval(err_call, R_GlobalEnv);
-  error("Logic Error: should never get here; contact maintainer.");
-}
 /*
 Create simple error for a tag
 */
 void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
-  if(TYPEOF(tag) != SYMSXP)
-    error("Need to implement deparsing of tag since this could be lang now");
+  if(TYPEOF(tag) != SYMSXP) {
+    // nocov start
+    error(
+      "Internal Error: %s%s"
+      "non symbol arg names are not currently supported; ",
+      "contact maintainer."
+    );
+    // nocov end
+  }
 
   const char * err_tag = CHAR(PRINTNAME(tag));
   char * err_msg = R_alloc(
@@ -78,7 +75,7 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
   );
   sprintf(err_msg, err_base, err_tag);
   VALC_stop(fun_call, err_msg);
-  error("Logic Error: shouldn't get here 181; contact maintainer.");
+  error("Internal Error: shouldn't get here 181; contact maintainer.");// nocov
 }
 /*
 return 2 if isTRUE, 1 if every element is TRUE, 0 if there is at least one
@@ -110,9 +107,11 @@ SEXP VALC_all_ext(SEXP vec) {
 /*
 print current PROTECT stack height; used for debugging
 */
+// nocov start
 void psh(const char * lab) {
   PROTECT_INDEX i;
   PROTECT_WITH_INDEX(R_NilValue, &i);
   UNPROTECT(1);
   Rprintf("Protect Stack %s: %d\n", lab, i);
 }
+// nocov end
