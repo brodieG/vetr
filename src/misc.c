@@ -16,11 +16,11 @@ SEXP VALC_test1(SEXP a) {
   return(a);
 }
 SEXP VALC_test2(SEXP a, SEXP b) {
-  VALC_stop(a, "error!", b);
+  // VALC_stop(a, "error!", b);
   return(a);
 }
 SEXP VALC_test3(SEXP a, SEXP b) {
-  VALC_stop(a, "error!", b);
+  // VALC_stop(a, "error!", b);
   return(a);
 }
 // nocov end

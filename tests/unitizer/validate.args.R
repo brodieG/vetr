@@ -114,3 +114,18 @@ unitizer_sect("Compound Expression Scope Issues", {
   }
   fun(-(1:3))
 })
+unitizer_sect("Non-equal args and validation exps", {
+  fun8 <- function(x="hello", y=TRUE, z)
+    vetr(x=integer(), z=integer(2L))
+
+  fun8(1L, NULL, 1:2)
+  fun8(1L, 1:2, NULL)
+
+  fun8(1L, 1:2)
+  fun8(1L)
+
+  # default argument fails validation
+
+  fun8(z=1:2)
+
+})

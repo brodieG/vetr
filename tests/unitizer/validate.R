@@ -98,6 +98,11 @@ unitizer_sect("Other Return Modes", {
   vet(INT.1 || NULL || LGL, "hello", format="text")
   vet(INT.1 || NULL || LGL, "hello", format="raw")
   vet(INT.1 || NULL || LGL, "hello", format="full")
+  vet(INT.1 || NULL || LGL, "hello", format="halloween")
+  vet(INT.1 || NULL || LGL, "hello", format=1:10)
+
+  vet(INT.1 || NULL || LGL, "hello", format="text", stop=TRUE)
+  vet(INT.1 || NULL || LGL, "hello", format="text", stop=1:3)
 })
 
 unitizer_sect("Multi-line Stuff", {
