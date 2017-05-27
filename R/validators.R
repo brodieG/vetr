@@ -33,8 +33,17 @@
 #'   matrix(numeric(), 0, 0) && .(mk_val_token(nrow(.) == ncol(.), "be square"))
 #' )
 
-mk_val_token <- function(exp, err.msg="") {
-  if(!is.character(err.msg)) stop("Argument `err.msg` must be character.")
+mk_val_token <- function(exp, err.msg="%s") {
+  if(
+    !is.character(err.msg) || length(err.msg) != 1L || is.na(err.msg) ||
+    inherits(try(sprintf(err.msg, "test"), silent=TRUE), "try-error") ||
+    identical(sprintf(err.msg, "test"), err.msg)
+  ) {
+    stop(
+      "Argument `err.msg` must be character(1L) and contain a single '%s' ",
+      "for use by `sprintf`."
+    )
+  }
   x <- substitute(exp)
   attr(x, "err.msg") <- err.msg
   x

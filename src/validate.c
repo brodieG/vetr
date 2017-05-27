@@ -24,16 +24,20 @@ SEXP VALC_process_error(
   // size of error, allocate, then convert to char
 
   if(TYPEOF(val_res) != LISTSXP)
+    // nocov start
     error(
       "Internal Error: unexpected type %s when evaluating test for %s; %s",
       type2char(TYPEOF(val_res)), CHAR(PRINTNAME(val_tag)),
       "contact mainainer."
     );
+    // nocov end
   if(ret_mode < 0 || ret_mode > 2)
+    // nocov start
     error(
       "%s%s", "Internal Error: arg ret_mode must be between 0 and 2; ",
       "contact maintainer."
     );
+    // nocov end
 
   SEXP val_res_cpy;
   size_t count_top = 0;
@@ -98,9 +102,11 @@ SEXP VALC_process_error(
   for(i = 0; i < err_len; i++) {
     SEXP str = VECTOR_ELT(err_msg_c, i);
     if(TYPEOF(str) != STRSXP || XLENGTH(str) != 1L) {
+      // nocov start
       error(
         "Internal Error: did not get character(1L) err msg; contact maintainer"
       );
+      // nocov end
     }
 
     SEXP new_elt;
@@ -178,7 +184,7 @@ SEXP VALC_validate(
     return(ScalarLogical(1));
   }
   if(TYPEOF(ret_mode_sxp) != STRSXP && XLENGTH(ret_mode_sxp) != 1)
-    error("Argument `return.mode` must be character(1L)");
+    error("Argument `format` must be character(1L)");
   int stop_int;
 
   if(
@@ -197,7 +203,7 @@ SEXP VALC_validate(
   } else if(!strcmp(ret_mode_chr, "full")) {
     ret_mode = 1;
   } else
-    error("Argument `return.mode` must be one of \"text\", \"raw\",\"full\"");
+    error("Argument `format` must be one of \"text\", \"raw\",\"full\"");
 
   SEXP out = VALC_process_error(
     res, VALC_SYM_current, par_call, ret_mode, stop_int
@@ -249,10 +255,12 @@ SEXP VALC_validate_args(
     frm_tag = TAG(fun_form_cpy);
 
     if(val_tag != frm_tag) {
+      // nocov start
       error(
         "%s%s", "Internal Error: validation token does not match formals; ",
         "contact maintainer."
       );
+      // nocov end
     }
     // Either our function is improperly missing an argument, or we have
     // validation for a default argument.  Note that since default arguments can
@@ -273,15 +281,23 @@ SEXP VALC_validate_args(
       fun_tok = CAR(fun_call_cpy);
     }
     val_tok = CAR(val_call_cpy);
-    if(val_tok == R_MissingArg)
+    if(val_tok == R_MissingArg) {
+      // nocov start
       error(
         "Internal Error: vetting expression unmatched; contact maintainer."
       );
+      // nocov end
+    }
 
     if(fun_tok == R_MissingArg) {
       // this shouldn't really happen now that we're using match.call instead of
       // match_call
+      // nocov start
+      error(
+        "Internal Error: unexpected missing arg; contact maintainer."
+      );
       VALC_arg_error(TAG(fun_call_cpy), fun_call, "Argument `%s` is missing");
+      // nocov end
     }
     // Need to evaluate the argument
 
@@ -307,14 +323,19 @@ SEXP VALC_validate_args(
       // fail, produce error message: NOTE - might change if we try to use full
       // expression instead of just arg name
       VALC_process_error(val_res, arg_tag, fun_call, 1, 1);
+      // nocov start
       error("Internal Error: should never get here 2487; contact maintainer");
+      // nocov end
     }
     UNPROTECT(1);
   }
-  if(val_call_cpy != R_NilValue || fun_call_cpy != R_NilValue)
+  if(val_call_cpy != R_NilValue || fun_call_cpy != R_NilValue) {
+    // nocov start
     error(
       "%s%s", "Internal Error: fun and validation matched calls different ",
       "lengths; contact maintainer."
     );
+    // nocov end
+  }
   return VALC_TRUE;
 }

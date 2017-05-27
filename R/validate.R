@@ -133,10 +133,3 @@ vet <- function(target, current, format="text", stop=FALSE)
     sys.call(), parent.frame(), format, stop
   )
 
-#' @export
-
-stopifnotvalid <- function(target, current, envir=parent.frame()) {
-  res <- .Call(VALC_validate, target, current, envir)
-  if(isTRUE(res)) return(res)
-  stop(res)
-}

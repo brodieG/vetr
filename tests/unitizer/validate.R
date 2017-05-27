@@ -57,6 +57,16 @@ unitizer_sect("Tokens Fail", {
   vet(LGL, letters)
   vet(LGL.1, 1:2 == 1:2)
 })
+unitizer_sect("Custom expressions", {
+  vet(. > 5, 1:10)
+  vet(. > 5, 6:10)
+
+  # corner cases
+
+  vet(.(c(TRUE, NA, TRUE)), 1:5)
+  vet(.(1:5), 1:5)
+  vet(.(1:5, 1:5), 1:5) # error
+})
 unitizer_sect("Compound Expressions", {
   vet(INT.1 || NULL, 1)    # Pass
   vet(INT.1 || NULL, NULL) # Pass
@@ -89,6 +99,11 @@ unitizer_sect("Other Return Modes", {
   vet(INT.1 || NULL || LGL, "hello", format="text")
   vet(INT.1 || NULL || LGL, "hello", format="raw")
   vet(INT.1 || NULL || LGL, "hello", format="full")
+  vet(INT.1 || NULL || LGL, "hello", format="halloween")
+  vet(INT.1 || NULL || LGL, "hello", format=1:10)
+
+  vet(INT.1 || NULL || LGL, "hello", format="text", stop=TRUE)
+  vet(INT.1 || NULL || LGL, "hello", format="text", stop=1:3)
 })
 
 unitizer_sect("Multi-line Stuff", {
@@ -127,3 +142,23 @@ unitizer_sect("Language", {
   vet(quote(a + b), quote(2 + x3))
   vet(quote(a + b), quote(x1 + x2 + x3))
 })
+
+unitizer_sect("Custom tokens", {
+  cust.tok.1 <- mk_val_token(quote(TRUE), "%sshould be logical(1L)")
+
+  vet(cust.tok.1, TRUE)
+  vet(cust.tok.1, 1:2)
+
+  # impossible tokens
+
+  mk_val_token(quote(TRUE), "should be logical(1L)")
+  mk_val_token(quote(TRUE), letters)
+
+  # hack impossile token
+
+  cust.tok.2 <- quote(. > 2)
+  attr(cust.tok.2, "err.msg") <- letters
+
+  vet(cust.tok.2, TRUE)
+})
+

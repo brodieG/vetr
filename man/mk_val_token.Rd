@@ -4,7 +4,7 @@
 \alias{mk_val_token}
 \title{Make Validator Token}
 \usage{
-mk_val_token(exp, err.msg = "")
+mk_val_token(exp, err.msg = "\%s")
 }
 \arguments{
 \item{exp}{an expression which will be captured but not evaluated}
