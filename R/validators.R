@@ -68,34 +68,34 @@ mk_val_token <- function(exp, err.msg="%s") {
 #' Keep in mind these validators are just language objects so you can just as
 #' easily create your own by quoting an R expression or by using
 #' \code{\link{mk_val_token}} if you also want to attach a custom error message.
-#' @name validation_tokens
-#' @rdname validation_tokens
+#' @name vet_tokens
+#' @rdname vet_tokens
 #' @export
 
 NO.NA <- mk_val_token(!is.na(.), "%sshould not contain NAs, but does")
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 NO.INF <- mk_val_token(
   is.finite(.), "%sshould contain only finite values, but does not"
 )
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 GTE.0 <- mk_val_token(
   . >= 0, "%sshould contain only positive values, but has negatives"
 )
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 LTE.0 <- mk_val_token(
   . <= 0, "%sshould contain only negative values, but has positives"
 )
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 GT.0 <- mk_val_token(
   . > 0,
@@ -106,7 +106,7 @@ GT.0 <- mk_val_token(
 )
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 LT.0 <- mk_val_token(
   . < 0,
@@ -125,110 +125,110 @@ LT.0 <- mk_val_token(
 #' @rdname validator_atomic
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 INT.1 <- quote(integer(1L) && NO.NA && NO.INF)
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 INT.1.POS <- quote(integer(1L) && NO.NA && NO.INF && GTE.0)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 INT.1.NEG <- quote(integer(1L) && NO.NA && NO.INF && LTE.0)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 INT.1.POS.STR <- quote(integer(1L) && NO.NA && NO.INF && GT.0)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 INT.1.NEG.STR <- quote(integer(1L) && NO.NA && NO.INF && LT.0)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 INT <- quote(integer() && NO.NA && NO.INF)
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 INT.POS <- quote(integer() && NO.NA && NO.INF && GTE.0)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 INT.NEG <- quote(integer() && NO.NA && NO.INF && LTE.0)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 INT.POS.STR <- quote(integer() && NO.NA && NO.INF && GT.0)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 INT.NEG.STR <- quote(integer() && NO.NA && NO.INF && LT.0)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 NUM.1 <- quote(numeric(1L) && NO.NA && NO.INF)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 NUM.1.POS <- quote(numeric(1L) && NO.NA && NO.INF && GTE.0)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 NUM.1.NEG <- quote(numeric(1L) && NO.NA && NO.INF && LTE.0)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 NUM <- quote(numeric() && NO.NA && NO.INF)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 NUM.POS <- quote(numeric() && NO.NA && NO.INF && GTE.0)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 NUM.NEG <- quote(numeric() && NO.NA && NO.INF && LTE.0)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 CHR.1 <- quote(character(1L) && NO.NA)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 CHR <- quote(character() && NO.NA)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 CPX <- quote(complex() && NO.NA && NO.INF)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 CPX.1 <- quote(complex(1L) && NO.NA && NO.INF)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 LGL <- quote(logical() && NO.NA)
 
 #' @export
-#' @name validation_tokens
+#' @name vet_tokens
 
 LGL.1 <- quote(logical(1L) && NO.NA)
 

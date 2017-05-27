@@ -1,100 +1,24 @@
 #' Vet Objects and Function Arguments
 #'
 #' Use templates and expressions to vet objects or function arguments.
-#' \code{vetq} vets objects, and \code{vetq_args} vets the formals of the
-#' function it is enclosed in.
+#' \code{vet} vets objects, and \code{vetr} vets the formals of the
+#' function that encloses it.
 #'
-#' @section Vetting with Templates:
-#'
-#'
-#'
-#'
-#' The \code{vet} functions use R objects as templates that the values
-#' being tested must match.  For example, in:\preformatted{
-#' vet(numeric(), 3.145)
-#' vet(numeric(), c(1, 2, 3))
-#' vet(numeric(), matrix(runif(9), 3))
-#' }
-#' the first argument is the template, and the second the value to check.
-#' \code{vet} uses whatever aspects of the template are defined and
-#' ensures that the value tested
-#'
-#' Each argument to \code{vetr} is matched to one argument of the
-#' enclosing function following the same rules \code{\link{match.call}} uses.
-#' For example, in:
-#' \preformatted{
-#' function(a, b) {
-#'   vetr(numeric(), logical(1L))
-#' }
-#' }
-#' \code{numeric()} will be used to vetr \code{a}, and
-#' \code{logical(1L)} to vetr \code{b}.
-#'
-#' The default validation mechanism is to use the arguments to
-#' \code{vetr} as templates.  For example, \code{numeric()} means
-#' arguments to \code{a} must be numeric, of any length, and \code{logical(1L)}
-#' means arguments to \code{b} must be one length logical.  Arguments must
-#' match the template structure, but need not match the values.
-#' \code{vetr} uses \code{alike} to determine whether an object
-#' matches a template.
-#'
-#' You may use \code{||} and/or \code{&&} to construct more complex
-#' validations: \preformatted{
-#' function(a, b) {
-#'   vetr(
-#'     a=numeric() || character(),
-#'     b=character(1L) || NULL
-#'   )
-#' }
-#' }
-#' \code{vetr} parses each expression to isolate the templates and then
-#' tests each template in turn verifying that any/all of them match the
-#' arguments as specified by you with \code{&&} / \code{||}.
-#'
-#' Often it is useful to be able to use arbitrary expressions as part of a
-#' validation.  You may do so by using \code{.()}.  Any expression within
-#' \code{.()} will be evaluated as is, and an argument will vetr
-#' successfully if that expression returns \code{TRUE} (note, a two length
-#' logical like \code{c(T, T)} will fail):
-#' \preformatted{
-#' function(a, b) {
-#'   vetr(
-#'     a=numeric() && .(!any(is.na(.))),
-#'     b=logical() && .(length(a) == length(.) && !any(is.na(.)))
-#'   )
-#' }
-#' }
-#' If you use \code{.} as a variable anyplace in the validation expression it
-#' will be substituted by the corresponding argument name prior to validation.
-#' If you need to use objects called \code{.} or \code{.()} in your validation
-#' expression you may do so by escaping them with another period (e.g. use
-#' \code{..} for a literal \code{.}).
-#'
-#' If you find yourself using particular custom validation expressions
-#'
-#' @section Validation Expressions:
-#'
-#' Validation expressions are subject to non-standard evaluation.  They are
-#' recursively substituted until all symbols in the initially substituted call
-#' that point to language objects no longer point to language.  For example, in:
-#' \preformat{
-#' a <- b <- c <- TRUE   # these are non-language objects
-#' x <- quote(a && b)    # this is a language object
-#' vet(target=x || c, current=z)
-#' }
-#' \code{target} will be expanded into \code{(a && b) || c}.
+#' See \code{vignette('vetr', package='vetr')} and examples for details on how
+#' to use these functions.
 #'
 #' @useDynLib vetr, .registration=TRUE, .fixes="VALC_"
 #' @note Will force evaluation of any arguments that are being checked (you may
 #'   omit arguments that should not be evaluate from \code{vetr})
 #' @name vet
 #' @rdname vet
-#' @aliases vetr
+#' @aliases vetr tev
 #' @export
+#' @seealso \code{\link{alike}} for how templates are used
 #' @param ... arguments to vetr; they will be matched to the enclosing
-#'   function formals as with \code{match.call}
-#' @param a template expression
-#' @param current a value to vet
+#'   function formals as with \code{\link{match.call}}
+#' @param target a template, a vetting expression, or a compound expression
+#' @param current an object to vet
 #' @param format character(1L), controls the format of the return value for
 #'   \code{vet}, in case of failure.  One of:\itemize{
 #'     \item "text": (default) character(1L) message for use elsewhere in code
@@ -103,11 +27,51 @@
 #'     \item "raw": character(N) least processed version of the error message
 #'       with none of the formatting or surrounding verbiage
 #' }
-#' @param stop logical(1L) whether to call \code{\link{stop}} on failure
+#' @param stop TRUE or FALSE whether to call \code{\link{stop}} on failure
 #'   (default) or not
 #' @return TRUE if validation succeeds, otherwise \code{stop} for
 #'   \code{vetr} and varies for \code{vet} according to value chosen in
-#'   \code{return.mode}
+#'   \code{stop}
+#' @examples
+#' ## template vetting
+#' vet(numeric(2L), runif(2))
+#' vet(numeric(2L), runif(3))
+#' vet(numeric(2L), letters)
+#' vet(numeric(2L), letters, stop=TRUE)
+#'
+#' ## Zero length templates are wild cards
+#' vet(numeric(), runif(2))
+#' vet(numeric(), runif(100))
+#' vet(numeric(), letters)
+#'
+#' ## Short (<100 length) integer-like numerics will
+#' ## pass for integer
+#' vet(integer(), c(1, 2, 3))
+#' vet(integer(), c(1, 2, 3) + 0.1)
+#'
+#' ## Nested templates; note, in packages you should consider
+#' ## defining templates outside of `vet` or `vetr` so that
+#' ## they are computed on load rather that at runtime
+#' vet(
+#'   list(numeric(1L), matrix(integer(), 3)),
+#'   list(runif(1), rbind(1:10, 1:10, 1:10))
+#' )
+#' vet(
+#'   list(numeric(1L), matrix(integer(), 3)),
+#'   list(runif(1), cbind(1:10, 1:10, 1:10))
+#' )
+#'
+#' ## Vetting expression
+#' vet(. > 0, runif(10))
+#' vet(. > 0, -runif(10))
+#'
+#' ## Compound expressions (template + expression(s)):
+#' vet(numeric(2L) && . > 0, runif(2))
+#' vet(numeric(2L) && . > 0, runif(10))
+#' vet(numeric(2L) && . > 0, -runif(2))
+#'
+#' ## Using pre-defined tokens
+#' vet(INT.1, 1)
 
 vetr <- function(...)
   .Call(
