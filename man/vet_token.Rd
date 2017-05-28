@@ -155,8 +155,8 @@ and \code{INT.1.POS.STR} will vet a strictly positive integer vector.  At
 this time tokens are predefined for the basic types as scalars or any-length
 vectors.  Some additional checks are available (e.g. positive only values).
 
-Every one of the predefined vetting token documented here implicitly
-disallows NAs, and for numerics also disallows infinite values. If you wish
+Every one of the predefined vetting tokens documented here implicitly
+disallows NAs.  Numeric tokens also disallow infinite values. If you wish
 to allow NAs or infinite values just use a template object (e.g.
 \code{integer(1L)}).
 }

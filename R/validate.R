@@ -4,17 +4,24 @@
 #' \code{vet} vets objects, and \code{vetr} vets the formals of the
 #' function that encloses it.
 #'
+#' The \code{target} argument for \code{vet} and the \code{...} arguments are
+#' recursively substituted.  If you wish to programmatically specify a vetting
+#' expression you can provide it as quoted language.
+#'
 #' See \code{vignette('vetr', package='vetr')} and examples for details on how
 #' to use these functions.
 #'
 #' @useDynLib vetr, .registration=TRUE, .fixes="VALC_"
-#' @note Will force evaluation of any arguments that are being checked (you may
-#'   omit arguments that should not be evaluate from \code{vetr})
+#' @note \code{vetr} will force evaluation of any arguments that are being
+#'   checked (you may omit arguments that should not be evaluate from
+#'   \code{vetr})
 #' @name vet
 #' @rdname vet
 #' @aliases vetr tev
 #' @export
-#' @seealso \code{\link{alike}} for how templates are used
+#' @seealso \code{\link{alike}} for how templates are used,
+#'   \code{\link{vet_token}} for how to specify custom error messages and also
+#'   for predefined validation tokens for common use cases.
 #' @param ... arguments to vetr; they will be matched to the enclosing
 #'   function formals as with \code{\link{match.call}}
 #' @param target a template, a vetting expression, or a compound expression
@@ -30,19 +37,26 @@
 #' @param stop TRUE or FALSE whether to call \code{\link{stop}} on failure
 #'   (default) or not
 #' @return TRUE if validation succeeds, otherwise \code{stop} for
-#'   \code{vetr} and varies for \code{vet} according to value chosen in
-#'   \code{stop}
+#'   \code{vetr} and varies for \code{vet} according to value chosen with
+#'   parameter \code{stop}
 #' @examples
 #' ## template vetting
 #' vet(numeric(2L), runif(2))
 #' vet(numeric(2L), runif(3))
 #' vet(numeric(2L), letters)
-#' vet(numeric(2L), letters, stop=TRUE)
+#' try(vet(numeric(2L), letters, stop=TRUE))
 #'
 #' ## Zero length templates are wild cards
 #' vet(numeric(), runif(2))
 #' vet(numeric(), runif(100))
 #' vet(numeric(), letters)
+#'
+#' ## This extends to data.frames
+#' iris.tpl <- iris[0,]   # zero row
+#' iris.1 <- iris[1:10,]
+#' iris.2 <- iris[1:10, c(1,2,3,5,4)]  # change col order
+#' vet(iris.tpl, iris.1)
+#' vet(iris.tpl, iris.2)
 #'
 #' ## Short (<100 length) integer-like numerics will
 #' ## pass for integer
@@ -52,26 +66,54 @@
 #' ## Nested templates; note, in packages you should consider
 #' ## defining templates outside of `vet` or `vetr` so that
 #' ## they are computed on load rather that at runtime
-#' vet(
-#'   list(numeric(1L), matrix(integer(), 3)),
-#'   list(runif(1), rbind(1:10, 1:10, 1:10))
-#' )
-#' vet(
-#'   list(numeric(1L), matrix(integer(), 3)),
-#'   list(runif(1), cbind(1:10, 1:10, 1:10))
-#' )
+#' tpl <- list(numeric(1L), matrix(integer(), 3))
+#' val.1 <- list(runif(1), rbind(1:10, 1:10, 1:10))
+#' val.2 <- list(runif(1), cbind(1:10, 1:10, 1:10))
+#' vet(tpl, val.1)
+#' vet(tpl, val.2)
 #'
 #' ## Vetting expression
 #' vet(. > 0, runif(10))
 #' vet(. > 0, -runif(10))
 #'
-#' ## Compound expressions (template + expression(s)):
+#' ## Compound expressions (template(s) + expression(s)):
 #' vet(numeric(2L) && . > 0, runif(2))
 #' vet(numeric(2L) && . > 0, runif(10))
 #' vet(numeric(2L) && . > 0, -runif(2))
 #'
-#' ## Using pre-defined tokens
+#' ## Using pre-defined tokens (see `?vet_token`)
 #' vet(INT.1, 1)
+#' vet(INT.1, 1:2)
+#' vet(INT.1 && . %in% 0:1 || LGL.1, TRUE)
+#' vet(INT.1 && . %in% 0:1 || LGL.1, 1)
+#' vet(INT.1 && . %in% 0:1 || LGL.1, NA)
+#'
+#' ## Function parameter vetting
+#' fun1 <- function(x, y) {
+#'   vetr(integer(), LGL.1)
+#'   TRUE   # do some work
+#' }
+#' fun1(1:10, TRUE)
+#' try(fun1(1:10, 1:10))
+#'
+#' ## only vet the second argument
+#' fun2 <- function(x, y) {
+#'   vetr(y=LGL.1)
+#'   TRUE   # do some work
+#' }
+#' try(fun2(letters, 1:10))
+#'
+#' ## more complex vetting (`tpl`, `val.1`, and `val.2` defined in
+#' ## earlier examples)
+#' fun3 <- function(x, y) {
+#'   vetr(x=tpl, y=tpl && ncol(.[[2]]) == ncol(x[[2]]))
+#'   TRUE   # do some work
+#' }
+#' fun3(val.1, val.1)
+#' try(fun3(val.1, val.2))
+#' val.1.a <- val.1
+#' val.1.a[[2]] <- val.1.a[[2]][, 1:8]
+#' try(fun3(val.1, val.1.a))
 
 vetr <- function(...)
   .Call(
