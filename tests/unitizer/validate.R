@@ -144,17 +144,17 @@ unitizer_sect("Language", {
 })
 
 unitizer_sect("Custom tokens", {
-  cust.tok.1 <- mk_val_token(quote(TRUE), "%sshould be logical(1L)")
+  cust.tok.1 <- vet_token(quote(TRUE), "%sshould be logical(1L)")
 
   vet(cust.tok.1, TRUE)
   vet(cust.tok.1, 1:2)
 
   # impossible tokens
 
-  mk_val_token(quote(TRUE), "should be logical(1L)")
-  mk_val_token(quote(TRUE), letters)
+  vet_token(quote(TRUE), "should be logical(1L)")
+  vet_token(quote(TRUE), letters)
 
-  # hack impossile token
+  # hack impossile token (`vet_token` itself wont allow it)
 
   cust.tok.2 <- quote(. > 2)
   attr(cust.tok.2, "err.msg") <- letters

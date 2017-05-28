@@ -3,7 +3,6 @@
 \docType{data}
 \name{vet_token}
 \alias{vet_token}
-\alias{vet_token}
 \alias{NO.NA}
 \alias{vet_token}
 \alias{NO.INF}
@@ -59,7 +58,7 @@
 \alias{LGL}
 \alias{vet_token}
 \alias{LGL.1}
-\title{Make Vetting Token}
+\title{Vetting Tokens With Custom Error Messages}
 \format{An object of class \code{call} of length 2.}
 \usage{
 vet_token(exp, err.msg = "\%s")
@@ -124,58 +123,74 @@ LGL.1
 \item{exp}{an expression which will be captured but not evaluated}
 
 \item{err.msg}{character(1L) a message that tells the user what the
-expected value should be}
+expected value should be, should contain a \dQuote{\%s} for \code{sprintf}
+to use (e.g. \dQuote{\%sshould be greater than 2})}
 }
 \value{
 a quoted expressions with \code{err.msg} attribute set
 }
 \description{
 Utility function to generate vetting tokens with attached error messages.
-
-Commonly used tokens that can be used as part of validation expressions.
+You should only need to use this if the error message produced naturally by
+\code{vetr} is unclear.  Several predefined tokens created by this function
+are also documented here.
 }
 \details{
 Allows you to supply error messages for vetting to use for each error
 token.  Your token should not contain top level \code{&&} or \code{||}.  If
-it does your error message will not be reported.  If your token must involve
-top level \code{&&} or \code{||}, use \code{identity(x && y)} to ensure that
-your error message is used by \code{validate}, but this will only make sense
-for a validation expression composed solely of custom tokens.  For example
-if you do something like:\preformat{
-validate(vet_token(identity(logical(1L) && !is.na(.))), NA)
-}
-the \code{logical(1L)} will be evaluated as \code{FALSE} and cause validation
-to always fail instead of being used as a template token.
+it does your error message will not be reported because \code{vetr} looks for
+error messages attached to atomic tokens.  If your token must involve
+top level \code{&&} or \code{||}, use \code{I(x && y)} to ensure that
+your error message is used by \code{vet}, but beware than in doing so you do
+not use templates within the \code{I} call as everything therein will be
+interpreted as a vetting expression rather than a template.
 
-Error messages should tell you what the acceptable values are so they mesh
-with the rest of the error reporting messages.  Typically, we will append
-"Should" ahead of your message, such that if you supply "not contain NAs"
-it will be displayed as "Should not contain NAs".
+Error messages are typically of the form \dQuote{\%sshould be XXX}.
 
-In particular, we predefine several templates useful for atomic vectors. For
-example, \code{INT.1.POS.STR} will validate:
-\itemize{
-  \item \code{INT}: integer-like
-  \item \code{1}: length 1
-  \item \code{POS.STR}: strictly positive (i.e. > zero)
-}
-whereas \code{INT} will validate any integer like vector of any length.
+This package ships with many predefined tokens for common use cases. They
+are listed in the \dQuote{Usage} section of this documentation.  The tokens
+are named in format \dQuote{TYPE[.LENGTH][.OTHER]}.  For example \code{INT}
+will vet an integer vector, \code{INT.1} will vet a scalar integer vector,
+and \code{INT.1.POS.STR} will vet a strictly positive integer vector.  At
+this time tokens are predefined for the basic types as scalars or any-length
+vectors.  Some additional checks are available (e.g. positive only values).
 
-Every one of the vetting token documented here implicitly disallows NAs,
-and for numerics also disallows infinite values. If you wish to allow NAs or
-infinite values just use \code{integer(1L)}.
-
-Keep in mind these vetting tokens are just language objects so you can just
-as easily create your own by quoting an R expression or by using
-\code{\link{vet_token}} if you also want to attach a custom error message.
+Every one of the predefined vetting token documented here implicitly
+disallows NAs, and for numerics also disallows infinite values. If you wish
+to allow NAs or infinite values just use a template object (e.g.
+\code{integer(1L)}).
 }
 \examples{
-LEN.2 <- vet_token(length(.) == 2, "be length two")
-SQR <- vet_token(nrow(.) == ncol(.), "be square")
-SQR.NUM.MX <- quote(matrix(numeric(), 0, 0) && SQR)
-## Alternative spec: note the use of `bquote`:
-SQR.NUM.MX <- bquote(
-  matrix(numeric(), 0, 0) && .(vet_token(nrow(.) == ncol(.), "be square"))
-)
+## Predefined tokens:
+vet(INT.1, 1:2)
+vet(INT.1 || LGL, 1:2)
+vet(INT.1 || LGL, c(TRUE, FALSE))
+
+## Check squareness
+mx <- matrix(1:3)
+SQR <- vet_token(nrow(.) == ncol(.), "\%sshould be square")
+vet(SQR, mx)
+
+## Let `vetr` make up error message; note `quote` vs `vet_token`
+## Often, `vetr` does fine without explictly specified err msg:
+SQR.V2 <- quote(nrow(.) == ncol(.))
+vet(SQR.V2, mx)
+
+## Combine some tokens, notice how we use `quote` at the combining
+## step:
+NUM.MX <- vet_token(matrix(numeric(), 0, 0), "\%sshould be numeric matrix")
+SQR.NUM.MX <- quote(NUM.MX && SQR)
+vet(SQR.NUM.MX, mx)
+
+## If instead we used `vet_token` the overall error message
+## is not used; instead it falls back to the error message of
+## the specific sub-token that fails:
+NUM.MX <- vet_token(matrix(numeric(), 0, 0), "\%sshould be numeric matrix")
+SQR.NUM.MX.V2 <-
+  vet_token(NUM.MX && SQR, "\%sshould be a square numeric matrix")
+vet(SQR.NUM.MX.V2, mx)
+}
+\seealso{
+\code{\link{vet}}
 }
 \keyword{datasets}

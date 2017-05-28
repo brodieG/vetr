@@ -14,7 +14,7 @@
 #' not use templates within the \code{I} call as everything therein will be
 #' interpreted as a vetting expression rather than a template.
 #'
-#' Error messages are typically of the form \dQuote{"%sshould be XXX"}.
+#' Error messages are typically of the form \dQuote{\%sshould be XXX}.
 #'
 #' This package ships with many predefined tokens for common use cases. They
 #' are listed in the \dQuote{Usage} section of this documentation.  The tokens
@@ -24,8 +24,8 @@
 #' this time tokens are predefined for the basic types as scalars or any-length
 #' vectors.  Some additional checks are available (e.g. positive only values).
 #'
-#' Every one of the predefined vetting token documented here implicitly
-#' disallows NAs, and for numerics also disallows infinite values. If you wish
+#' Every one of the predefined vetting tokens documented here implicitly
+#' disallows NAs.  Numeric tokens also disallow infinite values. If you wish
 #' to allow NAs or infinite values just use a template object (e.g.
 #' \code{integer(1L)}).
 #'
@@ -33,8 +33,8 @@
 #' @seealso \code{\link{vet}}
 #' @param exp an expression which will be captured but not evaluated
 #' @param err.msg character(1L) a message that tells the user what the
-#'   expected value should be, should contain a \dQuote{%s} for \code{sprintf}
-#'   to use (e.g. \dQuote{"%sshould be greater than 2"})
+#'   expected value should be, should contain a \dQuote{\%s} for \code{sprintf}
+#'   to use (e.g. \dQuote{\%sshould be greater than 2})
 #' @return a quoted expressions with \code{err.msg} attribute set
 #' @examples
 #' ## Predefined tokens:
