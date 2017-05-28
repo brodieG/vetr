@@ -1,39 +1,72 @@
-#' Make Validator Token
+#' Vetting Tokens With Custom Error Messages
 #'
-#' Utility function to generate validator tokens with attached error messages.
+#' Utility function to generate vetting tokens with attached error messages.
+#' You should only need to use this if the error message produced naturally by
+#' \code{vetr} is unclear.  Several predefined tokens created by this function
+#' are also documented here.
 #'
-#' Allows you to supply error messages for validator to use for each error
+#' Allows you to supply error messages for vetting to use for each error
 #' token.  Your token should not contain top level \code{&&} or \code{||}.  If
-#' it does your error message will not be reported.  If your token must involve
-#' top level \code{&&} or \code{||}, use \code{identity(x && y)} to ensure that
-#' your error message is used by \code{validate}, but this will only make sense
-#' for a validation expression composed solely of custom tokens.  For example
-#' if you do something like:\preformat{
-#' validate(mk_val_token(identity(logical(1L) && !is.na(.))), NA)
-#' }
-#' the \code{logical(1L)} will be evaluated as \code{FALSE} and cause validation
-#' to always fail instead of being used as a template token.
+#' it does your error message will not be reported because \code{vetr} looks for
+#' error messages attached to atomic tokens.  If your token must involve
+#' top level \code{&&} or \code{||}, use \code{I(x && y)} to ensure that
+#' your error message is used by \code{vet}, but beware than in doing so you do
+#' not use templates within the \code{I} call as everything therein will be
+#' interpreted as a vetting expression rather than a template.
 #'
-#' Error messages should tell you what the acceptable values are so they mesh
-#' with the rest of the error reporting messages.  Typically, we will append
-#' "Should" ahead of your message, such that if you supply "not contain NAs"
-#' it will be displayed as "Should not contain NAs".
+#' Error messages are typically of the form \dQuote{"%sshould be XXX"}.
+#'
+#' This package ships with many predefined tokens for common use cases. They
+#' are listed in the \dQuote{Usage} section of this documentation.  The tokens
+#' are named in format \dQuote{TYPE[.LENGTH][.OTHER]}.  For example \code{INT}
+#' will vet an integer vector, \code{INT.1} will vet a scalar integer vector,
+#' and \code{INT.1.POS.STR} will vet a strictly positive integer vector.  At
+#' this time tokens are predefined for the basic types as scalars or any-length
+#' vectors.  Some additional checks are available (e.g. positive only values).
+#'
+#' Every one of the predefined vetting token documented here implicitly
+#' disallows NAs, and for numerics also disallows infinite values. If you wish
+#' to allow NAs or infinite values just use a template object (e.g.
+#' \code{integer(1L)}).
 #'
 #' @export
+#' @seealso \code{\link{vet}}
 #' @param exp an expression which will be captured but not evaluated
 #' @param err.msg character(1L) a message that tells the user what the
-#'   expected value should be
+#'   expected value should be, should contain a \dQuote{%s} for \code{sprintf}
+#'   to use (e.g. \dQuote{"%sshould be greater than 2"})
 #' @return a quoted expressions with \code{err.msg} attribute set
 #' @examples
-#' LEN.2 <- mk_val_token(length(.) == 2, "be length two")
-#' SQR <- mk_val_token(nrow(.) == ncol(.), "be square")
-#' SQR.NUM.MX <- quote(matrix(numeric(), 0, 0) && SQR)
-#' ## Alternative spec: note the use of `bquote`:
-#' SQR.NUM.MX <- bquote(
-#'   matrix(numeric(), 0, 0) && .(mk_val_token(nrow(.) == ncol(.), "be square"))
-#' )
+#' ## Predefined tokens:
+#' vet(INT.1, 1:2)
+#' vet(INT.1 || LGL, 1:2)
+#' vet(INT.1 || LGL, c(TRUE, FALSE))
+#'
+#' ## Check squareness
+#' mx <- matrix(1:3)
+#' SQR <- vet_token(nrow(.) == ncol(.), "%sshould be square")
+#' vet(SQR, mx)
+#'
+#' ## Let `vetr` make up error message; note `quote` vs `vet_token`
+#' ## Often, `vetr` does fine without explictly specified err msg:
+#' SQR.V2 <- quote(nrow(.) == ncol(.))
+#' vet(SQR.V2, mx)
+#'
+#' ## Combine some tokens, notice how we use `quote` at the combining
+#' ## step:
+#' NUM.MX <- vet_token(matrix(numeric(), 0, 0), "%sshould be numeric matrix")
+#' SQR.NUM.MX <- quote(NUM.MX && SQR)
+#' vet(SQR.NUM.MX, mx)
+#'
+#' ## If instead we used `vet_token` the overall error message
+#' ## is not used; instead it falls back to the error message of
+#' ## the specific sub-token that fails:
+#' NUM.MX <- vet_token(matrix(numeric(), 0, 0), "%sshould be numeric matrix")
+#' SQR.NUM.MX.V2 <-
+#'   vet_token(NUM.MX && SQR, "%sshould be a square numeric matrix")
+#' vet(SQR.NUM.MX.V2, mx)
 
-mk_val_token <- function(exp, err.msg="%s") {
+vet_token <- function(exp, err.msg="%s") {
   if(
     !is.character(err.msg) || length(err.msg) != 1L || is.na(err.msg) ||
     inherits(try(sprintf(err.msg, "test"), silent=TRUE), "try-error") ||
@@ -48,56 +81,35 @@ mk_val_token <- function(exp, err.msg="%s") {
   attr(x, "err.msg") <- err.msg
   x
 }
-#' Predefined Validation Tokens
-#'
-#' Commonly used tokens that can be used as part of validation expressions.
-#'
-#' In particular, we predefine several templates useful for atomic vectors. For
-#' example, \code{INT.1.POS.STR} will validate:
-#' \itemize{
-#'   \item \code{INT}: integer-like
-#'   \item \code{1}: length 1
-#'   \item \code{POS.STR}: strictly positive (i.e. > zero)
-#' }
-#' whereas \code{INT} will validate any integer like vector of any length.
-#'
-#' Every one of the token validators documented here implicitly disallows NAs,
-#' and for numerics also disallows infinite values. If you wish to allow NAs or
-#' infinite values just use \code{integer(1L)}.
-#'
-#' Keep in mind these validators are just language objects so you can just as
-#' easily create your own by quoting an R expression or by using
-#' \code{\link{mk_val_token}} if you also want to attach a custom error message.
-#' @name vet_tokens
-#' @rdname vet_tokens
+#' @rdname vet_token
 #' @export
 
-NO.NA <- mk_val_token(!is.na(.), "%sshould not contain NAs, but does")
+NO.NA <- vet_token(!is.na(.), "%sshould not contain NAs, but does")
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
-NO.INF <- mk_val_token(
+NO.INF <- vet_token(
   is.finite(.), "%sshould contain only finite values, but does not"
 )
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
-GTE.0 <- mk_val_token(
+GTE.0 <- vet_token(
   . >= 0, "%sshould contain only positive values, but has negatives"
 )
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
-LTE.0 <- mk_val_token(
+LTE.0 <- vet_token(
   . <= 0, "%sshould contain only negative values, but has positives"
 )
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
-GT.0 <- mk_val_token(
+GT.0 <- vet_token(
   . > 0,
   paste0(
     "%sshould contain only \"strictly positive\" values, but has zeroes or ",
@@ -106,9 +118,9 @@ GT.0 <- mk_val_token(
 )
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
-LT.0 <- mk_val_token(
+LT.0 <- vet_token(
   . < 0,
   paste0(
     "%sshould contain only \"strictly negative\" values, but has zeroes ",
@@ -116,119 +128,112 @@ LT.0 <- mk_val_token(
   )
 )
 
-#' Atomic Vector validator
-#'
-#'
-#' @aliases NUM.1 CHR.1 LGL.1 CPX.1 INT NUM CHR CPX LGL
-#' @seealso \code{\link{validator_sub}}
 #' @export
-#' @rdname validator_atomic
-
-#' @export
-#' @name vet_tokens
+#' @name vet_token
 
 INT.1 <- quote(integer(1L) && NO.NA && NO.INF)
+
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 INT.1.POS <- quote(integer(1L) && NO.NA && NO.INF && GTE.0)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 INT.1.NEG <- quote(integer(1L) && NO.NA && NO.INF && LTE.0)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 INT.1.POS.STR <- quote(integer(1L) && NO.NA && NO.INF && GT.0)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 INT.1.NEG.STR <- quote(integer(1L) && NO.NA && NO.INF && LT.0)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 INT <- quote(integer() && NO.NA && NO.INF)
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 INT.POS <- quote(integer() && NO.NA && NO.INF && GTE.0)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 INT.NEG <- quote(integer() && NO.NA && NO.INF && LTE.0)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 INT.POS.STR <- quote(integer() && NO.NA && NO.INF && GT.0)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 INT.NEG.STR <- quote(integer() && NO.NA && NO.INF && LT.0)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 NUM.1 <- quote(numeric(1L) && NO.NA && NO.INF)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 NUM.1.POS <- quote(numeric(1L) && NO.NA && NO.INF && GTE.0)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 NUM.1.NEG <- quote(numeric(1L) && NO.NA && NO.INF && LTE.0)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 NUM <- quote(numeric() && NO.NA && NO.INF)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 NUM.POS <- quote(numeric() && NO.NA && NO.INF && GTE.0)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 NUM.NEG <- quote(numeric() && NO.NA && NO.INF && LTE.0)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 CHR.1 <- quote(character(1L) && NO.NA)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 CHR <- quote(character() && NO.NA)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 CPX <- quote(complex() && NO.NA && NO.INF)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 CPX.1 <- quote(complex(1L) && NO.NA && NO.INF)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 LGL <- quote(logical() && NO.NA)
 
 #' @export
-#' @name vet_tokens
+#' @name vet_token
 
 LGL.1 <- quote(logical(1L) && NO.NA)
 
