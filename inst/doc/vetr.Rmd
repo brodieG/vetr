@@ -13,7 +13,7 @@ vignette: >
 ---
 
 ```{r global_options, echo=FALSE}
-knitr::opts_chunk$set(error=TRUE)
+knitr::opts_chunk$set(error=TRUE, hilang='r')
 options(width=60)
 library(vetr)
 ```
@@ -26,11 +26,13 @@ function parameters your code will be more robust and easier to
 write.  It will also be easier to use since errors will be reported by
 documented functions and not from deep in the bowels of un-exported code.
 
-`vetr` lets you vet your inputs with minimal human and machine overhead:
+`vetr` takes the tedium out of comprehensive vetting by allowing you to:
 
-* Structural requirements expressed with minimal code via templates
-* Friendly auto-generated errors explain why an error occurred
-* Fast, it is written completely in C to minimize computation cost
+* Express structural requirements in a declarative style with templates
+* Auto-generate human-friendly error messages
+
+`vetr` is written in C to minimize the overhead of adding parameter checks to
+your functions.
 
 ## Templates
 
@@ -43,11 +45,15 @@ x <- 1:3
 stopifnot(is.numeric(x), length(x) == 1L)
 ```
 
-With `vetr`, the equivalent code is :
+With `vetr`, the equivalent code is:
 
 ```{r}
 vet(numeric(1L), x)
 ```
+
+We declare what we want our object to look like and let `vetr` figure out the
+details of the comparison.  Notice that the auto-generated error message also
+provides more information.
 
 If you are vetting function inputs, you can use the `vetr` function, which works
 just like `vet` except that is streamlined for use within functions:
@@ -71,11 +77,8 @@ enforce structural requirements for S3 objects.  Take this "laps" S3 object that
 we use to analyze car test drives on race tracks:
 
 ```{r}
-laps.template <- structure(
-  class="laps",
-  list(
-    car=character(1),
-    data=data.frame(lap=numeric(), time=Sys.time()[0])
+laps.template <- structure(class="laps",
+  list(car=character(1), data=data.frame(lap=numeric(), time=Sys.time()[0])
 ) )
 ```
 
@@ -83,19 +86,18 @@ We create several objects to run our tests with:
 
 ```{r}
 lap.times <- data.frame(lap=1:10, time=cumsum(rnorm(10, 120, 3)))
-laps.1 <- structure(lap.times, class="laps")
-laps.2 <- structure(list("corvette z06", lap.times), class="laps")
-laps.3 <- laps.4 <- setNames(laps.2, c("car", "data"))
-laps.4$data <- transform(laps.4$data, time=Sys.time() + time)
+laps1 <- structure(list(lap.times), class="laps")
+laps2 <- laps3 <-
+  structure(list(car="corvette z06", data=lap.times), class="laps")
+laps3$data <- transform(laps3$data, time=Sys.time() + time)
 ```
 
 Finally, we vet:
 
 ```{r}
-vet(laps.template, laps.1)   # Forgot to include car
-vet(laps.template, laps.2)   # Missing names
-vet(laps.template, laps.3)   # Lap times should be in POSIXct
-vet(laps.template, laps.4)   # works
+vet(laps.template, laps1)   # Forgot to include car
+vet(laps.template, laps2)   # Lap times should be in POSIXct
+vet(laps.template, laps3)   # works
 ```
 
 Worth noting:
@@ -125,11 +127,14 @@ vet_stopifnot <- function(x)
     inherits(x$data$time, c("POSIXct", "POSIXt"))
   )
 ```
+This a lot more typing, *and* a lot more thinking.  In fact, while creating this
+example we had to keep adding tests that we realized `vet` was carrying out
+automatically that we had not thought.
 
-Internally `vet` uses `alike` to compare the template to the test value.  See
-the [alike
-vignette](http://htmlpreview.github.io/?https://raw.githubusercontent.com/brodieG/alike/master/inst/doc/alike.html)
-for extensive details on how templates work.
+Internally `vet` uses `alike` to compare the template to the test value.  There
+are many subtleties to be aware of.  For example, notice how we use a zero row
+data.frame in the template to allow match any number of rows.  See
+the [alike vignette](alike.html) for extensive details on how templates work.
 
 ## Vetting Expressions
 
@@ -251,16 +256,16 @@ vet(TF_ish, 1)
 vet(TF_ish, "0")
 ```
 
-You can also provide more helpful error messages with `mk_val_token` for
+You can also provide more helpful error messages with `vet_token` for
 specific tokens:
 
 ```{r}
-NONA <- mk_val_token(!is.na(.), "not contain NAs")
+NONA <- vet_token(!is.na(.), "%s should not contain NAs")
 TF <- quote(logical(1L) && NONA)
 vet(TF, NA)
 ```
 
-See `?mk_val_token` for more details.
+See `?vet_token` for more details.
 
 ### Vetting Expression Parsing and Evaluation Rules
 

@@ -1,5 +1,5 @@
 ## ----global_options, echo=FALSE---------------------------
-knitr::opts_chunk$set(error=TRUE)
+knitr::opts_chunk$set(error=TRUE, hilang='r')
 options(width=60)
 library(vetr)
 
@@ -19,25 +19,21 @@ fun(1:2, "hello")
 fun(1, "hello")
 
 ## ---------------------------------------------------------
-laps.template <- structure(
-  class="laps",
-  list(
-    car=character(1),
-    data=data.frame(lap=numeric(), time=Sys.time()[0])
+laps.template <- structure(class="laps",
+  list(car=character(1), data=data.frame(lap=numeric(), time=Sys.time()[0])
 ) )
 
 ## ---------------------------------------------------------
 lap.times <- data.frame(lap=1:10, time=cumsum(rnorm(10, 120, 3)))
-laps.1 <- structure(lap.times, class="laps")
-laps.2 <- structure(list("corvette z06", lap.times), class="laps")
-laps.3 <- laps.4 <- setNames(laps.2, c("car", "data"))
-laps.4$data <- transform(laps.4$data, time=Sys.time() + time)
+laps1 <- structure(list(lap.times), class="laps")
+laps2 <- laps3 <-
+  structure(list(car="corvette z06", data=lap.times), class="laps")
+laps3$data <- transform(laps3$data, time=Sys.time() + time)
 
 ## ---------------------------------------------------------
-vet(laps.template, laps.1)   # Forgot to include car
-vet(laps.template, laps.2)   # Missing names
-vet(laps.template, laps.3)   # Lap times should be in POSIXct
-vet(laps.template, laps.4)   # works
+vet(laps.template, laps1)   # Forgot to include car
+vet(laps.template, laps2)   # Lap times should be in POSIXct
+vet(laps.template, laps3)   # works
 
 ## ---------------------------------------------------------
 vet_stopifnot <- function(x)
@@ -99,7 +95,7 @@ vet(TF_ish, 1)
 vet(TF_ish, "0")
 
 ## ---------------------------------------------------------
-NONA <- mk_val_token(!is.na(.), "not contain NAs")
+NONA <- vet_token(!is.na(.), "%s should not contain NAs")
 TF <- quote(logical(1L) && NONA)
 vet(TF, NA)
 

@@ -13,7 +13,7 @@ vignette: >
 ---
 
 ```{r global_options, echo=FALSE}
-knitr::opts_chunk$set(error=TRUE)
+knitr::opts_chunk$set(error=TRUE, hilang='r')
 options(width=60)
 library(vetr)
 ```
@@ -21,16 +21,18 @@ library(vetr)
 ## Garbage In
 
 R is particularly flexible about data structures so any user-facing code you
-write must vet inputs.  If you rigorously enforce structural requirements for
-function parameters your code will be more robust and easier to
-write.  It will also be easier to use since errors will be reported by
-documented functions and not from deep in the bowels of un-exported code.
+write must vet inputs.  If you enforce structural requirements for function
+parameters your code will be more robust and easier to write.  It will also be
+easier to use since errors will be reported by documented functions and not from
+deep in the bowels of un-exported code.
 
-`vetr` lets you vet your inputs with minimal human and machine overhead:
+`vetr` takes the tedium out of comprehensive vetting by allowing you to:
 
-* Structural requirements expressed with minimal code via templates
-* Friendly auto-generated errors explain why an error occurred
-* Fast, it is written completely in C to minimize computation cost
+* Express structural requirements in a declarative style with templates
+* Auto-generate human-friendly error messages
+
+`vetr` is written in C to minimize the overhead of adding parameter checks to
+your functions.
 
 ## Templates
 
@@ -43,11 +45,15 @@ x <- 1:3
 stopifnot(is.numeric(x), length(x) == 1L)
 ```
 
-With `vetr`, the equivalent code is :
+With `vetr`, the equivalent code is:
 
 ```{r}
 vet(numeric(1L), x)
 ```
+
+We declare what we want our object to look like and let `vetr` figure out the
+details of the comparison.  Notice that the auto-generated error message also
+provides more information.
 
 If you are vetting function inputs, you can use the `vetr` function, which works
 just like `vet` except that is streamlined for use within functions:
@@ -71,37 +77,31 @@ enforce structural requirements for S3 objects.  Take this "laps" S3 object that
 we use to analyze car test drives on race tracks:
 
 ```{r}
-laps.template <- structure(
-  class="laps",
-  list(
-    car=character(1),
-    data=data.frame(lap=numeric(), time=Sys.time()[0])
+laps.template <- structure(class="laps",
+  list(car=character(1), data=data.frame(lap=numeric(), time=Sys.time()[0])
 ) )
 ```
 
-We create several objects to run our tests with:
+We create a couple of objects to run our tests with:
 
 ```{r}
 lap.times <- data.frame(lap=1:10, time=cumsum(rnorm(10, 120, 3)))
-laps.1 <- structure(lap.times, class="laps")
-laps.2 <- structure(list("corvette z06", lap.times), class="laps")
-laps.3 <- laps.4 <- setNames(laps.2, c("car", "data"))
-laps.4$data <- transform(laps.4$data, time=Sys.time() + time)
+laps1 <- laps2 <- 
+  structure(list(car="corvette z06", data=lap.times), class="laps")
+laps2$data <- transform(laps2$data, time=Sys.time() + time)
 ```
 
 Finally, we vet:
 
 ```{r}
-vet(laps.template, laps.1)   # Forgot to include car
-vet(laps.template, laps.2)   # Missing names
-vet(laps.template, laps.3)   # Lap times should be in POSIXct
-vet(laps.template, laps.4)   # works
+vet(laps.template, laps1)   # Lap times should be in POSIXct
+vet(laps.template, laps2)   # works
 ```
 
 Worth noting:
 
 * `vet` recursively checks that the class of the data frame columns (in fact, it
-  will recursively check any value or attribute defined in the template)
+  will recursively check any structure or attribute defined in the template)
 * The leading portion of the message (e.g. `laps.3$data$time`) points
   you to the exact location of the problem, and gives you a snippet you can copy
   and paste into the prompt for further scrutiny (e.g. `str(laps.3$data$time)`)
@@ -125,11 +125,14 @@ vet_stopifnot <- function(x)
     inherits(x$data$time, c("POSIXct", "POSIXt"))
   )
 ```
+This is more typing, *and* more thinking.  In fact, while creating this
+example we had to keep adding tests that we realized `vet` was carrying out
+automatically that we had not thought of.
 
-Internally `vet` uses `alike` to compare the template to the test value.  See
-the [alike
-vignette](http://htmlpreview.github.io/?https://raw.githubusercontent.com/brodieG/alike/master/inst/doc/alike.html)
-for extensive details on how templates work.
+Internally `vet` uses `alike` to compare the template to the test value.  There
+are many subtleties to be aware of.  For example, notice how we use a zero row
+data.frame in the template to match any number of rows.  See the [alike
+vignette](alike.html) for extensive details on how templates work.
 
 ## Vetting Expressions
 
@@ -171,7 +174,7 @@ vet((numeric(2L) && !anyNA(.)) || NULL, NULL)
 vet((numeric(2L) && !anyNA(.)) || NULL, letters)
 ```
 
-We constructed a compound **validation expression** by combining two **validation tokens** with the `&&` and `||` operators.
+We constructed a compound **vetting expression** by combining two **vetting tokens** with the `&&` and `||` operators.
 
 ## Non Standard Evaluation of Vetting Expressions
 
@@ -181,7 +184,7 @@ Vetting expressions combine templates and custom tokens delimited by `&&` and
 `||`. While superficially vetting expressions look like R expressions, they
 are never run through the R evaluator.  Instead, they are substituted
 and recursively parsed into tokens.  Each token is then examined to determine
-whether it should be treated as a template or as a validation expression.  For
+whether it should be treated as a template or as a vetting expression.  For
 example:
 
 ```{r, eval=FALSE}
@@ -191,7 +194,7 @@ logical(1) || (numeric(1) && . %in% 0:1)
 is parsed as three tokens: `logical(1)`, `numeric(1)`, and `. %in% 0:1`.  Tokens
 that contain `.` are interpreted as custom expressions, and tokens that do not
 are treated as templates.  In this case the first two tokens are considered
-templates, and the last is a custom expression, so the overall validation
+templates, and the last is a custom expression, so the overall vetting
 expression will accept scalar logicals, or 0 or 1:
 
 ```{r}
@@ -202,23 +205,23 @@ vet(logical(1) || (numeric(1) && . %in% 0:1), "1")
 
 If you need to reference a literal dot (`.`) in a template, you can escape it by
 adding another dot so that `.` becomes `..`.  If you want to reference `...`
-you'll need to use `....`.  If you have a validation expression that does not
-reference the validation object (i.e. does not use `.`) you can mark it as a
-validation expression by wrapping it in `.()` (if you want to use a literal
+you'll need to use `....`.  If you have a vetting expression that does not
+reference the vetting object (i.e. does not use `.`) you can mark it as a
+vetting expression by wrapping it in `.()` (if you want to use a literal
 `.()` you can use `..()`).
 
 If you need `&&` or `||` to be interpreted literally you can wrap the call in
-`I` to tell `validate` not to recursively parse the expression:
+`I` to tell `vet` not to recursively parse the expression:
 
 ```{r, eval=FALSE}
 I(length(a) == length(b) && . %in% 0:1)
 ```
 
-which will be treated as a single custom validation token.  `validate` will not
+which will be treated as a single custom vetting token.  `vet` will not
 recurse into calls other than to `(`, `&&`, and `||`.  The use of `I`
 here is just an example of this behavior and convenient since `I` does not
 change the meaning of the vetting token.  Note that an implication of this is
-you should not nest template tokens inside functions as `validate` will not
+you should not nest template tokens inside functions as `vet` will not
 identify them as templates and you may get unexpected results as a result.  For
 example:
 
@@ -251,16 +254,16 @@ vet(TF_ish, 1)
 vet(TF_ish, "0")
 ```
 
-You can also provide more helpful error messages with `mk_val_token` for
+You can also provide more helpful error messages with `vet_token` for
 specific tokens:
 
 ```{r}
-NONA <- mk_val_token(!is.na(.), "not contain NAs")
+NONA <- vet_token(!is.na(.), "%s should not contain NAs")
 TF <- quote(logical(1L) && NONA)
 vet(TF, NA)
 ```
 
-See `?mk_val_token` for more details.
+See `?vet_token` for more details.
 
 ### Vetting Expression Parsing and Evaluation Rules
 
@@ -283,7 +286,7 @@ AUTHNOTE: more details on which exact parent frame is used.
 
 ### Predefined Tokens
 
-`validate` comes with many predifined validation tokens for common cases:
+`vetr` comes with many predifined vetting tokens for common cases:
 
 ```{r}
 vet(NUM.1.POS, 5)
@@ -293,7 +296,7 @@ vet(CHR, letters)
 vet(CHR, factor(letters))
 ```
 
-See `?validation_tokens` for more details about what predefined tokens are available.
+See `?vet_token` for more details about what predefined tokens are available.
 
 
 ## Performance Considerations
