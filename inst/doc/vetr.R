@@ -5,15 +5,15 @@ library(vetr)
 
 ## ---------------------------------------------------------
 x <- 1:3
-stopifnot(is.numeric(x), length(x) == 1L)
+vet(numeric(1L), x)
 
 ## ---------------------------------------------------------
-vet(numeric(1L), x)
+stopifnot(is.numeric(x), length(x) == 1L)
 
 ## ---------------------------------------------------------
 fun <- function(x, y) {
   vetr(numeric(1L), logical(1L))
-  # ... function code goes here
+  TRUE   # do work...
 }
 fun(1:2, "hello")
 fun(1, "hello")
@@ -25,15 +25,13 @@ laps.template <- structure(class="laps",
 
 ## ---------------------------------------------------------
 lap.times <- data.frame(lap=1:10, time=cumsum(rnorm(10, 120, 3)))
-laps1 <- structure(list(lap.times), class="laps")
-laps2 <- laps3 <-
+laps1 <- laps2 <-
   structure(list(car="corvette z06", data=lap.times), class="laps")
-laps3$data <- transform(laps3$data, time=Sys.time() + time)
+laps2$data <- transform(laps2$data, time=Sys.time() + time)
 
 ## ---------------------------------------------------------
-vet(laps.template, laps1)   # Forgot to include car
-vet(laps.template, laps2)   # Lap times should be in POSIXct
-vet(laps.template, laps3)   # works
+vet(laps.template, laps1)   # Lap times should be in POSIXct
+vet(laps.template, laps2)   # works
 
 ## ---------------------------------------------------------
 vet_stopifnot <- function(x)
@@ -84,6 +82,7 @@ vet(logical(1) || (numeric(1) && . %in% 0:1), "1")
 
 ## ---------------------------------------------------------
 TF <- quote(logical(1) && !anyNA(.))  # note `quote`
+
 vet(TF, TRUE)
 vet(TF, NA)
 vet(TF, 1)
@@ -91,13 +90,23 @@ vet(TF, 1)
 ## ---------------------------------------------------------
 ZERO_OR_ONE <- quote(numeric(1) && !is.na(.) && . %in% 0:1)
 TF_ish <- quote(TF || ZERO_OR_ONE)
+
 vet(TF_ish, 1)
 vet(TF_ish, "0")
 
 ## ---------------------------------------------------------
-NONA <- vet_token(!is.na(.), "%s should not contain NAs")
+NONA <- vet_token(!is.na(.), "%sshould not contain NAs")
 TF <- quote(logical(1L) && NONA)
 vet(TF, NA)
+
+## ---------------------------------------------------------
+vet(quote(x && y), quote(a || b))
+vet(quote(x && y), quote(a && b))
+
+## ---------------------------------------------------------
+LANG.AND <- quote(quote(x && y))
+vet(LANG.AND, quote(a || b))
+vet(LANG.AND, quote(a && b))
 
 ## ---------------------------------------------------------
 vet(NUM.1.POS, 5)
@@ -107,16 +116,39 @@ vet(CHR, letters)
 vet(CHR, factor(letters))
 
 ## ---------------------------------------------------------
+fun <- function(x, y, z) {
+  vetr(
+    matrix(numeric(), ncol=3),
+    logical(1L),
+    character(1L) && . %in% c("foo", "bar")
+  )
+  TRUE  # do work...
+}
+fun(matrix(1:12, 3), TRUE, "baz")
+fun(matrix(1:12, 4), TRUE, "baz")
+fun(matrix(1:12, 4), TRUE, "foo")
+
+## ---------------------------------------------------------
+fun <- function(x, y, z) {
+  vetr(z=character(1L) && . %in% c("foo", "bar"))
+  TRUE  # do work...
+}
+fun(matrix(1:12, 3), TRUE, "baz")
+fun(matrix(1:12, 4), TRUE, "bar")
+
+## ---------------------------------------------------------
 library(microbenchmark)
 microbenchmark(
-  vet(laps.template, laps.4), # vet version
-  vet_stopifnot(laps.4)       # validate version
+  vet(laps.template, laps2),
+  vet_stopifnot(laps2)
 )
 
 ## ---------------------------------------------------------
 microbenchmark(data.frame(a=numeric()))
 
 ## ---------------------------------------------------------
+library(valaddin)
+
 secant <- function(f, x, dx) (f(x + dx) - f(x)) / dx
 
 secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
@@ -128,18 +160,10 @@ secant_vetr <- function(f, x, dx) {
   vetr(x=numeric(), dx=numeric())
   secant(f, x, dx)
 }
+
 microbenchmark(
   secant_valaddin(log, 1, .1),
   secant_stopifnot(log, 1, .1),
   secant_vetr(log, 1, .1)
 )
-
-## ---------------------------------------------------------
-f.tpl <- `attributes<-`(function(x, y) NULL, NULL)
-secant_vetr2 <- function(f, x, dx) {
-  vetr(f.tpl, numeric(), numeric())
-  secant(f, x, dx)
-}
-secant_vetr2(log, 1, .1)
-secant_vetr2(sin, 1, .1)
 
