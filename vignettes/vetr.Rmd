@@ -337,7 +337,7 @@ fun(matrix(1:12, 4), TRUE, "foo")
 ```
 
 The arguments to `vetr` are matched to the arguments of the enclosing function
-in the same way as with `match.call` would.  For example, if we wished to vet just
+in the same way as with `match.call`.  For example, if we wished to vet just
 the third argument:
 
 ```{r}
