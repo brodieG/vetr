@@ -14,36 +14,21 @@ knitr::opts_chunk$set(
 [![](http://www.r-pkg.org/badges/version/vetr)](https://cran.r-project.org/package=vetr)
 [![Project Status: WIP - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip)
 
-## Trust, but Verify
-
-R is a flexible programming language, with flexible data structures.  In order
-to write robust code one must verify that objects conform to the structure the
-code expects.  
-
-This is a
-great feature, but 
-writing it can make 
-programming with R objects, particularly S3 objects, is
-challenging because there are no structural guarantees associated with an object
-class.
-
-`vetr` allows you to quickly verify R object structure.  It takes the tedium out
-of comprehensive 
-vetting by allowing you to express structural requirements in a
-declarative style with templates.  It improves the usability of your code by
-auto-generating human-friendly error messages for non-compliant inputs.
-It is written in C to minimize the overhead of parameter checks in your
-functions.  It has no dependencies.
+```{r child='inst/doc/rmdhunks/trust-but-verify.Rmd'}
+```
 
 ## Declarative Checks with Templates
+
+### Templates
 
 Declare a template that an object should conform to, and let `vetr` take care of
 the rest:
 
 ```{r}
-vet(numeric(1L), 1:3)
-vet(numeric(1L), "hello")
-vet(numeric(1L), 42)
+tpl <- numeric(1L)
+vet(tpl, 1:3)
+vet(tpl, "hello")
+vet(tpl, 42)
 ```
 
 `vetr` supports complex recursive templates:
@@ -52,18 +37,14 @@ vet(numeric(1L), 42)
 tpl <- list(numeric(1L), list(dat=matrix(numeric(), 3), mode=character(1L)))
 ```
 
-Here we declare we want a list containing a scalar numeric, and a nested
-named list with a three row matrix and a scalar character.  Let's make some objects that are supposed to conform to `tpl`:
+That can be used to vet complex objects:
 
 ```{r}
+## Make some objects
 obj1 <- list(42, list(cbind(1:5, 1:5, 1:5), "foo"))          # missing names
 obj2 <- list(42, list(dat=cbind(1:5, 1:5, 1:5), mode="foo")) # dat transposed
 obj3 <- list(42, list(dat=rbind(1:5, 1:5, 1:5), mode="foo")) # correct
-```
-
-And let's vet:
-
-```{r}
+## Vet them:
 vet(tpl, obj1)
 vet(tpl, obj2)
 vet(tpl, obj3)
@@ -71,16 +52,18 @@ vet(tpl, obj3)
 
 The auto-generated error message tells you:
 
-* What the object (or sub-object) should be
-* What it is
-* What expression to use to find the exact location of the failure (e.g.
-  `obj2[[2]]$dat`)
+* what the (sub-)object should be
+* what it is
+* the exact point of failure (e.g. `obj2[[2]]$dat`)
 
-You can augment templates with custom vetting tokens to check values in addition
-to structure:
+The point of failure is expressed such that you can copy and paste it into the
+prompt to directly examine the problem.
+
+### Vetting Expressions
+
+You can augment templates with custom vetting tokens to check values with `.`:
 
 ```{r}
-vet(numeric(1L) && . > 0, 1:3)
 vet(numeric(1L) && . > 0, -42)
 vet(numeric(1L) && . > 0, 42)
 ```
@@ -90,20 +73,19 @@ And you can compose vetting expressions as language objects and combine them:
 ```{r}
 scalar.num.pos <- quote(numeric(1L) && . > 0)
 foo.or.bar <- quote(character(1L) && . %in% c('foo', 'bar'))
-vet.exp <- quote(NULL || scalar.num.pos || foo.or.bar)
+vet.exp <- quote(scalar.num.pos || foo.or.bar)
 
 vet(vet.exp, 42)
-vet(vet.exp, NULL)
 vet(vet.exp, "foo")
 vet(vet.exp, "baz")
 ```
 
-See vignette for additional details.
+See [vignette][1] for additional details.
 
 ## Vetting Function Parameters
 
 If you are vetting function inputs, you can use the `vetr` function, which works
-just like `vet` except that is streamlined for use within functions:
+just like `vet` except that it is streamlined for use within functions:
 
 ```{r}
 fun <- function(x, y) {
@@ -124,11 +106,10 @@ arguments and fetches the argument values from the function environment.
 
 ## Installation
 
-`vetr` is available on CRAN.  It has no dependencies.
+`vetr` is available on CRAN.
 
 ```{r, eval=FALSE}
 install.packages('vetr')
-vignette('vetr', package='vetr')
 ```
 
 ## Related Packages
