@@ -1,6 +1,12 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "##",
+  fig.path = "README-"
+)
+```
 # vetr - Keep the Garbage Out
 
 [![](https://travis-ci.org/brodieG/vetr.svg?branch=master)](https://travis-ci.org/brodieG/vetr)
@@ -25,30 +31,22 @@ the overhead of parameter checks in your functions.
 Declare a template that an object should conform to, and let `vetr` take care of
 the rest:
 
-
-```r
+```{r}
 vet(numeric(1L), 1:3)
-## [1] "`1:3` should be length 1 (is 3)"
 vet(numeric(1L), "hello")
-## [1] "`\"hello\"` should be type \"numeric\" (is \"character\")"
 vet(numeric(1L), 42)
-## [1] TRUE
 ```
 
 This becomes particularly powerful with complex objects:
 
-
-```r
+```{r}
 tpl <- list(numeric(1L), list(dat=matrix(numeric(), 3), mode=character(1L)))
 obj1 <- list(42, list(rbind(1:5, 1:5, 1:5), letters))
 obj2 <- list(42, list(dat=rbind(1:5, 1:5, 1:5), mode=letters))
 obj3 <- list(42, list(dat=rbind(1:5, 1:5, 1:5), mode="foo"))
 vet(tpl, obj1)
-## [1] "`names(obj1[[2]])` should be type \"character\" (is \"NULL\")"
 vet(tpl, obj2)
-## [1] "`obj2[[2]]$mode` should be length 1 (is 26)"
 vet(tpl, obj3)
-## [1] TRUE
 ```
 
 Notice how the error message tells you what the object should be, what it is,
@@ -58,39 +56,30 @@ where the error is.
 You can augment templates with custom vetting tokens to check values in addition
 to structure:
 
-
-```r
+```{r}
 vet(numeric(1L) && . > 0, 1:3)
-## [1] "`1:3` should be length 1 (is 3)"
 vet(numeric(1L) && . > 0, -42)
-## [1] "`-42 > 0` is not TRUE (FALSE)"
 vet(numeric(1L) && . > 0, 42)
-## [1] TRUE
 ```
 
 If you are vetting function inputs, you can use the `vetr` function, which works
 just like `vet` except that is streamlined for use within functions:
 
-
-```r
+```{r}
 fun <- function(x, y) {
   vetr(numeric(1L), logical(1L))
   TRUE   # do work...
 }
 fun(1:2, "foo")
-## Error in fun(x = 1:2, y = "foo"): For argument `x`, `1:2` should be length 1 (is 2)
 fun(1, "foo")
-## Error in fun(x = 1, y = "foo"): For argument `y`, `"foo"` should be type "logical" (is "character")
 ```
 
 ## Installation
 
 `vetr` is available on CRAN.  It has no dependencies.
 
-
-```r
+```{r}
 install.packages('vetr')
-## Warning: package 'vetr' is not available (for R version 3.3.3)
 ```
 
 ## Related Packages
