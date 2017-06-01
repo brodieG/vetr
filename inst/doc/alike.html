@@ -4,7 +4,7 @@
 
 <head>
 
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 
@@ -347,11 +347,16 @@ mx.cur2 &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class
 <li>The last class in <code>current</code> must be the same as the last class in <code>target</code></li>
 </ul>
 <p>To illustrate:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tpl &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="ot">NULL</span>, <span class="dt">class=</span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>))
-cur &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="ot">NULL</span>, <span class="dt">class=</span><span class="kw">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>))
-cur2 &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="ot">NULL</span>, <span class="dt">class=</span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>, <span class="st">&quot;x&quot;</span>))
-
-<span class="kw">alike</span>(tpl, cur)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tpl &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="ot">NULL</span>, <span class="dt">class=</span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>))</code></pre></div>
+<pre><code>## Warning in structure(NULL, class = c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;)): Calling 'structure(NULL, *)' is deprecated, as NULL cannot have attributes.
+##   Consider 'structure(list(), *)' instead.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cur &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="ot">NULL</span>, <span class="dt">class=</span><span class="kw">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>))</code></pre></div>
+<pre><code>## Warning in structure(NULL, class = c(&quot;x&quot;, &quot;a&quot;, &quot;b&quot;, &quot;c&quot;)): Calling 'structure(NULL, *)' is deprecated, as NULL cannot have attributes.
+##   Consider 'structure(list(), *)' instead.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cur2 &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="ot">NULL</span>, <span class="dt">class=</span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>, <span class="st">&quot;x&quot;</span>))</code></pre></div>
+<pre><code>## Warning in structure(NULL, class = c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;x&quot;)): Calling 'structure(NULL, *)' is deprecated, as NULL cannot have attributes.
+##   Consider 'structure(list(), *)' instead.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(tpl, cur)</code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(tpl, cur2)</code></pre></div>
 <pre><code>## [1] &quot;`class(cur2)[2]` should be \&quot;a\&quot; (is \&quot;b\&quot;)&quot;</code></pre>
@@ -420,10 +425,10 @@ type_and_len &lt;-<span class="st"> </span>function(a, b) <span class="kw">typeo
   <span class="kw">type_and_len</span>(rivers, rivers)
 )</code></pre></div>
 <pre><code>## Unit: nanoseconds
-##                          expr  min     lq    mean median     uq   max
-##     identical(rivers, rivers)  940 1099.0 1693.57 1274.0 1446.0 35993
-##         alike(rivers, rivers) 1320 1491.0 2156.83 1657.5 1847.5 18479
-##  type_and_len(rivers, rivers) 1439 1697.5 2286.19 1865.0 2182.0 21654
+##                          expr  min     lq     mean median   uq     max
+##     identical(rivers, rivers) 1056 1162.5  1330.77 1222.5 1259    9244
+##         alike(rivers, rivers) 1474 1571.5  2017.79 1631.5 1729   21941
+##  type_and_len(rivers, rivers)  992 1067.0 32726.70 1111.0 1181 3150582
 ##  neval
 ##    100
 ##    100
@@ -435,8 +440,8 @@ type_and_len &lt;-<span class="st"> </span>function(a, b) <span class="kw">typeo
 )</code></pre></div>
 <pre><code>## Unit: microseconds
 ##                       expr   min     lq    mean median     uq    max neval
-##  identical(mtcars, mtcars) 1.002 1.3175 2.57019 1.6680 2.6910 20.966   100
-##      alike(mtcars, mtcars) 4.089 4.3045 8.21353 4.9165 9.1485 88.383   100</code></pre>
+##  identical(mtcars, mtcars) 1.055 1.1905 1.54460  1.286 1.7475  4.421   100
+##      alike(mtcars, mtcars) 4.012 4.1785 5.82755  4.267 6.8150 44.428   100</code></pre>
 <p>In the above example, we are comparing the data frames, their attributes, and the 11 columns individually.</p>
 <p>Keep in mind that the complexity of the <code>alike</code> comparison is driven by the complexity of the template, not the object we are checking, so we can always manage the expense of the <code>alike</code> evaluation.</p>
 <p>Comparisons that succeed will be substantially faster than comparisons that fail as the construction of error messages is non-trivial and we have prioritized optimization in the success case.</p>
@@ -451,9 +456,9 @@ mb &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(<span cl
 )
 <span class="kw">summary</span>(mb)[<span class="dv">1</span>:<span class="dv">4</span>]  <span class="co"># note: in microseconds</span></code></pre></div>
 <pre><code>##                          expr      min        lq       mean
-## 1     alike(mdl.tpl, mdl.tpl)   79.341   86.1900  103.84344
-## 2 all.equal(mdl.tpl, mdl.tpl) 1658.524 1734.3610 1972.67250
-## 3 identical(mdl.tpl, mdl.tpl)    1.004    1.7145    3.56951</code></pre>
+## 1     alike(mdl.tpl, mdl.tpl)   71.434   83.2900  102.66759
+## 2 all.equal(mdl.tpl, mdl.tpl) 1279.892 1374.2775 1656.07778
+## 3 identical(mdl.tpl, mdl.tpl)    1.160    1.6355    2.54415</code></pre>
 <p>Even with template as large as <code>lm</code> results (check <code>str(mdl.tpl)</code>) we can evaluate <code>alike</code> thousands of times before the overhead becomes noticeable.</p>
 </div>
 <div id="pre-defining-templates" class="section level3">
@@ -468,11 +473,11 @@ mb &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(<span cl
 )
 <span class="kw">summary</span>(mb)[<span class="dv">1</span>:<span class="dv">4</span>]  <span class="co"># note: in microseconds</span></code></pre></div>
 <pre><code>##                                              expr     min       lq
-## 1                           alike(df.tpl, df.cur)   3.294   4.0075
-## 2 alike(data.frame(integer(), numeric()), df.cur) 376.781 396.1030
-##        mean
-## 1   6.26516
-## 2 443.54626</code></pre>
+## 1                           alike(df.tpl, df.cur)   2.844   3.0475
+## 2 alike(data.frame(integer(), numeric()), df.cur) 254.527 275.1595
+##       mean
+## 1   4.6798
+## 2 284.5568</code></pre>
 <p><code>data.frame</code> is a particularly slow constructor, but in general you are best served by defining your templates (including calls to <code>abstract</code>) outside of your function so they are created on package load rather than every time your function is called.</p>
 </div>
 </div>
@@ -491,7 +496,7 @@ mb &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(<span cl
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>

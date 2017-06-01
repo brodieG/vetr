@@ -7,6 +7,7 @@ knitr::opts_chunk$set(
   fig.path = "README-"
 )
 ```
+
 # vetr - Trust, but Verify
 
 [![](https://travis-ci.org/brodieG/vetr.svg?branch=master)](https://travis-ci.org/brodieG/vetr)
@@ -17,130 +18,13 @@ knitr::opts_chunk$set(
 ```{r child='vignettes/rmdhunks/trust-but-verify.Rmd'}
 ```
 
-## Declarative Checks with Templates
-
-### Templates
-
-Declare a template that an object should conform to, and let `vetr` take care of
-the rest:
-
-```{r}
-tpl <- numeric(1L)
-vet(tpl, 1:3)
-vet(tpl, "hello")
-vet(tpl, 42)
+```{r child='vignettes/rmdhunks/declarative-checks.Rmd'}
 ```
 
-Zero length templates match any length:
-
-```{r}
-tpl <- integer()
-vet(tpl, 1L:3L)
-vet(tpl, 1L)
+```{r child='vignettes/rmdhunks/vetting-expressions.Rmd'}
 ```
 
-And for convenience short (<= 100 length) integer-like numerics are considered
-integer:
-
-```{r}
-tpl <- integer(1L)
-vet(tpl, 1)       # this is a numeric, not an integer
-vet(tpl, 1.0001)
-```
-
-`vetr` can compare recursive objects, such as lists, data.frames,
-data.frames in lists, and more:
-
-```{r}
-# Copies of built-in iris data set, one with corrupted levels
-
-iris1 <- iris2 <- iris[1:10, ]
-levels(iris2$Species)[3] <- "sibirica"
-
-# Nest them in a list (NB: 0-row DF in template matches any number of rows):
-
-tpl.nested <- list(a=character(1L), b=iris[0, ])   # 0-row iris
-obj.nested1 <- list(a="I", b=iris1)
-obj.nested2 <- list(a="I", b=iris2)
-
-# And vet:
-
-vet(tpl.nested, obj.nested1)
-vet(tpl.nested, obj.nested2)
-```
-
-Our template `list(a=character(1L), b=iris[0, ])` is equivalent to:
-
-```{r}
-stopifnot(
-  is.list(obj.nested2), length(obj.nested2) == 2,
-  identical(names(obj.nested2), c("a", "b")),
-  is.character(obj.nested2$a), length(obj.nested2$a) == 1L,
-  is.list(obj.nested2$b), inherits(obj.nested2$b, "data.frame"),
-  length(obj.nested2$b) == 5, is.integer(attr(obj.nested2$b, 'row.names')),
-  all(vapply(obj.nested2$b[1:4], is.numeric, logical(1L))),
-  identical(
-    names(obj.nested2$b),
-    c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
-  ),
-  is.factor(obj.nested2$b$Species),
-  identical(
-    levels(obj.nested2$b$Species), c("setosa", "versicolor", "virginica")
-  )
-)
-```
-
-From the one line template `vetr` figures out all the required comparisons of
-nested objects and attributes so that you do not have to.
-
-### Auto-Generated Error Messages
-
-Let's revisit the error message:
-
-```{r}
-vet(tpl.nested, obj.nested2)
-```
-
-It tells us:
-
-* The reason for the failure
-* What structure would be acceptable instead
-* The location of failure `levels(obj.nested2$b$Species)[3]`
-
-`vetr` does what it can to reduce the time from error to resolution.  Notice
-that the location of failure is written so that you can easily copy it in part
-or full to the R prompt for further examination.
-
-## Vetting Expressions
-
-You can combine templates with `&&` / `||`:
-
-```{r}
-vet(numeric(1L) || NULL, NULL)
-vet(numeric(1L) || NULL, 42)
-vet(numeric(1L) || NULL, "foo")
-```
-
-When you need to check values use `.` to reference the object:
-
-```{r}
-vet(numeric(1L) && . > 0, -42)
-vet(numeric(1L) && . > 0, 42)
-```
-
-You can compose vetting expressions as language objects and combine them:
-
-```{r}
-scalar.num.pos <- quote(numeric(1L) && . > 0)
-foo.or.bar <- quote(character(1L) && . %in% c('foo', 'bar'))
-vet.exp <- quote(scalar.num.pos || foo.or.bar)
-
-vet(vet.exp, 42)
-vet(vet.exp, "foo")
-vet(vet.exp, "baz")
-```
-
-See [vignette][1] for additional details.
+See [vignette][1] for additional details on how vetting expressions work.
 
 ## `vetr` in Functions
 
@@ -159,33 +43,34 @@ fun(1, "foo")
 `vetr` automatically matches the vetting expressions to the corresponding
 arguments and fetches the argument values from the function environment.
 
+See [vignette][1] for additional details on how the `vetr` function works.
+
 ## Additional Documentation
 
-* [`vetr` vignette][1]
-* [`alike` vignette][2] for discussion of templates
+* [`vetr` vignette][1], `?vetr`, `example(vetr)`
+* [`alike` vignette][2], `?alike`, and `example(alike)` for discussion of
+  templates
+
+## Development Status
+
+`vetr` is still in development, although most of the features are considered
+mature.  The most likely area of change is the treatment of function and
+language templates (e.g.  `alike(sum, max)`), and more flexible treatment of
+list templates (e.g. in future lists may be allowed to be different lengths so
+long as every named element in the template exists in the object).
 
 ## Installation
 
-`vetr` is available on CRAN.
+`vetr` will shortly be available on CRAN.  In the meantime, you can get it from
+github:
 
 ```{r, eval=FALSE}
-install.packages('vetr')
+# install.packages('devtools')
+devtools::install_github('brodieg/vetr@development')
 ```
 
-## Related Packages
-
-* [valaddin](https://github.com/egnha/valaddin) by Eugene Ha (see vignette for a
-  more detailed comparison) has very similar objectives to `vetr`
-* [ensurer](https://github.com/smbache/ensurer) by Stefan M Bache allows you to
-  specify contracts for data validation and has an experimental implementation
-  of type-safe functions.
-* [validate](https://github.com/data-cleaning/validate) by Mark van der Loo and
-  Edwin de Jonge provides tools for checking data
-* [types](https://github.com/jimhester/types) by Jim Hester provides a mechanism
-  for defining what types arguments should be, though it does not directly
-  enforce them
-* [argufy](https://github.com/gaborcsardi/argufy) by Gábor Csárdi adds
-  parameter checks via Roxygen (not published to CRAN)
+```{r child='vignettes/rmdhunks/related-packages.Rmd'}
+```
 
 ## Acknowledgments
 

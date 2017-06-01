@@ -4,67 +4,62 @@ options(width=60)
 library(vetr)
 
 ## ---------------------------------------------------------
-x <- 1:3
-vet(numeric(1L), x)
+tpl <- numeric(1L)
+vet(tpl, 1:3)
+vet(tpl, "hello")
+vet(tpl, 42)
 
 ## ---------------------------------------------------------
-stopifnot(is.numeric(x), length(x) == 1L)
+tpl <- integer()
+vet(tpl, 1L:3L)
+vet(tpl, 1L)
 
 ## ---------------------------------------------------------
-fun <- function(x, y) {
-  vetr(numeric(1L), logical(1L))
-  TRUE   # do work...
-}
-fun(1:2, "hello")
-fun(1, "hello")
+tpl <- integer(1L)
+vet(tpl, 1)       # this is a numeric, not an integer
+vet(tpl, 1.0001)
 
 ## ---------------------------------------------------------
-laps.template <- structure(class="laps",
-  list(car=character(1), data=data.frame(lap=numeric(), time=Sys.time()[0])
-) )
+tpl.iris <- iris[0, ]      # 0 row DF matches any number of rows in object
+iris.fake <- iris
+levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
+
+vet(tpl.iris, iris[1:10, ])
+vet(tpl.iris, iris.fake[1:10, ])
 
 ## ---------------------------------------------------------
-lap.times <- data.frame(lap=1:10, time=cumsum(rnorm(10, 120, 3)))
-laps1 <- laps2 <-
-  structure(list(car="corvette z06", data=lap.times), class="laps")
-laps2$data <- transform(laps2$data, time=Sys.time() + time)
+stopifnot(
+  is.list(iris.fake), inherits(iris.fake, "data.frame"),
+  length(iris.fake) == 5, is.integer(attr(iris.fake, 'row.names')),
+  identical(
+    names(iris.fake),
+    c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+  ),
+  all(vapply(iris.fake[1:4], is.numeric, logical(1L))),
+  typeof(iris.fake$Species) == "integer", is.factor(iris.fake$Species),
+  identical(levels(iris.fake$Species), c("setosa", "versicolor", "virginica"))
+)
 
 ## ---------------------------------------------------------
-vet(laps.template, laps1)   # Lap times should be in POSIXct
-vet(laps.template, laps2)   # works
+vet(tpl.iris, iris.fake[1:10, ])
 
 ## ---------------------------------------------------------
-vet_stopifnot <- function(x)
-  stopifnot(
-    is.list(x),
-    inherits(x, "laps"),
-    length(x) == 2L,
-    identical(names(x), c("car", "data")),
-    is.character(x$car),
-    length(x$car) == 1L,
-    is.data.frame(x$data),
-    identical(names(x$data), c("lap", "time")),
-    is.numeric(x$data$lap),
-    identical(mode(x$data$time), "numeric"),
-    inherits(x$data$time, c("POSIXct", "POSIXt"))
-  )
+vet(numeric(1L) || NULL, NULL)
+vet(numeric(1L) || NULL, 42)
+vet(numeric(1L) || NULL, "foo")
 
 ## ---------------------------------------------------------
-x <- 1:2
-y <- c(1, NA)
-vet(!anyNA(.), x)
-vet(!anyNA(.), y)
+vet(numeric(1L) && . > 0, -42)  # strictly positive scalar numeric
+vet(numeric(1L) && . > 0, 42)
 
 ## ---------------------------------------------------------
-vet(numeric(2L) && !anyNA(.), x)
-vet(numeric(2L) && !anyNA(.), y)
-vet(numeric(2L) && !anyNA(.), 1:10)
-vet(numeric(2L) && !anyNA(.) && . > 0L, -(1:2))
+scalar.num.pos <- quote(numeric(1L) && . > 0)
+foo.or.bar <- quote(character(1L) && . %in% c('foo', 'bar'))
+vet.exp <- quote(scalar.num.pos || foo.or.bar)
 
-## ---------------------------------------------------------
-vet((numeric(2L) && !anyNA(.)) || NULL, 1:2)
-vet((numeric(2L) && !anyNA(.)) || NULL, NULL)
-vet((numeric(2L) && !anyNA(.)) || NULL, letters)
+vet(vet.exp, 42)
+vet(vet.exp, "foo")
+vet(vet.exp, "baz")
 
 ## ---- eval=FALSE------------------------------------------
 #  logical(1) || (numeric(1) && . %in% 0:1)

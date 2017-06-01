@@ -1,0 +1,28 @@
+## Vetting Expressions
+
+You can combine templates with `&&` / `||`:
+
+```{r}
+vet(numeric(1L) || NULL, NULL)
+vet(numeric(1L) || NULL, 42)
+vet(numeric(1L) || NULL, "foo")
+```
+
+When you need to check values use `.` to reference the object:
+
+```{r}
+vet(numeric(1L) && . > 0, -42)  # strictly positive scalar numeric
+vet(numeric(1L) && . > 0, 42)
+```
+
+You can compose vetting expressions as language objects and combine them:
+
+```{r}
+scalar.num.pos <- quote(numeric(1L) && . > 0)
+foo.or.bar <- quote(character(1L) && . %in% c('foo', 'bar'))
+vet.exp <- quote(scalar.num.pos || foo.or.bar)
+
+vet(vet.exp, 42)
+vet(vet.exp, "foo")
+vet(vet.exp, "baz")
+```

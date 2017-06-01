@@ -1,6 +1,7 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 
+
 # vetr - Trust, but Verify
 
 [![](https://travis-ci.org/brodieG/vetr.svg?branch=master)](https://travis-ci.org/brodieG/vetr)
@@ -25,6 +26,7 @@ templates, and it auto-generates human-friendly error messages as needed.
 
 `vetr` is written in C to minimize overhead from parameter checks in your
 functions.  It has no dependencies.
+
 
 
 ## Declarative Checks with Templates
@@ -68,55 +70,43 @@ vet(tpl, 1.0001)
 ## [1] "`1.0001` should be type \"integer-like\" (is \"double\")"
 ```
 
-`vetr` can compare recursive objects, such as lists, data.frames,
-data.frames in lists, and more:
+`vetr` can compare recursive objects such as lists, and data.frames:
 
 
 ```r
-# Copies of built-in iris data set, one with corrupted levels
+tpl.iris <- iris[0, ]      # 0 row DF matches any number of rows in object
+iris.fake <- iris
+levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
 
-iris1 <- iris2 <- iris[1:10, ]
-levels(iris2$Species)[3] <- "sibirica"
-
-# Nest them in a list (NB: 0-row DF in template matches any number of rows):
-
-tpl.nested <- list(a=character(1L), b=iris[0, ])   # 0-row iris
-obj.nested1 <- list(a="I", b=iris1)
-obj.nested2 <- list(a="I", b=iris2)
-
-# And vet:
-
-vet(tpl.nested, obj.nested1)
+vet(tpl.iris, iris[1:10, ])
 ## [1] TRUE
-vet(tpl.nested, obj.nested2)
-## [1] "`levels(obj.nested2$b$Species)[3]` should be \"virginica\" (is \"sibirica\")"
+vet(tpl.iris, iris.fake[1:10, ])
+## [1] "`levels((iris.fake[1:10, ])$Species)[3]` should be \"virginica\" (is \"sibirica\")"
 ```
 
-Our template `list(a=character(1L), b=iris[0, ])` is equivalent to:
+From our declared template `iris[0, ]`, `vetr` infers all the required checks.
+In this case, `vet(iris[0, ], iris.fake, stop=TRUE)` is equivalent to:
 
 
 ```r
 stopifnot(
-  is.list(obj.nested2), length(obj.nested2) == 2,
-  identical(names(obj.nested2), c("a", "b")),
-  is.character(obj.nested2$a), length(obj.nested2$a) == 1L,
-  is.list(obj.nested2$b), inherits(obj.nested2$b, "data.frame"),
-  length(obj.nested2$b) == 5, is.integer(attr(obj.nested2$b, 'row.names')),
-  all(vapply(obj.nested2$b[1:4], is.numeric, logical(1L))),
+  is.list(iris.fake), inherits(iris.fake, "data.frame"),
+  length(iris.fake) == 5, is.integer(attr(iris.fake, 'row.names')),
   identical(
-    names(obj.nested2$b),
+    names(iris.fake),
     c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
   ),
-  is.factor(obj.nested2$b$Species),
-  identical(
-    levels(obj.nested2$b$Species), c("setosa", "versicolor", "virginica")
-  )
+  all(vapply(iris.fake[1:4], is.numeric, logical(1L))),
+  typeof(iris.fake$Species) == "integer", is.factor(iris.fake$Species),
+  identical(levels(iris.fake$Species), c("setosa", "versicolor", "virginica"))
 )
-## Error: identical(levels(obj.nested2$b$Species), c("setosa", "versicolor",  .... is not TRUE
+## Error: identical(levels(iris.fake$Species), c("setosa", "versicolor",  .... is not TRUE
 ```
 
-From the one line template `vetr` figures out all the required comparisons of
-nested objects and attributes so that you do not have to.
+You could just as easily have created templates for nested lists, or data frames
+in lists.  Templates are compared to objects with the `alike` functions.  For a
+thorough description of templates and how they work see the [`alike`
+vignette][2].  For template examples see `example(alike)`.
 
 ### Auto-Generated Error Messages
 
@@ -124,19 +114,20 @@ Let's revisit the error message:
 
 
 ```r
-vet(tpl.nested, obj.nested2)
-## [1] "`levels(obj.nested2$b$Species)[3]` should be \"virginica\" (is \"sibirica\")"
+vet(tpl.iris, iris.fake[1:10, ])
+## [1] "`levels((iris.fake[1:10, ])$Species)[3]` should be \"virginica\" (is \"sibirica\")"
 ```
 
 It tells us:
 
 * The reason for the failure
 * What structure would be acceptable instead
-* The location of failure `levels(obj.nested2$b$Species)[3]`
+* The location of failure `levels((iris.fake[1:10, ])$Species)[3]`
 
 `vetr` does what it can to reduce the time from error to resolution.  Notice
-that the location of failure is written so that you can easily copy it in part
-or full to the R prompt for further examination.
+that the location of failure is generated such that you can easily copy it in
+part or full to the R prompt for further examination.
+
 
 ## Vetting Expressions
 
@@ -156,7 +147,7 @@ When you need to check values use `.` to reference the object:
 
 
 ```r
-vet(numeric(1L) && . > 0, -42)
+vet(numeric(1L) && . > 0, -42)  # strictly positive scalar numeric
 ## [1] "`-42 > 0` is not TRUE (FALSE)"
 vet(numeric(1L) && . > 0, 42)
 ## [1] TRUE
@@ -180,7 +171,7 @@ vet(vet.exp, "baz")
 ## [3] "  - `\"baz\" %in% c(\"foo\", \"bar\")` is not TRUE (FALSE)"
 ```
 
-See [vignette][1] for additional details.
+See [vignette][1] for additional details on how vetting expressions work.
 
 ## `vetr` in Functions
 
@@ -202,19 +193,33 @@ fun(1, "foo")
 `vetr` automatically matches the vetting expressions to the corresponding
 arguments and fetches the argument values from the function environment.
 
+See [vignette][1] for additional details on how the `vetr` function works.
+
 ## Additional Documentation
 
-* [`vetr` vignette][1]
-* [`alike` vignette][2] for discussion of templates
+* [`vetr` vignette][1], `?vetr`, `example(vetr)`
+* [`alike` vignette][2], `?alike`, and `example(alike)` for discussion of
+  templates
+
+## Development Status
+
+`vetr` is still in development, although most of the features are considered
+mature.  The most likely area of change is the treatment of function and
+language templates (e.g.  `alike(sum, max)`), and more flexible treatment of
+list templates (e.g. in future lists may be allowed to be different lengths so
+long as every named element in the template exists in the object).
 
 ## Installation
 
-`vetr` is available on CRAN.
+`vetr` will shortly be available on CRAN.  In the meantime, you can get it from
+github:
 
 
 ```r
-install.packages('vetr')
+# install.packages('devtools')
+devtools::install_github('brodieg/vetr@development')
 ```
+
 
 ## Related Packages
 
