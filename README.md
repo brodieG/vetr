@@ -26,7 +26,6 @@ templates, and it auto-generates human-friendly error messages as needed.
 `vetr` is written in C to minimize overhead from parameter checks in your
 functions.  It has no dependencies.
 
-It worked!!!!
 
 ## Declarative Checks with Templates
 
@@ -46,42 +45,114 @@ vet(tpl, 42)
 ## [1] TRUE
 ```
 
-`vetr` supports complex recursive templates:
+Zero length templates match any length:
 
 
 ```r
-tpl <- list(numeric(1L), list(dat=matrix(numeric(), 3), mode=character(1L)))
-```
-
-That can be used to vet complex objects:
-
-
-```r
-## Make some objects
-obj1 <- list(42, list(cbind(1:5, 1:5, 1:5), "foo"))          # missing names
-obj2 <- list(42, list(dat=cbind(1:5, 1:5, 1:5), mode="foo")) # dat transposed
-obj3 <- list(42, list(dat=rbind(1:5, 1:5, 1:5), mode="foo")) # correct
-## Vet them:
-vet(tpl, obj1)
-## [1] "`names(obj1[[2]])` should be type \"character\" (is \"NULL\")"
-vet(tpl, obj2)
-## [1] "`obj2[[2]]$dat` should have 3 rows (has 5)"
-vet(tpl, obj3)
+tpl <- integer()
+vet(tpl, 1L:3L)
+## [1] TRUE
+vet(tpl, 1L)
 ## [1] TRUE
 ```
 
-The auto-generated error message tells you:
+And for convenience short (<= 100 length) integer-like numerics are considered
+integer:
 
-* what the (sub-)object should be
-* what it is
-* the exact point of failure (e.g. `obj2[[2]]$dat`)
 
-The point of failure is expressed such that you can copy and paste it into the
-prompt to directly examine the problem.
+```r
+tpl <- integer(1L)
+vet(tpl, 1)       # this is a numeric, not an integer
+## [1] TRUE
+vet(tpl, 1.0001)
+## [1] "`1.0001` should be type \"integer-like\" (is \"double\")"
+```
 
-### Vetting Expressions
+`vetr` can compare recursive objects, such as lists, data.frames,
+data.frames in lists, and more:
 
-You can augment templates with custom vetting tokens to check values with `.`:
+
+```r
+# Copies of built-in iris data set, one with corrupted levels
+
+iris1 <- iris2 <- iris[1:10, ]
+levels(iris2$Species)[3] <- "sibirica"
+
+# Nest them in a list (NB: 0-row DF in template matches any number of rows):
+
+tpl.nested <- list(a=character(1L), b=iris[0, ])   # 0-row iris
+obj.nested1 <- list(a="I", b=iris1)
+obj.nested2 <- list(a="I", b=iris2)
+
+# And vet:
+
+vet(tpl.nested, obj.nested1)
+## [1] TRUE
+vet(tpl.nested, obj.nested2)
+## [1] "`levels(obj.nested2$b$Species)[3]` should be \"virginica\" (is \"sibirica\")"
+```
+
+Our template `list(a=character(1L), b=iris[0, ])` is equivalent to:
+
+
+```r
+stopifnot(
+  is.list(obj.nested2), length(obj.nested2) == 2,
+  identical(names(obj.nested2), c("a", "b")),
+  is.character(obj.nested2$a), length(obj.nested2$a) == 1L,
+  is.list(obj.nested2$b), inherits(obj.nested2$b, "data.frame"),
+  length(obj.nested2$b) == 5, is.integer(attr(obj.nested2$b, 'row.names')),
+  all(vapply(obj.nested2$b[1:4], is.numeric, logical(1L))),
+  identical(
+    names(obj.nested2$b),
+    c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+  ),
+  is.factor(obj.nested2$b$Species),
+  identical(
+    levels(obj.nested2$b$Species), c("setosa", "versicolor", "virginica")
+  )
+)
+## Error: identical(levels(obj.nested2$b$Species), c("setosa", "versicolor",  .... is not TRUE
+```
+
+From the one line template `vetr` figures out all the required comparisons of
+nested objects and attributes so that you do not have to.
+
+### Auto-Generated Error Messages
+
+Let's revisit the error message:
+
+
+```r
+vet(tpl.nested, obj.nested2)
+## [1] "`levels(obj.nested2$b$Species)[3]` should be \"virginica\" (is \"sibirica\")"
+```
+
+It tells us:
+
+* The reason for the failure
+* What structure would be acceptable instead
+* The location of failure `levels(obj.nested2$b$Species)[3]`
+
+`vetr` does what it can to reduce the time from error to resolution.  Notice
+that the location of failure is written so that you can easily copy it in part
+or full to the R prompt for further examination.
+
+## Vetting Expressions
+
+You can combine templates with `&&` / `||`:
+
+
+```r
+vet(numeric(1L) || NULL, NULL)
+## [1] TRUE
+vet(numeric(1L) || NULL, 42)
+## [1] TRUE
+vet(numeric(1L) || NULL, "foo")
+## [1] "`\"foo\"` should be \"NULL\", or type \"numeric\" (is \"character\")"
+```
+
+When you need to check values use `.` to reference the object:
 
 
 ```r
@@ -91,7 +162,7 @@ vet(numeric(1L) && . > 0, 42)
 ## [1] TRUE
 ```
 
-And you can compose vetting expressions as language objects and combine them:
+You can compose vetting expressions as language objects and combine them:
 
 
 ```r
@@ -111,7 +182,7 @@ vet(vet.exp, "baz")
 
 See [vignette][1] for additional details.
 
-## Vetting Function Parameters
+## `vetr` in Functions
 
 If you are vetting function inputs, you can use the `vetr` function, which works
 just like `vet` except that it is streamlined for use within functions:

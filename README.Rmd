@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 [![](http://www.r-pkg.org/badges/version/vetr)](https://cran.r-project.org/package=vetr)
 [![Project Status: WIP - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip)
 
-```{r child='inst/doc/rmdhunks/trust-but-verify.Rmd'}
+```{r child='vignettes/rmdhunks/trust-but-verify.Rmd'}
 ```
 
 ## Declarative Checks with Templates
@@ -31,44 +31,104 @@ vet(tpl, "hello")
 vet(tpl, 42)
 ```
 
-`vetr` supports complex recursive templates:
+Zero length templates match any length:
 
 ```{r}
-tpl <- list(numeric(1L), list(dat=matrix(numeric(), 3), mode=character(1L)))
+tpl <- integer()
+vet(tpl, 1L:3L)
+vet(tpl, 1L)
 ```
 
-That can be used to vet complex objects:
+And for convenience short (<= 100 length) integer-like numerics are considered
+integer:
 
 ```{r}
-## Make some objects
-obj1 <- list(42, list(cbind(1:5, 1:5, 1:5), "foo"))          # missing names
-obj2 <- list(42, list(dat=cbind(1:5, 1:5, 1:5), mode="foo")) # dat transposed
-obj3 <- list(42, list(dat=rbind(1:5, 1:5, 1:5), mode="foo")) # correct
-## Vet them:
-vet(tpl, obj1)
-vet(tpl, obj2)
-vet(tpl, obj3)
+tpl <- integer(1L)
+vet(tpl, 1)       # this is a numeric, not an integer
+vet(tpl, 1.0001)
 ```
 
-The auto-generated error message tells you:
+`vetr` can compare recursive objects, such as lists, data.frames,
+data.frames in lists, and more:
 
-* what the (sub-)object should be
-* what it is
-* the exact point of failure (e.g. `obj2[[2]]$dat`)
+```{r}
+# Copies of built-in iris data set, one with corrupted levels
 
-The point of failure is expressed such that you can copy and paste it into the
-prompt to directly examine the problem.
+iris1 <- iris2 <- iris[1:10, ]
+levels(iris2$Species)[3] <- "sibirica"
 
-### Vetting Expressions
+# Nest them in a list (NB: 0-row DF in template matches any number of rows):
 
-You can augment templates with custom vetting tokens to check values with `.`:
+tpl.nested <- list(a=character(1L), b=iris[0, ])   # 0-row iris
+obj.nested1 <- list(a="I", b=iris1)
+obj.nested2 <- list(a="I", b=iris2)
+
+# And vet:
+
+vet(tpl.nested, obj.nested1)
+vet(tpl.nested, obj.nested2)
+```
+
+Our template `list(a=character(1L), b=iris[0, ])` is equivalent to:
+
+```{r}
+stopifnot(
+  is.list(obj.nested2), length(obj.nested2) == 2,
+  identical(names(obj.nested2), c("a", "b")),
+  is.character(obj.nested2$a), length(obj.nested2$a) == 1L,
+  is.list(obj.nested2$b), inherits(obj.nested2$b, "data.frame"),
+  length(obj.nested2$b) == 5, is.integer(attr(obj.nested2$b, 'row.names')),
+  all(vapply(obj.nested2$b[1:4], is.numeric, logical(1L))),
+  identical(
+    names(obj.nested2$b),
+    c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+  ),
+  is.factor(obj.nested2$b$Species),
+  identical(
+    levels(obj.nested2$b$Species), c("setosa", "versicolor", "virginica")
+  )
+)
+```
+
+From the one line template `vetr` figures out all the required comparisons of
+nested objects and attributes so that you do not have to.
+
+### Auto-Generated Error Messages
+
+Let's revisit the error message:
+
+```{r}
+vet(tpl.nested, obj.nested2)
+```
+
+It tells us:
+
+* The reason for the failure
+* What structure would be acceptable instead
+* The location of failure `levels(obj.nested2$b$Species)[3]`
+
+`vetr` does what it can to reduce the time from error to resolution.  Notice
+that the location of failure is written so that you can easily copy it in part
+or full to the R prompt for further examination.
+
+## Vetting Expressions
+
+You can combine templates with `&&` / `||`:
+
+```{r}
+vet(numeric(1L) || NULL, NULL)
+vet(numeric(1L) || NULL, 42)
+vet(numeric(1L) || NULL, "foo")
+```
+
+When you need to check values use `.` to reference the object:
 
 ```{r}
 vet(numeric(1L) && . > 0, -42)
 vet(numeric(1L) && . > 0, 42)
 ```
 
-And you can compose vetting expressions as language objects and combine them:
+You can compose vetting expressions as language objects and combine them:
 
 ```{r}
 scalar.num.pos <- quote(numeric(1L) && . > 0)
@@ -82,7 +142,7 @@ vet(vet.exp, "baz")
 
 See [vignette][1] for additional details.
 
-## Vetting Function Parameters
+## `vetr` in Functions
 
 If you are vetting function inputs, you can use the `vetr` function, which works
 just like `vet` except that it is streamlined for use within functions:
