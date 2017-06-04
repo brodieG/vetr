@@ -141,6 +141,27 @@ unitizer_sect("Language", {
   vet(x, quote(x2 + x3))
   vet(quote(a + b), quote(2 + x3))
   vet(quote(a + b), quote(x1 + x2 + x3))
+
+  # Test recursive substitution across environments, first check that all the
+  # symbols we use don't actually exist currently
+
+  unlist(lapply(c('aaA', 'bbB', 'ccC', 'ddD', 'eeE'), find))# should be length 0
+
+  x <- quote(aaA + bbB)
+  my.env <- new.env()
+  my.env$y <- quote(ccC - ddD)
+
+  # FALSE because `x` is expanded
+
+  evalq(vet(quote(x * y), quote(A * (B - C))), envir=my.env)
+
+  # TRUE because `eeE` is not expanded (but `y` is)
+
+  evalq(vet(quote(eeE * y), quote(A * (B - C))), envir=my.env)
+
+  # TRUE because expansion matches
+
+  evalq(vet(quote(x * y), quote((A + D) * (B - C))), envir=my.env)
 })
 
 unitizer_sect("Custom tokens", {
