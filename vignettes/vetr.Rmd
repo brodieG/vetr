@@ -29,14 +29,36 @@ library(vetr)
 
 ## Non Standard Evaluation of Vetting Expressions
 
+### Vetting Expressions are Language Objects
+
+`vet` captures the first argument unevaluated.  For example in:
+
+```{r, eval=FALSE}
+vet(logical(1L), 1:3)
+```
+
+The vetting expression is actually the unevaluated call (i.e. the result of
+`quote(logical(1L))`), not the object `logical(1L)`.  When you save vetting
+expressions to variables you must quote them:
+
+```{r, eval=FALSE}
+truefalseorNA <- quote(logical(1L))
+vet(truefalseorNA, 1:3)
+```
+
 ### Parsing Vetting Expressions
 
-Vetting expressions combine templates and custom tokens delimited by `&&` and
-`||`. While superficially vetting expressions look like R expressions, they
+Vetting expressions 
+combine template tokens and custom tokens delimited by `&&`
+and `||`. Custom tokens are unevaluated calls that contain the `.` symbol (e.g.
+`. > 0`).  Every other token is consider a template token.
+
+While superficially vetting expressions look like R expressions, they
 are never run through the R evaluator.  Instead, they are recursively
-substituted and parsed into tokens.  Each token is then examined to determine
-whether it should be treated as a template token or a custom token.  For
-example:
+substituted and parsed into component tokens.  A token.
+
+Each token is then examined to determine whether it should be treated as a template token or a custom token.
+For example:
 
 ```{r, eval=FALSE}
 logical(1) || (numeric(1) && . %in% 0:1)

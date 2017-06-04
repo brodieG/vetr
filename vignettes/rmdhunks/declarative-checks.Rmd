@@ -29,7 +29,7 @@ vet(tpl, 1)       # this is a numeric, not an integer
 vet(tpl, 1.0001)
 ```
 
-`vetr` can compare recursive objects such as lists, and data.frames:
+`vetr` can compare recursive objects such as lists, or data.frames:
 
 ```{r}
 tpl.iris <- iris[0, ]      # 0 row DF matches any number of rows in object
@@ -57,8 +57,8 @@ stopifnot(
 )
 ```
 
-`vetr` saved us a lot of typing, and also a lot of time coming up with the
-things that need to be compared.
+`vetr` saved us typing, and time to come up with the things that need to be
+compared.
 
 You could just as easily have created templates for nested lists, or data frames
 in lists.  Templates are compared to objects with the `alike` functions.  For a
