@@ -163,6 +163,15 @@ unitizer_sect("Language", {
 
   evalq(vet(quote(x * y), quote((A + D) * (B - C))), envir=my.env)
 
+  # potentialy infinite recursion
+
+  expA <- expB <- expC <- expD <- expE <- NULL
+  expA <- quote(expB && expC)
+  expB <- quote(expD * expE)
+  expE <- quote(expA)
+
+  vet(expA, TRUE)
+
   # Check that `..` is expanded properly
 
   . <- quote(. > 0)

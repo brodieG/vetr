@@ -252,6 +252,7 @@ void VALC_parse_recurse(
     SEXP lang_car = VECTOR_ELT(rem_parens, 0);
 
     // Replace any variables to language objects with language
+
     lang_car = VALC_sub_symbol(lang_car, rho, symb_hash);
     SETCAR(lang, lang_car);
     UNPROTECT(1);
