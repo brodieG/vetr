@@ -101,13 +101,28 @@ SEXP VALC_remove_parens(SEXP lang) {
 If a variable expands to language, sub it in and keep parsing
 */
 
-SEXP VALC_sub_symbol(SEXP lang, SEXP rho) {
+SEXP VALC_sub_symbol(SEXP lang, SEXP rho, pfHashTable * symb_hash) {
   int symb = TYPEOF(lang) == SYMSXP;
 
   if(!symb || lang == R_MissingArg) return(lang);
 
+
   // this could conflict with someone storing an expression in .. or .
   if(symb && lang != VALC_SYM_one_dot) {
+    const char * symb_chr = CHAR(PRINTNAME(lang));
+    const char * symb_stored = pfHashFind(symb_hash, symb_chr);
+
+    if(symb_stored == NULL) {
+      pfHashSet(symb_hash, symb_chr, "A"); // don't care about value
+    } else {
+      error(
+        "%s%s%s%s",
+        "Possible infinite recursion encountered when substituting symbol `",
+        symb_chr,
+        "`. `vetr` recursively substitutes the vetting expressions. ",
+        "See `vignette('vetr')`, \"Non Standard Evaluation\" section."
+      );
+    }
     if(findVar(lang, rho) != R_UnboundValue) {
       SEXP found_val = eval(lang, rho);
       SEXPTYPE found_val_type = TYPEOF(found_val);
@@ -132,8 +147,14 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   rem_res = PROTECT(VALC_remove_parens(lang_cpy));
   lang_cpy = VECTOR_ELT(rem_res, 0);
   mode = asInteger(VECTOR_ELT(rem_res, 1));
+
+  // Hash table to track symbols to make sure  we don't end up in an infinite
+  // recursion substituting symbols
+
+  pfHashTable * symb_hash = pfHashCreate(NULL);
+
   // Replace any variables to language objects with language
-  lang_cpy = VALC_sub_symbol(lang_cpy, rho);
+  lang_cpy = VALC_sub_symbol(lang_cpy, rho, symb_hash);
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     if(lang_cpy == VALC_SYM_one_dot) mode = 1;
@@ -142,7 +163,9 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   } else {
     res = PROTECT(allocList(length(lang_cpy)));
     // lang_cpy, res, are modified internally
-    VALC_parse_recurse(lang_cpy, res, var_name, rho, mode, R_NilValue);
+    VALC_parse_recurse(
+      lang_cpy, res, var_name, rho, mode, R_NilValue, symb_hash
+    );
   }
   res_vec = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
@@ -155,7 +178,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
 
 void VALC_parse_recurse(
   SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is,
-  SEXP first_fun
+  SEXP first_fun, pfHashTable * symb_hash
 ) {
   /*
   If the object is not a language list, then return it, as part of an R vector
@@ -225,7 +248,7 @@ void VALC_parse_recurse(
     SEXP lang_car = VECTOR_ELT(rem_parens, 0);
 
     // Replace any variables to language objects with language
-    lang_car = VALC_sub_symbol(lang_car, rho);
+    lang_car = VALC_sub_symbol(lang_car, rho, symb_hash);
     SETCAR(lang, lang_car);
     UNPROTECT(1);
 
@@ -233,7 +256,8 @@ void VALC_parse_recurse(
       SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
       VALC_parse_recurse(
-        lang_car, CAR(lang_track), var_name, rho, eval_as_is, first_fun
+        lang_car, CAR(lang_track), var_name, rho, eval_as_is, first_fun,
+        symb_hash
       );
     } else {
       int new_call_type = call_type;

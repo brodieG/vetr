@@ -34,11 +34,14 @@ int VALC_all(SEXP vec);
 int IS_TRUE(SEXP x);
 int IS_LANG(SEXP x);
 SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho);
-void VALC_parse_recurse(SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is, SEXP first_fun);
-SEXP VALC_sub_symbol(SEXP lang, SEXP rho);
+void VALC_parse_recurse(
+  SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is,
+  SEXP first_fun, pfHashTable * symb_hash
+);
+SEXP VALC_sub_symbol(SEXP lang, SEXP rho, pfHashTable * symb_hash);
 void VALC_install_objs();
 SEXP VALC_evaluate(
-  SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full, 
+  SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
   SEXP rho
 );
 void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base);
