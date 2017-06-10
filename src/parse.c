@@ -134,6 +134,10 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho, pfHashTable * symb_hash) {
   }
   return(lang);
 }
+SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
+  pfHashTable * symb_hash = pfHashCreate(NULL);
+  return VALC_sub_symbol(lang, rho, symb_hash);
+}
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 
