@@ -296,11 +296,14 @@ Here we borrow an example from the `valaddin` vignette to illustrate the
 last point:
 
 ```{r}
-library(valaddin)
-
 secant <- function(f, x, dx) (f(x + dx) - f(x)) / dx
 
-secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
+if(require(valaddin)) {
+  secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
+} else {
+  secant_valaddin <- function(...) stop("valaddin not available")
+}
+
 secant_stopifnot <- function(f, x, dx) {
   stopifnot(is.numeric(x), is.numeric(dx))
   secant(f, x, dx)
@@ -327,7 +330,7 @@ with many groups) then it becomes meaningful.
 ```
 
 ----
-<sup>1</sup>: We take some liberties in this example for clarity.  For instance, `alike` returns a character vector on failure, not `FALSE`, so really what `vet` is doing is `isTRUE(alike(...))`.
+<sup>1</sup>We take some liberties in this example for clarity.  For instance, `alike` returns a character vector on failure, not `FALSE`, so really what `vet` is doing is `isTRUE(alike(...))`.
 
 [1]: ./vetr.html
 [2]: ./alike.html

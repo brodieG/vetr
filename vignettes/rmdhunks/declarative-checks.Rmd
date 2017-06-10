@@ -64,7 +64,7 @@ vet_stopifnot(iris.fake[1:10, ])
 compared.
 
 You could just as easily have created templates for nested lists, or data frames
-in lists.  Templates are compared to objects with the `alike` functions.  For a
+in lists.  Templates are compared to objects with the `alike`.  For a
 thorough description of templates and how they work see the [`alike`
 vignette][2].  For template examples see `example(alike)`.
 
