@@ -21,6 +21,8 @@ knitr::opts_chunk$set(
 ```{r child='vignettes/rmdhunks/declarative-checks.Rmd'}
 ```
 
+## Vetting Expressions
+
 ```{r child='vignettes/rmdhunks/vetting-expressions.Rmd'}
 ```
 
@@ -69,10 +71,14 @@ devtools::install_github('brodieg/vetr@development')
 
 ## Related Packages
 
-* [valaddin](https://github.com/egnha/valaddin) by Eugene Ha (see [vignette][4]
+<ul>
+  <li><a href='https://github.com/egnha/valaddin'>valaddin</a> by Eugene Ha (see
+  <a
+  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#valaddin'>vignette</a>
   for a more detailed comparison) has very similar objectives to `vetr`
 ```{r child='vignettes/rmdhunks/related-packages.Rmd'}
 ```
+</ul>
 
 ## Acknowledgments
 
@@ -87,8 +93,9 @@ Thank you to:
 * [Dirk Eddelbuettel](https://github.com/eddelbuettel) and [Carl
   Boettiger](https://github.com/cboettig) for the
   [rocker](https://github.com/rocker-org/rocker) project, and [Gábor
-  Csárdi](https://github.com/gaborcsardi) and the R-consortium for Rhub, without
-  which testing bugs on R-devel and other platforms would be a nightmare.
+  Csárdi](https://github.com/gaborcsardi) and the R-consortium for
+  [Rhub](https://github.com/r-hub/rhub), without which testing bugs on R-devel
+  and other platforms would be a nightmare.
 * [Yihui Xie](https://github.com/yihui) for
   [knitr](https://cran.r-project.org/package=knitr) and  [J.J.
   Allaire](https://github.com/jjallaire) etal for
@@ -117,4 +124,3 @@ Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 [1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html
 [2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/alike.html
 [3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#non-standard-evaluation
-[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#valaddin

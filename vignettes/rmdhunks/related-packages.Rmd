@@ -1,10 +1,10 @@
-* [ensurer](https://github.com/smbache/ensurer) by Stefan M Bache allows you to
-  specify contracts for data validation and has an experimental implementation
-  of type-safe functions.
-* [validate](https://github.com/data-cleaning/validate) by Mark van der Loo and
-  Edwin de Jonge provides tools for checking data
-* [types](https://github.com/jimhester/types) by Jim Hester provides a mechanism
-  for defining what types arguments should be, though it does not directly
-  enforce them
-* [argufy](https://github.com/gaborcsardi/argufy) by Gábor Csárdi adds
-  parameter checks via Roxygen (not published to CRAN)
+  <li><a href='https://github.com/smbache/ensurer'>ensurer</a> by Stefan M Bache
+  allows you to specify contracts for data validation and has an experimental
+  implementation of type-safe functions.
+  <li><a href='https://github.com/data-cleaning/validate'>validate</a> by Mark van
+  der Loo and Edwin de Jonge provides tools for checking data
+  <li><a href='https://github.com/jimhester/types'>types</a> by Jim Hester
+  provides a mechanism for defining what types arguments should be, though it does
+  not directly enforce them
+  <li><a href='https://github.com/gaborcsardi/argufy'>argufy</a> by Gábor Csárdi
+  adds parameter checks via Roxygen (not published to CRAN)

@@ -229,8 +229,7 @@ Vetting expressions work the same way with `vetr` as they do with `vet`.
 ### Benchmarks
 
 `vetr` is written primarily in C to minimize the performance impact of adding
-validation checks to your functions.  Performance is comparable to or faster
-better than using `stopifnot`.  Here we run our checks on valid iris objects
+validation checks to your functions.  Performance is comparable to `stopifnot`.  Here we run our checks on valid iris objects
 we used to illustrate [declarative checks](#declarative-checks-with-templates):
 
 ```{r}
