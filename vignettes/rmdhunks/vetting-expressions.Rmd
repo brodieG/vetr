@@ -1,5 +1,3 @@
-## Vetting Expressions
-
 You can combine templates with `&&` / `||`:
 
 ```{r}
@@ -26,3 +24,20 @@ vet(vet.exp, 42)
 vet(vet.exp, "foo")
 vet(vet.exp, "baz")
 ```
+
+There are a number of predefined vetting tokens you can use in your
+vetting expressions:
+
+```{r}
+vet(NUM.POS, -runif(5))    # positive numeric
+vet(LGL.1, NA)             # TRUE or FALSE
+```
+
+See `?vet_token` for a full listing, and for instructions on how to define your
+own tokens with custom error messages.
+
+Vetting expressions are designed to be intuitive to use, but their
+implementation is complex.  We recommend you look at `example(vet)` for usage
+ideas, or at the ["Non Standard Evaluation" section of the vignette][3] for the
+gory details.
+

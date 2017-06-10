@@ -2,6 +2,26 @@
 knitr::opts_chunk$set(error=TRUE, hilang='r')
 options(width=60)
 library(vetr)
+mb <- function(...) {
+  mb.c <- match.call()
+  mb.c[[1]] <- quote(microbenchmark::microbenchmark)
+  res <- eval(mb.c, parent.frame())
+  res.sum <- summary(res)
+  cat(attr(res.sum, "unit"), "\n")
+  print(res.sum[1:4])
+
+}
+
+## ----echo=FALSE-------------------------------------------
+mb <- function(...) {
+  mb.c <- match.call()
+  mb.c[[1]] <- quote(microbenchmark::microbenchmark)
+  res <- eval(mb.c, parent.frame())
+  res.sum <- summary(res)
+  cat(attr(res.sum, "unit"), "\n")
+  print(res.sum[1:4])
+
+}
 
 ## ---------------------------------------------------------
 tpl <- numeric(1L)
@@ -28,17 +48,20 @@ vet(tpl.iris, iris[1:10, ])
 vet(tpl.iris, iris.fake[1:10, ])
 
 ## ---------------------------------------------------------
-stopifnot(
-  is.list(iris.fake), inherits(iris.fake, "data.frame"),
-  length(iris.fake) == 5, is.integer(attr(iris.fake, 'row.names')),
-  identical(
-    names(iris.fake),
-    c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
-  ),
-  all(vapply(iris.fake[1:4], is.numeric, logical(1L))),
-  typeof(iris.fake$Species) == "integer", is.factor(iris.fake$Species),
-  identical(levels(iris.fake$Species), c("setosa", "versicolor", "virginica"))
-)
+vet_stopifnot <- function(x) {
+  stopifnot(
+    is.list(x), inherits(x, "data.frame"),
+    length(x) == 5, is.integer(attr(x, 'row.names')),
+    identical(
+      names(x),
+      c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+    ),
+    all(vapply(x[1:4], is.numeric, logical(1L))),
+    typeof(x$Species) == "integer", is.factor(x$Species),
+    identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
+  )
+}
+vet_stopifnot(iris.fake[1:10, ])
 
 ## ---------------------------------------------------------
 vet(tpl.iris, iris.fake[1:10, ])
@@ -61,54 +84,53 @@ vet(vet.exp, 42)
 vet(vet.exp, "foo")
 vet(vet.exp, "baz")
 
+## ---------------------------------------------------------
+vet(NUM.POS, -runif(5))    # positive numeric
+vet(LGL.1, NA)             # TRUE or FALSE
+
 ## ---- eval=FALSE------------------------------------------
-#  logical(1) || (numeric(1) && . %in% 0:1)
+#  vet(. > 0, 1:3)
+
+## ---- eval=FALSE------------------------------------------
+#  a <- quote(integer() && . > 0)
+#  b <- quote(logical(1L) && !is.na(.))
+#  c <- quote(a || b)
+#  
+#  vet(c, 1:3)
+
+## ---- eval=FALSE------------------------------------------
+#  vet((integer() && . > 0) || (logical(1L) && !is.na(.)), 1:3)
+
+## ---- eval=FALSE------------------------------------------
+#  vet(quote(x + y), my.call)       # notice `quote`
+
+## ---- eval=FALSE------------------------------------------
+#  tpl.call <- quote(quote(x + y))  # notice `quote(quote(...))`
+#  vet(tpl.call, my.call)
+
+## ---- eval=FALSE------------------------------------------
+#  logical(1) || (numeric(1) && (. > 0 & . < 1))
 
 ## ---------------------------------------------------------
-vet(logical(1) || (numeric(1) && . %in% 0:1), TRUE)
-vet(logical(1) || (numeric(1) && . %in% 0:1), 0)
-vet(logical(1) || (numeric(1) && . %in% 0:1), "1")
+vet(. > 0, 1:3)
+
+## ---- eval=FALSE------------------------------------------
+#  vet(logical(1) || (numeric(1) && (. > 0 & . < 1)), 42)
+#  # becomes:
+#  alike(logical(1L), 42) || (alike(numeric(1L)) && all(42 > 0 & 42 < 1))
+#  # becomes:
+#  FALSE || (TRUE && FALSE)
+#  # becomes:
+#  FALSE
+
+## ---------------------------------------------------------
+vet(logical(1) || (numeric(1) && (. > 0 & . < 1)), 42)
 
 ## ---- eval=FALSE------------------------------------------
 #  I(length(a) == length(b) && . %in% 0:1)
 
 ## ---- eval=FALSE------------------------------------------
 #  I(logical(1L) && my_special_fun(.))
-
-## ---------------------------------------------------------
-TF <- quote(logical(1) && !anyNA(.))  # note `quote`
-
-vet(TF, TRUE)
-vet(TF, NA)
-vet(TF, 1)
-
-## ---------------------------------------------------------
-ZERO_OR_ONE <- quote(numeric(1) && !is.na(.) && . %in% 0:1)
-TF_ish <- quote(TF || ZERO_OR_ONE)
-
-vet(TF_ish, 1)
-vet(TF_ish, "0")
-
-## ---------------------------------------------------------
-NONA <- vet_token(!is.na(.), "%sshould not contain NAs")
-TF <- quote(logical(1L) && NONA)
-vet(TF, NA)
-
-## ---------------------------------------------------------
-vet(quote(x && y), quote(a || b))
-vet(quote(x && y), quote(a && b))
-
-## ---------------------------------------------------------
-LANG.AND <- quote(quote(x && y))
-vet(LANG.AND, quote(a || b))
-vet(LANG.AND, quote(a && b))
-
-## ---------------------------------------------------------
-vet(NUM.1.POS, 5)
-vet(NUM.1.POS, -3)
-vet(NUM.1.POS, runif(5))
-vet(CHR, letters)
-vet(CHR, factor(letters))
 
 ## ---------------------------------------------------------
 fun <- function(x, y, z) {
@@ -132,14 +154,13 @@ fun(matrix(1:12, 3), TRUE, "baz")
 fun(matrix(1:12, 4), TRUE, "bar")
 
 ## ---------------------------------------------------------
-library(microbenchmark)
-microbenchmark(
-  vet(laps.template, laps2),
-  vet_stopifnot(laps2)
+mb(  # wrapper around microbenchmark
+  vet(iris[0, ], iris[1:10, ]),
+  vet_stopifnot(iris[1:10, ])
 )
 
 ## ---------------------------------------------------------
-microbenchmark(data.frame(a=numeric()))
+mb(data.frame(a=numeric()))
 
 ## ---------------------------------------------------------
 library(valaddin)
@@ -156,7 +177,7 @@ secant_vetr <- function(f, x, dx) {
   secant(f, x, dx)
 }
 
-microbenchmark(
+mb(
   secant_valaddin(log, 1, .1),
   secant_stopifnot(log, 1, .1),
   secant_vetr(log, 1, .1)

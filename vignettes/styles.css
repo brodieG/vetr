@@ -120,18 +120,18 @@ h3.subtitle {
 pre, code {
   background-color: #EEE;
   color: #333;
+  white-space: pre-wrap;    /* Wrap long lines */
   /*border-radius: 3px;*/
 }
+code {font-size: 85%;}
 pre {
   border: 2px solid #EEE;
   overflow: auto;
-  white-space: pre-wrap;    /* Wrap long lines */
   /*
   border-radius: 3px;
   */
   margin: 5px 0px;
   padding: 5px 10px;
-  font-size: 85%;
 }
 pre:not([class]) {
   color: #353;

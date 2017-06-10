@@ -162,6 +162,11 @@ unitizer_sect("Language", {
   # TRUE because expansion matches
 
   evalq(vet(quote(x * y), quote((A + D) * (B - C))), envir=my.env)
+
+  # Check that `..` is expanded properly
+
+  . <- quote(. > 0)
+  vet(.., 1.4)
 })
 
 unitizer_sect("Custom tokens", {

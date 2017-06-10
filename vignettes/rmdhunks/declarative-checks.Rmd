@@ -44,17 +44,20 @@ From our declared template `iris[0, ]`, `vetr` infers all the required checks.
 In this case, `vet(iris[0, ], iris.fake, stop=TRUE)` is equivalent to:
 
 ```{r}
-stopifnot(
-  is.list(iris.fake), inherits(iris.fake, "data.frame"),
-  length(iris.fake) == 5, is.integer(attr(iris.fake, 'row.names')),
-  identical(
-    names(iris.fake),
-    c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
-  ),
-  all(vapply(iris.fake[1:4], is.numeric, logical(1L))),
-  typeof(iris.fake$Species) == "integer", is.factor(iris.fake$Species),
-  identical(levels(iris.fake$Species), c("setosa", "versicolor", "virginica"))
-)
+vet_stopifnot <- function(x) {
+  stopifnot(
+    is.list(x), inherits(x, "data.frame"),
+    length(x) == 5, is.integer(attr(x, 'row.names')),
+    identical(
+      names(x),
+      c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+    ),
+    all(vapply(x[1:4], is.numeric, logical(1L))),
+    typeof(x$Species) == "integer", is.factor(x$Species),
+    identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
+  )
+}
+vet_stopifnot(iris.fake[1:10, ])
 ```
 
 `vetr` saved us typing, and time to come up with the things that need to be
@@ -79,6 +82,6 @@ It tells us:
 * What structure would be acceptable instead
 * The location of failure `levels((iris.fake[1:10, ])$Species)[3]`
 
-`vetr` does what it can to reduce the time from error to resolution.  Notice
-that the location of failure is generated such that you can easily copy it in
-part or full to the R prompt for further examination.
+`vetr` does what it can to reduce the time from error to resolution.  The
+location of failure is generated such that you can easily copy it in part or
+full to the R prompt for further examination.

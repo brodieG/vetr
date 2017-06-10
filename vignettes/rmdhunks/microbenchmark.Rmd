@@ -1,0 +1,12 @@
+
+```{r echo=FALSE}
+mb <- function(...) {
+  mb.c <- match.call()
+  mb.c[[1]] <- quote(microbenchmark::microbenchmark)
+  res <- eval(mb.c, parent.frame())
+  res.sum <- summary(res)
+  cat(attr(res.sum, "unit"), "\n")
+  print(res.sum[1:4])
+
+}
+```

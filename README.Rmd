@@ -24,8 +24,6 @@ knitr::opts_chunk$set(
 ```{r child='vignettes/rmdhunks/vetting-expressions.Rmd'}
 ```
 
-See [vignette][1] for additional details on how vetting expressions work.
-
 ## `vetr` in Functions
 
 If you are vetting function inputs, you can use the `vetr` function, which works
@@ -69,6 +67,10 @@ github:
 devtools::install_github('brodieg/vetr@development')
 ```
 
+## Related Packages
+
+* [valaddin](https://github.com/egnha/valaddin) by Eugene Ha (see [vignette][4]
+  for a more detailed comparison) has very similar objectives to `vetr`
 ```{r child='vignettes/rmdhunks/related-packages.Rmd'}
 ```
 
@@ -97,6 +99,7 @@ Thank you to:
   ensurer.
 * Hadley Wickham for [devtools](https://cran.r-project.org/package=devtools),
   and for pointing me to Stefan M. Bache's ensurer package.
+* Olaf Mersmann for [microbenchmark](https://cran.r-project.org/package=microbenchmark), because microsecond matter.
 * All open source developers out there that make their work freely available
   for others to use.
 * [Github](https://github.com/), [Travis-CI](https://travis-ci.org/),
@@ -113,3 +116,5 @@ Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 
 [1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html
 [2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/alike.html
+[3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#non-standard-evaluation
+[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#valaddin

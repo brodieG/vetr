@@ -70,7 +70,7 @@ vet(tpl, 1.0001)
 ## [1] "`1.0001` should be type \"integer-like\" (is \"double\")"
 ```
 
-`vetr` can compare recursive objects such as lists, and data.frames:
+`vetr` can compare recursive objects such as lists, or data.frames:
 
 
 ```r
@@ -89,19 +89,25 @@ In this case, `vet(iris[0, ], iris.fake, stop=TRUE)` is equivalent to:
 
 
 ```r
-stopifnot(
-  is.list(iris.fake), inherits(iris.fake, "data.frame"),
-  length(iris.fake) == 5, is.integer(attr(iris.fake, 'row.names')),
-  identical(
-    names(iris.fake),
-    c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
-  ),
-  all(vapply(iris.fake[1:4], is.numeric, logical(1L))),
-  typeof(iris.fake$Species) == "integer", is.factor(iris.fake$Species),
-  identical(levels(iris.fake$Species), c("setosa", "versicolor", "virginica"))
-)
-## Error: identical(levels(iris.fake$Species), c("setosa", "versicolor",  .... is not TRUE
+vet_stopifnot <- function(x) {
+  stopifnot(
+    is.list(x), inherits(x, "data.frame"),
+    length(x) == 5, is.integer(attr(x, 'row.names')),
+    identical(
+      names(x),
+      c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+    ),
+    all(vapply(x[1:4], is.numeric, logical(1L))),
+    typeof(x$Species) == "integer", is.factor(x$Species),
+    identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
+  )
+}
+vet_stopifnot(iris.fake[1:10, ])
+## Error: identical(levels(x$Species), c("setosa", "versicolor", "virginica")) is not TRUE
 ```
+
+`vetr` saved us typing, and time to come up with the things that need to be
+compared.
 
 You could just as easily have created templates for nested lists, or data frames
 in lists.  Templates are compared to objects with the `alike` functions.  For a
@@ -124,12 +130,10 @@ It tells us:
 * What structure would be acceptable instead
 * The location of failure `levels((iris.fake[1:10, ])$Species)[3]`
 
-`vetr` does what it can to reduce the time from error to resolution.  Notice
-that the location of failure is generated such that you can easily copy it in
-part or full to the R prompt for further examination.
+`vetr` does what it can to reduce the time from error to resolution.  The
+location of failure is generated such that you can easily copy it in part or
+full to the R prompt for further examination.
 
-
-## Vetting Expressions
 
 You can combine templates with `&&` / `||`:
 
@@ -171,7 +175,25 @@ vet(vet.exp, "baz")
 ## [3] "  - `\"baz\" %in% c(\"foo\", \"bar\")` is not TRUE (FALSE)"
 ```
 
-See [vignette][1] for additional details on how vetting expressions work.
+There are a number of predefined vetting tokens you can use in your
+vetting expressions:
+
+
+```r
+vet(NUM.POS, -runif(5))    # positive numeric
+## [1] "`-runif(5)` should contain only positive values, but has negatives"
+vet(LGL.1, NA)             # TRUE or FALSE
+## [1] "`NA` should not contain NAs, but does"
+```
+
+See `?vet_token` for a full listing, and for instructions on how to define your
+own tokens with custom error messages.
+
+Vetting expressions are designed to be intuitive to use, but their
+implementation is complex.  We recommend you look at `example(vet)` for usage
+ideas, or at the ["Non Standard Evaluation" section of the vignette][3] for the
+gory details.
+
 
 ## `vetr` in Functions
 
@@ -220,11 +242,11 @@ github:
 devtools::install_github('brodieg/vetr@development')
 ```
 
-
 ## Related Packages
 
-* [valaddin](https://github.com/egnha/valaddin) by Eugene Ha (see vignette for a
-  more detailed comparison) has very similar objectives to `vetr`
+* [valaddin](https://github.com/egnha/valaddin) by Eugene Ha (see [vignette][4]
+  for a more detailed comparison) has very similar objectives to `vetr`
+
 * [ensurer](https://github.com/smbache/ensurer) by Stefan M Bache allows you to
   specify contracts for data validation and has an experimental implementation
   of type-safe functions.
@@ -240,24 +262,28 @@ devtools::install_github('brodieg/vetr@development')
 
 Thank you to:
 
-* R Core for developing such a wonderfully flexible language.
+* R Core for developing and maintaining such a wonderfully language.
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
-  the repository
+  the repository, and Uwe Ligges in particular for maintaining
+  [Winbuilder](http://win-builder.r-project.org/).
 * [Jim Hester](https://github.com/jimhester) because
   [covr](https://cran.r-project.org/package=covr) rocks.
 * [Dirk Eddelbuettel](https://github.com/eddelbuettel) and [Carl
   Boettiger](https://github.com/cboettig) for the
-  [rocker](https://github.com/rocker-org/rocker) project, without which testing
-  bugs on R-devel would be a nightmare.
+  [rocker](https://github.com/rocker-org/rocker) project, and [Gábor
+  Csárdi](https://github.com/gaborcsardi) and the R-consortium for Rhub, without
+  which testing bugs on R-devel and other platforms would be a nightmare.
 * [Yihui Xie](https://github.com/yihui) for
   [knitr](https://cran.r-project.org/package=knitr) and  [J.J.
   Allaire](https://github.com/jjallaire) etal for
-  [rmarkdown](https://cran.r-project.org/package=rmarkdown).
+  [rmarkdown](https://cran.r-project.org/package=rmarkdown), and by extension
+  John MacFarlane for [pandoc](http://pandoc.org/).
 * Stefan M. Bache for the idea of having a function for testing objects directly
   (originally `vetr` only worked with function arguments), which I took from
   ensurer.
 * Hadley Wickham for [devtools](https://cran.r-project.org/package=devtools),
   and for pointing me to Stefan M. Bache's ensurer package.
+* Olaf Mersmann for [microbenchmark](https://cran.r-project.org/package=microbenchmark), because microsecond matter.
 * All open source developers out there that make their work freely available
   for others to use.
 * [Github](https://github.com/), [Travis-CI](https://travis-ci.org/),
@@ -274,3 +300,5 @@ Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 
 [1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html
 [2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/alike.html
+[3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#non-standard-evaluation
+[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#valaddin

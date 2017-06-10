@@ -1,7 +1,3 @@
-## Related Packages
-
-* [valaddin](https://github.com/egnha/valaddin) by Eugene Ha (see vignette for a
-  more detailed comparison) has very similar objectives to `vetr`
 * [ensurer](https://github.com/smbache/ensurer) by Stefan M Bache allows you to
   specify contracts for data validation and has an experimental implementation
   of type-safe functions.
