@@ -1,9 +1,14 @@
 #include "pfhash.h"
+#include "cstringr.h"
+/*
+ * Note: last value written to `contents` is at ->idx - 1, if ->idx is zero,
+ * then the list is empty
+ */
 
 struct track_hash {
   pfHashTable * hash;
   const char ** contents;    // an array of characters
-  size_t idx;                // location of last value in contents
+  size_t idx;                // location after last value in contents
   size_t idx_max;            // how big the contents are
 };
 
@@ -70,7 +75,39 @@ int add_to_track_hash(
 
     if(track_hash->idx == track_hash->idx_max) {
 
-    }
+      // first, make sure no issues with size_t -> long
 
+      size_t new_size = CSR_add_szt(track_hash->idx_max, track_hash->idx_max);
+      size_t max_long = 1;
+      max_long = (max_long << sizeof(long)) / 2;
+
+      if(new_size > max_long) {
+        // nocov start
+        error(
+          "Internal Error: attempted to allocate hash content vector bigger ",
+          "than long limit"
+        );
+        // nocov end
+      }
+      // re-allocate
+      S_realloc(
+        track_hash->contents, new_size, track_hash->idx_max, sizeof(char *)
+      );
+      track_hash->idx_max = new_size;
+    } else if (track_hash->idx > track_hash->idx_max) {
+      // nocov start
+      error("Internal Error: hash index corrupted; contact maintainer.");
+      // nocov end
+    }
+    // We incur some cost in duplicating string here which may not be strictly
+    // necessary since it's most likely every string we use here should be
+    // present for the duration of execution, but cost is probably reasonably
+    // low.  Should revisit if this turns out to be wrong.
+
+    char * key_cpy = CSR_strmcpy(key, VALC_MAX_CHAR);
+    trach_hash->contents[track_hash->idx] = key_cpy;
+    track_hash->idx++;  // shouldn't be overflowable
+    res = 1;
   }
+  return res;
 }

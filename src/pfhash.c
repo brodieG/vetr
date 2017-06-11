@@ -121,6 +121,7 @@ static void locate (pfHashTable *tbl, const char *key,
 
 // In case your C implementation doesn't have strdup,
 //   we use this one.
+// DEVNOTE: Should we switch this to strmcpy?
 
 static char *dupstr (const char *str) {
     char *newstr = R_alloc (strlen (str) + 1, sizeof(char));

@@ -80,7 +80,7 @@ char * CSR_strmcpy(const char * str, size_t maxlen) {
 
   size_t len = CSR_strmlen_x(str, maxlen);
   if(len == maxlen && str[len])
-    warning("CSR_strmcopy: truncated string longer than %d", maxlen);
+    warning("CSR_strmcpy: truncated string longer than %d", maxlen);
 
   char * str_new = R_alloc(len + 1, sizeof(char));
 
