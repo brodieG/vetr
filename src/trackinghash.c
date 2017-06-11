@@ -7,17 +7,16 @@
 
 struct track_hash {
   pfHashTable * hash;
-  const char ** contents;    // an array of characters
+  char ** contents;          // an array of characters
   size_t idx;                // location after last value in contents
   size_t idx_max;            // how big the contents are
 };
 
-
 struct track_hash * create_track_hash(size_t size_init) {
-
   pfHashTable * hash = pfHashCreate(NULL);
-  const char ** contents = R_alloc(size_init, sizeof(char *));
-  struct track_hash * track_hash = R_alloc(1, sizeof(struct track_hash));
+  char ** contents = (char **) R_alloc(size_init, sizeof(char *));
+  struct track_hash * track_hash =
+    (struct track_hash *) R_alloc(1, sizeof(struct track_hash));
 
   track_hash->hash = hash;
   track_hash->contents = contents;
@@ -33,10 +32,10 @@ struct track_hash * create_track_hash(size_t size_init) {
  * Modifies the hash table by reference.
  */
 
-void reset_track_hash(struct * track_hash, size_t idx) {
+void reset_track_hash(struct track_hash * track_hash, size_t idx) {
   for(size_t i = idx; i < track_hash->idx; i--) {
     int del_res = pfHashDel(track_hash->hash, track_hash->contents[idx]);
-    if(int del_res)
+    if(del_res)
       // nocov start
       error(
         "Internal Error: unable to delete key %s; contact maintainer.",
@@ -46,7 +45,6 @@ void reset_track_hash(struct * track_hash, size_t idx) {
   }
   track_hash->idx = idx;
 }
-
 /* Add an item to the hash table
  *
  * If it already exists return 1, else 0
@@ -55,10 +53,10 @@ void reset_track_hash(struct * track_hash, size_t idx) {
  */
 
 int add_to_track_hash(
-  struct * track_hash, const char * key, const char * value
+  struct track_hash * track_hash, const char * key, const char * value
 ) {
-  int res_set = pfHashSet(track_hash, key, value);
   int res = 0;
+  int res_set = pfHashSet(track_hash->hash, key, value);
 
   if(res_set < 0) {
     // nocov start
@@ -89,9 +87,12 @@ int add_to_track_hash(
         );
         // nocov end
       }
-      // re-allocate
+      // re-allocate, note that we are re-allocating an array of pointers to
+      // strings, but `S_realloc` is looking for a (char *) hence the coersion
+
       S_realloc(
-        track_hash->contents, new_size, track_hash->idx_max, sizeof(char *)
+        (char *) track_hash->contents, new_size, track_hash->idx_max,
+        sizeof(char *)
       );
       track_hash->idx_max = new_size;
     } else if (track_hash->idx > track_hash->idx_max) {
@@ -104,8 +105,8 @@ int add_to_track_hash(
     // present for the duration of execution, but cost is probably reasonably
     // low.  Should revisit if this turns out to be wrong.
 
-    char * key_cpy = CSR_strmcpy(key, VALC_MAX_CHAR);
-    trach_hash->contents[track_hash->idx] = key_cpy;
+    char * key_cpy = CSR_strmcpy(key, CSR_MAX_CHAR);
+    track_hash->contents[track_hash->idx] = key_cpy;
     track_hash->idx++;  // shouldn't be overflowable
     res = 1;
   }

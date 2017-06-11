@@ -7,7 +7,7 @@ R_CallMethodDef callMethods[] = {
   {"validate_args", (DL_FUNC) &VALC_validate_args, 4},
   {"test", (DL_FUNC) &VALC_test, 2},
   {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
-  {"symb_sub", (DL_FUNC) &VALC_sub_symbol_ext, 3},
+  {"symb_sub", (DL_FUNC) &VALC_sub_symbol_ext, 2},
   {"parse", (DL_FUNC) &VALC_parse, 3},
   {"remove_parens", (DL_FUNC) &VALC_remove_parens, 1},
   {"eval_check", (DL_FUNC) &VALC_evaluate, 6},
