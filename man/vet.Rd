@@ -33,8 +33,8 @@ function formals as with \code{\link{match.call}}}
 }
 \value{
 TRUE if validation succeeds, otherwise \code{stop} for
-  \code{vetr} and varies for \code{vet} according to value chosen in
-  \code{stop}
+  \code{vetr} and varies for \code{vet} according to value chosen with
+  parameter \code{stop}
 }
 \description{
 Use templates and expressions to vet objects or function arguments.
@@ -42,12 +42,17 @@ Use templates and expressions to vet objects or function arguments.
 function that encloses it.
 }
 \details{
+The \code{target} argument for \code{vet} and the \code{...} arguments are
+recursively substituted.  If you wish to programmatically specify a vetting
+expression you can provide it as quoted language.
+
 See \code{vignette('vetr', package='vetr')} and examples for details on how
 to use these functions.
 }
 \note{
-Will force evaluation of any arguments that are being checked (you may
-  omit arguments that should not be evaluate from \code{vetr})
+\code{vetr} will force evaluation of any arguments that are being
+  checked (you may omit arguments that should not be evaluate from
+  \code{vetr})
 }
 \examples{
 ## template vetting
@@ -60,6 +65,13 @@ try(vet(numeric(2L), letters, stop=TRUE))
 vet(numeric(), runif(2))
 vet(numeric(), runif(100))
 vet(numeric(), letters)
+
+## This extends to data.frames
+iris.tpl <- iris[0,]   # zero row
+iris.1 <- iris[1:10,]
+iris.2 <- iris[1:10, c(1,2,3,5,4)]  # change col order
+vet(iris.tpl, iris.1)
+vet(iris.tpl, iris.2)
 
 ## Short (<100 length) integer-like numerics will
 ## pass for integer

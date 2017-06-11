@@ -1,129 +1,172 @@
-## ----global_options, echo=FALSE---------------------------
+## ----global_options, echo=FALSE------------------------------------------
 knitr::opts_chunk$set(error=TRUE)
-options(width=60)
 library(vetr)
 
-## ---------------------------------------------------------
-x <- 1:3
-stopifnot(is.numeric(x), length(x) == 1L)
-
-## ---------------------------------------------------------
-vet(numeric(1L), x)
-
-## ---------------------------------------------------------
-fun <- function(x, y) {
-  vetr(numeric(1L), logical(1L))
-  # ... function code goes here
+## ----echo=FALSE----------------------------------------------------------
+mb <- function(..., times=25) {
+  if(require(microbenchmark, quietly=TRUE)) {
+    mb.c <- match.call()
+    mb.c[[1]] <- quote(microbenchmark::microbenchmark)
+    res <- eval(mb.c, parent.frame())
+    res.sum <- summary(res)
+    cat(attr(res.sum, "unit"), "\n")
+    print(res.sum[1:5])
+  } else {
+    warning("Package microbenchmark not available.")
+  }
 }
-fun(1:2, "hello")
-fun(1, "hello")
 
-## ---------------------------------------------------------
-laps.template <- structure(
-  class="laps",
-  list(
-    car=character(1),
-    data=data.frame(lap=numeric(), time=Sys.time()[0])
-) )
+## ------------------------------------------------------------------------
+tpl <- numeric(1L)
+vet(tpl, 1:3)
+vet(tpl, "hello")
+vet(tpl, 42)
 
-## ---------------------------------------------------------
-lap.times <- data.frame(lap=1:10, time=cumsum(rnorm(10, 120, 3)))
-laps.1 <- structure(lap.times, class="laps")
-laps.2 <- structure(list("corvette z06", lap.times), class="laps")
-laps.3 <- laps.4 <- setNames(laps.2, c("car", "data"))
-laps.4$data <- transform(laps.4$data, time=Sys.time() + time)
+## ------------------------------------------------------------------------
+tpl <- integer()
+vet(tpl, 1L:3L)
+vet(tpl, 1L)
 
-## ---------------------------------------------------------
-vet(laps.template, laps.1)   # Forgot to include car
-vet(laps.template, laps.2)   # Missing names
-vet(laps.template, laps.3)   # Lap times should be in POSIXct
-vet(laps.template, laps.4)   # works
+## ------------------------------------------------------------------------
+tpl <- integer(1L)
+vet(tpl, 1)       # this is a numeric, not an integer
+vet(tpl, 1.0001)
 
-## ---------------------------------------------------------
-vet_stopifnot <- function(x)
+## ------------------------------------------------------------------------
+tpl.iris <- iris[0, ]      # 0 row DF matches any number of rows in object
+iris.fake <- iris
+levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
+
+vet(tpl.iris, iris)
+vet(tpl.iris, iris.fake)
+
+## ------------------------------------------------------------------------
+stopifnot_iris <- function(x) {
   stopifnot(
-    is.list(x),
-    inherits(x, "laps"),
-    length(x) == 2L,
-    identical(names(x), c("car", "data")),
-    is.character(x$car),
-    length(x$car) == 1L,
-    is.data.frame(x$data),
-    identical(names(x$data), c("lap", "time")),
-    is.numeric(x$data$lap),
-    identical(mode(x$data$time), "numeric"),
-    inherits(x$data$time, c("POSIXct", "POSIXt"))
+    is.list(x), inherits(x, "data.frame"),
+    length(x) == 5, is.integer(attr(x, 'row.names')),
+    identical(
+      names(x),
+      c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+    ),
+    all(vapply(x[1:4], is.numeric, logical(1L))),
+    typeof(x$Species) == "integer", is.factor(x$Species),
+    identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
   )
+}
+stopifnot_iris(iris.fake)
 
-## ---------------------------------------------------------
-x <- 1:2
-y <- c(1, NA)
-vet(!anyNA(.), x)
-vet(!anyNA(.), y)
+## ------------------------------------------------------------------------
+vet(tpl.iris, iris.fake)
 
-## ---------------------------------------------------------
-vet(numeric(2L) && !anyNA(.), x)
-vet(numeric(2L) && !anyNA(.), y)
-vet(numeric(2L) && !anyNA(.), 1:10)
-vet(numeric(2L) && !anyNA(.) && . > 0L, -(1:2))
+## ------------------------------------------------------------------------
+vet(numeric(1L) || NULL, NULL)
+vet(numeric(1L) || NULL, 42)
+vet(numeric(1L) || NULL, "foo")
 
-## ---------------------------------------------------------
-vet((numeric(2L) && !anyNA(.)) || NULL, 1:2)
-vet((numeric(2L) && !anyNA(.)) || NULL, NULL)
-vet((numeric(2L) && !anyNA(.)) || NULL, letters)
+## ------------------------------------------------------------------------
+vet(numeric(1L) && . > 0, -42)  # strictly positive scalar numeric
+vet(numeric(1L) && . > 0, 42)
 
-## ---- eval=FALSE------------------------------------------
-#  logical(1) || (numeric(1) && . %in% 0:1)
+## ------------------------------------------------------------------------
+scalar.num.pos <- quote(numeric(1L) && . > 0)
+foo.or.bar <- quote(character(1L) && . %in% c('foo', 'bar'))
+vet.exp <- quote(scalar.num.pos || foo.or.bar)
 
-## ---------------------------------------------------------
-vet(logical(1) || (numeric(1) && . %in% 0:1), TRUE)
-vet(logical(1) || (numeric(1) && . %in% 0:1), 0)
-vet(logical(1) || (numeric(1) && . %in% 0:1), "1")
+vet(vet.exp, 42)
+vet(vet.exp, "foo")
+vet(vet.exp, "baz")
 
-## ---- eval=FALSE------------------------------------------
+## ------------------------------------------------------------------------
+vet(NUM.POS, -runif(5))    # positive numeric
+vet(LGL.1, NA)             # TRUE or FALSE
+
+## ---- eval=FALSE---------------------------------------------------------
+#  vet(. > 0, 1:3)
+
+## ---- eval=FALSE---------------------------------------------------------
+#  a <- quote(integer() && . > 0)
+#  b <- quote(logical(1L) && !is.na(.))
+#  c <- quote(a || b)
+#  
+#  vet(c, 1:3)
+
+## ---- eval=FALSE---------------------------------------------------------
+#  vet((integer() && . > 0) || (logical(1L) && !is.na(.)), 1:3)
+
+## ---- eval=FALSE---------------------------------------------------------
+#  vet(quote(x + y), my.call)       # notice `quote`
+
+## ---- eval=FALSE---------------------------------------------------------
+#  tpl.call <- quote(quote(x + y))  # notice `quote(quote(...))`
+#  vet(tpl.call, my.call)
+
+## ---- eval=FALSE---------------------------------------------------------
+#  logical(1) || (numeric(1) && (. > 0 & . < 1))
+
+## ------------------------------------------------------------------------
+vet(. > 0, 1:3)
+
+## ---- eval=FALSE---------------------------------------------------------
+#  vet(logical(1) || (numeric(1) && (. > 0 & . < 1)), 42)
+#  # becomes:
+#  alike(logical(1L), 42) || (alike(numeric(1L)) && all(42 > 0 & 42 < 1))
+#  # becomes:
+#  FALSE || (TRUE && FALSE)
+#  # becomes:
+#  FALSE
+
+## ------------------------------------------------------------------------
+vet(logical(1) || (numeric(1) && (. > 0 & . < 1)), 42)
+
+## ---- eval=FALSE---------------------------------------------------------
 #  I(length(a) == length(b) && . %in% 0:1)
 
-## ---- eval=FALSE------------------------------------------
+## ---- eval=FALSE---------------------------------------------------------
 #  I(logical(1L) && my_special_fun(.))
 
-## ---------------------------------------------------------
-TF <- quote(logical(1) && !anyNA(.))  # note `quote`
-vet(TF, TRUE)
-vet(TF, NA)
-vet(TF, 1)
+## ------------------------------------------------------------------------
+fun <- function(x, y, z) {
+  vetr(
+    matrix(numeric(), ncol=3),
+    logical(1L),
+    character(1L) && . %in% c("foo", "bar")
+  )
+  TRUE  # do work...
+}
+fun(matrix(1:12, 3), TRUE, "baz")
+fun(matrix(1:12, 4), TRUE, "baz")
+fun(matrix(1:12, 4), TRUE, "foo")
 
-## ---------------------------------------------------------
-ZERO_OR_ONE <- quote(numeric(1) && !is.na(.) && . %in% 0:1)
-TF_ish <- quote(TF || ZERO_OR_ONE)
-vet(TF_ish, 1)
-vet(TF_ish, "0")
+## ------------------------------------------------------------------------
+fun <- function(x, y, z) {
+  vetr(z=character(1L) && . %in% c("foo", "bar"))
+  TRUE  # do work...
+}
+fun(matrix(1:12, 3), TRUE, "baz")
+fun(matrix(1:12, 4), TRUE, "bar")
 
-## ---------------------------------------------------------
-NONA <- mk_val_token(!is.na(.), "not contain NAs")
-TF <- quote(logical(1L) && NONA)
-vet(TF, NA)
+## ------------------------------------------------------------------------
+vetr_iris <- function(x) vetr(tpl.iris)
 
-## ---------------------------------------------------------
-vet(NUM.1.POS, 5)
-vet(NUM.1.POS, -3)
-vet(NUM.1.POS, runif(5))
-vet(CHR, letters)
-vet(CHR, factor(letters))
-
-## ---------------------------------------------------------
-library(microbenchmark)
-microbenchmark(
-  vet(laps.template, laps.4), # vet version
-  vet_stopifnot(laps.4)       # validate version
+mb(  # wrapper around microbenchmark
+  vet(tpl.iris, iris),
+  vetr_iris(iris),
+  stopifnot_iris(iris)   # defined in "Templates" section
 )
 
-## ---------------------------------------------------------
-microbenchmark(data.frame(a=numeric()))
+## ------------------------------------------------------------------------
+mb(data.frame(a=numeric()))
 
-## ---------------------------------------------------------
+## ------------------------------------------------------------------------
 secant <- function(f, x, dx) (f(x + dx) - f(x)) / dx
 
-secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
+if(require(valaddin, quietly=TRUE)) {
+  secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
+} else {
+  secant_valaddin <- function(...) warning("valaddin not available.")
+}
+
 secant_stopifnot <- function(f, x, dx) {
   stopifnot(is.numeric(x), is.numeric(dx))
   secant(f, x, dx)
@@ -132,18 +175,10 @@ secant_vetr <- function(f, x, dx) {
   vetr(x=numeric(), dx=numeric())
   secant(f, x, dx)
 }
-microbenchmark(
+
+mb(
   secant_valaddin(log, 1, .1),
   secant_stopifnot(log, 1, .1),
   secant_vetr(log, 1, .1)
 )
-
-## ---------------------------------------------------------
-f.tpl <- `attributes<-`(function(x, y) NULL, NULL)
-secant_vetr2 <- function(f, x, dx) {
-  vetr(f.tpl, numeric(), numeric())
-  secant(f, x, dx)
-}
-secant_vetr2(log, 1, .1)
-secant_vetr2(sin, 1, .1)
 

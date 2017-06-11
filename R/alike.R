@@ -108,7 +108,7 @@
 #' alike(iris, iris.fake)
 #'
 #' ## we even check attributes (factor levels must match)!
-#' iris.fake2 <- iris.fake
+#' iris.fake2 <- iris
 #' levels(iris.fake2$Species) <- c("setosa", "versicolor", "africana")
 #' alike(iris, iris.fake2)
 #'

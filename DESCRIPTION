@@ -24,5 +24,6 @@ Suggests:
     rmarkdown,
     unitizer,
     covr,
-    microbenchmark
+    microbenchmark,
+    valaddin
 RoxygenNote: 6.0.1

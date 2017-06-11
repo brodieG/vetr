@@ -120,18 +120,18 @@ h3.subtitle {
 pre, code {
   background-color: #EEE;
   color: #333;
+  white-space: pre-wrap;    /* Wrap long lines */
   /*border-radius: 3px;*/
 }
+code {font-size: 85%;}
 pre {
   border: 2px solid #EEE;
   overflow: auto;
-  white-space: pre-wrap;    /* Wrap long lines */
   /*
   border-radius: 3px;
   */
   margin: 5px 0px;
   padding: 5px 10px;
-  font-size: 85%;
 }
 pre:not([class]) {
   color: #353;
@@ -232,10 +232,10 @@ a {
 code > span.kw { color: #555; font-weight: bold; } /* Keyword */
 code > span.dt { color: #902000; } /* DataType */
 code > span.dv { color: #40a070; } /* DecVal (decimal values) */
-code > span.bn { color: #d14; } /* BaseN */
-code > span.fl { color: #d14; } /* Float */
-code > span.ch { color: #d14; } /* Char */
-code > span.st { color: #d14; } /* String */
+code > span.bn { color: #555; } /* BaseN */
+code > span.fl { color: #555; } /* Float */
+code > span.ch { color: #555; } /* Char */
+code > span.st { color: #40a070; } /* String */
 code > span.co { color: #888888; font-style: italic; } /* Comment */
 code > span.ot { color: #007020; } /* OtherToken */
 code > span.al { color: #ff0000; font-weight: bold; } /* AlertToken */
