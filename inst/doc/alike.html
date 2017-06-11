@@ -73,10 +73,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <div id="TOC">
 <ul>
-<li><a href="#introduction">Introduction<a name="top"></a></a><ul>
 <li><a href="#what-is-alikeness">What is Alikeness?</a></li>
-<li><a href="#motivation">Motivation</a></li>
-</ul></li>
+<li><a href="#declarative-comparison">Declarative Comparison</a></li>
 <li><a href="#object-comparison">Object Comparison</a><ul>
 <li><a href="#overview">Overview</a></li>
 <li><a href="#length-comparison">Length Comparison</a></li>
@@ -105,10 +103,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </ul>
 </div>
 
-<div id="introduction" class="section level2">
-<h2>Introduction<a name="top"></a></h2>
-<div id="what-is-alikeness" class="section level3">
-<h3>What is Alikeness?</h3>
+<div id="what-is-alikeness" class="section level2">
+<h2>What is Alikeness?</h2>
 <p><code>alike</code> is similar to <code>all.equal</code> from base R except it only compares object structure. As with <code>all.equal</code>, the first argument (<code>target</code>) must be matched by the second (<code>current</code>).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(vetr)
 <span class="kw">alike</span>(<span class="kw">integer</span>(<span class="dv">5</span>), <span class="dv">1</span>:<span class="dv">5</span>)      <span class="co"># different values, but same structure</span></code></pre></div>
@@ -141,19 +137,17 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <pre><code>## [1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(iris.tpl, CO2)                         <span class="co"># but column structure must match</span></code></pre></div>
 <pre><code>## [1] &quot;`names(CO2)[1]` should be \&quot;Sepal.Length\&quot; (is \&quot;Plant\&quot;)&quot;</code></pre>
-<p>“alikeness” is complex to describe, but should be intuitive to grasp. We recommend you look at the examples in the documentation for <code>alike</code> to get a sense for alikeness. If you want to understand the specifics, read on.</p>
+<p>“alikeness” is complex to describe, but should be intuitive to grasp. We recommend you look <code>example(alike)</code> to get a sense of “alikeness”. If you want to understand the specifics, read on.</p>
 </div>
-<div id="motivation" class="section level3">
-<h3>Motivation</h3>
-<p><code>alike</code> allows for template based validation of function arguments, and is used for that purpose by <code>validate</code>. S3 object templates represent structural requirements in a manner akin to prototypes in some OOP languages. Verifying the structural similarity of an S3 object as it enters our functions allows us to write simpler and more robust code. The S4 system does this and more, but S3 objects are still used extensively in R code.</p>
-<p>An alternative to template based validation is to directly check the structure of objects (e.g. <code>is.numeric(.) &amp;&amp; length(.) == .</code>). There are a few advantages to the template based approach:</p>
+<div id="declarative-comparison" class="section level2">
+<h2>Declarative Comparison</h2>
+<p><code>alike</code>’s template based comparison is declarative. You declare what structure an object is expected to implement, and <code>vetr</code> infers all the computations required to verify that is so. This makes is particularly well suited for enforcing structural requirements for S3 objects. The S4 system does this and more, but S3 objects are still used extensively in R code, and sometimes S4 classes are not appropriate.</p>
+<p>There are several advantages to template based comparisons:</p>
 <ul>
-<li>Often times it is simpler to define a template than to write out all the checks to confirm an object conforms to a particular structure</li>
-<li>We can generate the template from a known correct instance of an object and <a href="#Abstracting-Existing-Objects">abstract away</a> the elements that are not specific to the prototype (this is particularly valuable for otherwise complex objects)</li>
-<li>We can produce plainish-english interpretations of structural mismatches since we are dealing with a known limited set of comparisons</li>
-<li>Much of the code we would repeat in every function is encapsulated within <code>alike</code></li>
+<li>Often times it is simpler to define a template than to write out all the checks to confirm an object conforms to a particular structure.</li>
+<li>We can generate the template from a known correct instance of an object and <a href="#Abstracting-Existing-Objects">abstract away</a> the elements that are not specific to the prototype (this is particularly valuable for otherwise complex objects).</li>
+<li>We can produce plainish-english interpretations of structural mismatches since we are dealing with a known limited set of comparisons.</li>
 </ul>
-</div>
 </div>
 <div id="object-comparison" class="section level2">
 <h2>Object Comparison</h2>
@@ -197,21 +191,22 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li>if the template is the global environment, then <code>current</code> must be too (this is because the global environment is often littered with many objects, and explicitly comparing it to another environment could be computationally expensive)</li>
 </ul>
 <p><code>NULL</code> elements within templates in recursive objects are considered undefined and as such act like wildcards:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(<span class="kw">list</span>(<span class="ot">NULL</span>, <span class="ot">NULL</span>), <span class="kw">list</span>(<span class="dv">1</span>:<span class="dv">10</span>, letters))       <span class="co"># two NULLs match two length list</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## two NULLs match two length list
+<span class="kw">alike</span>(<span class="kw">list</span>(<span class="ot">NULL</span>, <span class="ot">NULL</span>), <span class="kw">list</span>(<span class="dv">1</span>:<span class="dv">10</span>, letters))</code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(<span class="kw">list</span>(<span class="ot">NULL</span>, <span class="ot">NULL</span>), <span class="kw">list</span>(<span class="dv">1</span>:<span class="dv">10</span>, letters, iris)) <span class="co"># but not three length list</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## but not three length list
+<span class="kw">alike</span>(<span class="kw">list</span>(<span class="ot">NULL</span>, <span class="ot">NULL</span>), <span class="kw">list</span>(<span class="dv">1</span>:<span class="dv">10</span>, letters, iris))</code></pre></div>
 <pre><code>## [1] &quot;`list(1:10, letters, iris)` should be length 2 (is 3)&quot;</code></pre>
 <p>Note that top level <code>NULL</code>s do not act as wildcards:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(<span class="ot">NULL</span>, <span class="dv">1</span>:<span class="dv">10</span>)                   <span class="co"># NULL only matches NULL</span></code></pre></div>
 <pre><code>## [1] &quot;`1:10` should be \&quot;NULL\&quot; (is \&quot;integer\&quot;)&quot;</code></pre>
-<p>Treating <code>NULL</code> inconsistenly depending on whether it is nested or not is a compromise designed to make <code>alike</code> a better fit for argument validation because arguments that are <code>NULL</code> by default are fairly common.</p>
+<p>Treating <code>NULL</code> inconsistently depending on whether it is nested or not is a compromise designed to make <code>alike</code> a better fit for argument validation because arguments that are <code>NULL</code> by default are fairly common.</p>
 <p><code>alike</code> will check for self-referential loops in nested environments and prevent infinite recursion. If you somehow introduce a self-referential structure in a template without using environments then <code>alike</code> will get stuck in an infinite recursion loop.</p>
+<p>We are currently considering adding new comparison modes for lists that would allow for checks more similar to environments (see <a href="https://github.com/brodieG/vetr/issues/29">#29</a>).</p>
 </div>
 <div id="language-objects-formulas-and-functions" class="section level3">
 <h3>Language Objects, Formulas, and Functions</h3>
-<blockquote>
 <p>Alikeness for these types of objects is a little harder to define. We have settled on somewhat arbitrary semantics, though hopefully they are intuitive. These may change in the future as we gain experience using <code>alike</code> with these types of objects. This is particularly true of functions.</p>
-</blockquote>
 <p>Language objects are also compared recursively, but alikeness has a slightly different meaning for them:</p>
 <div id="language-objects" class="section level4">
 <h4>Language Objects</h4>
@@ -226,7 +221,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fun &lt;-<span class="st"> </span>function(a, b, c) <span class="ot">NULL</span>
 <span class="kw">alike</span>(<span class="kw">quote</span>(<span class="kw">fun</span>(p, q, p)), <span class="kw">quote</span>(<span class="kw">fun</span>(y, x, x)))</code></pre></div>
 <pre><code>## [1] &quot;`quote(fun(y, x, x))[[4]]` should be `y` (is `x`)&quot;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(<span class="kw">quote</span>(<span class="kw">fun</span>(p, q, p)), <span class="kw">quote</span>(<span class="kw">fun</span>(<span class="dt">b=</span>y, x, x)))  <span class="co"># `match.call` re-orders arguments</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># `match.call` re-orders arguments</span>
+<span class="kw">alike</span>(<span class="kw">quote</span>(<span class="kw">fun</span>(p, q, p)), <span class="kw">quote</span>(<span class="kw">fun</span>(<span class="dt">b=</span>y, x, x)))</code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
 <p>Constants match any constants, but keep in mind that expressions like <code>1:10</code> or <code>c(1, 2, 3)</code> are calls to <code>:</code> and <code>c</code> respectively, not constants in the context of language objects.</p>
 <p><code>NULL</code> is a wild card in calls as well:</p>
@@ -257,9 +253,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(print.default, print)   <span class="co"># but not vice versa</span></code></pre></div>
 <pre><code>## [1] &quot;`print` should have argument `digits` after argument `x`&quot;</code></pre>
 <p>A method of a generic must have all arguments present in the generic, with the same default values if those are defined. If the generic contains <code>...</code> then the method may have additional arguments, but must also contain <code>...</code>.</p>
-<blockquote>
-<p>It is likely that in the future we will relax the requirements for funciton alikeness to something closer to the requirements for language objects.</p>
-</blockquote>
+<p>Potential changes / improvements for function comparison are being considered in <a href="https://github.com/brodieG/vetr/issues/35">#35</a>.</p>
 </div>
 </div>
 <div id="s4-and-r5-rc-objects" class="section level3">
@@ -347,16 +341,11 @@ mx.cur2 &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class
 <li>The last class in <code>current</code> must be the same as the last class in <code>target</code></li>
 </ul>
 <p>To illustrate:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tpl &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="ot">NULL</span>, <span class="dt">class=</span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>))</code></pre></div>
-<pre><code>## Warning in structure(NULL, class = c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;)): Calling 'structure(NULL, *)' is deprecated, as NULL cannot have attributes.
-##   Consider 'structure(list(), *)' instead.</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cur &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="ot">NULL</span>, <span class="dt">class=</span><span class="kw">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>))</code></pre></div>
-<pre><code>## Warning in structure(NULL, class = c(&quot;x&quot;, &quot;a&quot;, &quot;b&quot;, &quot;c&quot;)): Calling 'structure(NULL, *)' is deprecated, as NULL cannot have attributes.
-##   Consider 'structure(list(), *)' instead.</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cur2 &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="ot">NULL</span>, <span class="dt">class=</span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>, <span class="st">&quot;x&quot;</span>))</code></pre></div>
-<pre><code>## Warning in structure(NULL, class = c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;x&quot;)): Calling 'structure(NULL, *)' is deprecated, as NULL cannot have attributes.
-##   Consider 'structure(list(), *)' instead.</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(tpl, cur)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tpl &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="ot">TRUE</span>, <span class="dt">class=</span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>))
+cur &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="ot">TRUE</span>, <span class="dt">class=</span><span class="kw">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>))
+cur2 &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="ot">TRUE</span>, <span class="dt">class=</span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>, <span class="st">&quot;x&quot;</span>))
+
+<span class="kw">alike</span>(tpl, cur)</code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(tpl, cur2)</code></pre></div>
 <pre><code>## [1] &quot;`class(cur2)[2]` should be \&quot;a\&quot; (is \&quot;b\&quot;)&quot;</code></pre>
@@ -368,6 +357,10 @@ mx.cur2 &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class
 <div id="levels" class="section level4">
 <h4>levels</h4>
 <p>Levels are compared like <a href="#row.names-and-names">row.names and names</a>.</p>
+</div>
+<div id="srcref" class="section level4">
+<h4>srcref</h4>
+<p>This attribute is completely ignored.</p>
 </div>
 <div id="normal-attributes-that-happen-to-have-special-names" class="section level4">
 <h4>Normal Attributes that Happen To Have Special Names</h4>
@@ -386,7 +379,10 @@ mx.cur2 &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class
 <p>You can always create your own templates by manually building R structures:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">int.scalar &lt;-<span class="st"> </span><span class="kw">integer</span>(1L)
 int.mat<span class="fl">.2</span>.by<span class="fl">.4</span> &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">integer</span>(), <span class="dv">2</span>, <span class="dv">4</span>)
-df.chr.num.num &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class="kw">list</span>(<span class="kw">character</span>(), <span class="kw">numeric</span>(), <span class="kw">numeric</span>()), <span class="dt">class=</span><span class="st">&quot;data.frame&quot;</span>)  <span class="co"># avoid having to specify column names</span></code></pre></div>
+<span class="co"># A df without column names</span>
+df.chr.num.num &lt;-<span class="st"> </span><span class="kw">structure</span>(
+  <span class="kw">list</span>(<span class="kw">character</span>(), <span class="kw">numeric</span>(), <span class="kw">numeric</span>()), <span class="dt">class=</span><span class="st">&quot;data.frame&quot;</span>
+)</code></pre></div>
 </div>
 <div id="abstracting-existing-structures" class="section level3">
 <h3>Abstracting Existing Structures</h3>
@@ -405,9 +401,11 @@ df.chr.num.num &lt;-<span class="st"> </span><span class="kw">structure</span>(<
 <p>and also abstracts the <code>dim</code>, <code>dimnames</code>, and <code>tsp</code> attributes if present. Other attributes are left untouched unless a specific <code>abstract</code> method exists for a particular object that also modifies attributes. One example of such a method is <code>abstract.lm</code>, and it does some minor tweaking to the base abstractions to allow us to match models produced by <code>lm</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df.dummy &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x=</span><span class="kw">runif</span>(<span class="dv">3</span>), <span class="dt">y=</span><span class="kw">runif</span>(<span class="dv">3</span>), <span class="dt">z=</span><span class="kw">runif</span>(<span class="dv">3</span>))
 mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span class="kw">lm</span>(y ~<span class="st"> </span>x +<span class="st"> </span>z, df.dummy))
-<span class="kw">alike</span>(mdl.tpl, <span class="kw">lm</span>(Sepal.Length ~<span class="st"> </span>Sepal.Width +<span class="st"> </span>Petal.Width, iris))  <span class="co"># TRUE, expecting bi-variate model</span></code></pre></div>
+<span class="co"># TRUE, expecting bi-variate model</span>
+<span class="kw">alike</span>(mdl.tpl, <span class="kw">lm</span>(Sepal.Length ~<span class="st"> </span>Sepal.Width +<span class="st"> </span>Petal.Width, iris))</code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">alike</span>(mdl.tpl, <span class="kw">lm</span>(Sepal.Length ~<span class="st"> </span>Sepal.Width, iris)))           <span class="co"># `cat` here to make error message legible</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># `cat` here to make error message legible</span>
+<span class="kw">cat</span>(<span class="kw">alike</span>(mdl.tpl, <span class="kw">lm</span>(Sepal.Length ~<span class="st"> </span>Sepal.Width, iris)))</code></pre></div>
 <pre><code>## `lm(Sepal.Length ~ Sepal.Width, iris)$terms[[3]]` should be a call to `+` (is &quot;symbol&quot;)</code></pre>
 <p>The error message is telling us that at index <code>&quot;terms&quot;</code> (i.e. <code>lm(Sepal.Length ~ Sepal.Width, iris)$terms</code>) <code>alike</code> was expecting a call to <code>+</code> instead of a symbol (i.e <code>Sepal.Width + &lt;somevar&gt;</code> instead of <code>Sepal.Width</code>). The message could certainly be more eloquent, but with a little context it should provide enough information to figure out the problem.</p>
 </div>
@@ -426,19 +424,19 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
   <span class="kw">type_and_len</span>(rivers, rivers)
 )</code></pre></div>
 <pre><code>## nanoseconds 
-##                           expr  min     lq     mean
-## 1    identical(rivers, rivers)  956 1109.5  1431.25
-## 2        alike(rivers, rivers) 1423 1617.5  1982.84
-## 3 type_and_len(rivers, rivers)  873 1017.5 39527.82</code></pre>
-<p>While <code>alike</code> is slower than <code>identical</code>, it is competitive and is actually faster than a bare bones R function that checks types and length. As objects grow more complex, <code>identical</code> will obviously pull ahead, though <code>alike</code> should be sufficiently fast for most applications:</p>
+##                           expr  min     lq     mean median
+## 1    identical(rivers, rivers) 1009 1209.0  1638.13 1344.5
+## 2        alike(rivers, rivers) 1532 1716.5  2527.51 1839.0
+## 3 type_and_len(rivers, rivers)  913 1045.5 33955.02 1166.5</code></pre>
+<p>While <code>alike</code> is slower than <code>identical</code> and the comparable bare bones R function, it is competitive., it is competitive and is actually faster than a bare bones R function that checks types and length. As objects grow more complex, <code>identical</code> will obviously pull ahead, though <code>alike</code> should be sufficiently fast for most applications:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">mb</span>(
   <span class="kw">identical</span>(mtcars, mtcars),
   <span class="kw">alike</span>(mtcars, mtcars)
 )</code></pre></div>
 <pre><code>## nanoseconds 
-##                        expr  min     lq    mean
-## 1 identical(mtcars, mtcars)  931 1144.0 1295.45
-## 2     alike(mtcars, mtcars) 3840 4001.5 4430.47</code></pre>
+##                        expr  min     lq    mean median
+## 1 identical(mtcars, mtcars)  948 1175.5 1318.74 1261.5
+## 2     alike(mtcars, mtcars) 3820 4034.5 4420.32 4123.5</code></pre>
 <p>In the above example, we are comparing the data frames, their attributes, and the 11 columns individually.</p>
 <p>Keep in mind that the complexity of the <code>alike</code> comparison is driven by the complexity of the template, not the object we are checking, so we can always manage the expense of the <code>alike</code> evaluation.</p>
 <p>Comparisons that succeed will be substantially faster than comparisons that fail as the construction of error messages is non-trivial and we have prioritized optimization in the success case.</p>
@@ -446,16 +444,17 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
 <p>Templates with large numbers of attributes (e.g. &gt; 25) may scale non-linearly. We intend to optimize this some day, though in our experience objects with that many attributes are rare (note having multiple objects each with a handful attributes nested in recursive structures is not a problem).</p>
 <p>Large objects will be slower to evaluate. Let us revisit the <code>lm</code> example, though this time we compare our template to itself to ensure that the comparisons succeed for <code>alike</code>, <code>all.equal</code>, and <code>identical</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span class="kw">lm</span>(y ~<span class="st"> </span>x +<span class="st"> </span>z, <span class="kw">data.frame</span>(<span class="dt">x=</span><span class="kw">runif</span>(<span class="dv">3</span>), <span class="dt">y=</span><span class="kw">runif</span>(<span class="dv">3</span>), <span class="dt">z=</span><span class="kw">runif</span>(<span class="dv">3</span>))))
+<span class="co"># compare mdl.tpl to itself to ensure success in all three scenarios</span>
 <span class="kw">mb</span>(
-  <span class="kw">alike</span>(mdl.tpl, mdl.tpl),       <span class="co"># compare mdl.tpl to itself to ensure success in all three scenarios</span>
+  <span class="kw">alike</span>(mdl.tpl, mdl.tpl),
   <span class="kw">all.equal</span>(mdl.tpl, mdl.tpl),   <span class="co"># for reference</span>
   <span class="kw">identical</span>(mdl.tpl, mdl.tpl)
 )</code></pre></div>
-<pre><code>## nanoseconds 
-##                          expr     min        lq       mean
-## 1     alike(mdl.tpl, mdl.tpl)   85003   90643.5  110762.17
-## 2 all.equal(mdl.tpl, mdl.tpl) 1541211 1586137.0 1899734.58
-## 3 identical(mdl.tpl, mdl.tpl)     969    2259.5    3040.81</code></pre>
+<pre><code>## microseconds 
+##                          expr      min        lq       mean    median
+## 1     alike(mdl.tpl, mdl.tpl)   84.904   90.7265  102.41121   98.7660
+## 2 all.equal(mdl.tpl, mdl.tpl) 1524.761 1561.3395 1758.06387 1596.8200
+## 3 identical(mdl.tpl, mdl.tpl)    1.044    2.0505    2.58111    2.6595</code></pre>
 <p>Even with template as large as <code>lm</code> results (check <code>str(mdl.tpl)</code>) we can evaluate <code>alike</code> thousands of times before the overhead becomes noticeable.</p>
 </div>
 <div id="pre-defining-templates" class="section level3">
@@ -470,11 +469,11 @@ df.cur &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span cl
 )</code></pre></div>
 <pre><code>## microseconds 
 ##                                              expr     min       lq
-## 1                           alike(df.tpl, df.cur)   3.260   4.0820
-## 2 alike(data.frame(integer(), numeric()), df.cur) 321.236 331.5985
-##        mean
-## 1   6.52103
-## 2 389.29543</code></pre>
+## 1                           alike(df.tpl, df.cur)   3.291   3.8650
+## 2 alike(data.frame(integer(), numeric()), df.cur) 322.985 327.2255
+##       mean   median
+## 1   5.8776   6.2020
+## 2 390.4004 331.9925</code></pre>
 <p><code>data.frame</code> is a particularly slow constructor, but in general you are best served by defining your templates (including calls to <code>abstract</code>) outside of your function so they are created on package load rather than every time your function is called.</p>
 </div>
 </div>

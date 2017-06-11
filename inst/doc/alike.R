@@ -3,14 +3,14 @@ knitr::opts_chunk$set(error=TRUE)
 library(vetr)
 
 ## ----echo=FALSE----------------------------------------------------------
-mb <- function(...) {
+mb <- function(..., times=25) {
   if(require(microbenchmark, quietly=TRUE)) {
     mb.c <- match.call()
     mb.c[[1]] <- quote(microbenchmark::microbenchmark)
     res <- eval(mb.c, parent.frame())
     res.sum <- summary(res)
     cat(attr(res.sum, "unit"), "\n")
-    print(res.sum[1:4])
+    print(res.sum[1:5])
   } else {
     warning("Package microbenchmark not available.")
   }
@@ -51,8 +51,10 @@ alike(1.1, 1L)   # integers can match numerics
 #  stopifnot(alike(integer(1L), x))
 
 ## ------------------------------------------------------------------------
-alike(list(NULL, NULL), list(1:10, letters))       # two NULLs match two length list
-alike(list(NULL, NULL), list(1:10, letters, iris)) # but not three length list
+## two NULLs match two length list
+alike(list(NULL, NULL), list(1:10, letters))
+## but not three length list
+alike(list(NULL, NULL), list(1:10, letters, iris))
 
 ## ------------------------------------------------------------------------
 alike(NULL, 1:10)                   # NULL only matches NULL
@@ -65,7 +67,8 @@ alike(quote(mean(a, b)), quote(sum(x, y)))  # functions are different
 ## ------------------------------------------------------------------------
 fun <- function(a, b, c) NULL
 alike(quote(fun(p, q, p)), quote(fun(y, x, x)))
-alike(quote(fun(p, q, p)), quote(fun(b=y, x, x)))  # `match.call` re-orders arguments
+# `match.call` re-orders arguments
+alike(quote(fun(p, q, p)), quote(fun(b=y, x, x)))
 
 ## ------------------------------------------------------------------------
 str(one.arg.tpl <- as.call(list(NULL, NULL)))
@@ -109,9 +112,9 @@ alike(mx.tpl, mx.cur2)
 names(dimnames(mx.tpl))
 
 ## ------------------------------------------------------------------------
-tpl <- structure(NULL, class=c("a", "b", "c"))
-cur <- structure(NULL, class=c("x", "a", "b", "c"))
-cur2 <- structure(NULL, class=c("a", "b", "c", "x"))
+tpl <- structure(TRUE, class=c("a", "b", "c"))
+cur <- structure(TRUE, class=c("x", "a", "b", "c"))
+cur2 <- structure(TRUE, class=c("a", "b", "c", "x"))
 
 alike(tpl, cur)
 alike(tpl, cur2)
@@ -119,7 +122,10 @@ alike(tpl, cur2)
 ## ------------------------------------------------------------------------
 int.scalar <- integer(1L)
 int.mat.2.by.4 <- matrix(integer(), 2, 4)
-df.chr.num.num <- structure(list(character(), numeric(), numeric()), class="data.frame")  # avoid having to specify column names
+# A df without column names
+df.chr.num.num <- structure(
+  list(character(), numeric(), numeric()), class="data.frame"
+)
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  iris.tpl <- iris[0, ]
@@ -134,8 +140,10 @@ abstract(list(c(a=1, b=2, c=3), letters))
 ## ------------------------------------------------------------------------
 df.dummy <- data.frame(x=runif(3), y=runif(3), z=runif(3))
 mdl.tpl <- abstract(lm(y ~ x + z, df.dummy))
-alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width + Petal.Width, iris))  # TRUE, expecting bi-variate model
-cat(alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width, iris)))           # `cat` here to make error message legible
+# TRUE, expecting bi-variate model
+alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width + Petal.Width, iris))
+# `cat` here to make error message legible
+cat(alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width, iris)))
 
 ## ------------------------------------------------------------------------
 type_and_len <- function(a, b)
@@ -155,8 +163,9 @@ mb(
 
 ## ------------------------------------------------------------------------
 mdl.tpl <- abstract(lm(y ~ x + z, data.frame(x=runif(3), y=runif(3), z=runif(3))))
+# compare mdl.tpl to itself to ensure success in all three scenarios
 mb(
-  alike(mdl.tpl, mdl.tpl),       # compare mdl.tpl to itself to ensure success in all three scenarios
+  alike(mdl.tpl, mdl.tpl),
   all.equal(mdl.tpl, mdl.tpl),   # for reference
   identical(mdl.tpl, mdl.tpl)
 )

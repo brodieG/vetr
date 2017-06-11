@@ -227,12 +227,12 @@ the simplest of cases.  Here we run our checks on valid iris objects we used to
 illustrate [declarative checks](#declarative-checks-with-templates):
 
 ```{r}
-fun_w_vetr <- function(x) vetr(tpl.iris)
+vetr_iris <- function(x) vetr(tpl.iris)
 
 mb(  # wrapper around microbenchmark
   vet(tpl.iris, iris),
-  fun_w_vetr(iris),
-  vet_stopifnot(iris)
+  vetr_iris(iris),
+  stopifnot_iris(iris)   # defined in "Templates" section
 )
 ```
 
@@ -262,7 +262,8 @@ In this case the `data.frame` call alone take over 100us.
 
 `stopifnot` is a fine solution in many cases, but the error messages that result
 from it can be cryptic, and it can take a fair bit of effort to set-up
-comprehensive tests for complex objects.
+comprehensive tests for complex objects.  Additionally, it is slower except
+perhaps for the simplest of checks.
 
 ### S4 Classes
 
@@ -297,7 +298,7 @@ secant <- function(f, x, dx) (f(x + dx) - f(x)) / dx
 if(require(valaddin, quietly=TRUE)) {
   secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
 } else {
-  secant_valaddin <- function(...) warning("valaddin not available.\n")
+  secant_valaddin <- function(...) warning("valaddin not available.")
 }
 
 secant_stopifnot <- function(f, x, dx) {

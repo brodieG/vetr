@@ -3,14 +3,14 @@ knitr::opts_chunk$set(error=TRUE)
 library(vetr)
 
 ## ----echo=FALSE----------------------------------------------------------
-mb <- function(...) {
+mb <- function(..., times=25) {
   if(require(microbenchmark, quietly=TRUE)) {
     mb.c <- match.call()
     mb.c[[1]] <- quote(microbenchmark::microbenchmark)
     res <- eval(mb.c, parent.frame())
     res.sum <- summary(res)
     cat(attr(res.sum, "unit"), "\n")
-    print(res.sum[1:4])
+    print(res.sum[1:5])
   } else {
     warning("Package microbenchmark not available.")
   }
@@ -41,7 +41,7 @@ vet(tpl.iris, iris)
 vet(tpl.iris, iris.fake)
 
 ## ------------------------------------------------------------------------
-vet_stopifnot <- function(x) {
+stopifnot_iris <- function(x) {
   stopifnot(
     is.list(x), inherits(x, "data.frame"),
     length(x) == 5, is.integer(attr(x, 'row.names')),
@@ -54,7 +54,7 @@ vet_stopifnot <- function(x) {
     identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
   )
 }
-vet_stopifnot(iris.fake)
+stopifnot_iris(iris.fake)
 
 ## ------------------------------------------------------------------------
 vet(tpl.iris, iris.fake)
@@ -147,12 +147,12 @@ fun(matrix(1:12, 3), TRUE, "baz")
 fun(matrix(1:12, 4), TRUE, "bar")
 
 ## ------------------------------------------------------------------------
-fun_w_vetr <- function(x) vetr(tpl.iris)
+vetr_iris <- function(x) vetr(tpl.iris)
 
 mb(  # wrapper around microbenchmark
   vet(tpl.iris, iris),
-  fun_w_vetr(iris),
-  vet_stopifnot(iris)
+  vetr_iris(iris),
+  stopifnot_iris(iris)   # defined in "Templates" section
 )
 
 ## ------------------------------------------------------------------------
@@ -164,7 +164,7 @@ secant <- function(f, x, dx) (f(x + dx) - f(x)) / dx
 if(require(valaddin, quietly=TRUE)) {
   secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
 } else {
-  secant_valaddin <- function(...) warning("valaddin not available.\n")
+  secant_valaddin <- function(...) warning("valaddin not available.")
 }
 
 secant_stopifnot <- function(f, x, dx) {
