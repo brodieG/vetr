@@ -141,12 +141,12 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 iris.fake &lt;-<span class="st"> </span>iris
 <span class="kw">levels</span>(iris.fake$Species)[<span class="dv">3</span>] &lt;-<span class="st"> &quot;sibirica&quot;</span>   <span class="co"># tweak levels</span>
 
-<span class="kw">vet</span>(tpl.iris, iris[<span class="dv">1</span>:<span class="dv">10</span>, ])</code></pre></div>
+<span class="kw">vet</span>(tpl.iris, iris)</code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl.iris, iris.fake[<span class="dv">1</span>:<span class="dv">10</span>, ])</code></pre></div>
-<pre><code>## [1] &quot;`levels((iris.fake[1:10, ])$Species)[3]` should be \&quot;virginica\&quot; (is \&quot;sibirica\&quot;)&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl.iris, iris.fake)</code></pre></div>
+<pre><code>## [1] &quot;`levels(iris.fake$Species)[3]` should be \&quot;virginica\&quot; (is \&quot;sibirica\&quot;)&quot;</code></pre>
 <p>From our declared template <code>iris[0, ]</code>, <code>vetr</code> infers all the required checks. In this case, <code>vet(iris[0, ], iris.fake, stop=TRUE)</code> is equivalent to:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vet_stopifnot &lt;-<span class="st"> </span>function(x) {
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stopifnot_iris &lt;-<span class="st"> </span>function(x) {
   <span class="kw">stopifnot</span>(
     <span class="kw">is.list</span>(x), <span class="kw">inherits</span>(x, <span class="st">&quot;data.frame&quot;</span>),
     <span class="kw">length</span>(x) ==<span class="st"> </span><span class="dv">5</span>, <span class="kw">is.integer</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>)),
@@ -159,16 +159,16 @@ iris.fake &lt;-<span class="st"> </span>iris
     <span class="kw">identical</span>(<span class="kw">levels</span>(x$Species), <span class="kw">c</span>(<span class="st">&quot;setosa&quot;</span>, <span class="st">&quot;versicolor&quot;</span>, <span class="st">&quot;virginica&quot;</span>))
   )
 }
-<span class="kw">vet_stopifnot</span>(iris.fake[<span class="dv">1</span>:<span class="dv">10</span>, ])</code></pre></div>
+<span class="kw">stopifnot_iris</span>(iris.fake)</code></pre></div>
 <pre><code>## Error: identical(levels(x$Species), c(&quot;setosa&quot;, &quot;versicolor&quot;, &quot;virginica&quot;)) is not TRUE</code></pre>
 <p><code>vetr</code> saved us typing, and time to come up with the things that need to be compared.</p>
-<p>You could just as easily have created templates for nested lists, or data frames in lists. Templates are compared to objects with the <code>alike</code> functions. For a thorough description of templates and how they work see the <a href="./alike.html"><code>alike</code> vignette</a>. For template examples see <code>example(alike)</code>.</p>
+<p>You could just as easily have created templates for nested lists, or data frames in lists. Templates are compared to objects with the <code>alike</code>. For a thorough description of templates and how they work see the <a href="./alike.html"><code>alike</code> vignette</a>. For template examples see <code>example(alike)</code>.</p>
 </div>
 <div id="auto-generated-error-messages" class="section level3">
 <h3>Auto-Generated Error Messages</h3>
 <p>Let’s revisit the error message:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl.iris, iris.fake[<span class="dv">1</span>:<span class="dv">10</span>, ])</code></pre></div>
-<pre><code>## [1] &quot;`levels((iris.fake[1:10, ])$Species)[3]` should be \&quot;virginica\&quot; (is \&quot;sibirica\&quot;)&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl.iris, iris.fake)</code></pre></div>
+<pre><code>## [1] &quot;`levels(iris.fake$Species)[3]` should be \&quot;virginica\&quot; (is \&quot;sibirica\&quot;)&quot;</code></pre>
 <p>It tells us:</p>
 <ul>
 <li>The reason for the failure</li>
@@ -312,15 +312,19 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <h2>Performance Considerations</h2>
 <div id="benchmarks" class="section level3">
 <h3>Benchmarks</h3>
-<p><code>vetr</code> is written primarily in C to minimize the performance impact of adding validation checks to your functions. Performance is comparable to or faster better than using <code>stopifnot</code>. Here we run our checks on valid iris objects we used to illustrate <a href="#declarative-checks-with-templates">declarative checks</a>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">mb</span>(  <span class="co"># wrapper around microbenchmark</span>
-  <span class="kw">vet</span>(iris[<span class="dv">0</span>, ], iris[<span class="dv">1</span>:<span class="dv">10</span>, ]),
-  <span class="kw">vet_stopifnot</span>(iris[<span class="dv">1</span>:<span class="dv">10</span>, ])
+<p><code>vetr</code> is written primarily in C to minimize the performance impact of adding validation checks to your functions. Performance should be faster than using <code>stopifnot</code>. The <code>vetr</code> function itself carries some additional overhead from matching arguments, but it should still be faster than <code>stopifnot</code> except in the simplest of cases. Here we run our checks on valid iris objects we used to illustrate <a href="#declarative-checks-with-templates">declarative checks</a>:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vetr_iris &lt;-<span class="st"> </span>function(x) <span class="kw">vetr</span>(tpl.iris)
+
+<span class="kw">mb</span>(  <span class="co"># wrapper around microbenchmark</span>
+  <span class="kw">vet</span>(tpl.iris, iris),
+  <span class="kw">vetr_iris</span>(iris),
+  <span class="kw">stopifnot_iris</span>(iris)   <span class="co"># defined in &quot;Templates&quot; section</span>
 )</code></pre></div>
 <pre><code>## microseconds 
-##                           expr     min       lq     mean
-## 1 vet(iris[0, ], iris[1:10, ]) 116.827 128.3545 168.6651
-## 2  vet_stopifnot(iris[1:10, ]) 127.157 141.1590 183.8112</code></pre>
+##                   expr    min      lq     mean  median
+## 1  vet(tpl.iris, iris)  6.179  7.2835  8.59369  7.6935
+## 2      vetr_iris(iris) 14.228 15.6515 30.57223 17.1640
+## 3 stopifnot_iris(iris) 85.158 89.5365 95.20954 90.8335</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -329,8 +333,8 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">mb</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
 <pre><code>## microseconds 
-##                        expr    min       lq     mean
-## 1 data.frame(a = numeric()) 100.48 101.6495 105.6473</code></pre>
+##                        expr     min      lq     mean  median
+## 1 data.frame(a = numeric()) 119.664 122.232 127.9718 123.237</code></pre>
 <p>In this case the <code>data.frame</code> call alone take over 100us.</p>
 </div>
 </div>
@@ -338,7 +342,7 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <h2>Alternatives</h2>
 <div id="stopifnot" class="section level3">
 <h3><code>stopifnot</code></h3>
-<p><code>stopifnot</code> is a fine solution in many cases, but the error messages that result from it can be cryptic, and it can take a fair bit of effort to set-up comprehensive tests for complex objects.</p>
+<p><code>stopifnot</code> is a fine solution in many cases, but the error messages that result from it can be cryptic, and it can take a fair bit of effort to set-up comprehensive tests for complex objects. Additionally, it is slower except perhaps for the simplest of checks.</p>
 </div>
 <div id="s4-classes" class="section level3">
 <h3>S4 Classes</h3>
@@ -355,11 +359,14 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <li>Minimal computational overhead</li>
 </ul>
 <p>Here we borrow an example from the <code>valaddin</code> vignette to illustrate the last point:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(valaddin)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">secant &lt;-<span class="st"> </span>function(f, x, dx) (<span class="kw">f</span>(x +<span class="st"> </span>dx) -<span class="st"> </span><span class="kw">f</span>(x)) /<span class="st"> </span>dx
 
-secant &lt;-<span class="st"> </span>function(f, x, dx) (<span class="kw">f</span>(x +<span class="st"> </span>dx) -<span class="st"> </span><span class="kw">f</span>(x)) /<span class="st"> </span>dx
+if(<span class="kw">require</span>(valaddin, <span class="dt">quietly=</span><span class="ot">TRUE</span>)) {
+  secant_valaddin &lt;-<span class="st"> </span>valaddin::<span class="kw">firmly</span>(secant, <span class="kw">list</span>(~x, ~dx) ~<span class="st"> </span>is.numeric)
+} else {
+  secant_valaddin &lt;-<span class="st"> </span>function(...) <span class="kw">warning</span>(<span class="st">&quot;valaddin not available.&quot;</span>)
+}
 
-secant_valaddin &lt;-<span class="st"> </span>valaddin::<span class="kw">firmly</span>(secant, <span class="kw">list</span>(~x, ~dx) ~<span class="st"> </span>is.numeric)
 secant_stopifnot &lt;-<span class="st"> </span>function(f, x, dx) {
   <span class="kw">stopifnot</span>(<span class="kw">is.numeric</span>(x), <span class="kw">is.numeric</span>(dx))
   <span class="kw">secant</span>(f, x, dx)
@@ -375,22 +382,26 @@ secant_vetr &lt;-<span class="st"> </span>function(f, x, dx) {
   <span class="kw">secant_vetr</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>)
 )</code></pre></div>
 <pre><code>## microseconds 
-##                            expr     min       lq      mean
-## 1  secant_valaddin(log, 1, 0.1) 152.004 157.6165 283.86216
-## 2 secant_stopifnot(log, 1, 0.1)   7.472   9.5155  55.27248
-## 3      secant_vetr(log, 1, 0.1)  14.704  15.9985  39.69649</code></pre>
+##                            expr     min      lq      mean   median
+## 1  secant_valaddin(log, 1, 0.1) 184.508 191.311 379.33456 195.3495
+## 2 secant_stopifnot(log, 1, 0.1)   9.693  11.575  36.57268  12.6840
+## 3      secant_vetr(log, 1, 0.1)  17.768  19.761  94.22996  22.1130</code></pre>
 <p>In many cases ~100us is not enough of a difference to be concerned with, but if an R function must be applied repeatedly (e.g. split-apply-combine analysis with many groups) then it becomes meaningful.</p>
 </div>
 <div id="other-third-party-packages" class="section level3">
 <h3>Other Third Party Packages</h3>
 <ul>
-<li><a href="https://github.com/smbache/ensurer">ensurer</a> by Stefan M Bache allows you to specify contracts for data validation and has an experimental implementation of type-safe functions.</li>
-<li><a href="https://github.com/data-cleaning/validate">validate</a> by Mark van der Loo and Edwin de Jonge provides tools for checking data</li>
-<li><a href="https://github.com/jimhester/types">types</a> by Jim Hester provides a mechanism for defining what types arguments should be, though it does not directly enforce them</li>
-<li><a href="https://github.com/gaborcsardi/argufy">argufy</a> by Gábor Csárdi adds parameter checks via Roxygen (not published to CRAN)</li>
+<li>
+<a href="https://github.com/smbache/ensurer">ensurer</a> by Stefan M Bache allows you to specify contracts for data validation and has an experimental implementation of type-safe functions.
+<li>
+<a href="https://github.com/data-cleaning/validate">validate</a> by Mark van der Loo and Edwin de Jonge provides tools for checking data
+<li>
+<a href="https://github.com/jimhester/types">types</a> by Jim Hester provides a mechanism for defining what types arguments should be, though it does not directly enforce them
+<li>
+<a href="https://github.com/gaborcsardi/argufy">argufy</a> by Gábor Csárdi adds parameter checks via Roxygen (not published to CRAN)
 </ul>
 <hr />
-<p><sup>1</sup>: We take some liberties in this example for clarity. For instance, <code>alike</code> returns a character vector on failure, not <code>FALSE</code>, so really what <code>vet</code> is doing is <code>isTRUE(alike(...))</code>.</p>
+<p><sup>1</sup>We take some liberties in this example for clarity. For instance, <code>alike</code> returns a character vector on failure, not <code>FALSE</code>, so really what <code>vet</code> is doing is <code>isTRUE(alike(...))</code>.</p>
 </div>
 </div>
 

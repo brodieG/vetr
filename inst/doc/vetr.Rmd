@@ -13,19 +13,10 @@ vignette: >
 ---
 
 ```{r global_options, echo=FALSE}
-knitr::opts_chunk$set(error=TRUE, hilang='r')
-options(width=60)
+knitr::opts_chunk$set(error=TRUE)
 library(vetr)
-mb <- function(...) {
-  mb.c <- match.call()
-  mb.c[[1]] <- quote(microbenchmark::microbenchmark)
-  res <- eval(mb.c, parent.frame())
-  res.sum <- summary(res)
-  cat(attr(res.sum, "unit"), "\n")
-  print(res.sum[1:4])
-
-}
 ```
+
 ```{r child='./rmdhunks/microbenchmark.Rmd'}
 ```
 
@@ -229,14 +220,19 @@ Vetting expressions work the same way with `vetr` as they do with `vet`.
 ### Benchmarks
 
 `vetr` is written primarily in C to minimize the performance impact of adding
-validation checks to your functions.  Performance is comparable to or faster
-better than using `stopifnot`.  Here we run our checks on valid iris objects
-we used to illustrate [declarative checks](#declarative-checks-with-templates):
+validation checks to your functions.  Performance should be faster than using
+`stopifnot`.  The `vetr` function itself carries some additional overhead from
+matching arguments, but it should still be faster than `stopifnot` except in
+the simplest of cases.  Here we run our checks on valid iris objects we used to
+illustrate [declarative checks](#declarative-checks-with-templates):
 
 ```{r}
+vetr_iris <- function(x) vetr(tpl.iris)
+
 mb(  # wrapper around microbenchmark
-  vet(iris[0, ], iris[1:10, ]),
-  vet_stopifnot(iris[1:10, ])
+  vet(tpl.iris, iris),
+  vetr_iris(iris),
+  stopifnot_iris(iris)   # defined in "Templates" section
 )
 ```
 
@@ -266,7 +262,8 @@ In this case the `data.frame` call alone take over 100us.
 
 `stopifnot` is a fine solution in many cases, but the error messages that result
 from it can be cryptic, and it can take a fair bit of effort to set-up
-comprehensive tests for complex objects.
+comprehensive tests for complex objects.  Additionally, it is slower except
+perhaps for the simplest of checks.
 
 ### S4 Classes
 
@@ -296,11 +293,14 @@ Here we borrow an example from the `valaddin` vignette to illustrate the
 last point:
 
 ```{r}
-library(valaddin)
-
 secant <- function(f, x, dx) (f(x + dx) - f(x)) / dx
 
-secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
+if(require(valaddin, quietly=TRUE)) {
+  secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
+} else {
+  secant_valaddin <- function(...) warning("valaddin not available.")
+}
+
 secant_stopifnot <- function(f, x, dx) {
   stopifnot(is.numeric(x), is.numeric(dx))
   secant(f, x, dx)
@@ -323,11 +323,13 @@ with many groups) then it becomes meaningful.
 
 ### Other Third Party Packages
 
+<ul>
 ```{r child='./rmdhunks/related-packages.Rmd'}
 ```
+</ul>
 
 ----
-<sup>1</sup>: We take some liberties in this example for clarity.  For instance, `alike` returns a character vector on failure, not `FALSE`, so really what `vet` is doing is `isTRUE(alike(...))`.
+<sup>1</sup>We take some liberties in this example for clarity.  For instance, `alike` returns a character vector on failure, not `FALSE`, so really what `vet` is doing is `isTRUE(alike(...))`.
 
 [1]: ./vetr.html
 [2]: ./alike.html

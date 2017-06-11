@@ -134,6 +134,8 @@ It tells us:
 location of failure is generated such that you can easily copy it in part or
 full to the R prompt for further examination.
 
+## Vetting Expressions
+
 
 You can combine templates with `&&` / `||`:
 
@@ -244,19 +246,23 @@ devtools::install_github('brodieg/vetr@development')
 
 ## Related Packages
 
-* [valaddin](https://github.com/egnha/valaddin) by Eugene Ha (see [vignette][4]
+<ul>
+  <li><a href='https://github.com/egnha/valaddin'>valaddin</a> by Eugene Ha (see
+  <a
+  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#valaddin'>vignette</a>
   for a more detailed comparison) has very similar objectives to `vetr`
 
-* [ensurer](https://github.com/smbache/ensurer) by Stefan M Bache allows you to
-  specify contracts for data validation and has an experimental implementation
-  of type-safe functions.
-* [validate](https://github.com/data-cleaning/validate) by Mark van der Loo and
-  Edwin de Jonge provides tools for checking data
-* [types](https://github.com/jimhester/types) by Jim Hester provides a mechanism
-  for defining what types arguments should be, though it does not directly
-  enforce them
-* [argufy](https://github.com/gaborcsardi/argufy) by Gábor Csárdi adds
-  parameter checks via Roxygen (not published to CRAN)
+  <li><a href='https://github.com/smbache/ensurer'>ensurer</a> by Stefan M Bache
+  allows you to specify contracts for data validation and has an experimental
+  implementation of type-safe functions.
+  <li><a href='https://github.com/data-cleaning/validate'>validate</a> by Mark van
+  der Loo and Edwin de Jonge provides tools for checking data
+  <li><a href='https://github.com/jimhester/types'>types</a> by Jim Hester
+  provides a mechanism for defining what types arguments should be, though it does
+  not directly enforce them
+  <li><a href='https://github.com/gaborcsardi/argufy'>argufy</a> by Gábor Csárdi
+  adds parameter checks via Roxygen (not published to CRAN)
+</ul>
 
 ## Acknowledgments
 
@@ -271,8 +277,9 @@ Thank you to:
 * [Dirk Eddelbuettel](https://github.com/eddelbuettel) and [Carl
   Boettiger](https://github.com/cboettig) for the
   [rocker](https://github.com/rocker-org/rocker) project, and [Gábor
-  Csárdi](https://github.com/gaborcsardi) and the R-consortium for Rhub, without
-  which testing bugs on R-devel and other platforms would be a nightmare.
+  Csárdi](https://github.com/gaborcsardi) and the R-consortium for
+  [Rhub](https://github.com/r-hub/rhub), without which testing bugs on R-devel
+  and other platforms would be a nightmare.
 * [Yihui Xie](https://github.com/yihui) for
   [knitr](https://cran.r-project.org/package=knitr) and  [J.J.
   Allaire](https://github.com/jjallaire) etal for
@@ -301,4 +308,3 @@ Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 [1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html
 [2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/alike.html
 [3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#non-standard-evaluation
-[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#valaddin

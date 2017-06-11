@@ -36,15 +36,15 @@ tpl.iris <- iris[0, ]      # 0 row DF matches any number of rows in object
 iris.fake <- iris
 levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
 
-vet(tpl.iris, iris[1:10, ])
-vet(tpl.iris, iris.fake[1:10, ])
+vet(tpl.iris, iris)
+vet(tpl.iris, iris.fake)
 ```
 
 From our declared template `iris[0, ]`, `vetr` infers all the required checks.
 In this case, `vet(iris[0, ], iris.fake, stop=TRUE)` is equivalent to:
 
 ```{r}
-vet_stopifnot <- function(x) {
+stopifnot_iris <- function(x) {
   stopifnot(
     is.list(x), inherits(x, "data.frame"),
     length(x) == 5, is.integer(attr(x, 'row.names')),
@@ -57,14 +57,14 @@ vet_stopifnot <- function(x) {
     identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
   )
 }
-vet_stopifnot(iris.fake[1:10, ])
+stopifnot_iris(iris.fake)
 ```
 
 `vetr` saved us typing, and time to come up with the things that need to be
 compared.
 
 You could just as easily have created templates for nested lists, or data frames
-in lists.  Templates are compared to objects with the `alike` functions.  For a
+in lists.  Templates are compared to objects with the `alike`.  For a
 thorough description of templates and how they work see the [`alike`
 vignette][2].  For template examples see `example(alike)`.
 
@@ -73,7 +73,7 @@ vignette][2].  For template examples see `example(alike)`.
 Let's revisit the error message:
 
 ```{r}
-vet(tpl.iris, iris.fake[1:10, ])
+vet(tpl.iris, iris.fake)
 ```
 
 It tells us:
