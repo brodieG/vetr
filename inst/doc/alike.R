@@ -1,3 +1,21 @@
+## ----global_options, echo=FALSE------------------------------------------
+knitr::opts_chunk$set(error=TRUE)
+library(vetr)
+
+## ----echo=FALSE----------------------------------------------------------
+mb <- function(...) {
+  if(require(microbenchmark, quietly=TRUE)) {
+    mb.c <- match.call()
+    mb.c[[1]] <- quote(microbenchmark::microbenchmark)
+    res <- eval(mb.c, parent.frame())
+    res.sum <- summary(res)
+    cat(attr(res.sum, "unit"), "\n")
+    print(res.sum[1:4])
+  } else {
+    warning("Package microbenchmark not available.")
+  }
+}
+
 ## ------------------------------------------------------------------------
 library(vetr)
 alike(integer(5), 1:5)      # different values, but same structure
@@ -120,36 +138,35 @@ alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width + Petal.Width, iris))  # TRUE, expe
 cat(alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width, iris)))           # `cat` here to make error message legible
 
 ## ------------------------------------------------------------------------
-library(microbenchmark)
-type_and_len <- function(a, b) typeof(a) == typeof(b) && length(a) == length(b)  # for reference
-microbenchmark(
+type_and_len <- function(a, b)
+  typeof(a) == typeof(b) && length(a) == length(b)  # for reference
+
+mb(  # a wrapper around `microbenchmark`
   identical(rivers, rivers),
   alike(rivers, rivers),
   type_and_len(rivers, rivers)
 )
 
 ## ------------------------------------------------------------------------
-microbenchmark(
+mb(
   identical(mtcars, mtcars),
   alike(mtcars, mtcars)
 )
 
 ## ------------------------------------------------------------------------
 mdl.tpl <- abstract(lm(y ~ x + z, data.frame(x=runif(3), y=runif(3), z=runif(3))))
-mb <- microbenchmark(unit="us",
+mb(
   alike(mdl.tpl, mdl.tpl),       # compare mdl.tpl to itself to ensure success in all three scenarios
   all.equal(mdl.tpl, mdl.tpl),   # for reference
   identical(mdl.tpl, mdl.tpl)
 )
-summary(mb)[1:4]  # note: in microseconds
 
 ## ------------------------------------------------------------------------
 df.tpl <- data.frame(a=integer(), b=numeric())
 df.cur <- data.frame(a=1:10, b=1:10 + .1)
 
-mb <- microbenchmark(unit="us",
+mb(
   alike(df.tpl, df.cur),
   alike(data.frame(integer(), numeric()), df.cur)
 )
-summary(mb)[1:4]  # note: in microseconds
 

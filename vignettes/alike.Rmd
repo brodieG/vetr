@@ -12,6 +12,14 @@ vignette: >
   %\usepackage[utf8]{inputenc}
 ---
 
+```{r global_options, echo=FALSE}
+knitr::opts_chunk$set(error=TRUE)
+library(vetr)
+```
+
+```{r child='./rmdhunks/microbenchmark.Rmd'}
+```
+
 ## Introduction<a name=top></a>
 
 ### What is Alikeness?
@@ -196,7 +204,7 @@ alike(y ~ x ^ 2, a ~ b ^ 3)
 #### Functions
 
 Functions are `alike` if the signature of the `current` function can reasonably
-be interpreted as a valid method for the `target` function.  
+be interpreted as a valid method for the `target` function.
 
 ```{r}
 alike(print, print.default)   # print can be the generic for print.default
@@ -392,12 +400,13 @@ The error message is telling us that at index `"terms"` (i.e. `lm(Sepal.Length ~
 
 ### Sample Timings
 
-We have gone to great lengths to make `alike` fast so that it can be included in other functions without concerns for what overhead.  Here are some benchmarks measured on a Intel(R) Core(TM) i7-3667U CPU @@ 2.00GHz MBA running OS X Mavericks and R 3.1.2.:
+We have gone to great lengths to make `alike` fast so that it can be included in other functions without concerns for what overhead:
 
 ```{r}
-library(microbenchmark)
-type_and_len <- function(a, b) typeof(a) == typeof(b) && length(a) == length(b)  # for reference
-microbenchmark(
+type_and_len <- function(a, b)
+  typeof(a) == typeof(b) && length(a) == length(b)  # for reference
+
+mb(  # a wrapper around `microbenchmark`
   identical(rivers, rivers),
   alike(rivers, rivers),
   type_and_len(rivers, rivers)
@@ -407,7 +416,7 @@ microbenchmark(
 While `alike` is slower than `identical`, it is competitive and is actually faster than a bare bones R function that checks types and length.  As objects grow more complex, `identical` will obviously pull ahead, though `alike` should be sufficiently fast for most applications:
 
 ```{r}
-microbenchmark(
+mb(
   identical(mtcars, mtcars),
   alike(mtcars, mtcars)
 )
@@ -426,12 +435,11 @@ Large objects will be slower to evaluate.  Let us revisit the `lm` example, thou
 
 ```{r}
 mdl.tpl <- abstract(lm(y ~ x + z, data.frame(x=runif(3), y=runif(3), z=runif(3))))
-mb <- microbenchmark(unit="us",
+mb(
   alike(mdl.tpl, mdl.tpl),       # compare mdl.tpl to itself to ensure success in all three scenarios
   all.equal(mdl.tpl, mdl.tpl),   # for reference
   identical(mdl.tpl, mdl.tpl)
 )
-summary(mb)[1:4]  # note: in microseconds
 ```
 
 Even with template as large as `lm` results (check `str(mdl.tpl)`) we can evaluate `alike` thousands of times before the overhead becomes noticeable.
@@ -444,11 +452,10 @@ Some fairly innocuous R expressions carry substantial overhead.  Consider:
 df.tpl <- data.frame(a=integer(), b=numeric())
 df.cur <- data.frame(a=1:10, b=1:10 + .1)
 
-mb <- microbenchmark(unit="us",
+mb(
   alike(df.tpl, df.cur),
   alike(data.frame(integer(), numeric()), df.cur)
 )
-summary(mb)[1:4]  # note: in microseconds
 ```
 
 `data.frame` is a particularly slow constructor, but in general you are best served by defining your templates (including calls to `abstract`) outside of your function so they are created on package load rather than every time your function is called.

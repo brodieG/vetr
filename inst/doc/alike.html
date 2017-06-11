@@ -416,32 +416,29 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
 <h2>Performance Considerations</h2>
 <div id="sample-timings" class="section level3">
 <h3>Sample Timings</h3>
-<p>We have gone to great lengths to make <code>alike</code> fast so that it can be included in other functions without concerns for what overhead. Here are some benchmarks measured on a Intel(R) Core(TM) i7-3667U CPU @@ 2.00GHz MBA running OS X Mavericks and R 3.1.2.:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(microbenchmark)
-type_and_len &lt;-<span class="st"> </span>function(a, b) <span class="kw">typeof</span>(a) ==<span class="st"> </span><span class="kw">typeof</span>(b) &amp;&amp;<span class="st"> </span><span class="kw">length</span>(a) ==<span class="st"> </span><span class="kw">length</span>(b)  <span class="co"># for reference</span>
-<span class="kw">microbenchmark</span>(
+<p>We have gone to great lengths to make <code>alike</code> fast so that it can be included in other functions without concerns for what overhead:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">type_and_len &lt;-<span class="st"> </span>function(a, b)
+  <span class="kw">typeof</span>(a) ==<span class="st"> </span><span class="kw">typeof</span>(b) &amp;&amp;<span class="st"> </span><span class="kw">length</span>(a) ==<span class="st"> </span><span class="kw">length</span>(b)  <span class="co"># for reference</span>
+
+<span class="kw">mb</span>(  <span class="co"># a wrapper around `microbenchmark`</span>
   <span class="kw">identical</span>(rivers, rivers),
   <span class="kw">alike</span>(rivers, rivers),
   <span class="kw">type_and_len</span>(rivers, rivers)
 )</code></pre></div>
-<pre><code>## Unit: nanoseconds
-##                          expr  min     lq     mean median     uq     max
-##     identical(rivers, rivers) 1040 1170.0  1283.47 1210.5 1299.5    3862
-##         alike(rivers, rivers) 1451 1553.0  1786.30 1627.0 1724.5   11185
-##  type_and_len(rivers, rivers)  957 1037.5 29219.73 1098.0 1192.0 2803479
-##  neval
-##    100
-##    100
-##    100</code></pre>
+<pre><code>## nanoseconds 
+##                           expr  min     lq     mean
+## 1    identical(rivers, rivers)  956 1109.5  1431.25
+## 2        alike(rivers, rivers) 1423 1617.5  1982.84
+## 3 type_and_len(rivers, rivers)  873 1017.5 39527.82</code></pre>
 <p>While <code>alike</code> is slower than <code>identical</code>, it is competitive and is actually faster than a bare bones R function that checks types and length. As objects grow more complex, <code>identical</code> will obviously pull ahead, though <code>alike</code> should be sufficiently fast for most applications:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">microbenchmark</span>(
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">mb</span>(
   <span class="kw">identical</span>(mtcars, mtcars),
   <span class="kw">alike</span>(mtcars, mtcars)
 )</code></pre></div>
-<pre><code>## Unit: microseconds
-##                       expr   min     lq    mean median    uq    max neval
-##  identical(mtcars, mtcars) 1.371 1.5750 1.82532  1.667 1.764 10.413   100
-##      alike(mtcars, mtcars) 5.334 5.4485 6.19346  5.523 5.628 36.519   100</code></pre>
+<pre><code>## nanoseconds 
+##                        expr  min     lq    mean
+## 1 identical(mtcars, mtcars)  931 1144.0 1295.45
+## 2     alike(mtcars, mtcars) 3840 4001.5 4430.47</code></pre>
 <p>In the above example, we are comparing the data frames, their attributes, and the 11 columns individually.</p>
 <p>Keep in mind that the complexity of the <code>alike</code> comparison is driven by the complexity of the template, not the object we are checking, so we can always manage the expense of the <code>alike</code> evaluation.</p>
 <p>Comparisons that succeed will be substantially faster than comparisons that fail as the construction of error messages is non-trivial and we have prioritized optimization in the success case.</p>
@@ -449,16 +446,16 @@ type_and_len &lt;-<span class="st"> </span>function(a, b) <span class="kw">typeo
 <p>Templates with large numbers of attributes (e.g. &gt; 25) may scale non-linearly. We intend to optimize this some day, though in our experience objects with that many attributes are rare (note having multiple objects each with a handful attributes nested in recursive structures is not a problem).</p>
 <p>Large objects will be slower to evaluate. Let us revisit the <code>lm</code> example, though this time we compare our template to itself to ensure that the comparisons succeed for <code>alike</code>, <code>all.equal</code>, and <code>identical</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span class="kw">lm</span>(y ~<span class="st"> </span>x +<span class="st"> </span>z, <span class="kw">data.frame</span>(<span class="dt">x=</span><span class="kw">runif</span>(<span class="dv">3</span>), <span class="dt">y=</span><span class="kw">runif</span>(<span class="dv">3</span>), <span class="dt">z=</span><span class="kw">runif</span>(<span class="dv">3</span>))))
-mb &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(<span class="dt">unit=</span><span class="st">&quot;us&quot;</span>,
+<span class="kw">mb</span>(
   <span class="kw">alike</span>(mdl.tpl, mdl.tpl),       <span class="co"># compare mdl.tpl to itself to ensure success in all three scenarios</span>
   <span class="kw">all.equal</span>(mdl.tpl, mdl.tpl),   <span class="co"># for reference</span>
   <span class="kw">identical</span>(mdl.tpl, mdl.tpl)
-)
-<span class="kw">summary</span>(mb)[<span class="dv">1</span>:<span class="dv">4</span>]  <span class="co"># note: in microseconds</span></code></pre></div>
-<pre><code>##                          expr      min        lq       mean
-## 1     alike(mdl.tpl, mdl.tpl)   72.067   81.9865   97.66442
-## 2 all.equal(mdl.tpl, mdl.tpl) 1157.616 1270.6335 1493.71950
-## 3 identical(mdl.tpl, mdl.tpl)    1.023    1.4450    2.20312</code></pre>
+)</code></pre></div>
+<pre><code>## nanoseconds 
+##                          expr     min        lq       mean
+## 1     alike(mdl.tpl, mdl.tpl)   85003   90643.5  110762.17
+## 2 all.equal(mdl.tpl, mdl.tpl) 1541211 1586137.0 1899734.58
+## 3 identical(mdl.tpl, mdl.tpl)     969    2259.5    3040.81</code></pre>
 <p>Even with template as large as <code>lm</code> results (check <code>str(mdl.tpl)</code>) we can evaluate <code>alike</code> thousands of times before the overhead becomes noticeable.</p>
 </div>
 <div id="pre-defining-templates" class="section level3">
@@ -467,17 +464,17 @@ mb &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(<span cl
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">integer</span>(), <span class="dt">b=</span><span class="kw">numeric</span>())
 df.cur &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="dv">1</span>:<span class="dv">10</span>, <span class="dt">b=</span><span class="dv">1</span>:<span class="dv">10</span> +<span class="st"> </span>.<span class="dv">1</span>)
 
-mb &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(<span class="dt">unit=</span><span class="st">&quot;us&quot;</span>,
+<span class="kw">mb</span>(
   <span class="kw">alike</span>(df.tpl, df.cur),
   <span class="kw">alike</span>(<span class="kw">data.frame</span>(<span class="kw">integer</span>(), <span class="kw">numeric</span>()), df.cur)
-)
-<span class="kw">summary</span>(mb)[<span class="dv">1</span>:<span class="dv">4</span>]  <span class="co"># note: in microseconds</span></code></pre></div>
-<pre><code>##                                              expr     min       lq
-## 1                           alike(df.tpl, df.cur)   2.800   3.1070
-## 2 alike(data.frame(integer(), numeric()), df.cur) 260.482 273.0765
+)</code></pre></div>
+<pre><code>## microseconds 
+##                                              expr     min       lq
+## 1                           alike(df.tpl, df.cur)   3.260   4.0820
+## 2 alike(data.frame(integer(), numeric()), df.cur) 321.236 331.5985
 ##        mean
-## 1   4.36705
-## 2 277.43103</code></pre>
+## 1   6.52103
+## 2 389.29543</code></pre>
 <p><code>data.frame</code> is a particularly slow constructor, but in general you are best served by defining your templates (including calls to <code>abstract</code>) outside of your function so they are created on package load rather than every time your function is called.</p>
 </div>
 </div>
