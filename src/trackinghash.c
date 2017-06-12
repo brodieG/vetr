@@ -124,11 +124,10 @@ SEXP VALC_track_hash_test(SEXP keys, SEXP size) {
   if(TYPEOF(keys) != STRSXP) error("Arg keys must be character");
   if(TYPEOF(size) != INTSXP) error("Arg size must be integer");
 
-  int size_int = asInteger(size);
   R_xlen_t i, key_size = XLENGTH(keys);
   SEXP res = PROTECT(allocVector(INTSXP, key_size));
 
-  struct track_hash * track_hash = create_track_hash(asInteger(size));
+  struct track_hash * track_hash = VALC_create_track_hash(asInteger(size));
 
   for(i = 0; i < key_size; ++i) {
     if(STRING_ELT(keys, i) == NA_STRING) {
@@ -136,12 +135,12 @@ SEXP VALC_track_hash_test(SEXP keys, SEXP size) {
       if(++i < key_size) {
         int reset_int = atoi(CHAR(STRING_ELT(keys, i)));
         if(reset_int < 0) error("Internal Error: negative reset key.");
-        reset_track_hash(track_hash, (size_t) reset_int);
+        VALC_reset_track_hash(track_hash, (size_t) reset_int);
         INTEGER(res)[i] = reset_int;
       }
     } else {
       INTEGER(res)[i] =
-        add_to_track_hash(track_hash, CHAR(STRING_ELT(keys, i)));
+        VALC_add_to_track_hash(track_hash, CHAR(STRING_ELT(keys, i)), "42");
     }
   }
   UNPROTECT(1);
