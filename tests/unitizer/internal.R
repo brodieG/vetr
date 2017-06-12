@@ -439,6 +439,17 @@ unitizer_sect("Hash", {
     1:26, function(x) paste0(LETTERS[seq(x)], collapse=""), character(1L)
   )
   vetr:::hash_test(keys, values)
+
+  ## hash tracking, uses a hash to detect potential collisions
+
+  vetr:::track_hash(letters[1:3], 2)  # one resize
+  vetr:::track_hash(letters[1:5], 2)  # two resize
+
+  vetr:::track_hash(c("a", "b", "b"), 2)          # one repeat
+  vetr:::track_hash(c("a", "b", NA, 1,  "b"), 2)  # reset prior to repeat
+
+  keys <- c("a", "b", NA, 1,  "b", "hello", "goodbye", "a", NA, 3, "hello", "b")
+  vetr:::track_hash(keys, 8)
 })
 unitizer_sect("Mode", {
   vetr:::alike_mode(NULL)
