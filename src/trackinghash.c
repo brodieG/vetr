@@ -34,13 +34,17 @@ struct track_hash * VALC_create_track_hash(size_t size_init) {
  */
 
 void VALC_reset_track_hash(struct track_hash * track_hash, size_t idx) {
-  for(size_t i = idx; i <= track_hash->idx; i--) {
-    int del_res = pfHashDel(track_hash->hash, track_hash->contents[i]);
+  Rprintf("in reset with track_hash->idx %d and idx %d\n", track_hash->idx, idx);
+  Rprintf("Check size %d\n", track_hash->idx <= idx);
+  for(size_t i = track_hash->idx; i > idx; --i) {
+    Rprintf("Delete index %d %s\n", i, track_hash->contents[i - 1]);
+
+    int del_res = pfHashDel(track_hash->hash, track_hash->contents[i - 1]);
     if(del_res)
       // nocov start
       error(
         "Internal Error: unable to delete key %s; contact maintainer.",
-        track_hash->contents[i]
+        track_hash->contents[i - 1]
       );
       // nocov end
   }
@@ -92,6 +96,10 @@ size_t VALC_add_to_track_hash(
       // re-allocate, note that we are re-allocating an array of pointers to
       // strings, but `S_realloc` is looking for a (char *) hence the coersion
 
+      Rprintf(
+        "Realloc new_size %d old_size %d sizeof %d\n",
+        new_size, track_hash->idx_max,sizeof(char *)
+      );
       S_realloc(
         (char *) track_hash->contents, new_size, track_hash->idx_max,
         sizeof(char *)
@@ -109,6 +117,7 @@ size_t VALC_add_to_track_hash(
 
     char * key_cpy = CSR_strmcpy(key, CSR_MAX_CHAR);
     track_hash->contents[track_hash->idx] = key_cpy;
+    Rprintf("Copying %s into slot %d\n", key_cpy, track_hash->idx);
     track_hash->idx++;  // shouldn't be overflowable
   }
   return res;
@@ -130,12 +139,16 @@ SEXP VALC_track_hash_test(SEXP keys, SEXP size) {
   struct track_hash * track_hash = VALC_create_track_hash(asInteger(size));
 
   for(i = 0; i < key_size; ++i) {
+    Rprintf("i = %d, key = %s\n", i, CHAR(STRING_ELT(keys, i)));
     if(STRING_ELT(keys, i) == NA_STRING) {
+      Rprintf("start reset\n");
       INTEGER(res)[i] = NA_INTEGER;
       if(++i < key_size) {
         int reset_int = atoi(CHAR(STRING_ELT(keys, i)));
         if(reset_int < 0) error("Internal Error: negative reset key.");
+        Rprintf("reset with %d\n", reset_int);
         VALC_reset_track_hash(track_hash, (size_t) reset_int);
+        Rprintf("done reset\n", reset_int);
         INTEGER(res)[i] = reset_int;
       }
     } else {
