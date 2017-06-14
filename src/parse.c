@@ -183,7 +183,6 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   res_vec = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
   SET_VECTOR_ELT(res_vec, 1, res);
-  PrintValue(lang_cpy);
   UNPROTECT(4);
   return(res_vec);
 }
@@ -268,14 +267,14 @@ void VALC_parse_recurse(
 
     // Replace any variables to language objects with language
 
-    if(lang_car == VALC_SYM_one_dot) {
+    int is_one_dot = lang_car == VALC_SYM_one_dot;
+    lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
+    if(is_one_dot) {
       eval_as_is = 1;
     } else {
-      // we assing this in the next step, so no need to protect
-      lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
       lang_car = VALC_sub_symbol(lang_car, rho, track_hash);
-      UNPROTECT(1);
     }
+    UNPROTECT(1);
     SETCAR(lang, lang_car);
     UNPROTECT(1);
 
