@@ -181,6 +181,8 @@ unitizer_sect("Language", {
 
   . <- quote(. > 0)
   vet(.., 1.4)
+  . <- quote(numeric(1L))
+  vet(.., 1.5)
 })
 
 unitizer_sect("Custom tokens", {

@@ -5,5 +5,5 @@
 # CSR_max_chars (reconcile with above)
 # Recursion depth for environments
 # Recursion depth for vetting expression substitution
-# track_hash contents initial size
-#
+# track_hash contents initial size (64)
+# VALC_name_sub max symbol 15K

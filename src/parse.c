@@ -24,7 +24,7 @@ SEXP VALC_name_sub(SEXP symb, SEXP arg_name) {
     if(i > 15000) {
       // nocov start
       error(
-        "Intenral Error: %s%s",
+        "Internal Error: %s%s",
         "unexpectedly large symbol name (>15000, shouldn't happen); ",
         "contact maintainer."
       );
@@ -63,6 +63,9 @@ SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name) {
 \* -------------------------------------------------------------------------- */
 /*
   Don't need paren calls since the parsing already accounted for them
+
+  If it encounters a call to `.(` removes that, but notes we're in mode 1 via
+  the second value in the vector.
 */
 SEXP VALC_remove_parens(SEXP lang) {
   SEXP mode,
@@ -99,13 +102,12 @@ SEXP VALC_remove_parens(SEXP lang) {
 \* -------------------------------------------------------------------------- */
 /*
 If a variable expands to language, sub it in and keep parsing unless the sub itself is to symbol then keep subbing until it doesn't
+
+Note we didn't use to sub `.`, but based on #34 seems like we should.
 */
 SEXP VALC_sub_symbol(SEXP lang, SEXP rho, struct track_hash * track_hash) {
-  // this could conflict with someone storing an expression in .. or .
   size_t protect_i = 0;
-  while(
-    TYPEOF(lang) == SYMSXP && lang != VALC_SYM_one_dot && lang != R_MissingArg
-  ) {
+  while(TYPEOF(lang) == SYMSXP && lang != R_MissingArg) {
     const char * symb_chr = CHAR(PRINTNAME(lang));
     int symb_stored = VALC_add_to_track_hash(track_hash, symb_chr, "42");
 
@@ -157,12 +159,16 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
 
   struct track_hash * track_hash = VALC_create_track_hash(64);
 
-  // Replace any variables to language objects with language
+  // Replace any variables to language objects with language, though first check
+  // that we don't already have the `.`, although that would be odd even before
+  // we start recursion (really this should probably be handled exclusively in
+  // parse_recurse...
+
+  if(lang_cpy == VALC_SYM_one_dot) mode = 1;
+  lang_cpy = VALC_name_sub(lang_cpy, var_name);
   lang_cpy = VALC_sub_symbol(lang_cpy, rho, track_hash);
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
-    if(lang_cpy == VALC_SYM_one_dot) mode = 1;
-    lang_cpy = VALC_name_sub(lang_cpy, var_name);
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
   } else {
     res = PROTECT(allocList(length(lang_cpy)));
