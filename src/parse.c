@@ -101,7 +101,7 @@ SEXP VALC_remove_parens(SEXP lang) {
 If a variable expands to language, sub it in and keep parsing
 */
 
-SEXP VALC_sub_symbol(SEXP lang, SEXP rho, pfHashTable * symb_hash) {
+SEXP VALC_sub_symbol(SEXP lang, SEXP rho, struct track_hash * track_hash) {
   int symb = TYPEOF(lang) == SYMSXP;
 
   if(!symb || lang == R_MissingArg) return(lang);
@@ -110,11 +110,9 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho, pfHashTable * symb_hash) {
   // this could conflict with someone storing an expression in .. or .
   if(symb && lang != VALC_SYM_one_dot) {
     const char * symb_chr = CHAR(PRINTNAME(lang));
-    const char * symb_stored = pfHashFind(symb_hash, symb_chr);
+    int symb_stored = VALC_add_to_track_hash(track_hash, symb_chr, "42");
 
-    if(symb_stored == NULL) {
-      pfHashSet(symb_hash, symb_chr, "A"); // don't care about value
-    } else {
+    if(!symb_stored) {
       error(
         "%s%s%s%s",
         "Possible infinite recursion encountered when substituting symbol `",
@@ -135,8 +133,8 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho, pfHashTable * symb_hash) {
   return(lang);
 }
 SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
-  pfHashTable * symb_hash = pfHashCreate(NULL);
-  return VALC_sub_symbol(lang, rho, symb_hash);
+  struct track_hash * track_hash = VALC_create_track_hash(64);
+  return VALC_sub_symbol(lang, rho, track_hash);
 }
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
@@ -155,10 +153,10 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   // Hash table to track symbols to make sure  we don't end up in an infinite
   // recursion substituting symbols
 
-  pfHashTable * symb_hash = pfHashCreate(NULL);
+  struct track_hash * track_hash = VALC_create_track_hash(64);
 
   // Replace any variables to language objects with language
-  lang_cpy = VALC_sub_symbol(lang_cpy, rho, symb_hash);
+  lang_cpy = VALC_sub_symbol(lang_cpy, rho, track_hash);
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     if(lang_cpy == VALC_SYM_one_dot) mode = 1;
@@ -168,7 +166,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
     res = PROTECT(allocList(length(lang_cpy)));
     // lang_cpy, res, are modified internally
     VALC_parse_recurse(
-      lang_cpy, res, var_name, rho, mode, R_NilValue, symb_hash
+      lang_cpy, res, var_name, rho, mode, R_NilValue, track_hash
     );
   }
   res_vec = PROTECT(allocVector(VECSXP, 2));
@@ -182,7 +180,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
 
 void VALC_parse_recurse(
   SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is,
-  SEXP first_fun, pfHashTable * symb_hash
+  SEXP first_fun, struct track_hash * track_hash
 ) {
   /*
   If the object is not a language list, then return it, as part of an R vector
@@ -253,17 +251,24 @@ void VALC_parse_recurse(
 
     // Replace any variables to language objects with language
 
-    lang_car = VALC_sub_symbol(lang_car, rho, symb_hash);
+    lang_car = VALC_sub_symbol(lang_car, rho, track_hash);
     SETCAR(lang, lang_car);
     UNPROTECT(1);
 
     if(TYPEOF(lang_car) == LANGSXP) {
       SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
+
+      // each time we exit from a recursion, we should reset the hash so that we
+      // don't mistakenly tag symbol collisions that occur on different branches
+      // of the parse tree
+
+      size_t substitute_level = track_hash->idx;
       VALC_parse_recurse(
         lang_car, CAR(lang_track), var_name, rho, eval_as_is, first_fun,
-        symb_hash
+        track_hash
       );
+      VALC_reset_track_hash(track_hash, substitute_level);
     } else {
       int new_call_type = call_type;
       if(lang_car == VALC_SYM_one_dot || eval_as_is) {

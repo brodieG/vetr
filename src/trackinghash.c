@@ -68,6 +68,7 @@ size_t VALC_add_to_track_hash(
     );
     // nocov end
   } else if(res_set) {
+    // Already existed, so no need to add
     res = 0;
   } else {
     // Need to add a value to the hash, first make sure that there is enough
