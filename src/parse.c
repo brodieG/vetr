@@ -111,22 +111,25 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho, struct track_hash * track_hash) {
 
     if(!symb_stored) {
       error(
-        "%s%s%s%s",
+        "%s%s%s%s%s",
         "Possible infinite recursion encountered when substituting symbol `",
         symb_chr,
         "`. `vetr` recursively substitutes the vetting expressions. ",
-        "See `vignette('vetr')`, \"Non Standard Evaluation\" section."
+        "See `vignette('vetr', package='vetr')`, \"Non Standard Evaluation\" ",
+        "section."
       );
     }
+    int var_found_resolves_symbol = 0;
     if(findVar(lang, rho) != R_UnboundValue) {
       SEXP found_val = eval(lang, rho);
       SEXPTYPE found_val_type = TYPEOF(found_val);
-      Rprintf("symb: %s foundtype: %s\n", symb_chr, type2char(found_val_type));
       if(found_val_type == LANGSXP || found_val_type == SYMSXP) {
         lang = PROTECT(duplicate(found_val));
       } else PROTECT(R_NilValue);  // Balance
+      var_found_resolves_symbol = found_val_type == SYMSXP;
     } else PROTECT(R_NilValue);  // Balance
     protect_i = CSR_add_szt(protect_i, 1);
+    if(!var_found_resolves_symbol) break;
   }
   UNPROTECT(protect_i);
   return(lang);
@@ -263,6 +266,15 @@ void VALC_parse_recurse(
       // don't mistakenly tag symbol collisions that occur on different branches
       // of the parse tree
 
+      /*
+      if(!track_hash->idx)
+        // nocov start
+        error(
+          "%s%s", "Internal Error: ",
+          "track hash index not initialized; contact maintainer."
+        );
+        // nocov end
+      */
       size_t substitute_level = track_hash->idx;
       VALC_parse_recurse(
         lang_car, CAR(lang_track), var_name, rho, eval_as_is, first_fun,
