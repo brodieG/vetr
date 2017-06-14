@@ -258,7 +258,7 @@ void VALC_parse_recurse(
     // which is probably why I did it the current way in the first place.
 
     SEXP rem_parens = PROTECT(VALC_remove_parens(CAR(lang)));
-    if(!eval_as_is && asInteger(VECTOR_ELT(rem_parens, 1))) {
+    if(asInteger(VECTOR_ELT(rem_parens, 1)) || eval_as_is) {
       eval_as_is = 1;
     } else {
       eval_as_is = 0;
@@ -267,13 +267,12 @@ void VALC_parse_recurse(
 
     // Replace any variables to language objects with language
 
-    int is_one_dot = lang_car == VALC_SYM_one_dot;
+    int is_one_dot = (lang_car == VALC_SYM_one_dot);
     lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
     if(is_one_dot) {
       eval_as_is = 1;
-    } else {
-      lang_car = VALC_sub_symbol(lang_car, rho, track_hash);
     }
+    lang_car = VALC_sub_symbol(lang_car, rho, track_hash);
     UNPROTECT(1);
     SETCAR(lang, lang_car);
     UNPROTECT(1);
