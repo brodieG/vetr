@@ -163,10 +163,13 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   // that we don't already have the `.`, although that would be odd even before
   // we start recursion (really this should probably be handled exclusively in
   // parse_recurse...
+  //
+  // mode == 1 or mode == 2 means we're in "dot" mode, just that with "2" it's
+  // an actualy dot that we shouldn't substitute.
 
-  if(lang_cpy == VALC_SYM_one_dot) mode = 1;
+  if(lang_cpy == VALC_SYM_one_dot) mode = 2;
   lang_cpy = VALC_name_sub(lang_cpy, var_name);
-  lang_cpy = VALC_sub_symbol(lang_cpy, rho, track_hash);
+  if(mode != 2) lang_cpy = VALC_sub_symbol(lang_cpy, rho, track_hash);
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
@@ -242,13 +245,18 @@ void VALC_parse_recurse(
   lang_track = CDR(lang_track);
   call_type = 999; // Reset for sub-elements
 
-  // Loop through remaining elements of call; if any are calls, recurse, otherwise
-  // sub for dots and record as templates (999).  Stuff here shouldn't need to
-  // be PROTECTed since it is pointed at but PROTECTED stuff.
+  // Loop through remaining elements of call; if any are calls, recurse,
+  // otherwise sub for dots and record as templates (999).  Stuff here shouldn't
+  // need to be PROTECTed since it is pointed at but PROTECTED stuff.
 
   while(lang != R_NilValue) {
     // Remove parens removes parens and `.` calls, and indicates whether a `.`
     // call was encountered through the second value in the return list
+    //
+    // Note, eval_as_is equivalent to mode in the non recurse version of parse,
+    // should really combine this code here (i.e. handle the degenerate case
+    // where lang is a symbol, although I guess that's a fair bit of complexity
+    // which is probably why I did it the current way in the first place.
 
     SEXP rem_parens = PROTECT(VALC_remove_parens(CAR(lang)));
     if(!eval_as_is && asInteger(VECTOR_ELT(rem_parens, 1))) {
@@ -260,7 +268,14 @@ void VALC_parse_recurse(
 
     // Replace any variables to language objects with language
 
-    lang_car = VALC_sub_symbol(lang_car, rho, track_hash);
+    if(lang_car == VALC_SYM_one_dot) {
+      eval_as_is = 1;
+    } else {
+      // we assing this in the next step, so no need to protect
+      lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
+      lang_car = VALC_sub_symbol(lang_car, rho, track_hash);
+      UNPROTECT(1);
+    }
     SETCAR(lang, lang_car);
     UNPROTECT(1);
 
@@ -272,15 +287,6 @@ void VALC_parse_recurse(
       // don't mistakenly tag symbol collisions that occur on different branches
       // of the parse tree
 
-      /*
-      if(!track_hash->idx)
-        // nocov start
-        error(
-          "%s%s", "Internal Error: ",
-          "track hash index not initialized; contact maintainer."
-        );
-        // nocov end
-      */
       size_t substitute_level = track_hash->idx;
       VALC_parse_recurse(
         lang_car, CAR(lang_track), var_name, rho, eval_as_is, first_fun,
@@ -294,7 +300,6 @@ void VALC_parse_recurse(
           SETCAR(first_fun, ScalarInteger(10));
         new_call_type = 10;
       }
-      SETCAR(lang, VALC_name_sub(lang_car, var_name));
       SETCAR(lang_track, ScalarInteger(new_call_type));
     }
     lang = CDR(lang);
