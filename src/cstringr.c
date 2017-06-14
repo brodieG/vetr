@@ -13,8 +13,8 @@ size_t CSR_len_chr_len(R_xlen_t a) {
   return log_len;
 }
 /*
-Returns a character pointer to the string representation of the integer; allocates
-with R_alloc so in theory don't need to worry about freeing memory
+Returns a character pointer to the string representation of the integer;
+allocates with R_alloc so in theory don't need to worry about freeing memory
 */
 
 char * CSR_len_as_chr(R_xlen_t a) {
