@@ -121,6 +121,7 @@ static void locate (pfHashTable *tbl, const char *key,
 
 // In case your C implementation doesn't have strdup,
 //   we use this one.
+// DEVNOTE: Should we switch this to strmcpy?
 
 static char *dupstr (const char *str) {
     char *newstr = R_alloc (strlen (str) + 1, sizeof(char));
@@ -184,8 +185,14 @@ void pfHashDestroy (pfHashTable *tbl) {
 }
 */
 
-// Set a hash value (key/data), creating it if it doesn't
-//   already exist.
+/*
+ * Set a hash value (key/data), creating it if it doesn't
+ * already exist.
+ *
+ * Return 1 if it already existed, 0 if it didn't and we created the value, -1
+ * if something went wrong.  Note this function originally returned -1 on
+ * failure and 0 on success.
+ */
 
 int pfHashSet (pfHashTable *tbl, const char *key, const char *data) {
     int entry;
@@ -199,7 +206,7 @@ int pfHashSet (pfHashTable *tbl, const char *key, const char *data) {
             return -1;  // nocov
         // free (node->data);
         node->data = newdata;
-        return 0;
+        return 1;  // this used to be zero
     }
 
     node = (void *) R_alloc (1, sizeof (pfHashNode));
@@ -223,8 +230,7 @@ int pfHashSet (pfHashTable *tbl, const char *key, const char *data) {
 
 // Delete a hash entry, returning error if not found.
 
-/*
-int pfHashDel (pfHashTable *tbl, char *key) {
+int pfHashDel (pfHashTable *tbl, const char *key) {
     int entry;
     pfHashNode *prev, *node;
 
@@ -246,7 +252,6 @@ int pfHashDel (pfHashTable *tbl, char *key) {
 
     return 0;
 }
-*/
 
 // Find a hash entry, and return the data. If not found,
 //   returns NULL.

@@ -13,8 +13,8 @@ size_t CSR_len_chr_len(R_xlen_t a) {
   return log_len;
 }
 /*
-Returns a character pointer to the string representation of the integer; allocates
-with R_alloc so in theory don't need to worry about freeing memory
+Returns a character pointer to the string representation of the integer;
+allocates with R_alloc so in theory don't need to worry about freeing memory
 */
 
 char * CSR_len_as_chr(R_xlen_t a) {
@@ -80,7 +80,7 @@ char * CSR_strmcpy(const char * str, size_t maxlen) {
 
   size_t len = CSR_strmlen_x(str, maxlen);
   if(len == maxlen && str[len])
-    warning("CSR_strmcopy: truncated string longer than %d", maxlen);
+    warning("CSR_strmcpy: truncated string longer than %d", maxlen);
 
   char * str_new = R_alloc(len + 1, sizeof(char));
 

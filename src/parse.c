@@ -98,26 +98,45 @@ SEXP VALC_remove_parens(SEXP lang) {
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 /*
-If a variable expands to language, sub it in and keep parsing
+If a variable expands to language, sub it in and keep parsing unless the sub itself is to symbol then keep subbing until it doesn't
 */
-
-SEXP VALC_sub_symbol(SEXP lang, SEXP rho) {
-  int symb = TYPEOF(lang) == SYMSXP;
-
-  if(!symb || lang == R_MissingArg) return(lang);
-
+SEXP VALC_sub_symbol(SEXP lang, SEXP rho, struct track_hash * track_hash) {
   // this could conflict with someone storing an expression in .. or .
-  if(symb && lang != VALC_SYM_one_dot) {
+  size_t protect_i = 0;
+  while(
+    TYPEOF(lang) == SYMSXP && lang != VALC_SYM_one_dot && lang != R_MissingArg
+  ) {
+    const char * symb_chr = CHAR(PRINTNAME(lang));
+    int symb_stored = VALC_add_to_track_hash(track_hash, symb_chr, "42");
+
+    if(!symb_stored) {
+      error(
+        "%s%s%s%s%s",
+        "Possible infinite recursion encountered when substituting symbol `",
+        symb_chr,
+        "`. `vetr` recursively substitutes the vetting expressions. ",
+        "See `vignette('vetr', package='vetr')`, \"Non Standard Evaluation\" ",
+        "section."
+      );
+    }
+    int var_found_resolves_symbol = 0;
     if(findVar(lang, rho) != R_UnboundValue) {
       SEXP found_val = eval(lang, rho);
       SEXPTYPE found_val_type = TYPEOF(found_val);
       if(found_val_type == LANGSXP || found_val_type == SYMSXP) {
         lang = PROTECT(duplicate(found_val));
       } else PROTECT(R_NilValue);  // Balance
+      var_found_resolves_symbol = found_val_type == SYMSXP;
     } else PROTECT(R_NilValue);  // Balance
-    UNPROTECT(1);
+    protect_i = CSR_add_szt(protect_i, 1);
+    if(!var_found_resolves_symbol) break;
   }
+  UNPROTECT(protect_i);
   return(lang);
+}
+SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
+  struct track_hash * track_hash = VALC_create_track_hash(64);
+  return VALC_sub_symbol(lang, rho, track_hash);
 }
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
@@ -132,8 +151,14 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   rem_res = PROTECT(VALC_remove_parens(lang_cpy));
   lang_cpy = VECTOR_ELT(rem_res, 0);
   mode = asInteger(VECTOR_ELT(rem_res, 1));
+
+  // Hash table to track symbols to make sure  we don't end up in an infinite
+  // recursion substituting symbols
+
+  struct track_hash * track_hash = VALC_create_track_hash(64);
+
   // Replace any variables to language objects with language
-  lang_cpy = VALC_sub_symbol(lang_cpy, rho);
+  lang_cpy = VALC_sub_symbol(lang_cpy, rho, track_hash);
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     if(lang_cpy == VALC_SYM_one_dot) mode = 1;
@@ -142,11 +167,14 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   } else {
     res = PROTECT(allocList(length(lang_cpy)));
     // lang_cpy, res, are modified internally
-    VALC_parse_recurse(lang_cpy, res, var_name, rho, mode, R_NilValue);
+    VALC_parse_recurse(
+      lang_cpy, res, var_name, rho, mode, R_NilValue, track_hash
+    );
   }
   res_vec = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
   SET_VECTOR_ELT(res_vec, 1, res);
+  PrintValue(lang_cpy);
   UNPROTECT(4);
   return(res_vec);
 }
@@ -155,7 +183,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
 
 void VALC_parse_recurse(
   SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is,
-  SEXP first_fun
+  SEXP first_fun, struct track_hash * track_hash
 ) {
   /*
   If the object is not a language list, then return it, as part of an R vector
@@ -225,16 +253,34 @@ void VALC_parse_recurse(
     SEXP lang_car = VECTOR_ELT(rem_parens, 0);
 
     // Replace any variables to language objects with language
-    lang_car = VALC_sub_symbol(lang_car, rho);
+
+    lang_car = VALC_sub_symbol(lang_car, rho, track_hash);
     SETCAR(lang, lang_car);
     UNPROTECT(1);
 
     if(TYPEOF(lang_car) == LANGSXP) {
       SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
+
+      // each time we exit from a recursion, we should reset the hash so that we
+      // don't mistakenly tag symbol collisions that occur on different branches
+      // of the parse tree
+
+      /*
+      if(!track_hash->idx)
+        // nocov start
+        error(
+          "%s%s", "Internal Error: ",
+          "track hash index not initialized; contact maintainer."
+        );
+        // nocov end
+      */
+      size_t substitute_level = track_hash->idx;
       VALC_parse_recurse(
-        lang_car, CAR(lang_track), var_name, rho, eval_as_is, first_fun
+        lang_car, CAR(lang_track), var_name, rho, eval_as_is, first_fun,
+        track_hash
       );
+      VALC_reset_track_hash(track_hash, substitute_level);
     } else {
       int new_call_type = call_type;
       if(lang_car == VALC_SYM_one_dot || eval_as_is) {
