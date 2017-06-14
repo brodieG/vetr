@@ -98,17 +98,14 @@ SEXP VALC_remove_parens(SEXP lang) {
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 /*
-If a variable expands to language, sub it in and keep parsing
+If a variable expands to language, sub it in and keep parsing unless the sub itself is to symbol then keep subbing until it doesn't
 */
-
 SEXP VALC_sub_symbol(SEXP lang, SEXP rho, struct track_hash * track_hash) {
-  int symb = TYPEOF(lang) == SYMSXP;
-
-  if(!symb || lang == R_MissingArg) return(lang);
-
-
   // this could conflict with someone storing an expression in .. or .
-  if(symb && lang != VALC_SYM_one_dot) {
+  size_t protect_i = 0;
+  while(
+    TYPEOF(lang) == SYMSXP && lang != VALC_SYM_one_dot && lang != R_MissingArg
+  ) {
     const char * symb_chr = CHAR(PRINTNAME(lang));
     int symb_stored = VALC_add_to_track_hash(track_hash, symb_chr, "42");
 
@@ -124,12 +121,14 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho, struct track_hash * track_hash) {
     if(findVar(lang, rho) != R_UnboundValue) {
       SEXP found_val = eval(lang, rho);
       SEXPTYPE found_val_type = TYPEOF(found_val);
+      Rprintf("symb: %s foundtype: %s\n", symb_chr, type2char(found_val_type));
       if(found_val_type == LANGSXP || found_val_type == SYMSXP) {
         lang = PROTECT(duplicate(found_val));
       } else PROTECT(R_NilValue);  // Balance
     } else PROTECT(R_NilValue);  // Balance
-    UNPROTECT(1);
+    protect_i = CSR_add_szt(protect_i, 1);
   }
+  UNPROTECT(protect_i);
   return(lang);
 }
 SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
@@ -172,6 +171,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   res_vec = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
   SET_VECTOR_ELT(res_vec, 1, res);
+  PrintValue(lang_cpy);
   UNPROTECT(4);
   return(res_vec);
 }
