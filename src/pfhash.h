@@ -37,7 +37,7 @@ lifted directly from: http://powerfield-software.com/?p=615 under license:
     pfHashTable *pfHashCreate (uint32_t(*)(const char*));
     // void pfHashDestroy (pfHashTable*);
     int pfHashSet (pfHashTable*,const char*,const char*);
-    // int pfHashDel (pfHashTable*,char*);
+     int pfHashDel (pfHashTable*,const char*);
     const char *pfHashFind (pfHashTable*,const char*);
     void pfHashDebug (pfHashTable*,char*);
     SEXP pfHashTest(SEXP keys, SEXP values);

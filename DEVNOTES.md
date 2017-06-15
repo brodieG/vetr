@@ -1,14 +1,5 @@
 ## Notes for the next day
 
-Main todo is to explore what the various output formats are supposed to be and
-confirm that they work as expected.  Documentation look stale (though maybe the
-source docs are updated and we just haven't regenerated).
-
-## Naming
-
-`vetR`: short, sweet, "better code with vetR" (urgh)
-`safer`
-
 ## NSE?
 
 Is it possible to allow the functions to accept arbitrary language objects and
@@ -29,6 +20,28 @@ Seems like this should work just fine so long as we substitute target first.
 
 Need to watch out for infinite loops with stuff that keeps evaluating to
 language? (e.g. `y <- quote(get("y")); validate(y, x);`)
+
+^^ indeed.  In order to protect against this, we will use a hash table to track
+re-appearance of a symbol, the problem is we only care about reappearance of a
+symbol if it is a child to itself.  This means we have to rest the hash tables
+after we dive into each branch of the parsed language, or duplicate them each
+time we dive into a branch.
+
+So we need a structure that points to:
+
+* Our hash table
+* A growable character vector containing all encountered names
+* The current index of the character vector
+* The current size of the character vector
+
+We also want to extend this to environment tracking as that currently may not be
+done correctly?  Though with environments maybe less of an issue as there isn't
+any and/or logic to contend with, so if an environment matched in one branch it
+must be definition match in the next.
+
+One potential challenge on relying on environment memory locations is if
+somehow R copies and moves an environment in the middle of our operation.  That
+seems somewhat unlikely, but should probably be documented someplace.
 
 ## Parse Rules
 

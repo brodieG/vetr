@@ -163,10 +163,26 @@ unitizer_sect("Language", {
 
   evalq(vet(quote(x * y), quote((A + D) * (B - C))), envir=my.env)
 
+  # potentialy infinite recursion
+
+  expA <- expB <- expC <- expD <- expE <- 0
+  expA <- quote(expB && expC)
+  expB <- quote(expD * expE)
+  expE <- quote(expA || expD)
+
+  vet(expA, TRUE)
+
+  # check that symbols (i.e. not call) are resolved recursively too
+
+  expE <- quote(expA)
+  vet(expA, TRUE)
+
   # Check that `..` is expanded properly
 
   . <- quote(. > 0)
   vet(.., 1.4)
+  . <- quote(numeric(1L))
+  vet(.., 1.5)
 })
 
 unitizer_sect("Custom tokens", {

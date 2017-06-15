@@ -439,6 +439,24 @@ unitizer_sect("Hash", {
     1:26, function(x) paste0(LETTERS[seq(x)], collapse=""), character(1L)
   )
   vetr:::hash_test(keys, values)
+
+  ## hash tracking, uses a hash to detect potential collisions, 1 means a value
+  ## is added, >1 means a value was added and tracking array had to be resized
+  ## to that size, 0 means it existed already, NA is a reset instruction, value
+  ## following a reset instruction is what the reset was to
+
+  vetr:::track_hash(letters[1:3], 2L)  # one resize
+  vetr:::track_hash(letters[1:5], 2L)  # two resize
+
+  vetr:::track_hash(c("a", "b", "b"), 2L)          # one repeat
+  vetr:::track_hash(c("a", "b", NA, 1,  "b"), 2L)  # reset prior to repeat
+  vetr:::track_hash(c("a", "b", NA, 1,  "a"), 2L)
+
+  keys <- c(
+    "a", "b", NA, 1,  "b", "hello", "goodbye", "a", NA, 3, "hello",
+    "goodbye", "b"
+  )
+  vetr:::track_hash(keys, 8L)
 })
 unitizer_sect("Mode", {
   vetr:::alike_mode(NULL)

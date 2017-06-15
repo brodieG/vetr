@@ -3,15 +3,16 @@ Title: Vet Your Inputs!
 Description: A template based vetting mechanism for your function inputs that
     simplifies argument checking for both complex and simple values while
     providing informative messages to your users.
-Version: 0.0.2.9007
+Version: 0.0.2.9008
 Authors@R: c(
     person("Brodie", "Gaslam", email="brodie.gaslam@yahoo.com",
     role=c("aut", "cre")),
     person(family="Paxdiablo", role="cph", comment="Hash
     table implementation in src/pfhash.h"),
     person(family="R Core Team",
-    email="R-core@r-project.org", role="cph", comment="Used/adapted several
-    code snippets from R sources, see COPYRIGHTS"))
+    email="R-core@r-project.org", role="cph",
+    comment="Used/adapted several code snippets from R sources, see COPYRIGHTS"
+    ))
 Depends:
     R (>= 3.2.2)
 License: GPL (>=2)
