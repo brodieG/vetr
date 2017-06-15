@@ -252,6 +252,7 @@ void VALC_parse_recurse(
   // need to be PROTECTed since it is pointed at but PROTECTED stuff.
 
   while(lang != R_NilValue) {
+    int eval_as_is_internal = eval_as_is;
     // Remove parens removes parens and `.` calls, and indicates whether a `.(`
     // call was encountered through the second value in the return list.  This
     // means that all elements of this language object henceforth should be
@@ -259,10 +260,10 @@ void VALC_parse_recurse(
     // affect that element.
 
     SEXP rem_parens = PROTECT(VALC_remove_parens(CAR(lang)));
-    if(asInteger(VECTOR_ELT(rem_parens, 1)) || eval_as_is) {
-      eval_as_is = 1;
+    if(asInteger(VECTOR_ELT(rem_parens, 1)) || eval_as_is_internal) {
+      eval_as_is_internal = 1;
     } else {
-      eval_as_is = 0;
+      eval_as_is_internal = 0;
     }
     SEXP lang_car = VECTOR_ELT(rem_parens, 0);
 
@@ -285,13 +286,13 @@ void VALC_parse_recurse(
 
       size_t substitute_level = track_hash->idx;
       VALC_parse_recurse(
-        lang_car, CAR(lang_track), var_name, rho, eval_as_is, first_fun,
+        lang_car, CAR(lang_track), var_name, rho, eval_as_is_internal, first_fun,
         track_hash
       );
       VALC_reset_track_hash(track_hash, substitute_level);
     } else {
       int new_call_type = call_type;
-      if(is_one_dot || eval_as_is) {
+      if(is_one_dot || eval_as_is_internal) {
         if(first_fun != R_NilValue)
           SETCAR(first_fun, ScalarInteger(10));
         new_call_type = 10;
