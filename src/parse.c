@@ -3,7 +3,7 @@
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 /*
-Name replacement, substitutes `.` for argname and multi dots for one dot fewer
+Name replacement, substitutes `.` for argname and multi dots for one dot fewer.  This is specifically for the `.`.  The standard symbol substitution happens via `VALC_symb_sub`.  Note that we skip `VALC_symb_sub` for `.` when it wasn't escaped by this.
 */
 SEXP VALC_name_sub(SEXP symb, SEXP arg_name) {
   if(TYPEOF(symb) != SYMSXP){
@@ -103,7 +103,9 @@ SEXP VALC_remove_parens(SEXP lang) {
 /*
 If a variable expands to language, sub it in and keep parsing unless the sub itself is to symbol then keep subbing until it doesn't
 
-Note we didn't use to sub `.`, but based on #34 seems like we should.
+See VALC_name_sub too.  We substitute `.` here as well, but logic before this function is called should ensure that we only call it on `.` when it was previously `..`.
+
+Really seems like these two functions should be merged into one so that we don't get out of sync in how we use them.
 */
 SEXP VALC_sub_symbol(SEXP lang, SEXP rho, struct track_hash * track_hash) {
   size_t protect_i = 0;
@@ -165,7 +167,8 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   // parse_recurse...
   //
   // mode == 1 or mode == 2 means we're in "dot" mode, just that with "2" it's
-  // an actualy dot that we shouldn't substitute.
+  // an actualy dot that we shouldn't substitute recursively, instead it should
+  // be substituted with `name_sub`.
 
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
   lang_cpy = VALC_name_sub(lang_cpy, var_name);
@@ -249,13 +252,11 @@ void VALC_parse_recurse(
   // need to be PROTECTed since it is pointed at but PROTECTED stuff.
 
   while(lang != R_NilValue) {
-    // Remove parens removes parens and `.` calls, and indicates whether a `.`
-    // call was encountered through the second value in the return list
-    //
-    // Note, eval_as_is equivalent to mode in the non recurse version of parse,
-    // should really combine this code here (i.e. handle the degenerate case
-    // where lang is a symbol, although I guess that's a fair bit of complexity
-    // which is probably why I did it the current way in the first place.
+    // Remove parens removes parens and `.` calls, and indicates whether a `.(`
+    // call was encountered through the second value in the return list.  This
+    // means that all elements of this language object henceforth should be
+    // evaled as is.  This is distinct to encountering a `.` which would only
+    // affect that element.
 
     SEXP rem_parens = PROTECT(VALC_remove_parens(CAR(lang)));
     if(asInteger(VECTOR_ELT(rem_parens, 1)) || eval_as_is) {
@@ -269,10 +270,7 @@ void VALC_parse_recurse(
 
     int is_one_dot = (lang_car == VALC_SYM_one_dot);
     lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
-    if(is_one_dot) {
-      eval_as_is = 1;
-    }
-    lang_car = VALC_sub_symbol(lang_car, rho, track_hash);
+    if(!is_one_dot) lang_car = VALC_sub_symbol(lang_car, rho, track_hash);
     UNPROTECT(1);
     SETCAR(lang, lang_car);
     UNPROTECT(1);
@@ -293,7 +291,7 @@ void VALC_parse_recurse(
       VALC_reset_track_hash(track_hash, substitute_level);
     } else {
       int new_call_type = call_type;
-      if(lang_car == VALC_SYM_one_dot || eval_as_is) {
+      if(is_one_dot || eval_as_is) {
         if(first_fun != R_NilValue)
           SETCAR(first_fun, ScalarInteger(10));
         new_call_type = 10;
