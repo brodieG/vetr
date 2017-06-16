@@ -151,8 +151,8 @@
 #' ## FALSE, inconsistent symbols
 #' alike(quote(x + y), quote(a + a))
 
-alike <- function(target, current)
-  .Call(VALC_alike_ext, target, current, substitute(current), parent.frame())
+alike <- function(target, current, settings=NULL, env=parent.frame())
+  .Call(VALC_alike_ext, target, current, substitute(current), env, settings)
 
 #' @rdname alike
 #' @export
