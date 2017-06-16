@@ -32,5 +32,6 @@
     long track_hash_content_size;
   };
   struct VALC_settings VALC_settings_init();
+  struct VALC_settings VALC_settings_vet(SEXP set_list);
 
 #endif

@@ -11,10 +11,10 @@ struct VALC_settings VALC_settings_init() {
     .suppress_warnings = 0,
     .in_attr = 0,
     .width = 0,
-    .env_limit = 65535L,
-    .max_nchar = 65535L,
-    .max_sub_depth = 65535L;
-    .max_symbol_size = 15000L;
+    .env_depth_max = 65535L,
+    .symb_sub_depth_max = 65535L,
+    .nchar_max = 65535L;
+    .symb_size_max = 15000L;
     .track_hash_content_size = 63L;
   };
 }
@@ -48,7 +48,7 @@ static long VALC_is_scalar_int <- function(
  */
 
 struct VALC_settings VALC_settings_vet(SEXP set_list) {
-  struct VALC_settings = VALC_settings_init();
+  struct VALC_settings settings = VALC_settings_init();
 
   if(TYPEOF(set_list) == VECSXP) {
     if(xlength(set_list) != R_xlen_t) {
@@ -65,7 +65,8 @@ struct VALC_settings VALC_settings_vet(SEXP set_list) {
     const char * set_names_default[] = {
       "type.mode", "attr.mode", "lang.mode", "fun.mode", "rec.mode",
       "suppress.warnings", "fuzzy.int.max.len",
-      "width", "env.depth.max", "symb.sub.depth.max", "nchar.max"
+      "width", "env.depth.max", "symb.sub.depth.max", "nchar.max",
+      "track.hash.content.size"
     }
     SEXP set_names_def_sxp = PROTECT(allocVector(STRSXP, set_len));
     for(R_xlen_t i = 0; i < set_len; ++i) {
@@ -73,82 +74,51 @@ struct VALC_settings VALC_settings_vet(SEXP set_list) {
     }
     if(!R_compute_identical(set_names, set_names_def_sxp, 16)) {
       error(
-      "A;rgument `settings` names are not in format produced by ",
+      "Argument `settings` names are not in format produced by ",
       "`vetr_settings`."
       );
     }
+    set_names_def_sxp = R_NilValue;
+    UNPROTECT(1);
+    // check the scalar integers
 
+    settings.type_mode =
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 0), "type.mode", 0, 2);
+    settings.attr_mode =
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 1), "attr.mode", 0, 2);
+    settings.lang_mode =
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 2), "lang.mode", 0, 2);
+    settings.fun_mode =
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 3), "fun.mode", 0, 2);
+    settings.rec_mode =
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 4), "rec.mode", 0, 2);
+    settings.fuzzy_int_max_len = VALC_is_scalar_int(
+      VECTOR_ELT(set_list, 6), "fuzzy.int.max.len", 0L, LONG_MAX
+    );
+    settings.width =
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 7), "width", -1L, LONG_MAX);
+    settings.env_depth_max =
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 8), "env.depth.max", 0, LONG_MAX);
+    settings.symb_depth_max = VALC_is_scalar_int(
+      VECTOR_ELT(set_list, 9), "symb.depth.max", 0, LONG_MAX
+    );
+    settings.nchar_max =
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 10), "nchar.max", 0, LONG_MAX);
+    settings.symb_size_max =
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 11), "symb.size.max", 0, LONG_MAX);
+    settings.track_hash_content_size = VALC_is_scalar_int(
+      VECTOR_ELT(set_list, 12), "track.hash.content.size", 0, LONG_MAX
+    );
 
-    VALC_settings
-    SEXPTYPE int_mod_type, fuzzy_type, attr_mod_type, lang_mod_type, width_type,
-      env_limit_type;
-    int supp_warn = 0, type_int = 0, attr_int = 0, lang_int = 0, width_int = -1,
-      env_limit_int;
-    R_xlen_t fuzzy_int_max_len_int;
+    // Other checks
 
-    int_mod_type = TYPEOF(type_mode);
-    attr_mod_type = TYPEOF(attr_mode);
-    lang_mod_type = TYPEOF(lang_mode);
-    fuzzy_type = TYPEOF(fuzzy_int_max_len);
-    width_type = TYPEOF(width);
-    env_limit_type = TYPEOF(env_limit);
-
+    SEXP sup_warn = VECTOR_ELT(set_list, 5);
     if(
-      (int_mod_type != INTSXP && int_mod_type != REALSXP) ||
-      XLENGTH(type_mode) != 1 || (type_int = asInteger(type_mode)) == NA_INTEGER
-      || type_int < 0 || type_int > 2
-    )
-      error("Argument `type.mode` must be a one length numeric between 0 and 2");
-    if(
-      (attr_mod_type != INTSXP && attr_mod_type != REALSXP) ||
-      XLENGTH(attr_mode) != 1 || (attr_int = asInteger(attr_mode)) == NA_INTEGER ||
-      attr_int < 0 || attr_int > 2
-    )
-      error("Argument `attr.mode` must be a one length numeric");
-    if(
-      (lang_mod_type != INTSXP && lang_mod_type != REALSXP) ||
-      XLENGTH(lang_mode) != 1 || (lang_int = asInteger(lang_mode)) == NA_INTEGER ||
-      lang_int < 0 || lang_int > 1
-    )
-      error("Argument `lang.mode` must be a one length numeric between 0 and 1");
-    if(
-      (fuzzy_type != INTSXP && fuzzy_type != REALSXP) ||
-      XLENGTH(fuzzy_int_max_len) != 1 ||
-      (fuzzy_int_max_len_int = asInteger(fuzzy_int_max_len)) == NA_INTEGER
-    )
-      error("Argument `fuzzy.int.max.len` must be an integer one length vector");
-    if(
-      TYPEOF(suppress_warnings) != LGLSXP || XLENGTH(suppress_warnings) != 1 ||
-      (supp_warn = asLogical(suppress_warnings)) == NA_LOGICAL
-    )
-      error("Argument `suppress.warnings` must be TRUE or FALSE");
-    if(env != R_NilValue && TYPEOF(env) != ENVSXP)
-      error("Argument `env` must be NULL or an environment");
-    if(
-      (width_type != INTSXP && width_type != REALSXP) ||
-      XLENGTH(width) != 1 || (width_int = asInteger(width)) == NA_INTEGER
-    )
-      error("Argument `width` must be an integer one length vector");
-    if(
-      (env_limit_type != INTSXP && env_limit_type != REALSXP) ||
-      XLENGTH(env_limit) != 1 ||
-      (env_limit_int = asInteger(env_limit)) == NA_INTEGER ||
-      env_limit_int < 1
-    )
-      error(
-        "%s%s",
-        "Argument `env.limit` must be a strictly positive ",
-        "an integer one length vector"
-      );
-
-  } else if (set_list != R_NilValue) {
-    error(
-      "%s%s",
-      "Argument `settings` must be a list generated by `vetr_settings`, or ",
-      "NULL."
-    )
+      TYPEOF(sup_warn) != LGLSXP || xlength(sup_warn) != 1 ||
+      sup_warn == NA_LOGICAL
+    ) {
+      error("Setting `suppress.warnings` must be TRUE or FALSE");
+    }
   }
-
-
-
+  return settings;
 }

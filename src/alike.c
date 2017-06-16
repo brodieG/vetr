@@ -1,3 +1,4 @@
+#include "settings.h"
 #include "alike.h"
 
 /*-----------------------------------------------------------------------------\
@@ -111,7 +112,7 @@ Check:
 - attributes
 */
 struct ALIKEC_res ALIKEC_alike_obj(
-  SEXP target, SEXP current, struct ALIKEC_settings set
+  SEXP target, SEXP current, struct VALC_settings set
 ) {
   int is_df = 0, err_lvl = 6;
   SEXPTYPE tar_type, cur_type;
@@ -392,7 +393,7 @@ this setup may not prevent infinite recursion.
 */
 struct ALIKEC_res ALIKEC_alike_rec(
   SEXP target, SEXP current, struct ALIKEC_rec_track rec,
-  struct ALIKEC_settings set
+  struct VALC_settings set
 ) {
   /*
   Recurse through various types of recursive structures.
@@ -575,7 +576,7 @@ Return value is a character value that starts with %s and follows with
 something like "should be ...".
 */
 struct ALIKEC_res ALIKEC_alike_internal(
-  SEXP target, SEXP current, struct ALIKEC_settings set
+  SEXP target, SEXP current, struct VALC_settings set
 ) {
   if(set.type_mode < 0 || set.type_mode > 2)
     error("Interal Error: argument `type.mode` must be in 0:2");  // nocov
@@ -611,7 +612,7 @@ text is not wrapped.  Negative width will use the getOption("width");
 curr_sub is just current substituted
 */
 struct ALIKEC_res_fin ALIKEC_alike_wrap(
-  SEXP target, SEXP current, SEXP curr_sub, struct ALIKEC_settings set
+  SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
 ) {
   if(
     TYPEOF(curr_sub) != LANGSXP && TYPEOF(curr_sub) != SYMSXP &&
@@ -685,35 +686,17 @@ struct ALIKEC_res_fin ALIKEC_alike_wrap(
   return res_out;
 }
 /*
-Originally the "fast" version, but is now the version that allows us to specify
-settings
-*/
-SEXP ALIKEC_alike_fast1(
-  SEXP target, SEXP current, SEXP curr_sub, SEXP settings
-) {
-  SEXP res;
-  if (TYPEOF(settings) == VECSXP && XLENGTH(settings) == 8) {
-    res = ALIKEC_alike(
-      target, current, curr_sub, VECTOR_ELT(settings, 0),
-      VECTOR_ELT(settings, 1), VECTOR_ELT(settings, 2), VECTOR_ELT(settings, 3),
-      VECTOR_ELT(settings, 4), VECTOR_ELT(settings, 5), VECTOR_ELT(settings, 6),
-      VECTOR_ELT(settings, 7)
-    );
-  } else error("Argument `settings` is not a length 8 list as expected");
-  return res;
-}
-/*
-Main external interface, no settings
+Main external interface
 */
 SEXP ALIKEC_alike_ext(
-  SEXP target, SEXP current, SEXP curr_sub, SEXP env
+  SEXP target, SEXP current, SEXP curr_sub, SEXP env, SEXP settings
 ) {
   if(TYPEOF(env) != ENVSXP) {
     // nocov start
     error(
       "%s %s%s",
-      "Internal Error; `env` argument should be environment, is",
-      type2char(TYPEOF(env)), "; contact maintainer."
+      "Argument `env` argument should be environment, is",
+      type2char(TYPEOF(env)), "."
     );
     // nocov end
   }
@@ -728,7 +711,7 @@ SEXP ALIKEC_alike_ext(
     );
     // nocov end
   }
-  struct ALIKEC_settings set = ALIKEC_set_def("");
+  struct VALC_settings set = VALC_settings_vet(settings);
   set.env = env;
   return ALIKEC_string_or_true(
     ALIKEC_alike_wrap(target, current, curr_sub, set)
@@ -762,7 +745,7 @@ SEXP ALIKEC_alike_ext2(
     );
     // nocov end
   }
-  struct ALIKEC_settings set = ALIKEC_set_def("");
+  struct VALC_settings set = ALIKEC_set_def("");
   set.env = env;
   return ALIKEC_strsxp_or_true(
     ALIKEC_alike_wrap(target, current, curr_sub, set)
@@ -838,7 +821,7 @@ SEXP ALIKEC_alike(
       "an integer one length vector"
     );
 
-  struct ALIKEC_settings set = ALIKEC_set_def("");
+  struct VALC_settings set = ALIKEC_set_def("");
   set.type_mode = type_int;
   set.attr_mode = attr_int;
   set.lang_mode = lang_int;
