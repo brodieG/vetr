@@ -1,5 +1,6 @@
 #include "cstringr.h"
 #include "pfhash.h"
+#include "settings.h"
 #include <wchar.h>
 
 #ifndef _ALIKEC_H
@@ -100,15 +101,6 @@
     int df;      // whether df or not, not use by all functions
     int lvl;     // Type of error used for prioritizing
   };
-  struct ALIKEC_settings {
-    int type_mode, attr_mode, lang_mode, fuzzy_int_max_len, suppress_warnings;
-    const char * prepend;     // no longer in use
-    SEXP env;                 // what envto look for functions to match call in
-    int in_attr;
-    int width;      // Tell alike what screen width to assume
-    int env_limit;  // how many envs to track when searching for env loop
-  };
-
 
   // - Main Funs --------------------------------------------------------------
 
@@ -120,11 +112,8 @@
   SEXP ALIKEC_alike_ext(SEXP target, SEXP current, SEXP cur_sub, SEXP env);
   SEXP ALIKEC_alike_ext2(SEXP target, SEXP current, SEXP curr_sub, SEXP env);
 
-  SEXP ALIKEC_alike_fast1(
-    SEXP target, SEXP current, SEXP curr_sub, SEXP settings
-  );
   struct ALIKEC_res ALIKEC_alike_internal(
-    SEXP target, SEXP current, struct ALIKEC_settings set
+    SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_typeof(SEXP object);
   SEXP ALIKEC_type_alike(SEXP target, SEXP current, SEXP mode, SEXP max_len);
@@ -142,20 +131,20 @@
     const char * act_pre, const char * actual
   );
   struct ALIKEC_res_sub ALIKEC_compare_attributes_internal(
-    SEXP target, SEXP current, struct ALIKEC_settings set
+    SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_compare_class_ext(SEXP prim, SEXP sec);
   SEXP ALIKEC_compare_dimnames_ext(SEXP prim, SEXP sec);
   SEXP ALIKEC_compare_dim_ext(SEXP prim, SEXP sec, SEXP target, SEXP current);
   struct ALIKEC_res_sub ALIKEC_lang_alike_internal(
-    SEXP target, SEXP current, struct ALIKEC_settings set
+    SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_lang_alike_ext(SEXP target, SEXP current, SEXP match_env);
   SEXP ALIKEC_lang_alike_chr_ext(SEXP target, SEXP current, SEXP match_env);
   struct ALIKEC_res_lang ALIKEC_lang_alike_rec(
     SEXP target, SEXP cur_par, pfHashTable * tar_hash, pfHashTable * cur_hash,
     pfHashTable * rev_hash, size_t * tar_varnum, size_t * cur_varnum,
-    int formula, SEXP match_call, SEXP match_env, struct ALIKEC_settings set,
+    int formula, SEXP match_call, SEXP match_env, struct VALC_settings set,
     struct ALIKEC_rec_track rec
   );
   struct ALIKEC_res_strings
@@ -170,7 +159,6 @@
   void psh(const char * lab);
   SEXP ALIKEC_rec_ind_as_lang(struct ALIKEC_rec_track rec);
   struct ALIKEC_rec_track ALIKEC_rec_def();
-  struct ALIKEC_settings ALIKEC_set_def();
   struct ALIKEC_rec_track ALIKEC_rec_ind_chr(
     struct ALIKEC_rec_track res, const char * ind
   );

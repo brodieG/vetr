@@ -20,16 +20,6 @@
 #' functions may change in the future.
 #'
 #' @section \code{.alike}:
-#'
-#' \code{.alike} is identical to \code{alike}, except that it exposes the
-#' \code{settings} parameter that modifies certain aspects of how "alikeness" is
-#' computed. There is only one \code{settings} parameter to minimize the
-#' overhead associated with \code{.alike}.  If you intend to run \code{.alike}
-#' as part of a process that runs many times, consider defining the value for
-#' \code{settings} outside of the function call once:\preformatted{
-#'   sets <- alike_settings(...)                  # specify settings once
-#'   for(i in 1e5) .alike(x[[i]], y[[i]], sets)   # re-use settings 1e5 times
-#' }
 #' @export
 #' @seealso \code{\link{type_alike}}, \code{\link{type_of}},
 #'   \code{\link{abstract}}, \code{\link{vetr_settings}} for more control of
@@ -129,21 +119,3 @@
 alike <- function(target, current, settings=NULL, env=parent.frame())
   .Call(VALC_alike_ext, target, current, substitute(current), env, settings)
 
-#' @rdname alike
-#' @export
-
-.alike <- function(target, current, settings=alike_settings(env=parent.frame()))
-  .Call(VALC_alike_fast1, target, current, substitute(current), settings)
-
-#' @rdname alike
-#' @export
-
-alike_settings <- function(
-  type.mode=0L, attr.mode=0L, lang.mode=0L, rec.mode=0L,
-  env=parent.frame(), fuzzy.int.max.len=100L, suppress.warnings=FALSE,
-  width=-1L, env.limit=65536L
-)
-  list(
-    type.mode, attr.mode, env, fuzzy.int.max.len, suppress.warnings, lang.mode,
-    width, env.limit
-  )
