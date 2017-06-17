@@ -52,12 +52,12 @@ SEXP VALC_process_error(
 
   if(ret_mode == 1) {
     err_arg_msg = CSR_smprintf4(
-      set.max_nchar, err_very_base, err_arg, "", "", ""
+      set.nchar_max, err_very_base, err_arg, "", "", ""
     );
   }
   const char * err_base = "%s%%s%%s";
   char * err_base_msg = CSR_smprintf4(
-    set.max_nchar, err_base, err_arg_msg, "", "", ""
+    set.nchar_max, err_base, err_arg_msg, "", "", ""
   );
   // Translate to VECSXP; need to do so because the merging logic is based on
   // VECSXP; obviously the translation back and forth isn't optimal and we
@@ -115,7 +115,7 @@ SEXP VALC_process_error(
 
     if(err_len > 1 && ret_mode != 2) {
       new_elt = PROTECT(
-        mkChar(CSR_bullet(CHAR(old_elt), "  - ", "    ", set.max_nchar))
+        mkChar(CSR_bullet(CHAR(old_elt), "  - ", "    ", set.nchar_max))
       );
     } else {
       new_elt = PROTECT(old_elt);
@@ -132,14 +132,14 @@ SEXP VALC_process_error(
       // one correct value for the arg
 
       const char * err_msg_orig = CHAR(asChar(err_vec_res));
-      char * err_msg = CSR_strmcpy(err_msg_orig, set.max_nchar);
+      char * err_msg = CSR_strmcpy(err_msg_orig, set.nchar_max);
       if(err_msg) err_msg[0] = tolower(err_msg[0]);
 
       const char * err_interim = "";
       if(ret_mode == 1) err_interim = ", ";
 
       char * err_full = CSR_smprintf4(
-        set.max_nchar, err_base_msg, err_interim, err_msg, "", ""
+        set.nchar_max, err_base_msg, err_interim, err_msg, "", ""
       );
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_full));
     } else if(has_header) {
@@ -152,7 +152,7 @@ SEXP VALC_process_error(
         err_interim = "At least one of these should pass:";
       }
       char * err_head = CSR_smprintf4(
-        set.max_nchar, err_base_msg, err_interim, "", "", ""
+        set.nchar_max, err_base_msg, err_interim, "", "", ""
       );
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_head));
     }
@@ -161,7 +161,7 @@ SEXP VALC_process_error(
   if(!stop) {
     return err_vec_res;
   } else {
-    char * err_full = CSR_collapse(err_vec_res, "\n", set.max_nchar);
+    char * err_full = CSR_collapse(err_vec_res, "\n", set.nchar_max);
     VALC_stop(fun_call, err_full);
   }
   error("%s",

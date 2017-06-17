@@ -45,7 +45,11 @@
 #' @param fun.mode NOT IMPLEMENTED, controls how functions are compared
 #' @param rec.mode integer(1L) `0` currently unused, intended to control how
 #'   recursive structures (other than language objects) are compared
-#' @param fuzzy.int.max.len see same parameter for \code{\link{type_alike}}
+#' @param fuzzy.int.max.len max length of numeric vectors to consider for
+#'   integer likeness (e.g. \code{c(1, 2)} can be considered "integer", even
+#'   though it is numeric); currently we limit this check to vectors
+#'   shorter than 100 to avoid a potentially expensive computation on large
+#'   vectors, set to -1 to apply to all vectors
 #' @param suppress.warnings logical(1L)
 #' @param width to use when deparsing expressions; default `-1`
 #'   equivalent to \code{getOption("width")}

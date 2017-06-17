@@ -11,15 +11,20 @@
 
     int type_mode, attr_mode, lang_mode, fun_mode, rec_mode;
 
-    size_t fuzzy_int_max_len;
+    // Length of numeric vectors to consider for integer-likeness
+
+    int fuzzy_int_max_len;
 
     int suppress_warnings;
+
+    // internal, track whether we are recursing through attributes
+
     int in_attr;
 
     int width;      // Tell alike what screen width to assume
 
     // what env to look for functions to match call in, substitute, etc, used
-    // boty by alike and by vet funs
+    // both by alike and by vet funs
 
     SEXP env;
 

@@ -46,7 +46,8 @@ type_of <- function(object)
 #' DEVNOTE RATIONALIZE THE BELOW WITH vetr_settings
 #'
 #' mode integer(1L) in 0:2, see details
-#' fuzzy.int.max.len max length of numeric vectors to consider for
+#'
+#' @param fuzzy.int.max.len max length of numeric vectors to consider for
 #'   integer likeness (e.g. \code{c(1, 2)} can be considered "integer", even
 #'   though it is numeric); currently we limit this check to vectors
 #'   shorter than 100 to avoid a potentially expensive computation on large

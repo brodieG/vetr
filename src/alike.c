@@ -211,7 +211,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
     int is_fun = 0;
 
     if(!err && (is_fun = isFunction(target) && isFunction(current))) {
-      err_fun = ALIKEC_fun_alike_internal(target, current);
+      err_fun = ALIKEC_fun_alike_internal(target, current, set);
       if(err_fun.target[0]) {
         err = 1;
         msg_tar_pre = err_fun.tar_pre;

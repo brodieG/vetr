@@ -69,12 +69,8 @@ struct ALIKEC_res_strings ALIKEC_type_alike_internal(
   return res_fin;
 }
 SEXP ALIKEC_type_alike(SEXP target, SEXP current, SEXP settings) {
-  SEXPTYPE mod_type, max_len_type;
   struct ALIKEC_res_strings res;
   struct VALC_settings set = VALC_settings_vet(settings, R_BaseEnv);
-
-  mod_type = TYPEOF(mode);
-  max_len_type = TYPEOF(max_len);
 
   res = ALIKEC_type_alike_internal(target, current, set);
   if(res.target[0]) {

@@ -10,7 +10,7 @@ struct VALC_settings VALC_settings_init() {
     .attr_mode = 0,
     .lang_mode = 0,
     .fun_mode = 0,
-    .fuzzy_int_max_len = 0,
+    .fuzzy_int_max_len = 100,
     .suppress_warnings = 0,
     .in_attr = 0,
     .env = R_BaseEnv,
@@ -26,9 +26,12 @@ struct VALC_settings VALC_settings_init() {
  * Check that a SEXP could pass as a scalar integer and return it as a long
  */
 static long VALC_is_scalar_int(
-  SEXP x, const char * x_name, long x_min, long x_max
+  SEXP x, const char * x_name, int x_min, int x_max
 ) {
-  long x_int = asInteger(x);
+  // Despite L notation, R integers are just ints, but there are checks to
+  // ensure ints are 32 bits on compilation and such
+
+  int x_int = asInteger(x);
 
   if(xlength(x) != 1) error("Setting `%s` must be scalar integer.", x_name);
   if(x_int == NA_INTEGER) error("Setting `%s` may not be NA.", x_name);
@@ -101,22 +104,22 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
     settings.rec_mode =
       VALC_is_scalar_int(VECTOR_ELT(set_list, 4), "rec.mode", 0, 2);
     settings.fuzzy_int_max_len = VALC_is_scalar_int(
-      VECTOR_ELT(set_list, 6), "fuzzy.int.max.len", 0L, SIZE_MAX
+      VECTOR_ELT(set_list, 6), "fuzzy.int.max.len", INT_MIN, INT_MAX
     );
     settings.width =
-      VALC_is_scalar_int(VECTOR_ELT(set_list, 7), "width", -1L, LONG_MAX);
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 7), "width", -1L, INT_MAX);
     settings.env_depth_max =
-      VALC_is_scalar_int(VECTOR_ELT(set_list, 8), "env.depth.max", 0, SIZE_MAX);
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 8), "env.depth.max", 0, INT_MAX);
     settings.symb_sub_depth_max = VALC_is_scalar_int(
-      VECTOR_ELT(set_list, 9), "symb.sub.depth.max", 0, SIZE_MAX
+      VECTOR_ELT(set_list, 9), "symb.sub.depth.max", 0, INT_MAX
     );
     settings.nchar_max =
-      VALC_is_scalar_int(VECTOR_ELT(set_list, 10), "nchar.max", 0, SIZE_MAX);
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 10), "nchar.max", 0, INT_MAX);
     settings.symb_size_max = VALC_is_scalar_int(
-      VECTOR_ELT(set_list, 11), "symb.size.max", 0, SIZE_MAX
+      VECTOR_ELT(set_list, 11), "symb.size.max", 0, INT_MAX
     );
     settings.track_hash_content_size = VALC_is_scalar_int(
-      VECTOR_ELT(set_list, 12), "track.hash.content.size", 0, SIZE_MAX
+      VECTOR_ELT(set_list, 12), "track.hash.content.size", 0, INT_MAX
     );
     // Other checks
 
