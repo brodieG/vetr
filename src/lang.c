@@ -446,7 +446,7 @@ the problem if there is one (relative to the matched object)
 */
 
 SEXP ALIKEC_lang_alike_core(
-  SEXP target, SEXP current, struct ALIKEC_settings set
+  SEXP target, SEXP current, struct VALC_settings set
 ) {
   SEXP match_env = set.env;
   SEXPTYPE tar_type = TYPEOF(target), cur_type = TYPEOF(current);
@@ -544,7 +544,7 @@ SEXP ALIKEC_lang_alike_core(
   refering directly to the original object
 */
 struct ALIKEC_res_sub ALIKEC_lang_alike_internal(
-  SEXP target, SEXP current, struct ALIKEC_settings set
+  SEXP target, SEXP current, struct VALC_settings set
 ) {
   SEXP lang_res = PROTECT(ALIKEC_lang_alike_core(target, current, set));
 
@@ -573,7 +573,7 @@ For testing purposes
 SEXP ALIKEC_lang_alike_ext(
   SEXP target, SEXP current, SEXP match_env
 ) {
-  struct ALIKEC_settings set = ALIKEC_set_def("");
+  struct VALC_settings set = VALC_settings_vet(R_NilValue, R_BaseEnv);
   set.env = match_env;
   return ALIKEC_lang_alike_core(target, current, set);
 }
@@ -581,9 +581,9 @@ SEXP ALIKEC_lang_alike_ext(
 SEXP ALIKEC_lang_alike_chr_ext(
   SEXP target, SEXP current, SEXP match_env
 ) {
-  struct ALIKEC_settings set = ALIKEC_set_def("");
+  struct VALC_settings set = VALC_settings_vet(R_NilValue, R_BaseEnv);
   set.env = match_env;
-  SEXP res = PROTECT(ALIKEC_lang_alike_internal(target, current, set).message);
+  SEXP res = PROTECT(ALIKEC_lang_alike_internal(target, current, set.message));
   SEXP res_str;
   if(res != R_NilValue) {
     res_str = PROTECT(VECTOR_ELT(res, 0));

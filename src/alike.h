@@ -6,11 +6,6 @@
 #ifndef _ALIKEC_H
 #define _ALIKEC_H
 
-  // - Constants --------------------------------------------------------------
-
-  #define ALIKEC_MAX_CHAR 50000
-  #define ALIKEC_MAX_ENVS 65536
-
   // - Data Structures ---------------------------------------------------------
 
   /*

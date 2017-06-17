@@ -4,32 +4,6 @@
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
 /*
-Initialize settings.
-
-We provide only the prepend argument as an input since that is the only one that
-requires differnet treatment between external and internal functions.
-
-Note settings are effectively global for the entire duration of a `.Call`
-across all these functions (i.e. they are all refering to the same settings
-in memory) so we have to think carefully when modifying them.
-
-An alternative would have been to just instantiate new settings objects for each
-recursion, but that seems potentially wasteful (though we haven't tested).
-*/
-struct ALIKEC_settings ALIKEC_set_def(const char * prepend) {
-  return (struct ALIKEC_settings) {
-    .type_mode = 0,
-    .attr_mode = 0,
-    .lang_mode = 0,
-    .fuzzy_int_max_len = 100,
-    .env = R_NilValue,
-    .prepend = prepend,
-    .width = -1,
-    .in_attr = 0,
-    .env_limit = ALIKEC_MAX_ENVS
-  };
-}
-/*
  * Construct the default result
  *
  * `tar_pre` string to prepend before target
