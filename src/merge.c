@@ -95,8 +95,7 @@ SEXP ALIKEC_sort_msg(SEXP msgs, struct VALC_settings set) {
  * One length vectors are treated as unmergeable.
  */
 
-SEXP ALIKEC_merge_msg(SEXP msgs) {
-
+SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set) {
   R_xlen_t len = XLENGTH(msgs);
   SEXP res;
 
@@ -105,7 +104,7 @@ SEXP ALIKEC_merge_msg(SEXP msgs) {
     // 1. Sort the strings (really only need to do this if longer than 3, but oh
     // well
 
-    SEXP msg_sort = PROTECT(ALIKEC_sort_msg(msgs));
+    SEXP msg_sort = PROTECT(ALIKEC_sort_msg(msgs, set));
     R_xlen_t groups = 1;
 
     // Determine how many groups of similar things there are in our list
@@ -186,12 +185,16 @@ SEXP ALIKEC_merge_msg(SEXP msgs) {
   UNPROTECT(2);
   return res;
 }
+SEXP ALIKEC_merge_msg_ext(SEXP msgs) {
+  struct VALC_settings set = VALC_settings_init();
+  return ALIKEC_merge_msg(msgs, set);
+}
 /*
  * additional layer just collapses the 5 length char vectors into one
  */
 SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set) {
 
-  SEXP msg_c = PROTECT(duplicate(ALIKEC_merge_msg(msgs)));
+  SEXP msg_c = PROTECT(duplicate(ALIKEC_merge_msg(msgs, set)));
 
   R_xlen_t i;
 
@@ -214,7 +217,7 @@ SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set) {
   UNPROTECT(1);
   return msg_c;
 }
-SEXP ALIKEC_merge_msg_ext(SEXP msgs) {
-  struct VALC_settings set = VALC_settings_vet(R_NilValue, R_BaseEnv);
+SEXP ALIKEC_merge_msg_2_ext(SEXP msgs) {
+  struct VALC_settings set = VALC_settings_init();
   return ALIKEC_merge_msg_2(msgs, set);
 }

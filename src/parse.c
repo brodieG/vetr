@@ -107,11 +107,16 @@ See VALC_name_sub too.  We substitute `.` here as well, but logic before this fu
 
 Really seems like these two functions should be merged into one so that we don't get out of sync in how we use them.
 */
-SEXP VALC_sub_symbol(SEXP lang, SEXP rho, struct track_hash * track_hash) {
+SEXP VALC_sub_symbol(
+  SEXP lang, struct VALC_settings set, struct track_hash * track_hash
+) {
   size_t protect_i = 0;
+  SEXP rho = set.env;
   while(TYPEOF(lang) == SYMSXP && lang != R_MissingArg) {
     const char * symb_chr = CHAR(PRINTNAME(lang));
-    int symb_stored = VALC_add_to_track_hash(track_hash, symb_chr, "42");
+    int symb_stored = VALC_add_to_track_hash(
+      track_hash, symb_chr, "42", set.nchar_max
+    );
 
     if(!symb_stored) {
       error(
@@ -140,7 +145,8 @@ SEXP VALC_sub_symbol(SEXP lang, SEXP rho, struct track_hash * track_hash) {
 }
 SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
   struct track_hash * track_hash = VALC_create_track_hash(64);
-  return VALC_sub_symbol(lang, rho, track_hash);
+  struct VALC_settings set = VALC_settings_vet(R_NilValue, rho);
+  return VALC_sub_symbol(lang, set, track_hash);
 }
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
@@ -173,7 +179,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, struct VALC_settings set) {
 
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
   lang_cpy = VALC_name_sub(lang_cpy, var_name);
-  if(mode != 2) lang_cpy = VALC_sub_symbol(lang_cpy, set.env, track_hash);
+  if(mode != 2) lang_cpy = VALC_sub_symbol(lang_cpy, set, track_hash);
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
@@ -192,7 +198,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, struct VALC_settings set) {
 }
 SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
   struct VALC_settings set = VALC_settings_init(NULL, rho);
-  VALC_parse(lang, var_name, set);
+  return VALC_parse(lang, var_name, set);
 }
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
@@ -276,7 +282,7 @@ void VALC_parse_recurse(
 
     int is_one_dot = (lang_car == VALC_SYM_one_dot);
     lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
-    if(!is_one_dot) lang_car = VALC_sub_symbol(lang_car, set.env, track_hash);
+    if(!is_one_dot) lang_car = VALC_sub_symbol(lang_car, set, track_hash);
     UNPROTECT(1);
     SETCAR(lang, lang_car);
     UNPROTECT(1);

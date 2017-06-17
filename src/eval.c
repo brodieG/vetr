@@ -76,7 +76,7 @@ SEXP VALC_evaluate_recurse(
         eval_res = PROTECT(
           VALC_evaluate_recurse(
             CAR(lang), CAR(act_codes), arg_value, arg_lang, arg_tag, lang_full,
-            rho
+            set
         ) );
         if(TYPEOF(eval_res) == LISTSXP) {
           if(mode == 1) {
@@ -144,7 +144,7 @@ SEXP VALC_evaluate_recurse(
       eval_res_c = VALC_all(eval_tmp);
       eval_res = PROTECT(ScalarLogical(eval_res_c > 0));
     } else {
-      eval_res = PROTECT(ALIKEC_alike_ext2(eval_tmp, arg_value, arg_lang, set));
+      eval_res = PROTECT(ALIKEC_alike_int2(eval_tmp, arg_value, arg_lang, set));
     }
     // Sanity checks
 
@@ -187,14 +187,14 @@ SEXP VALC_evaluate_recurse(
               "\"err.msg\" attribute for validation token for argument `%s` must be a one length character vector."
             );
           }
-          err_call = ALIKEC_pad_or_quote(arg_lang, -1, -1);
+          err_call = ALIKEC_pad_or_quote(arg_lang, -1, -1, set);
 
           // Need to make copy of string, modify it, and turn it back into
           // string
 
           const char * err_attrib_msg = CHAR(STRING_ELT(err_attrib, 0));
           char * err_attrib_mod = CSR_smprintf4(
-            set.max_nchar, err_attrib_msg, err_call, "", "", ""
+            set.nchar_max, err_attrib_msg, err_call, "", "", ""
           );
           // not protecting mkString since assigning to protected object
           SETCAR(err_msg, mkString(err_attrib_mod));
@@ -202,7 +202,7 @@ SEXP VALC_evaluate_recurse(
           // message attribute not defined, must construct error message based
           // on result of evaluation
 
-          err_call = ALIKEC_pad_or_quote(lang, -1, -1);
+          err_call = ALIKEC_pad_or_quote(lang, -1, -1, set);
 
           char * err_str;
           char * err_tok;
@@ -342,7 +342,7 @@ SEXP VALC_evaluate_ext(
   SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
   SEXP rho
 ) {
-  struct VALC_settings set = VALC_settings_vet(R_NilValue);
+  struct VALC_settings set = VALC_settings_vet(R_NilValue, rho);
   if(TYPEOF(rho) != ENVSXP)
     error("Argument `rho` must be an environment.");
   set.env = rho;

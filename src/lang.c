@@ -153,8 +153,12 @@ struct ALIKEC_res_lang ALIKEC_lang_obj_compare(
   if(target == R_NilValue) {// NULL matches anything
     res.success = 1;
   } else if(tsc_type == SYMSXP && csc_type == SYMSXP) {
-    const char * tar_abs = ALIKEC_symb_abstract(target, tar_hash, tar_varnum);
-    const char * cur_abs = ALIKEC_symb_abstract(current, cur_hash, cur_varnum);
+    const char * tar_abs = ALIKEC_symb_abstract(
+      target, tar_hash, tar_varnum, set
+    );
+    const char * cur_abs = ALIKEC_symb_abstract(
+      current, cur_hash, cur_varnum, set
+    );
     // reverse hash to get what symbol should be in case of error
     const char * rev_symb = pfHashFind(rev_hash, tar_abs);
     const char * csc_text = CHAR(PRINTNAME(current));
@@ -183,7 +187,7 @@ struct ALIKEC_res_lang ALIKEC_lang_obj_compare(
     res.msg_strings.tar_pre = "be";
     res.msg_strings.target = CSR_smprintf4(
       set.nchar_max, "a call to `%s`",
-      ALIKEC_deparse_chr(CAR(target), -1), "", "", ""
+      ALIKEC_deparse_chr(CAR(target), -1, set), "", "", ""
     );
     res.msg_strings.act_pre = "is";
     res.msg_strings.actual = CSR_smprintf4(
@@ -289,13 +293,13 @@ struct ALIKEC_res_lang ALIKEC_lang_alike_rec(
       res.msg_strings.tar_pre = "be";
       res.msg_strings.target = CSR_smprintf4(
         set.nchar_max, "a call to `%s`",
-        ALIKEC_deparse_chr(CAR(target), -1), "", "", ""
+        ALIKEC_deparse_chr(CAR(target), -1, set), "", "", ""
       );
 
       res.msg_strings.act_pre = "is";
       res.msg_strings.actual = CSR_smprintf4(
         set.nchar_max, "a call to `%s`",
-        ALIKEC_deparse_chr(CAR(current), -1), "", "", ""
+        ALIKEC_deparse_chr(CAR(current), -1, set), "", "", ""
       );
     } else if (CDR(target) != R_NilValue) {
       // Zero length calls match anything, so only come here if target is not
@@ -573,7 +577,7 @@ For testing purposes
 SEXP ALIKEC_lang_alike_ext(
   SEXP target, SEXP current, SEXP match_env
 ) {
-  struct VALC_settings set = VALC_settings_vet(R_NilValue, R_BaseEnv);
+  struct VALC_settings set = VALC_settings_init();
   set.env = match_env;
   return ALIKEC_lang_alike_core(target, current, set);
 }
@@ -581,9 +585,9 @@ SEXP ALIKEC_lang_alike_ext(
 SEXP ALIKEC_lang_alike_chr_ext(
   SEXP target, SEXP current, SEXP match_env
 ) {
-  struct VALC_settings set = VALC_settings_vet(R_NilValue, R_BaseEnv);
+  struct VALC_settings set = VALC_settings_init();
   set.env = match_env;
-  SEXP res = PROTECT(ALIKEC_lang_alike_internal(target, current, set.message));
+  SEXP res = PROTECT(ALIKEC_lang_alike_internal(target, current, set).message);
   SEXP res_str;
   if(res != R_NilValue) {
     res_str = PROTECT(VECTOR_ELT(res, 0));

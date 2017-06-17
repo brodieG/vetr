@@ -9,14 +9,14 @@
   struct VALC_settings {
     // Original alike settings
 
-    int type_mode, attr_mode, lang_mode, fun_mode;
+    int type_mode, attr_mode, lang_mode, fun_mode, rec_mode;
 
     size_t fuzzy_int_max_len;
 
     int suppress_warnings;
     int in_attr;
 
-    long width;      // Tell alike what screen width to assume
+    int width;      // Tell alike what screen width to assume
 
     // what env to look for functions to match call in, substitute, etc, used
     // boty by alike and by vet funs
@@ -32,6 +32,6 @@
     size_t track_hash_content_size;
   };
   struct VALC_settings VALC_settings_init();
-  struct VALC_settings VALC_settings_vet(SEXP set_list);
+  struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env);
 
 #endif

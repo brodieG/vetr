@@ -1,8 +1,11 @@
+#include "settings.h"
+#include <stdint.h>
+
 /*
  * Initialize settings with default values
  */
 struct VALC_settings VALC_settings_init() {
-  (struct VALC_settings) {
+  return (struct VALC_settings) {
     .type_mode = 0,
     .attr_mode = 0,
     .lang_mode = 0,
@@ -10,28 +13,27 @@ struct VALC_settings VALC_settings_init() {
     .fuzzy_int_max_len = 0,
     .suppress_warnings = 0,
     .in_attr = 0,
-    .env = R_GlobalEnv,
+    .env = R_BaseEnv,
     .width = 0,
     .env_depth_max = 65535L,
     .symb_sub_depth_max = 65535L,
-    .nchar_max = 65535L;
-    .symb_size_max = 15000L;
-    .track_hash_content_size = 63L;
+    .nchar_max = 65535L,
+    .symb_size_max = 15000L,
+    .track_hash_content_size = 63L
   };
 }
 /*
  * Check that a SEXP could pass as a scalar integer and return it as a long
  */
-static long VALC_is_scalar_int <- function(
+static long VALC_is_scalar_int(
   SEXP x, const char * x_name, long x_min, long x_max
 ) {
-  SEXPTYPE x_type = TYPEOF(x);
   long x_int = asInteger(x);
 
   if(xlength(x) != 1) error("Setting `%s` must be scalar integer.", x_name);
   if(x_int == NA_INTEGER) error("Setting `%s` may not be NA.", x_name);
   if(TYPEOF(x) == REALSXP) {
-    if(x_int != asReal(x)) error("Setting `%s` must be integer like.", x_name)
+    if(x_int != asReal(x)) error("Setting `%s` must be integer like.", x_name);
   }
   if(x_int < x_min || x_int > x_max)
     error(
@@ -50,32 +52,32 @@ static long VALC_is_scalar_int <- function(
 
 struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
   struct VALC_settings settings = VALC_settings_init();
+  R_xlen_t set_len = 11;
 
   if(TYPEOF(set_list) == VECSXP) {
-    if(xlength(set_list) != R_xlen_t) {
+    if(xlength(set_list) != set_len) {
       error(
         "`vet/vetr` usage error: `settings` must be a list of length %zu.",
         set_len
       );
     }
     SEXP set_names = getAttrib(set_list, R_NamesSymbol);
-    if(set_names == R_NilValue || TYPEOF(names) != STRSXP) {
+    if(set_names == R_NilValue || TYPEOF(set_names) != STRSXP) {
       error(
         "%s%s%s", "`vet/vetr` usage error: ",
         "argument `settings` must be a named list as produced ",
         "by `vetr_settings`."
-      )
+      );
     }
-    R_xlen_t set_len = 11;
     const char * set_names_default[] = {
       "type.mode", "attr.mode", "lang.mode", "fun.mode", "rec.mode",
       "suppress.warnings", "fuzzy.int.max.len",
       "width", "env.depth.max", "symb.sub.depth.max", "nchar.max",
       "track.hash.content.size"
-    }
+    };
     SEXP set_names_def_sxp = PROTECT(allocVector(STRSXP, set_len));
     for(R_xlen_t i = 0; i < set_len; ++i) {
-      SET_VECTOR_ELT(set_names_def_sxp, i, mkChar(*settings_names[i]));
+      SET_VECTOR_ELT(set_names_def_sxp, i, mkChar(set_names_default[i]));
     }
     if(!R_compute_identical(set_names, set_names_def_sxp, 16)) {
       error(
@@ -105,8 +107,8 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
       VALC_is_scalar_int(VECTOR_ELT(set_list, 7), "width", -1L, LONG_MAX);
     settings.env_depth_max =
       VALC_is_scalar_int(VECTOR_ELT(set_list, 8), "env.depth.max", 0, SIZE_MAX);
-    settings.symb_depth_max = VALC_is_scalar_int(
-      VECTOR_ELT(set_list, 9), "symb.depth.max", 0, SIZE_MAX
+    settings.symb_sub_depth_max = VALC_is_scalar_int(
+      VECTOR_ELT(set_list, 9), "symb.sub.depth.max", 0, SIZE_MAX
     );
     settings.nchar_max =
       VALC_is_scalar_int(VECTOR_ELT(set_list, 10), "nchar.max", 0, SIZE_MAX);
@@ -121,7 +123,7 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
     SEXP sup_warn = VECTOR_ELT(set_list, 5);
     if(
       TYPEOF(sup_warn) != LGLSXP || xlength(sup_warn) != 1 ||
-      sup_warn == NA_LOGICAL
+      asInteger(sup_warn) == NA_LOGICAL
     ) {
       error(
         "%s%s",

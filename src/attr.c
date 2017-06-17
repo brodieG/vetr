@@ -232,7 +232,7 @@ struct ALIKEC_res_sub ALIKEC_compare_class(
 }
 SEXP ALIKEC_compare_class_ext(SEXP target, SEXP current) {
   struct ALIKEC_res_sub res = ALIKEC_compare_class(
-    target, current, VALC_settings_vet(R_NilValue, R_BaseEnv);
+    target, current, VALC_settings_init()
   );
   PROTECT(res.message);
   SEXP res_sxp = ALIKEC_res_sub_as_sxp(res);
@@ -385,7 +385,7 @@ SEXP ALIKEC_compare_dim_ext(
   return ALIKEC_res_sub_as_sxp(
     ALIKEC_compare_dims(
       target, current, tar_obj, cur_obj,
-      VALC_settings_vet(R_NilValue, R_BaseEnv)
+      VALC_settings_init()
   ) );
 }
 
@@ -510,7 +510,7 @@ struct ALIKEC_res_sub ALIKEC_compare_special_char_attrs_internal(
 
 SEXP ALIKEC_compare_special_char_attrs(SEXP target, SEXP current) {
   struct ALIKEC_res_sub res = ALIKEC_compare_special_char_attrs_internal(
-    target, current, ALIKEC_set_def(""), 0
+    target, current, VALC_settings_init(), 0
   );
   PROTECT(res.message);
   SEXP res_sexp = PROTECT(ALIKEC_res_sub_as_sxp(res));
@@ -732,7 +732,7 @@ SEXP ALIKEC_compare_dimnames_ext(SEXP prim, SEXP sec) {
   return(
     ALIKEC_res_sub_as_sxp(
       ALIKEC_compare_dimnames(
-        prim, sec, VALC_settings_vet(R_NilValue, R_BaseEnv)
+        prim, sec, VALC_settings_init()
   ) ) );
 }
 /*-----------------------------------------------------------------------------\
@@ -792,7 +792,7 @@ external
 SEXP ALIKEC_compare_ts_ext(SEXP target, SEXP current) {
   return ALIKEC_res_sub_as_sxp(
     ALIKEC_compare_ts(target, current,
-      VALC_settings_vet(R_NilValue, R_BaseEnv)
+      VALC_settings_init()
     )
   );
 }
@@ -1258,7 +1258,7 @@ SEXP ALIKEC_compare_attributes(SEXP target, SEXP current, SEXP attr_mode) {
   )
     error("Argument `mode` must be a one length integer like vector");
 
-  struct VALC_settings set = VALC_settings_vet(R_NilValue, R_BaseEnv);
+  struct VALC_settings set = VALC_settings_init();
   set.attr_mode = asInteger(attr_mode);
 
   struct ALIKEC_res_sub comp_res =

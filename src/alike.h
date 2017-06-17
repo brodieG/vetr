@@ -99,11 +99,15 @@
 
   // - Main Funs --------------------------------------------------------------
 
-  SEXP ALIKEC_alike_ext(SEXP target, SEXP current, SEXP cur_sub, SEXP env);
+  SEXP ALIKEC_alike_ext(
+    SEXP target, SEXP current, SEXP cur_sub, SEXP env, SEXP settings
+  );
   SEXP ALIKEC_alike_int2(
     SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
   );
-  SEXP ALIKEC_alike_ext2(SEXP target, SEXP current, SEXP curr_sub, SEXP env);
+  SEXP ALIKEC_alike_ext2(
+    SEXP target, SEXP current, SEXP curr_sub, SEXP env, SEXP settings
+  );
 
   struct ALIKEC_res ALIKEC_alike_internal(
     SEXP target, SEXP current, struct VALC_settings set
@@ -140,8 +144,9 @@
     int formula, SEXP match_call, SEXP match_env, struct VALC_settings set,
     struct ALIKEC_rec_track rec
   );
-  struct ALIKEC_res_strings
-    ALIKEC_fun_alike_internal(SEXP target, SEXP current);
+  struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
+    SEXP target, SEXP current, struct VALC_settings set
+  );
   SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current);
   SEXP ALIKEC_compare_ts_ext(SEXP target, SEXP current);
   SEXP ALIKEC_pad_or_quote_ext(SEXP lang, SEXP width, SEXP syntactic);
@@ -171,18 +176,24 @@
   );
   int ALIKEC_is_an_op(SEXP lang);
   int ALIKEC_is_an_op_inner(SEXP lang);
-  const char * ALIKEC_pad_or_quote(SEXP lang, int width, int syntactic);
+  const char * ALIKEC_pad_or_quote(
+    SEXP lang, int width, int syntactic, struct VALC_settings set
+  );
   SEXP ALIKEC_deparse_width(SEXP obj, int width);
   SEXP ALIKEC_deparse(SEXP obj, int width_cutoff);
-  const char * ALIKEC_pad(SEXP obj, R_xlen_t lines, int pad);
+  const char * ALIKEC_pad(
+    SEXP obj, R_xlen_t lines, int pad, struct VALC_settings set
+  );
   SEXP ALIKEC_pad_ext(SEXP obj, SEXP lines, SEXP pad);
-  const char * ALIKEC_deparse_chr(SEXP obj, int width_cutoff);
+  const char * ALIKEC_deparse_chr(
+    SEXP obj, int width_cutoff, struct VALC_settings set
+  );
   SEXP ALIKEC_match_call(SEXP call, SEXP match_call, SEXP env);
   SEXP ALIKEC_findFun(SEXP symbol, SEXP rho);
   SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho);
   SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res_fin res);
   SEXP ALIKEC_string_or_true(
-    struct ALIKEC_res_fin res, struct VALC_setttings set
+    struct ALIKEC_res_fin res, struct VALC_settings set
   );
   SEXP ALIKEC_class(SEXP obj, SEXP class);
   SEXP ALIKEC_abstract_ts(SEXP x, SEXP what);
@@ -198,10 +209,11 @@
   struct ALIKEC_rec_track ALIKEC_rec_inc(struct ALIKEC_rec_track);
   struct ALIKEC_rec_track ALIKEC_rec_dec(struct ALIKEC_rec_track);
   SEXP ALIKEC_syntactic_names_exp(SEXP lang);
-  SEXP ALIKEC_sort_msg(SEXP msgs);
-  SEXP ALIKEC_merge_msg(SEXP msgs);
-  SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set);
+  SEXP ALIKEC_sort_msg(SEXP msgs, struct VALC_settings set);
+  SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set);
   SEXP ALIKEC_merge_msg_ext(SEXP msgs);
+  SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set);
+  SEXP ALIKEC_merge_msg_2_ext(SEXP msgs);
 
   // - Init and pre-install Symbols -------------------------------------------
 

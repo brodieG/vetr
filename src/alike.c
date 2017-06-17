@@ -430,10 +430,10 @@ struct ALIKEC_res ALIKEC_alike_rec(
       // rec tracking is specific to each call to ALIKEC_alike_internal
 
       if(!res.rec.envs) res.rec.envs =
-        ALIKEC_env_set_create(16, set.env_limit);
+        ALIKEC_env_set_create(16, set.env_depth_max);
 
       int env_stack_status =
-        ALIKEC_env_track(target, res.rec.envs, set.env_limit);
+        ALIKEC_env_track(target, res.rec.envs, set.env_depth_max);
       if(!res.rec.envs->no_rec)
         res.rec.envs->no_rec = !env_stack_status;
       if(env_stack_status  < 0 && !set.suppress_warnings) {
@@ -709,5 +709,5 @@ SEXP ALIKEC_alike_ext2(
     // nocov end
   }
   struct VALC_settings set = VALC_settings_vet(settings, env);
-  return ALIKEC_alike_int2(target, current, cur_sub, set);
+  return ALIKEC_alike_int2(target, current, curr_sub, set);
 }
