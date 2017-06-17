@@ -180,13 +180,13 @@ struct ALIKEC_res_sub ALIKEC_compare_class(
         SET_STRING_ELT(msg_strings, 0, mkChar("be"));
         SET_STRING_ELT(
           msg_strings, 1, mkChar(
-            CSR_smprintf4(ALIKEC_MAX_CHAR, "\"%s\"", tar_class, "", "", "")
+            CSR_smprintf4(set.nchar_max, "\"%s\"", tar_class, "", "", "")
         ) );
         SET_STRING_ELT(msg_strings, 2, mkChar("is"));
         SET_STRING_ELT(
           msg_strings, 3,
           mkChar(
-            CSR_smprintf4(ALIKEC_MAX_CHAR, "\"%s\"", cur_class, "", "", "")
+            CSR_smprintf4(set.nchar_max, "\"%s\"", cur_class, "", "", "")
         ) );
       } else {
         SET_STRING_ELT(msg_strings, 0, mkChar("be"));
@@ -194,14 +194,14 @@ struct ALIKEC_res_sub ALIKEC_compare_class(
             msg_strings, 1,
             mkChar(
               CSR_smprintf4(
-                ALIKEC_MAX_CHAR,  "class \"%s\"", tar_class, "", "", ""
+                set.nchar_max,  "class \"%s\"", tar_class, "", "", ""
         ) ) );
         SET_STRING_ELT(msg_strings, 2, mkChar("is"));
         SET_STRING_ELT(
           msg_strings, 3,
             mkChar(
               CSR_smprintf4(
-                ALIKEC_MAX_CHAR,  "\"%s\"", cur_class, "", "", ""
+                set.nchar_max,  "\"%s\"", cur_class, "", "", ""
         ) ) );
   } } }
   // Check to make sure have enough classes
@@ -214,7 +214,7 @@ struct ALIKEC_res_sub ALIKEC_compare_class(
         VECTOR_ELT(res.message, 0),  1,
         mkChar(
           CSR_smprintf4(
-            ALIKEC_MAX_CHAR, "from class \"%s\"",
+            set.nchar_max, "from class \"%s\"",
             CHAR(STRING_ELT(target, tar_class_i)), "", "", ""
   ) ) );} }
   // Make sure class attributes are alike
@@ -302,9 +302,9 @@ struct ALIKEC_res_sub ALIKEC_compare_dims(
     res.lvl = 1;
     res.message = ALIKEC_res_msg_def(
       "be",
-      CSR_smprintf4(ALIKEC_MAX_CHAR, "\"%s\"", class_err_target, "", "", ""),
+      CSR_smprintf4(set.nchar_max, "\"%s\"", class_err_target, "", "", ""),
       "is",
-      CSR_smprintf4(ALIKEC_MAX_CHAR, "\"%s\"", class_err_actual, "", "", "")
+      CSR_smprintf4(set.nchar_max, "\"%s\"", class_err_actual, "", "", "")
     );
     return res;
   }
@@ -320,13 +320,13 @@ struct ALIKEC_res_sub ALIKEC_compare_dims(
     res.message = ALIKEC_res_msg_def(
       "have",
       CSR_smprintf4(
-        ALIKEC_MAX_CHAR, "%s dimension%s",
+        set.nchar_max, "%s dimension%s",
         CSR_len_as_chr(target_len), target_len == (R_xlen_t) 1 ? "" : "s",
         "", ""
       ),
       "has",
       CSR_smprintf4(
-        ALIKEC_MAX_CHAR, "%s", CSR_len_as_chr(current_len), "", "", ""
+        set.nchar_max, "%s", CSR_len_as_chr(current_len), "", "", ""
     ));
     return res;
   }
@@ -355,24 +355,24 @@ struct ALIKEC_res_sub ALIKEC_compare_dims(
             // nocov end
         }
         err_dim2 = (char *) CSR_smprintf4(
-          ALIKEC_MAX_CHAR, err_dimtmp, tar_dim_val == 1 ? "" : "s", "", "", ""
+          set.nchar_max, err_dimtmp, tar_dim_val == 1 ? "" : "s", "", "", ""
         );
       } else {
         err_dim1 = "size ";
         err_dim2 = (char *) CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "at dimension %s",
+          set.nchar_max, "at dimension %s",
           CSR_len_as_chr((R_xlen_t)(attr_i + 1)), "", "", ""
       );}
       res.success = 0;
       res.message = ALIKEC_res_msg_def(
         "have",
         CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "%s%s %s",
+          set.nchar_max, "%s%s %s",
           (const char *) err_dim1, tar_dim_chr, (const char *) err_dim2, ""
         ),
         "has",
         CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "%s",
+          set.nchar_max, "%s",
           CSR_len_as_chr((R_xlen_t)(INTEGER(current)[attr_i])), "", "", ""
       ));
       return res;
@@ -481,11 +481,11 @@ struct ALIKEC_res_sub ALIKEC_compare_special_char_attrs_internal(
               ALIKEC_res_msg_def(
                 "be",
                 CSR_smprintf4(
-                  ALIKEC_MAX_CHAR, "\"%s\"", tar_name_val, "", "", ""
+                  set.nchar_max, "\"%s\"", tar_name_val, "", "", ""
                 ),
                 "is",
                 CSR_smprintf4(
-                    ALIKEC_MAX_CHAR, "\"%s\"", cur_name_val, "", "", ""
+                  set.nchar_max, "\"%s\"", cur_name_val, "", "", ""
             ) ) );
             SEXP wrap = PROTECT(allocVector(VECSXP, 2));
             SET_VECTOR_ELT(wrap, 0,
@@ -761,11 +761,11 @@ struct ALIKEC_res_sub ALIKEC_compare_ts(
           ALIKEC_res_msg_def(
             "be",
             CSR_smprintf4(
-              ALIKEC_MAX_CHAR, "%s", tar_num, "", "", ""
+              set.nchar_max, "%s", tar_num, "", "", ""
             ),
             "is",
             CSR_smprintf4(
-              ALIKEC_MAX_CHAR, "%s", cur_num, "", "", ""
+              set.nchar_max, "%s", cur_num, "", "", ""
             )
         ) );
         SEXP wrap = PROTECT(allocVector(VECSXP, 2));
@@ -859,11 +859,11 @@ struct ALIKEC_res_sub ALIKEC_compare_attributes_internal_simple(
     res.message = PROTECT(
       ALIKEC_res_msg_def(
         CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "%shave",
+          set.nchar_max, "%shave",
           tae_type == NILSXP ? "not " : "", "", "", ""
         ),
         CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "attribute \"%s\"",
+          set.nchar_max, "attribute \"%s\"",
           CHAR(PRINTNAME(attr_sym)), "", "", ""
         ),
         "", ""
@@ -874,11 +874,11 @@ struct ALIKEC_res_sub ALIKEC_compare_attributes_internal_simple(
       ALIKEC_res_msg_def(
         "be",
         CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "%s", type2char(tae_type), "", "", ""
+          set.nchar_max, "%s", type2char(tae_type), "", "", ""
         ),
         "is",
         CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "%s", type2char(cae_type), "", "", ""
+          set.nchar_max, "%s", type2char(cae_type), "", "", ""
         )
     ) );
     SEXP wrap = PROTECT(ALIKEC_attr_wrap(attr_sym, R_NilValue));
@@ -891,11 +891,11 @@ struct ALIKEC_res_sub ALIKEC_compare_attributes_internal_simple(
         ALIKEC_res_msg_def(
           "be",
           CSR_smprintf4(
-            ALIKEC_MAX_CHAR, "%s", CSR_len_as_chr(tae_val_len), "", "", ""
+            set.nchar_max, "%s", CSR_len_as_chr(tae_val_len), "", "", ""
           ),
           "is",
           CSR_smprintf4(
-            ALIKEC_MAX_CHAR, "%s", CSR_len_as_chr(cae_val_len), "", "", ""
+            set.nchar_max, "%s", CSR_len_as_chr(cae_val_len), "", "", ""
           )
       ) );
       SEXP wrap = PROTECT(ALIKEC_attr_wrap(attr_sym, R_NilValue));
@@ -1075,10 +1075,10 @@ struct ALIKEC_res_sub ALIKEC_compare_attributes_internal(
       errs[7].message = PROTECT(
         ALIKEC_res_msg_def(
           CSR_smprintf4(
-            ALIKEC_MAX_CHAR, "%shave",
+            set.nchar_max, "%shave",
             (cur_attr_el == R_NilValue ? "" : "not "), "", "", ""
           ),
-          CSR_smprintf4(ALIKEC_MAX_CHAR, "attribute \"%s\"", tx, "", "", ""),
+          CSR_smprintf4(set.nchar_max, "attribute \"%s\"", tx, "", "", ""),
           "", ""
       ) );
       ps++;
@@ -1207,13 +1207,13 @@ struct ALIKEC_res_sub ALIKEC_compare_attributes_internal(
       ALIKEC_res_msg_def(
         "have",
         CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "%s attribute%s",
+          set.nchar_max, "%s attribute%s",
           CSR_len_as_chr(prim_attr_count),
           prim_attr_count != 1 ? "s" : "", "", ""
         ),
         "has",
         CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "%s", CSR_len_as_chr(sec_attr_count), "", "", ""
+          set.nchar_max, "%s", CSR_len_as_chr(sec_attr_count), "", "", ""
         )
     ) );
     ps++;

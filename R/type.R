@@ -43,18 +43,21 @@ type_of <- function(object)
 #'   \item 2: types must be equal for all objects types (for functions, this is
 #'     unchanged from 1)
 #' }
+#' DEVNOTE RATIONALIZE THE BELOW WITH vetr_settings
 #'
-#' @seealso type_of, alike
-#' @aliases .type_alike
-#' @param target the object to test type alikeness against
-#' @param current the object to test the type alikeness of
-#' @param mode integer(1L) in 0:2, see details
-#' @param fuzzy.int.max.len max length of numeric vectors to consider for
+#' mode integer(1L) in 0:2, see details
+#' fuzzy.int.max.len max length of numeric vectors to consider for
 #'   integer likeness (e.g. \code{c(1, 2)} can be considered "integer", even
 #'   though it is numeric); currently we limit this check to vectors
 #'   shorter than 100 to avoid a potentially expensive computation on large
 #'   vectors
+#'
+#' @seealso type_of, alike, [vetr_settings()]
+#' @aliases .type_alike
+#' @param target the object to test type alikeness against
+#' @param current the object to test the type alikeness of
+#' @param settings see 
 #' @export
 
-type_alike <- function(target, current, mode=0L, fuzzy.int.max.len=100)
-  .Call(VALC_type_alike, target, current, mode, fuzzy.int.max.len)
+type_alike <- function(target, current, settings=NULL)
+  .Call(VALC_type_alike, target, current, settings)

@@ -104,12 +104,10 @@
 
   // - Main Funs --------------------------------------------------------------
 
-  SEXP ALIKEC_alike (
-    SEXP target, SEXP current, SEXP curr_sub, SEXP type_mode, SEXP attr_mode,
-    SEXP env, SEXP fuzzy_int_max_len, SEXP suppress_warnings, SEXP lang_mode,
-    SEXP width, SEXP env_limit
-  );
   SEXP ALIKEC_alike_ext(SEXP target, SEXP current, SEXP cur_sub, SEXP env);
+  SEXP ALIKEC_alike_int2(
+    SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
+  );
   SEXP ALIKEC_alike_ext2(SEXP target, SEXP current, SEXP curr_sub, SEXP env);
 
   struct ALIKEC_res ALIKEC_alike_internal(
@@ -122,7 +120,7 @@
 
   SEXPTYPE ALIKEC_typeof_internal(SEXP object);
   struct ALIKEC_res_strings ALIKEC_type_alike_internal(
-    SEXP target, SEXP current, int mode, R_xlen_t max_len
+    SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_compare_attributes(SEXP target, SEXP current, SEXP attr_mode);
   SEXP ALIKEC_compare_special_char_attrs(SEXP target, SEXP current);
@@ -188,7 +186,9 @@
   SEXP ALIKEC_findFun(SEXP symbol, SEXP rho);
   SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho);
   SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res_fin res);
-  SEXP ALIKEC_string_or_true(struct ALIKEC_res_fin);
+  SEXP ALIKEC_string_or_true(
+    struct ALIKEC_res_fin res, struct VALC_setttings set
+  );
   SEXP ALIKEC_class(SEXP obj, SEXP class);
   SEXP ALIKEC_abstract_ts(SEXP x, SEXP what);
   int ALIKEC_env_track(SEXP env, struct ALIKEC_env_track * envs, int env_limit);
@@ -205,6 +205,7 @@
   SEXP ALIKEC_syntactic_names_exp(SEXP lang);
   SEXP ALIKEC_sort_msg(SEXP msgs);
   SEXP ALIKEC_merge_msg(SEXP msgs);
+  SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set);
   SEXP ALIKEC_merge_msg_ext(SEXP msgs);
 
   // - Init and pre-install Symbols -------------------------------------------

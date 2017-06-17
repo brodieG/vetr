@@ -55,12 +55,15 @@
 #'   many we will go through.
 #' @param symb.sub.depth.max integer(1L) maximum recursion depth when
 #'   recursively substituting symbols in vetting expression
+#' @param env what environment to use to match calls and evaluate vetting
+#'   expressions; if NULL will use the calling frame to \code{vet/vetr/alike}
+#' @return list with all the setting values
 
 vetr_settings <- function(
   type.mode=0L, attr.mode=0L, lang.mode=0L, fun.mode=0L, rec.mode=0L,
   suppress.warnings=FALSE, fuzzy.int.max.len=100L,
   width=-1L, env.depth.max=65535L, symb.sub.depth.max=65535L,
-  nchar.max=65535L
+  nchar.max=65535L, env=NULL
 ) {
   as.list(environment)
 }

@@ -134,7 +134,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
     if(s4_tar + s4_cur == 1) {
       err = 1;
       const char * msg_tmp = CSR_smprintf4(
-        ALIKEC_MAX_CHAR, "%sbe", (s4_tar ? "" : "not "), "", "", ""
+        set.nchar_max, "%sbe", (s4_tar ? "" : "not "), "", "", ""
       );
       res.message = PROTECT(ALIKEC_res_msg_def(msg_tmp, "S4", "", ""));
     } else {
@@ -176,7 +176,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
       if(!inherits) {
         err = 1;
         const char * msg_tmp = CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "S4 class \"%s\" (package: %s)",
+          set.nchar_max, "S4 class \"%s\" (package: %s)",
           CHAR(asChar(klass)), CHAR(asChar(klass_attrib)), "", ""
         );
         res.message = PROTECT(
@@ -251,9 +251,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
     //  to symbol symbol
 
     if(!err && !is_lang) {
-      err_type = ALIKEC_type_alike_internal(
-        target, current, set.type_mode, set.fuzzy_int_max_len
-      );
+      err_type = ALIKEC_type_alike_internal(target, current, set);
       if(err_type.target[0]) {
         err = 1;
         msg_tar_pre = err_type.tar_pre;
@@ -285,21 +283,21 @@ struct ALIKEC_res ALIKEC_alike_obj(
         if(is_df) {
           msg_tar_pre = "have";
           msg_target = CSR_smprintf4(
-            ALIKEC_MAX_CHAR, "%s column%s",
+            set.nchar_max, "%s column%s",
             err_tok1, tar_len == (R_xlen_t) 1 ? "" : "s", "",  ""
           );
           msg_act_pre = "has";
           msg_actual = CSR_smprintf4(
-            ALIKEC_MAX_CHAR, "%s", err_tok2,  "", "", ""
+            set.nchar_max, "%s", err_tok2,  "", "", ""
           );
         } else {
           msg_tar_pre = "be";
           msg_target = CSR_smprintf4(
-            ALIKEC_MAX_CHAR, "length %s", err_tok1,  "",  "", ""
+            set.nchar_max, "length %s", err_tok1,  "",  "", ""
           );
           msg_act_pre = "is";
           msg_actual = CSR_smprintf4(
-            ALIKEC_MAX_CHAR, "%s", err_tok2,  "", "", ""
+            set.nchar_max, "%s", err_tok2,  "", "", ""
           );
         }
       } else if (
@@ -316,13 +314,13 @@ struct ALIKEC_res ALIKEC_alike_obj(
         err = 1;
         msg_tar_pre = "have";
         msg_target = CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "%s row%s",
+          set.nchar_max, "%s row%s",
           CSR_len_as_chr(tar_first_el_len),
           tar_first_el_len == (R_xlen_t) 1 ? "" : "s", "", ""
         );
         msg_act_pre = "has";
         msg_actual = CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "%s",
+          set.nchar_max, "%s",
           CSR_len_as_chr(cur_first_el_len), "", "", ""
         );
     } }
@@ -501,7 +499,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
                 ALIKEC_res_msg_def(
                   "contain",
                   CSR_smprintf4(
-                    ALIKEC_MAX_CHAR, "variable `%s`",
+                    set.nchar_max, "variable `%s`",
                     CHAR(asChar(STRING_ELT(tar_names, i))), "", "", ""
                   ),
                   "", ""
@@ -541,7 +539,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
             ALIKEC_res_msg_def(
               "have",
               CSR_smprintf4(
-                ALIKEC_MAX_CHAR, "name \"%s\" at pairlist index [[%s]]",
+                set.nchar_max, "name \"%s\" at pairlist index [[%s]]",
                 CHAR(asChar(tar_tag_chr)), CSR_len_as_chr(i + 1), "", ""
               ),
               "", ""
@@ -593,7 +591,7 @@ struct ALIKEC_res ALIKEC_alike_internal(
     res.success = 0;
     res.message = ALIKEC_res_msg_def(
       "be", "\"NULL\"", "is", CSR_smprintf4(
-      ALIKEC_MAX_CHAR, "\"%s\"", type2char(TYPEOF(current)), "", "", ""
+      set.nchar_max, "\"%s\"", type2char(TYPEOF(current)), "", "", ""
     ) );
   } else {
     // Recursively check object
@@ -678,7 +676,7 @@ struct ALIKEC_res_fin ALIKEC_alike_wrap(
 
     res_out.call = ALIKEC_pad_or_quote(
       curr_sub, set.width,
-      asLogical(getAttrib(rec_ind, ALIKEC_SYM_syntacticnames))
+      asLogical(getAttrib(rec_ind, ALIKEC_SYM_syntacticnames)), set
     );
     UNPROTECT(2);
   }
@@ -691,15 +689,6 @@ Main external interface
 SEXP ALIKEC_alike_ext(
   SEXP target, SEXP current, SEXP curr_sub, SEXP env, SEXP settings
 ) {
-  if(TYPEOF(env) != ENVSXP) {
-    // nocov start
-    error(
-      "%s %s%s",
-      "Argument `env` argument should be environment, is",
-      type2char(TYPEOF(env)), "."
-    );
-    // nocov end
-  }
   if(
     TYPEOF(curr_sub) != LANGSXP && TYPEOF(curr_sub) != SYMSXP &&
     !(isVectorAtomic(curr_sub) && XLENGTH(curr_sub) == 1) &&
@@ -711,9 +700,18 @@ SEXP ALIKEC_alike_ext(
     );
     // nocov end
   }
-  struct VALC_settings set = VALC_settings_vet(settings);
-  set.env = env;
+  struct VALC_settings set = VALC_settings_vet(settings, env);
   return ALIKEC_string_or_true(
+    ALIKEC_alike_wrap(target, current, curr_sub, set), set
+  );
+}
+/*
+ * Another secondary, but takes the set struct instead of SEXP list
+ */
+SEXP ALIKEC_alike_int2(
+  SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
+) {
+  return ALIKEC_strsxp_or_true(
     ALIKEC_alike_wrap(target, current, curr_sub, set)
   );
 }
@@ -723,17 +721,8 @@ character vectors for the errors instead of length 1 so that the return values
 can be used with ALIKEC_merge_msg.
 */
 SEXP ALIKEC_alike_ext2(
-  SEXP target, SEXP current, SEXP curr_sub, SEXP env
+  SEXP target, SEXP current, SEXP curr_sub, SEXP env, SEXP settings
 ) {
-  if(TYPEOF(env) != ENVSXP) {
-    // nocov start
-    error(
-      "Internal Error; %s%d%s",
-      "`env` argument should be environment, is ", TYPEOF(env),
-      ". contact maintainer."
-    );
-    // nocov end
-  }
   if(
     TYPEOF(curr_sub) != LANGSXP && TYPEOF(curr_sub) != SYMSXP &&
     !(isVectorAtomic(curr_sub) && XLENGTH(curr_sub) == 1) &&
@@ -745,93 +734,6 @@ SEXP ALIKEC_alike_ext2(
     );
     // nocov end
   }
-  struct VALC_settings set = ALIKEC_set_def("");
-  set.env = env;
-  return ALIKEC_strsxp_or_true(
-    ALIKEC_alike_wrap(target, current, curr_sub, set)
-  );
-}
-/*
-Semi-internal interface; used to be the main external one but no longer as we
-changed the interface, we now access this function via ALIKEC_alike_fast
-*/
-SEXP ALIKEC_alike(
-  SEXP target, SEXP current, SEXP curr_sub, SEXP type_mode, SEXP attr_mode,
-  SEXP env, SEXP fuzzy_int_max_len, SEXP suppress_warnings, SEXP lang_mode,
-  SEXP width, SEXP env_limit
-) {
-  SEXPTYPE int_mod_type, fuzzy_type, attr_mod_type, lang_mod_type, width_type,
-    env_limit_type;
-  int supp_warn = 0, type_int = 0, attr_int = 0, lang_int = 0, width_int = -1,
-    env_limit_int;
-  R_xlen_t fuzzy_int_max_len_int;
-
-  int_mod_type = TYPEOF(type_mode);
-  attr_mod_type = TYPEOF(attr_mode);
-  lang_mod_type = TYPEOF(lang_mode);
-  fuzzy_type = TYPEOF(fuzzy_int_max_len);
-  width_type = TYPEOF(width);
-  env_limit_type = TYPEOF(env_limit);
-
-  if(
-    (int_mod_type != INTSXP && int_mod_type != REALSXP) ||
-    XLENGTH(type_mode) != 1 || (type_int = asInteger(type_mode)) == NA_INTEGER ||
-    type_int < 0 || type_int > 2
-  )
-    error("Argument `type.mode` must be a one length numeric between 0 and 2");
-  if(
-    (attr_mod_type != INTSXP && attr_mod_type != REALSXP) ||
-    XLENGTH(attr_mode) != 1 || (attr_int = asInteger(attr_mode)) == NA_INTEGER ||
-    attr_int < 0 || attr_int > 2
-  )
-    error("Argument `attr.mode` must be a one length numeric");
-  if(
-    (lang_mod_type != INTSXP && lang_mod_type != REALSXP) ||
-    XLENGTH(lang_mode) != 1 || (lang_int = asInteger(lang_mode)) == NA_INTEGER ||
-    lang_int < 0 || lang_int > 1
-  )
-    error("Argument `lang.mode` must be a one length numeric between 0 and 1");
-  if(
-    (fuzzy_type != INTSXP && fuzzy_type != REALSXP) ||
-    XLENGTH(fuzzy_int_max_len) != 1 ||
-    (fuzzy_int_max_len_int = asInteger(fuzzy_int_max_len)) == NA_INTEGER
-  )
-    error("Argument `fuzzy.int.max.len` must be an integer one length vector");
-  if(
-    TYPEOF(suppress_warnings) != LGLSXP || XLENGTH(suppress_warnings) != 1 ||
-    (supp_warn = asLogical(suppress_warnings)) == NA_LOGICAL
-  )
-    error("Argument `suppress.warnings` must be TRUE or FALSE");
-  if(env != R_NilValue && TYPEOF(env) != ENVSXP)
-    error("Argument `env` must be NULL or an environment");
-  if(
-    (width_type != INTSXP && width_type != REALSXP) ||
-    XLENGTH(width) != 1 || (width_int = asInteger(width)) == NA_INTEGER
-  )
-    error("Argument `width` must be an integer one length vector");
-  if(
-    (env_limit_type != INTSXP && env_limit_type != REALSXP) ||
-    XLENGTH(env_limit) != 1 ||
-    (env_limit_int = asInteger(env_limit)) == NA_INTEGER ||
-    env_limit_int < 1
-  )
-    error(
-      "%s%s",
-      "Argument `env.limit` must be a strictly positive ",
-      "an integer one length vector"
-    );
-
-  struct VALC_settings set = ALIKEC_set_def("");
-  set.type_mode = type_int;
-  set.attr_mode = attr_int;
-  set.lang_mode = lang_int;
-  set.fuzzy_int_max_len = fuzzy_int_max_len_int;
-  set.suppress_warnings = supp_warn;
-  set.env = env;
-  set.width = width_int;
-  set.env_limit = env_limit_int;
-
-  return ALIKEC_string_or_true(
-    ALIKEC_alike_wrap(target, current, curr_sub, set)
-  );
+  struct VALC_settings set = VALC_settings_vet(settings, env);
+  return ALIKEC_alike_int2(target, current, cur_sub, set);
 }

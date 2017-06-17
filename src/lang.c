@@ -53,7 +53,7 @@ varnum used to generate the anonymized variable name
 */
 
 const char * ALIKEC_symb_abstract(
-  SEXP symb, pfHashTable * hash, size_t * varnum
+  SEXP symb, pfHashTable * hash, size_t * varnum, struct VALC_settings set
 ) {
   const char * symb_chr = CHAR(PRINTNAME(symb));
   // really shouldn't have to do this, but can't be bothered re-defining the
@@ -61,7 +61,7 @@ const char * ALIKEC_symb_abstract(
   const char * symb_abs = pfHashFind(hash, (char *) symb_chr);
   if(symb_abs == NULL) {
     symb_abs = CSR_smprintf4(
-      ALIKEC_MAX_CHAR, "a%s", CSR_len_as_chr(*varnum), "", "", ""
+      set.nchar_max, "a%s", CSR_len_as_chr(*varnum), "", "", ""
     );
     pfHashSet(hash, (char *) symb_chr, symb_abs);
     (*varnum)++;
@@ -123,7 +123,7 @@ struct ALIKEC_res_lang ALIKEC_lang_obj_compare(
   SEXP target, SEXP cur_par, pfHashTable * tar_hash,
   pfHashTable * cur_hash, pfHashTable * rev_hash, size_t * tar_varnum,
   size_t * cur_varnum, int formula, SEXP match_call, SEXP match_env,
-  struct ALIKEC_settings set, struct ALIKEC_rec_track rec
+  struct VALC_settings set, struct ALIKEC_rec_track rec
 ) {
   SEXP current = CAR(cur_par);
   struct ALIKEC_res_lang res = ALIKEC_res_lang_init();
@@ -166,37 +166,37 @@ struct ALIKEC_res_lang ALIKEC_lang_obj_compare(
       if(*tar_varnum > *cur_varnum) {
         res.msg_strings.tar_pre = "not be";
         res.msg_strings.target = CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "`%s`", csc_text, "", "", ""
+          set.nchar_max, "`%s`", csc_text, "", "", ""
         );
       } else {
         res.msg_strings.tar_pre = "be";
         res.msg_strings.target = CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "`%s`", rev_symb, "", "", ""
+          set.nchar_max, "`%s`", rev_symb, "", "", ""
         );
         res.msg_strings.act_pre = "is";
         res.msg_strings.actual = CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "`%s`", csc_text, "", "", ""
+          set.nchar_max, "`%s`", csc_text, "", "", ""
         );
       }
     } else res.success = 1;
   } else if (tsc_type == LANGSXP && csc_type != LANGSXP) {
     res.msg_strings.tar_pre = "be";
     res.msg_strings.target = CSR_smprintf4(
-      ALIKEC_MAX_CHAR, "a call to `%s`",
+      set.nchar_max, "a call to `%s`",
       ALIKEC_deparse_chr(CAR(target), -1), "", "", ""
     );
     res.msg_strings.act_pre = "is";
     res.msg_strings.actual = CSR_smprintf4(
-      ALIKEC_MAX_CHAR, "\"%s\"", type2char(csc_type), "", "", ""
+      set.nchar_max, "\"%s\"", type2char(csc_type), "", "", ""
     );
   } else if (tsc_type != LANGSXP && csc_type == LANGSXP) {
     res.msg_strings.tar_pre = "be";
     res.msg_strings.target = CSR_smprintf4(
-      ALIKEC_MAX_CHAR, "\"%s\"", type2char(tsc_type), "", "", ""
+      set.nchar_max, "\"%s\"", type2char(tsc_type), "", "", ""
     );
     res.msg_strings.act_pre = "is";
     res.msg_strings.actual = CSR_smprintf4(
-      ALIKEC_MAX_CHAR, "\"%s\"", type2char(csc_type), "", "", ""
+      set.nchar_max, "\"%s\"", type2char(csc_type), "", "", ""
     );
   } else if (tsc_type == LANGSXP) {
     // Note how we pass cur_par and not current so we can modify cur_par
@@ -208,11 +208,11 @@ struct ALIKEC_res_lang ALIKEC_lang_obj_compare(
   } else if(tsc_type == SYMSXP || csc_type == SYMSXP) {
     res.msg_strings.tar_pre = "be";
     res.msg_strings.target = CSR_smprintf4(
-      ALIKEC_MAX_CHAR, "\"%s\"", type2char(tsc_type), "", "", ""
+      set.nchar_max, "\"%s\"", type2char(tsc_type), "", "", ""
     );
     res.msg_strings.act_pre = "is";
     res.msg_strings.actual = CSR_smprintf4(
-      ALIKEC_MAX_CHAR, "\"%s\"", type2char(csc_type), "", "", ""
+      set.nchar_max, "\"%s\"", type2char(csc_type), "", "", ""
     );
   } else if (formula && !R_compute_identical(target, current, 16)) {
     // Maybe this shouldn't be "identical", but too much of a pain in the butt
@@ -258,7 +258,7 @@ call).
 struct ALIKEC_res_lang ALIKEC_lang_alike_rec(
   SEXP target, SEXP cur_par, pfHashTable * tar_hash, pfHashTable * cur_hash,
   pfHashTable * rev_hash, size_t * tar_varnum, size_t * cur_varnum, int formula,
-  SEXP match_call, SEXP match_env, struct ALIKEC_settings set,
+  SEXP match_call, SEXP match_env, struct VALC_settings set,
   struct ALIKEC_rec_track rec
 ) {
   SEXP current = CAR(cur_par);
@@ -288,13 +288,13 @@ struct ALIKEC_res_lang ALIKEC_lang_alike_rec(
 
       res.msg_strings.tar_pre = "be";
       res.msg_strings.target = CSR_smprintf4(
-        ALIKEC_MAX_CHAR, "a call to `%s`",
+        set.nchar_max, "a call to `%s`",
         ALIKEC_deparse_chr(CAR(target), -1), "", "", ""
       );
 
       res.msg_strings.act_pre = "is";
       res.msg_strings.actual = CSR_smprintf4(
-        ALIKEC_MAX_CHAR, "a call to `%s`",
+        set.nchar_max, "a call to `%s`",
         ALIKEC_deparse_chr(CAR(current), -1), "", "", ""
       );
     } else if (CDR(target) != R_NilValue) {
@@ -347,19 +347,19 @@ struct ALIKEC_res_lang ALIKEC_lang_alike_rec(
           if(prev_tag != R_UnboundValue) {
             if(prev_tag == R_NilValue) {
               prev_tag_msg = CSR_smprintf4(
-                ALIKEC_MAX_CHAR, "after argument %s", CSR_len_as_chr(arg_num),
+                set.nchar_max, "after argument %s", CSR_len_as_chr(arg_num),
                 "", "", ""
               );
             } else {
               prev_tag_msg = CSR_smprintf4(
-                ALIKEC_MAX_CHAR, "after argument `%s`", CHAR(PRINTNAME(prev_tag)),
+                set.nchar_max, "after argument `%s`", CHAR(PRINTNAME(prev_tag)),
                 "", "", ""
           );} }
           res.success = 0;
 
           res.msg_strings.tar_pre = "have";
           res.msg_strings.target = CSR_smprintf4(
-            ALIKEC_MAX_CHAR, "argument `%s` %s",
+            set.nchar_max, "argument `%s` %s",
             CHAR(PRINTNAME(TAG(tar_sub))), prev_tag_msg, "", ""
           );
           res.msg_strings.act_pre = "has";
@@ -367,7 +367,7 @@ struct ALIKEC_res_lang ALIKEC_lang_alike_rec(
             res.msg_strings.actual = "unnamed argument";
           } else {
             res.msg_strings.actual = CSR_smprintf4(
-              ALIKEC_MAX_CHAR, "`%s`", CHAR(PRINTNAME(TAG(cur_sub))), "", "", ""
+              set.nchar_max, "`%s`", CHAR(PRINTNAME(TAG(cur_sub))), "", "", ""
             );
           }
         } else {
@@ -415,11 +415,11 @@ struct ALIKEC_res_lang ALIKEC_lang_alike_rec(
           res.success = 0;
           res.msg_strings.tar_pre = "have";
           res.msg_strings.target = CSR_smprintf4(
-            ALIKEC_MAX_CHAR, "%s arguments", CSR_len_as_chr(tar_len), "", "", ""
+            set.nchar_max, "%s arguments", CSR_len_as_chr(tar_len), "", "", ""
           );
           res.msg_strings.act_pre = "has";
           res.msg_strings.actual = CSR_smprintf4(
-            ALIKEC_MAX_CHAR, "%s", CSR_len_as_chr(cur_len), "", "", ""
+            set.nchar_max, "%s", CSR_len_as_chr(cur_len), "", "", ""
         );}
       }
       target = current = R_NilValue;

@@ -9,10 +9,6 @@
 // One question: are static objects not garbage collected?  The examples from
 // "Writing R Extensions" don't seem to require the protection of these
 
-#ifndef VALC_MAX_CHAR
-#define VALC_MAX_CHAR 10000
-#endif
-
 #ifndef _VETR_H
 #define _VETR_H
 
@@ -24,10 +20,9 @@
   SEXP VALC_TRUE;
   SEXP VALC_SYM_errmsg;
 
-
   SEXP VALC_validate(
     SEXP target, SEXP current, SEXP cur_sub, SEXP par_call, SEXP rho,
-    SEXP ret_mode_sxp, SEXP stop
+    SEXP ret_mode_sxp, SEXP stop, SEXP settings
   );
   SEXP VALC_validate_args(
     SEXP fun, SEXP fun_call, SEXP val_call, SEXP fun_frame
@@ -43,10 +38,13 @@
   int VALC_all(SEXP vec);
   int IS_TRUE(SEXP x);
   int IS_LANG(SEXP x);
-  SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho);
+  SEXP VALC_parse(
+    SEXP lang, SEXP var_name, SEXP rho, struct VALC_settings settings
+  );
+  SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho);
   void VALC_parse_recurse(
-    SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is,
-    SEXP first_fun, struct track_hash * track_hash
+    SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is,
+    SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash
   );
   SEXP VALC_sub_symbol(SEXP lang, SEXP rho, struct track_hash * track_hash);
   SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho);

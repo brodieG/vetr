@@ -56,7 +56,8 @@ void VALC_reset_track_hash(struct track_hash * track_hash, size_t idx) {
  */
 
 size_t VALC_add_to_track_hash(
-  struct track_hash * track_hash, const char * key, const char * value
+  struct track_hash * track_hash, const char * key, const char * value,
+  long max_char
 ) {
   size_t res = 1;
   int res_set = pfHashSet(track_hash->hash, key, value);
@@ -109,7 +110,7 @@ size_t VALC_add_to_track_hash(
     // present for the duration of execution, but cost is probably reasonably
     // low.  Should revisit if this turns out to be wrong.
 
-    char * key_cpy = CSR_strmcpy(key, CSR_MAX_CHAR);
+    char * key_cpy = CSR_strmcpy(key, max_char);
     track_hash->contents[track_hash->idx] = key_cpy;
     track_hash->idx++;  // shouldn't be overflowable
   }

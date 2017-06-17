@@ -36,6 +36,11 @@
 #' }
 #' @param stop TRUE or FALSE whether to call \code{\link{stop}} on failure
 #'   (default) or not
+#' @param settings a settings list as produced by [vetr_settings()], or NULL to
+#'   use the default settings
+#' @param .VETR_SETTINGS same as `settings`, but for `vetr`.  Note that this
+#'   means you cannot use `vetr` with a function that takes a `.VETR_SETTINGS`
+#'   argument
 #' @return TRUE if validation succeeds, otherwise \code{stop} for
 #'   \code{vetr} and varies for \code{vet} according to value chosen with
 #'   parameter \code{stop}
@@ -115,7 +120,7 @@
 #' val.1.a[[2]] <- val.1.a[[2]][, 1:8]
 #' try(fun3(val.1, val.1.a))
 
-vetr <- function(...)
+vetr <- function(..., .VETR_SETTINGS=NULL)
   .Call(
     VALC_validate_args,
     fun.match <- sys.function(sys.parent(1)),
@@ -125,7 +130,8 @@ vetr <- function(...)
       envir=parent.frame(2L)
     ),
     match.call(definition=fun.match, envir=(par.frame <- parent.frame())),
-    par.frame
+    par.frame,
+    .VETR_SETTINGS
   )
 
 # Do we need both `substitute(target)` and sys.call??
@@ -133,9 +139,11 @@ vetr <- function(...)
 #' @rdname vet
 #' @export
 
-vet <- function(target, current, format="text", stop=FALSE)
+vet <- function(
+  target, current, format="text", stop=FALSE, settings=NULL
+)
   .Call(
     VALC_validate, substitute(target), current, substitute(current),
-    sys.call(), parent.frame(), format, stop
+    sys.call(), parent.frame(), format, stop, settings
   )
 

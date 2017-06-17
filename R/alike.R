@@ -19,18 +19,19 @@
 #' Note that the semantics of alikeness for language objects, formulas, and
 #' functions may change in the future.
 #'
-#' @section \code{.alike}:
 #' @export
 #' @seealso \code{\link{type_alike}}, \code{\link{type_of}},
 #'   \code{\link{abstract}}, \code{\link{vetr_settings}} for more control of
 #'   settings
 #' @param target the template to compare the object to
 #' @param current the object to determine alikeness of to the template
-#' @param settings a list of settings for \code{.alike} generated using
-#'   \code{alike_settings}
+#' @param settings a list of settings generated using \code{vetr_settings}, NULL
+#'   for default
 #' @param env environment used internally when evaluating expressions; currently
 #'   used only when looking up functions to \code{\link{match.call}} when
-#'   testing language objects
+#'   testing language objects, note that this will be overridden by the
+#'   environment specified in \code{settings} if any, defaults to the parent
+#'   frame.
 #' @return TRUE if target and current are alike, character(1L) describing why
 #'   they are not if they are not
 #' @examples
@@ -116,6 +117,6 @@
 #' ## FALSE, inconsistent symbols
 #' alike(quote(x + y), quote(a + a))
 
-alike <- function(target, current, settings=NULL, env=parent.frame())
+alike <- function(target, current, env=parent.frame(), settings=NULL)
   .Call(VALC_alike_ext, target, current, substitute(current), env, settings)
 

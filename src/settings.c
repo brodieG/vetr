@@ -10,6 +10,7 @@ struct VALC_settings VALC_settings_init() {
     .fuzzy_int_max_len = 0,
     .suppress_warnings = 0,
     .in_attr = 0,
+    .env = R_GlobalEnv,
     .width = 0,
     .env_depth_max = 65535L,
     .symb_sub_depth_max = 65535L,
@@ -47,17 +48,21 @@ static long VALC_is_scalar_int <- function(
  * it is fastest this way
  */
 
-struct VALC_settings VALC_settings_vet(SEXP set_list) {
+struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
   struct VALC_settings settings = VALC_settings_init();
 
   if(TYPEOF(set_list) == VECSXP) {
     if(xlength(set_list) != R_xlen_t) {
-      error("Argument `settings` must be a list of length %zu.", set_len);
+      error(
+        "`vet/vetr` usage error: `settings` must be a list of length %zu.",
+        set_len
+      );
     }
     SEXP set_names = getAttrib(set_list, R_NamesSymbol);
     if(set_names == R_NilValue || TYPEOF(names) != STRSXP) {
       error(
-        "%s%s", "Argument `settings` must be a named list as produced ",
+        "%s%s%s", "`vet/vetr` usage error: ",
+        "argument `settings` must be a named list as produced ",
         "by `vetr_settings`."
       )
     }
@@ -74,8 +79,9 @@ struct VALC_settings VALC_settings_vet(SEXP set_list) {
     }
     if(!R_compute_identical(set_names, set_names_def_sxp, 16)) {
       error(
-      "Argument `settings` names are not in format produced by ",
-      "`vetr_settings`."
+        "%s%s",
+        "`vet/vetr` usage error: argument `settings` names are not in format  ",
+        "produced by `vetr_settings`."
       );
     }
     set_names_def_sxp = R_NilValue;
@@ -93,23 +99,23 @@ struct VALC_settings VALC_settings_vet(SEXP set_list) {
     settings.rec_mode =
       VALC_is_scalar_int(VECTOR_ELT(set_list, 4), "rec.mode", 0, 2);
     settings.fuzzy_int_max_len = VALC_is_scalar_int(
-      VECTOR_ELT(set_list, 6), "fuzzy.int.max.len", 0L, LONG_MAX
+      VECTOR_ELT(set_list, 6), "fuzzy.int.max.len", 0L, SIZE_MAX
     );
     settings.width =
       VALC_is_scalar_int(VECTOR_ELT(set_list, 7), "width", -1L, LONG_MAX);
     settings.env_depth_max =
-      VALC_is_scalar_int(VECTOR_ELT(set_list, 8), "env.depth.max", 0, LONG_MAX);
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 8), "env.depth.max", 0, SIZE_MAX);
     settings.symb_depth_max = VALC_is_scalar_int(
-      VECTOR_ELT(set_list, 9), "symb.depth.max", 0, LONG_MAX
+      VECTOR_ELT(set_list, 9), "symb.depth.max", 0, SIZE_MAX
     );
     settings.nchar_max =
-      VALC_is_scalar_int(VECTOR_ELT(set_list, 10), "nchar.max", 0, LONG_MAX);
-    settings.symb_size_max =
-      VALC_is_scalar_int(VECTOR_ELT(set_list, 11), "symb.size.max", 0, LONG_MAX);
-    settings.track_hash_content_size = VALC_is_scalar_int(
-      VECTOR_ELT(set_list, 12), "track.hash.content.size", 0, LONG_MAX
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 10), "nchar.max", 0, SIZE_MAX);
+    settings.symb_size_max = VALC_is_scalar_int(
+      VECTOR_ELT(set_list, 11), "symb.size.max", 0, SIZE_MAX
     );
-
+    settings.track_hash_content_size = VALC_is_scalar_int(
+      VECTOR_ELT(set_list, 12), "track.hash.content.size", 0, SIZE_MAX
+    );
     // Other checks
 
     SEXP sup_warn = VECTOR_ELT(set_list, 5);
@@ -117,8 +123,17 @@ struct VALC_settings VALC_settings_vet(SEXP set_list) {
       TYPEOF(sup_warn) != LGLSXP || xlength(sup_warn) != 1 ||
       sup_warn == NA_LOGICAL
     ) {
-      error("Setting `suppress.warnings` must be TRUE or FALSE");
+      error(
+        "%s%s",
+        "`vet/vetr` usage error: setting `suppress.warnings` must be TRUE ",
+        "or FALSE"
+      );
     }
+    settings.suppress_warnings = asLogical(sup_warn);
   }
+  if(TYPEOF(env) != ENVSXP) {
+    error("`vet/vetr` usage error: argument `env` must be an environment.");
+  }
+  if(settings.env == R_NilValue) settings.env = env;
   return settings;
 }

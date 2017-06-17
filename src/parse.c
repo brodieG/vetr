@@ -145,7 +145,7 @@ SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 
-SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
+SEXP VALC_parse(SEXP lang, SEXP var_name, struct VALC_settings set) {
   SEXP lang_cpy, res, res_vec, rem_res;
   int mode;
 
@@ -159,7 +159,8 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   // Hash table to track symbols to make sure  we don't end up in an infinite
   // recursion substituting symbols
 
-  struct track_hash * track_hash = VALC_create_track_hash(64);
+  struct track_hash * track_hash =
+    VALC_create_track_hash(set.track_hash_content_size);
 
   // Replace any variables to language objects with language, though first check
   // that we don't already have the `.`, although that would be odd even before
@@ -172,7 +173,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
 
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
   lang_cpy = VALC_name_sub(lang_cpy, var_name);
-  if(mode != 2) lang_cpy = VALC_sub_symbol(lang_cpy, rho, track_hash);
+  if(mode != 2) lang_cpy = VALC_sub_symbol(lang_cpy, set.env, track_hash);
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
@@ -180,7 +181,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
     res = PROTECT(allocList(length(lang_cpy)));
     // lang_cpy, res, are modified internally
     VALC_parse_recurse(
-      lang_cpy, res, var_name, rho, mode, R_NilValue, track_hash
+      lang_cpy, res, var_name, mode, R_NilValue, set, track_hash
     );
   }
   res_vec = PROTECT(allocVector(VECSXP, 2));
@@ -189,12 +190,16 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, SEXP rho) {
   UNPROTECT(4);
   return(res_vec);
 }
+SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
+  struct VALC_settings set = VALC_settings_init(NULL, rho);
+  VALC_parse(lang, var_name, set);
+}
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 
 void VALC_parse_recurse(
-  SEXP lang, SEXP lang_track, SEXP var_name, SEXP rho, int eval_as_is,
-  SEXP first_fun, struct track_hash * track_hash
+  SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is,
+  SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash
 ) {
   /*
   If the object is not a language list, then return it, as part of an R vector
@@ -271,7 +276,7 @@ void VALC_parse_recurse(
 
     int is_one_dot = (lang_car == VALC_SYM_one_dot);
     lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
-    if(!is_one_dot) lang_car = VALC_sub_symbol(lang_car, rho, track_hash);
+    if(!is_one_dot) lang_car = VALC_sub_symbol(lang_car, set.env, track_hash);
     UNPROTECT(1);
     SETCAR(lang, lang_car);
     UNPROTECT(1);
@@ -286,8 +291,8 @@ void VALC_parse_recurse(
 
       size_t substitute_level = track_hash->idx;
       VALC_parse_recurse(
-        lang_car, CAR(lang_track), var_name, rho, eval_as_is_internal, first_fun,
-        track_hash
+        lang_car, CAR(lang_track), var_name, eval_as_is_internal,
+        first_fun, set, track_hash
       );
       VALC_reset_track_hash(track_hash, substitute_level);
     } else {
