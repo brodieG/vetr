@@ -16,7 +16,7 @@ R_CallMethodDef callMethods[] = {
   {"all", (DL_FUNC) &VALC_all_ext, 1},
   {"track_hash", (DL_FUNC) &VALC_track_hash_test, 2},
 
-  {"alike_ext", (DL_FUNC) &ALIKEC_alike_ext, 4},
+  {"alike_ext", (DL_FUNC) &ALIKEC_alike_ext, 5},
   {"typeof", (DL_FUNC) &ALIKEC_typeof, 1},
   {"mode", (DL_FUNC) &ALIKEC_mode, 1},
   {"type_alike", (DL_FUNC) &ALIKEC_type_alike, 4},
