@@ -86,7 +86,7 @@ SEXP VALC_process_error(
   // Collapse similar entries into one; from this point on every entry in the
   // list should be a character(1L)
 
-  SEXP err_msg_c = PROTECT(ALIKEC_merge_msg_ext_2(err_msg_full, set));
+  SEXP err_msg_c = PROTECT(ALIKEC_merge_msg_2(err_msg_full, set));
   R_xlen_t i, err_len = XLENGTH(err_msg_c);
 
   // Transfer to a character vector from list, also convert to bullets if
@@ -226,7 +226,7 @@ SEXP VALC_validate_args(
 ) {
   // For now just use default settings
 
-  struct VALC_settings set = VALC_settings_vet(settings);
+  struct VALC_settings set = VALC_settings_vet(settings, fun_frame);
   set.env = fun_frame;
 
   // For the elements with validation call setup, check for errors;  Note that
@@ -327,9 +327,8 @@ SEXP VALC_validate_args(
     // Evaluate the validation expression
 
     SEXP val_res = PROTECT(
-      VALC_evaluate(
-        val_tok, fun_tok, arg_tag, fun_val, val_call, fun_frame, set
-    ) );
+      VALC_evaluate(val_tok, fun_tok, arg_tag, fun_val, val_call, set)
+    );
     if(!IS_TRUE(val_res)) {
       // fail, produce error message: NOTE - might change if we try to use full
       // expression instead of just arg name

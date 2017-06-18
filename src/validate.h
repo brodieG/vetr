@@ -25,7 +25,7 @@
     SEXP ret_mode_sxp, SEXP stop, SEXP settings
   );
   SEXP VALC_validate_args(
-    SEXP fun, SEXP fun_call, SEXP val_call, SEXP fun_frame
+    SEXP fun, SEXP fun_call, SEXP val_call, SEXP fun_frame, SEXP settings
   );
   SEXP VALC_remove_parens(SEXP lang);
   SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name);
@@ -51,6 +51,10 @@
   );
   SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho);
   void VALC_install_objs();
+  SEXP VALC_evaluate(
+    SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
+    struct VALC_settings set
+  );
   SEXP VALC_evaluate_ext(
     SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
     SEXP rho
