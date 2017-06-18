@@ -13,12 +13,6 @@ type_alike(target, current, settings = NULL)
 \item{current}{the object to test the type alikeness of}
 
 \item{settings}{see}
-
-\item{fuzzy.int.max.len}{max length of numeric vectors to consider for
-integer likeness (e.g. \code{c(1, 2)} can be considered "integer", even
-though it is numeric); currently we limit this check to vectors
-shorter than 100 to avoid a potentially expensive computation on large
-vectors}
 }
 \description{
 By default, checks \code{\link{type_of}} objects and two objects are

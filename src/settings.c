@@ -13,7 +13,7 @@ struct VALC_settings VALC_settings_init() {
     .fuzzy_int_max_len = 100,
     .suppress_warnings = 0,
     .in_attr = 0,
-    .env = R_BaseEnv,
+    .env = R_NilValue,
     .width = 0,
     .env_depth_max = 65535L,
     .symb_sub_depth_max = 65535L,
@@ -38,7 +38,7 @@ static long VALC_is_scalar_int(
   if(TYPEOF(x) == REALSXP) {
     if(x_int != asReal(x)) error("Setting `%s` must be integer like.", x_name);
   }
-  if(x_int < x_min || x_int > x_max)
+  if(x_int <= x_min || x_int >= x_max)
     error(
       "Setting `%s` must be scalar integer between %d and %d.",
       x_name, x_min, x_max
@@ -55,7 +55,7 @@ static long VALC_is_scalar_int(
 
 struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
   struct VALC_settings settings = VALC_settings_init();
-  R_xlen_t set_len = 11;
+  R_xlen_t set_len = 14;
 
   if(TYPEOF(set_list) == VECSXP) {
     if(xlength(set_list) != set_len) {
@@ -75,14 +75,16 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
     const char * set_names_default[] = {
       "type.mode", "attr.mode", "lang.mode", "fun.mode", "rec.mode",
       "suppress.warnings", "fuzzy.int.max.len",
-      "width", "env.depth.max", "symb.sub.depth.max", "nchar.max",
-      "track.hash.content.size"
+      "width", "env.depth.max", "symb.sub.depth.max", "symb.size.max", 
+      "nchar.max", "track.hash.content.size", "env"
     };
     SEXP set_names_def_sxp = PROTECT(allocVector(STRSXP, set_len));
     for(R_xlen_t i = 0; i < set_len; ++i) {
-      SET_VECTOR_ELT(set_names_def_sxp, i, mkChar(set_names_default[i]));
+      SET_STRING_ELT(set_names_def_sxp, i, mkChar(set_names_default[i]));
     }
     if(!R_compute_identical(set_names, set_names_def_sxp, 16)) {
+      PrintValue(set_names);
+      PrintValue(set_names_def_sxp);
       error(
         "%s%s",
         "`vet/vetr` usage error: argument `settings` names are not in format  ",
@@ -116,7 +118,7 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
     settings.nchar_max =
       VALC_is_scalar_int(VECTOR_ELT(set_list, 10), "nchar.max", 0, INT_MAX);
     settings.symb_size_max = VALC_is_scalar_int(
-      VECTOR_ELT(set_list, 11), "symb.size.max", 0, INT_MAX
+      VECTOR_ELT(set_list, 11), "symb.size.max", 0, 15000
     );
     settings.track_hash_content_size = VALC_is_scalar_int(
       VECTOR_ELT(set_list, 12), "track.hash.content.size", 0, INT_MAX
@@ -135,6 +137,17 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
       );
     }
     settings.suppress_warnings = asLogical(sup_warn);
+
+    if(
+      TYPEOF(VECTOR_ELT(set_list, 13)) != ENVSXP &&
+      set_list != R_NilValue
+    ) {
+      error(
+        "%s%s",
+        "`ver/vetr` usage error: setting `env` must be an environment ",
+        "or NULL"
+      );
+    }
   }
   if(TYPEOF(env) != ENVSXP) {
     error("`vet/vetr` usage error: argument `env` must be an environment.");

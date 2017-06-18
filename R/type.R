@@ -47,12 +47,6 @@ type_of <- function(object)
 #'
 #' mode integer(1L) in 0:2, see details
 #'
-#' @param fuzzy.int.max.len max length of numeric vectors to consider for
-#'   integer likeness (e.g. \code{c(1, 2)} can be considered "integer", even
-#'   though it is numeric); currently we limit this check to vectors
-#'   shorter than 100 to avoid a potentially expensive computation on large
-#'   vectors
-#'
 #' @seealso type_of, alike, [vetr_settings()]
 #' @aliases .type_alike
 #' @param target the object to test type alikeness against

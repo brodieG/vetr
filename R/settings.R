@@ -19,6 +19,9 @@
 #' generation does not become part of the \code{vet/vetr/alike} evaluation as
 #' that could add noticeable overhead to the function evaluation.
 #'
+#' Settings after `fuzzy.int.max.len` are fairly low level and exposed mostly
+#' for testing purposes.  You should generally not need to use them.
+#'
 #' Note that a successful evaluation of this function does not guarantee a
 #' correct settings list.  Those checks are carried out internally by
 #' \code{vet/vetr/alike}.
@@ -51,7 +54,7 @@
 #'   though it is numeric); currently we limit this check to vectors
 #'   shorter than 100 to avoid a potentially expensive computation on large
 #'   vectors, set to -1 to apply to all vectors
-#' @param suppress.warnings logical(1L)
+#' @param suppress.warnings logical(1L) suppress warnings if TRUE
 #' @param width to use when deparsing expressions; default `-1`
 #'   equivalent to \code{getOption("width")}
 #' @param env.depth.max integer(1L) maximum number of nested environments to
@@ -60,15 +63,25 @@
 #'   many we will go through.
 #' @param symb.sub.depth.max integer(1L) maximum recursion depth when
 #'   recursively substituting symbols in vetting expression
+#' @param symb.size.max integer(1L) maximum number of characters that a symbol
+#'   is allowed to have in vetting expressions.
+#' @param track.hash.content.size integer(1L) used to set the initial size of
+#'   the symbol tracking vector used with the hash table that detects recursive
+#'   symbol substitution.  If the tracking vector fills up it will be grown by
+#'   2x.
 #' @param env what environment to use to match calls and evaluate vetting
-#'   expressions; if NULL will use the calling frame to \code{vet/vetr/alike}
+#'   expressions, although typically you would specify this with the `env`
+#'   argument to `vet`; if NULL will use the calling frame to
+#'   \code{vet/vetr/alike}.
 #' @return list with all the setting values
 
 vetr_settings <- function(
   type.mode=0L, attr.mode=0L, lang.mode=0L, fun.mode=0L, rec.mode=0L,
   suppress.warnings=FALSE, fuzzy.int.max.len=100L,
   width=-1L, env.depth.max=65535L, symb.sub.depth.max=65535L,
-  nchar.max=65535L, env=NULL
+  symb.size.max=15000L, nchar.max=65535L, track.hash.content.size=63L, 
+  env=NULL
 ) {
-  as.list(environment)
+  # we just use the function to match parameters
+  as.list(environment())
 }
