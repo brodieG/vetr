@@ -255,7 +255,7 @@ unitizer_sect("Environments / Pairlists", {
     env.nest.2.cpy[[letters[i]]] <- new.env();
     env.nest.2.cpy <- env.nest.2.cpy[[letters[i]]]
   }
-  alike(env.nest.1, env.nest.2, settings=vetr_settings(env.limit=16))
+  alike(env.nest.1, env.nest.2, settings=vetr_settings(env.depth.max=16))
 
   # Global env test
 
@@ -490,5 +490,5 @@ unitizer_sect("Errors", {
   alike(NULL, NULL, settings=vetr_settings(suppress.warnings=NA))
   alike(NULL, NULL, settings=vetr_settings(env=letters))
   alike(NULL, NULL, settings=vetr_settings(width=letters))
-  alike(NULL, NULL, settings=vetr_settings(env.limit=-1L))
+  alike(NULL, NULL, settings=vetr_settings(env.depth.max=-1L))
 })
