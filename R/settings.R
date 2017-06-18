@@ -24,6 +24,7 @@
 #' \code{vet/vetr/alike}.
 #'
 #' @seealso \code{\link{type_alike}}, \code{\link{alike}}, \code{\link{vetr}}
+#' @export
 #' @param type.mode integer(1L) in 0:2 how strict to be about type comparison,
 #'   see \code{\link{type_alike}}, with 0, the default, the most flexible.
 #' @param type.mode integer(1L) in 0:2, see \code{mode} parameter to

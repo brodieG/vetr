@@ -255,7 +255,7 @@ unitizer_sect("Environments / Pairlists", {
     env.nest.2.cpy[[letters[i]]] <- new.env();
     env.nest.2.cpy <- env.nest.2.cpy[[letters[i]]]
   }
-  alike(env.nest.1, env.nest.2, settings=alike_settings(env.limit=16))
+  alike(env.nest.1, env.nest.2, settings=vetr_settings(env.limit=16))
 
   # Global env test
 
@@ -279,7 +279,7 @@ unitizer_sect("Calls / Formulas", {
   alike(quote(fun(b=fun2(x, y), 1, 3)), quote(fun(NULL, fun2(a, b), 1)))
   alike(  # FALSE, match.call disabled
     quote(fun(b=fun2(x, y), 1, 3)), quote(fun(NULL, fun2(a, b), 1)),
-    alike_settings(lang.mode=1)
+    vetr_settings(lang.mode=1)
   )
   # FALSE, mismatch
   alike(quote(fun(b=fun2(x, y), 1, 3)), quote(fun(fun2(a, b), NULL, 1)))
@@ -362,34 +362,34 @@ unitizer_sect("Functions", {
   attributes(fun2) <- NULL
 
   alike(fun, fun2)   # TRUE
-  alike(fun, fun2, settings=alike_settings(attr.mode=2L))
-  alike(fun2, fun, settings=alike_settings(attr.mode=1L))
-  alike(fun2, fun, settings=alike_settings(attr.mode=2L))
+  alike(fun, fun2, settings=vetr_settings(attr.mode=2L))
+  alike(fun2, fun, settings=vetr_settings(attr.mode=1L))
+  alike(fun2, fun, settings=vetr_settings(attr.mode=2L))
 })
 
 # Subset of tests for version with settings
 
 unitizer_sect("settings", {
-  alike(1L, 1.0, alike_settings(type.mode=1L))
-  alike(1.0, 1L, alike_settings(type.mode=1L))
-  alike(1.0, 1L, alike_settings(type.mode=2L))   # FALSE
+  alike(1L, 1.0, vetr_settings(type.mode=1L))
+  alike(1.0, 1L, vetr_settings(type.mode=1L))
+  alike(1.0, 1L, vetr_settings(type.mode=2L))   # FALSE
   alike(1:101, 1:101 + 0.0)  # FALSE
-  alike(1:101, 1:101 + 0.0, alike_settings(fuzzy.int.max.len=200)) # TRUE
-  alike(1:101, 1:101 + 0.0, alike_settings(fuzzy.int.max.len=-1))  # TRUE
+  alike(1:101, 1:101 + 0.0, vetr_settings(fuzzy.int.max.len=200)) # TRUE
+  alike(1:101, 1:101 + 0.0, vetr_settings(fuzzy.int.max.len=-1))  # TRUE
   alike(list(a=1:10), data.frame(a=1:10))
-  alike(list(a=1:10), data.frame(a=1:10), alike_settings(attr.mode=1L))
-  alike(list(a=1:10), data.frame(a=1:10), alike_settings(attr.mode=2L))  # FALSE
+  alike(list(a=1:10), data.frame(a=1:10), vetr_settings(attr.mode=1L))
+  alike(list(a=1:10), data.frame(a=1:10), vetr_settings(attr.mode=2L))  # FALSE
   fun <- function(a, b, c) NULL
   # FALSE
   alike(
     quote(fun(b=fun2(x, y), 1, 3)), quote(fun(NULL, fun2(a, b), 1)),
-    alike_settings(env=NULL)
+    vetr_settings(env=NULL)
   )
   # TRUE
   alike(
     quote(fun(b=fun2(x, y), 1, 3)), quote(fun(NULL, fun2(a, b), 1))
   )
-  alike(`&&`, function() NULL, alike_settings(type.mode=1))   # FALSE
+  alike(`&&`, function() NULL, vetr_settings(type.mode=1))   # FALSE
   # Error
 
   alike(1, 2, NULL)
@@ -483,12 +483,12 @@ unitizer_sect("Raw", {
   alike(as.raw(integer(3)), as.raw(integer(3)))
 })
 unitizer_sect("Errors", {
-  alike(NULL, NULL, settings=alike_settings(type.mode=3))
-  alike(NULL, NULL, settings=alike_settings(attr.mode=letters))
-  alike(NULL, NULL, settings=alike_settings(lang.mode=letters))
-  alike(NULL, NULL, settings=alike_settings(fuzzy.int.max.len=NA_integer_))
-  alike(NULL, NULL, settings=alike_settings(suppress.warnings=NA))
-  alike(NULL, NULL, settings=alike_settings(env=letters))
-  alike(NULL, NULL, settings=alike_settings(width=letters))
-  alike(NULL, NULL, settings=alike_settings(env.limit=-1L))
+  alike(NULL, NULL, settings=vetr_settings(type.mode=3))
+  alike(NULL, NULL, settings=vetr_settings(attr.mode=letters))
+  alike(NULL, NULL, settings=vetr_settings(lang.mode=letters))
+  alike(NULL, NULL, settings=vetr_settings(fuzzy.int.max.len=NA_integer_))
+  alike(NULL, NULL, settings=vetr_settings(suppress.warnings=NA))
+  alike(NULL, NULL, settings=vetr_settings(env=letters))
+  alike(NULL, NULL, settings=vetr_settings(width=letters))
+  alike(NULL, NULL, settings=vetr_settings(env.limit=-1L))
 })
