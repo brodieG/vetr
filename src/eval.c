@@ -345,6 +345,5 @@ SEXP VALC_evaluate_ext(
   struct VALC_settings set = VALC_settings_vet(R_NilValue, rho);
   if(TYPEOF(rho) != ENVSXP)
     error("Argument `rho` must be an environment.");
-  set.env = rho;
   return VALC_evaluate(lang, arg_lang, arg_tag, arg_value, lang_full, set);
 }
