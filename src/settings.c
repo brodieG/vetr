@@ -28,20 +28,31 @@ struct VALC_settings VALC_settings_init() {
 static long VALC_is_scalar_int(
   SEXP x, const char * x_name, int x_min, int x_max
 ) {
+  SEXPTYPE x_type = TYPEOF(x);
+
+  if(x_type != REALSXP && x_type != INTSXP)
+    error(
+      "Setting `%s` must be integer-like (is %s).", x_name, type2char(x_type)
+    );
+
   // Despite L notation, R integers are just ints, but there are checks to
   // ensure ints are 32 bits on compilation and such
 
   int x_int = asInteger(x);
 
-  if(xlength(x) != 1) error("Setting `%s` must be scalar integer.", x_name);
+  if(xlength(x) != 1)
+    error(
+      "Setting `%s` must be scalar integer (is length %zu).", x_name,
+      xlength(x)
+  );
   if(x_int == NA_INTEGER) error("Setting `%s` may not be NA.", x_name);
   if(TYPEOF(x) == REALSXP) {
     if(x_int != asReal(x)) error("Setting `%s` must be integer like.", x_name);
   }
   if(x_int < x_min || x_int > x_max)
     error(
-      "Setting `%s` must be scalar integer between %d and %d.",
-      x_name, x_min, x_max
+      "Setting `%s` must be scalar integer between %d and %d (is %d).",
+      x_name, x_min, x_max, x_int
     );
   return x_int;
 }
@@ -75,7 +86,7 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
     const char * set_names_default[] = {
       "type.mode", "attr.mode", "lang.mode", "fun.mode", "rec.mode",
       "suppress.warnings", "fuzzy.int.max.len",
-      "width", "env.depth.max", "symb.sub.depth.max", "symb.size.max", 
+      "width", "env.depth.max", "symb.sub.depth.max", "symb.size.max",
       "nchar.max", "track.hash.content.size", "env"
     };
     SEXP set_names_def_sxp = PROTECT(allocVector(STRSXP, set_len));
@@ -83,8 +94,6 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
       SET_STRING_ELT(set_names_def_sxp, i, mkChar(set_names_default[i]));
     }
     if(!R_compute_identical(set_names, set_names_def_sxp, 16)) {
-      PrintValue(set_names);
-      PrintValue(set_names_def_sxp);
       error(
         "%s%s",
         "`vet/vetr` usage error: argument `settings` names are not in format  ",

@@ -410,7 +410,7 @@ unitizer_sect("settings", {
 
   # Error
 
-  alike(1, 2, settings=NULL)
+  alike(1, 2, settings=letters)
 } )
 # These are also part of the examples, but here as well so that issues are
 # detected during development and not the last minute package checks
