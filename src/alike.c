@@ -438,8 +438,10 @@ struct ALIKEC_res ALIKEC_alike_rec(
         res.rec.envs->no_rec = !env_stack_status;
       if(env_stack_status  < 0 && !set.suppress_warnings) {
         warning(
-          "`alike` environment stack exhausted; %s.",
-          "unable to recurse any further into environments"
+          "`alike` environment stack exhausted at recursion depth %d; %s%s",
+          set.env_depth_max,
+          "unable to recurse any further into environments; see ",
+          "`env.depth.max` parameter for `vetr_settings`."
         );
         res.rec.envs->no_rec = 1; // so we only get warning once
       }

@@ -279,7 +279,7 @@ unitizer_sect("Calls / Formulas", {
   alike(quote(fun(b=fun2(x, y), 1, 3)), quote(fun(NULL, fun2(a, b), 1)))
   alike(  # FALSE, match.call disabled
     quote(fun(b=fun2(x, y), 1, 3)), quote(fun(NULL, fun2(a, b), 1)),
-    vetr_settings(lang.mode=1)
+    settings=vetr_settings(lang.mode=1)
   )
   # FALSE, mismatch
   alike(quote(fun(b=fun2(x, y), 1, 3)), quote(fun(fun2(a, b), NULL, 1)))
@@ -370,29 +370,47 @@ unitizer_sect("Functions", {
 # Subset of tests for version with settings
 
 unitizer_sect("settings", {
-  alike(1L, 1.0, vetr_settings(type.mode=1L))
-  alike(1.0, 1L, vetr_settings(type.mode=1L))
-  alike(1.0, 1L, vetr_settings(type.mode=2L))   # FALSE
+  alike(1L, 1.0, settings=vetr_settings(type.mode=1L))
+  alike(1.0, 1L, settings=vetr_settings(type.mode=1L))
+  alike(1.0, 1L, settings=vetr_settings(type.mode=2L))   # FALSE
   alike(1:101, 1:101 + 0.0)  # FALSE
-  alike(1:101, 1:101 + 0.0, vetr_settings(fuzzy.int.max.len=200)) # TRUE
-  alike(1:101, 1:101 + 0.0, vetr_settings(fuzzy.int.max.len=-1))  # TRUE
+  # TRUE
+  alike(1:101, 1:101 + 0.0, settings=vetr_settings(fuzzy.int.max.len=200))
+  # TRUE
+  alike(1:101, 1:101 + 0.0, settings=vetr_settings(fuzzy.int.max.len=-1))
   alike(list(a=1:10), data.frame(a=1:10))
-  alike(list(a=1:10), data.frame(a=1:10), vetr_settings(attr.mode=1L))
-  alike(list(a=1:10), data.frame(a=1:10), vetr_settings(attr.mode=2L))  # FALSE
-  fun <- function(a, b, c) NULL
+  alike(list(a=1:10), data.frame(a=1:10), settings=vetr_settings(attr.mode=1L))
   # FALSE
+  alike(list(a=1:10), data.frame(a=1:10), settings=vetr_settings(attr.mode=2L))
+
+  fun <- function(a, b, c) NULL
+
+  call.a <- quote(fun(b=fun2(x, y), 1, 3))
+  call.b <- quote(fun(NULL, fun2(a, b), 1))
+
+  # FALSE, function not defined in empty env
+
+  alike(call.a, call.b, settings=vetr_settings(env=emptyenv()))
+
+  # FALSE, also not defined this way
+
+  alike(call.a, call.b, env=emptyenv())
+
+  # TRUE, verify that settings takes precedence
   alike(
-    quote(fun(b=fun2(x, y), 1, 3)), quote(fun(NULL, fun2(a, b), 1)),
-    vetr_settings(env=NULL)
+    call.a, call.b, env=emptyenv(), settings=vetr_settings(env=environment())
   )
   # TRUE
   alike(
-    quote(fun(b=fun2(x, y), 1, 3)), quote(fun(NULL, fun2(a, b), 1))
+    call.a, call.b
   )
-  alike(`&&`, function() NULL, vetr_settings(type.mode=1))   # FALSE
+  # FALSE
+
+  alike(`&&`, function() NULL, settings=vetr_settings(type.mode=1))
+
   # Error
 
-  alike(1, 2, NULL)
+  alike(1, 2, settings=NULL)
 } )
 # These are also part of the examples, but here as well so that issues are
 # detected during development and not the last minute package checks
@@ -403,7 +421,8 @@ unitizer_sect("Examples", {
   alike(1.1, 1L)         # TRUE, by default, integers are always considered real
 
   alike(1:100, 1:100 + 0.0)  # TRUE
-  alike(1:101, 1:101 + 0.0)  # FALSE, we do not check numerics for integerness if longer than 100
+  # FALSE, we do not check numerics for integerness if longer than 100
+  alike(1:101, 1:101 + 0.0)
 
   # Scalarness can now be checked at same time as type
 
@@ -447,16 +466,20 @@ unitizer_sect("Examples", {
   iris.tpl <- abstract(iris)
   str(iris.tpl)
   alike(iris.tpl, iris)
-  alike(iris.tpl, iris[sample(1:nrow(iris), 10), ])    # any row sample of iris matches our iris template
+  # any row sample of iris matches our iris template
+  alike(iris.tpl, iris[sample(1:nrow(iris), 10), ])
   alike(iris.tpl, iris[c(2, 1, 3, 4, 5)])              # but column order matters
 
   # Also works with matrices / arrays
 
   alike(matrix(integer(), 3, 3), matrix(1:9, nrow=3))         # 3 x 3 integer
-  alike(matrix(integer(), 3, 3), matrix(runif(9), nrow=3))    # 3 x 3, but not integer!
-  alike(matrix(integer(), 3), matrix(1:12, nrow=3))           # partial spec, any 3 row integer matrix
+  # 3 x 3, but not integer!
+  alike(matrix(integer(), 3, 3), matrix(runif(9), nrow=3))
+  # partial spec, any 3 row integer matrix
+  alike(matrix(integer(), 3), matrix(1:12, nrow=3))
   alike(matrix(integer(), 3), matrix(1:12, nrow=4))
-  alike(matrix(logical()), array(rep(TRUE, 8), rep(2, 3)))    # Any logical matrix (but not arrays)
+  # Any logical matrix (but not arrays)
+  alike(matrix(logical()), array(rep(TRUE, 8), rep(2, 3)))
 
   # In order for objects to be alike, they must share a family tree, not just
   # a common class
@@ -472,7 +495,8 @@ unitizer_sect("Examples", {
   # consistent; we don't care what the symbols are, so long as they are used
   # consistently across target and current:
 
-  alike(quote(x + y), quote(a + b))   # TRUE, symbols are consistent (adding two different symbols)
+  # TRUE, symbols are consistent (adding two different symbols)
+  alike(quote(x + y), quote(a + b))
   alike(quote(x + y), quote(a - b))   # FALSE, different function
   alike(quote(x + y), quote(a + a))   # FALSE, inconsistent symbols
 } )

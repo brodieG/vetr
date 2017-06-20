@@ -26,6 +26,9 @@
 #'   function formals as with \code{\link{match.call}}
 #' @param target a template, a vetting expression, or a compound expression
 #' @param current an object to vet
+#' @param env the environment to match calls and evaluate vetting expressions
+#'   in; will be ignored if an environment is also specified via
+#'   [vetr_settings()].  Defaults to calling frame.
 #' @param format character(1L), controls the format of the return value for
 #'   \code{vet}, in case of failure.  One of:\itemize{
 #'     \item "text": (default) character(1L) message for use elsewhere in code
@@ -140,10 +143,10 @@ vetr <- function(..., .VETR_SETTINGS=NULL)
 #' @export
 
 vet <- function(
-  target, current, format="text", stop=FALSE, settings=NULL
+  target, current, env=parent.frame(), format="text", stop=FALSE, settings=NULL
 )
   .Call(
     VALC_validate, substitute(target), current, substitute(current),
-    sys.call(), parent.frame(), format, stop, settings
+    sys.call(), env, format, stop, settings
   )
 
