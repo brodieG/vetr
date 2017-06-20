@@ -158,6 +158,12 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
       );
     }
     settings.env = VECTOR_ELT(set_list, 13);
+  } else if (set_list != R_NilValue) {
+    error(
+      "%s (is %s).",
+      "`vet/vetr` usage error: argument `settings` must be a list or NULL",
+      type2char(TYPEOF(set_list))
+    );
   }
   if(TYPEOF(env) != ENVSXP) {
     error("`vet/vetr` usage error: argument `env` must be an environment.");
