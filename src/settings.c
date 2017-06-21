@@ -118,9 +118,9 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
       VECTOR_ELT(set_list, 6), "fuzzy.int.max.len", INT_MIN, INT_MAX
     );
     settings.width =
-      VALC_is_scalar_int(VECTOR_ELT(set_list, 7), "width", -1L, INT_MAX);
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 7), "width", -1, INT_MAX);
     settings.env_depth_max =
-      VALC_is_scalar_int(VECTOR_ELT(set_list, 8), "env.depth.max", 0, INT_MAX);
+      VALC_is_scalar_int(VECTOR_ELT(set_list, 8), "env.depth.max", -1, INT_MAX);
     settings.symb_sub_depth_max = VALC_is_scalar_int(
       VECTOR_ELT(set_list, 9), "symb.sub.depth.max", 0, INT_MAX
     );

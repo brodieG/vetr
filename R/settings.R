@@ -59,8 +59,8 @@
 #'   equivalent to \code{getOption("width")}
 #' @param env.depth.max integer(1L) maximum number of nested environments to
 #'   recurse through; these are tracked to make sure we do not get into an
-#'   infinite recursion loop, but because they are tracked we keep a limit on how
-#'   many we will go through.
+#'   infinite recursion loop, but because they are tracked we keep a limit on
+#'   how many we will go through, set to -1 to allow unlimited recursion depth.
 #' @param symb.sub.depth.max integer(1L) maximum recursion depth when
 #'   recursively substituting symbols in vetting expression
 #' @param symb.size.max integer(1L) maximum number of characters that a symbol
