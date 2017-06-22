@@ -287,7 +287,7 @@ void VALC_parse_recurse(
     SETCAR(lang, lang_car);
     UNPROTECT(1);
 
-    if(TYPEOF(lang_car) == LANGSXP) {
+    if(TYPEOF(lang_car) == LANGSXP && !is_one_dot) {
       SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
 

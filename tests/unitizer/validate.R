@@ -93,6 +93,12 @@ unitizer_sect("Compound Expressions", {
     (matrix(integer(), 0) && nrow(.) == ncol(.)) || NULL,
     matrix(runif(16), nrow=4)
   )
+  # custom expression partially defined in parent env
+
+  exp.a <- quote(all(. > 0))
+  exp.b <- quote(is.vector(.))
+  
+  vet(exp.a && exp.b, -(1:3))
 })
 
 unitizer_sect("Other Return Modes", {
