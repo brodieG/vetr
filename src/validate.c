@@ -207,6 +207,7 @@ SEXP VALC_validate(
     ret_mode = 1;
   } else
     error(
+      "%s%s",
       "`vet` usage error: argument `format` must be one of \"text\", \"raw\", ",
       "\"full\""
     );
@@ -319,7 +320,6 @@ SEXP VALC_validate_args(
     // corresponding promise to be evaluated in the correct frame
 
     SEXP fun_val = R_tryEval(arg_tag, fun_frame, err_point);
-
     if(* err_point) {
       VALC_arg_error(
         arg_tag, fun_call,
