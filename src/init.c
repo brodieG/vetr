@@ -19,7 +19,7 @@ R_CallMethodDef callMethods[] = {
   {"alike_ext", (DL_FUNC) &ALIKEC_alike_ext, 5},
   {"typeof", (DL_FUNC) &ALIKEC_typeof, 1},
   {"mode", (DL_FUNC) &ALIKEC_mode, 1},
-  {"type_alike", (DL_FUNC) &ALIKEC_type_alike, 4},
+  {"type_alike", (DL_FUNC) &ALIKEC_type_alike, 3},
   {"syntactic_names", (DL_FUNC) &ALIKEC_syntactic_names_exp, 1},
   {"compare_attributes", (DL_FUNC) &ALIKEC_compare_attributes, 3},
   {"is_valid_name_ext", (DL_FUNC) &ALIKEC_is_valid_name_ext, 1},
