@@ -197,7 +197,7 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, struct VALC_settings set) {
   return(res_vec);
 }
 SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
-  struct VALC_settings set = VALC_settings_init(NULL, rho);
+  struct VALC_settings set = VALC_settings_vet(R_NilValue, rho);
   return VALC_parse(lang, var_name, set);
 }
 /* -------------------------------------------------------------------------- *\
