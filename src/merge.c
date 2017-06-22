@@ -185,10 +185,6 @@ SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set) {
   UNPROTECT(2);
   return res;
 }
-SEXP ALIKEC_merge_msg_ext(SEXP msgs) {
-  struct VALC_settings set = VALC_settings_init();
-  return ALIKEC_merge_msg(msgs, set);
-}
 /*
  * additional layer just collapses the 5 length char vectors into one
  */

@@ -105,10 +105,6 @@
   SEXP ALIKEC_alike_int2(
     SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
   );
-  SEXP ALIKEC_alike_ext2(
-    SEXP target, SEXP current, SEXP curr_sub, SEXP env, SEXP settings
-  );
-
   struct ALIKEC_res ALIKEC_alike_internal(
     SEXP target, SEXP current, struct VALC_settings set
   );
@@ -211,7 +207,6 @@
   SEXP ALIKEC_syntactic_names_exp(SEXP lang);
   SEXP ALIKEC_sort_msg(SEXP msgs, struct VALC_settings set);
   SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set);
-  SEXP ALIKEC_merge_msg_ext(SEXP msgs);
   SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set);
   SEXP ALIKEC_merge_msg_2_ext(SEXP msgs);
 

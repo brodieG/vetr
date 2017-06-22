@@ -682,7 +682,9 @@ SEXP ALIKEC_alike_ext(
   );
 }
 /*
- * Another secondary, but takes the set struct instead of SEXP list
+ * Another secondary, but takes the set struct instead of SEXP list, and returns
+ * length 5 character vectors for the errors instead of length 1 so that the
+ * return values can be used with ALIKEC_merge_msg.
  */
 SEXP ALIKEC_alike_int2(
   SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
@@ -690,26 +692,4 @@ SEXP ALIKEC_alike_int2(
   return ALIKEC_strsxp_or_true(
     ALIKEC_alike_wrap(target, current, curr_sub, set)
   );
-}
-/*
-Secondary external interface, main difference is that it returns length 5
-character vectors for the errors instead of length 1 so that the return values
-can be used with ALIKEC_merge_msg.
-*/
-SEXP ALIKEC_alike_ext2(
-  SEXP target, SEXP current, SEXP curr_sub, SEXP env, SEXP settings
-) {
-  if(
-    TYPEOF(curr_sub) != LANGSXP && TYPEOF(curr_sub) != SYMSXP &&
-    !(isVectorAtomic(curr_sub) && XLENGTH(curr_sub) == 1) &&
-    curr_sub != R_NilValue
-  ) {
-    // nocov start
-    error(
-      "Internal Error; `curr_sub` must be language."
-    );
-    // nocov end
-  }
-  struct VALC_settings set = VALC_settings_vet(settings, env);
-  return ALIKEC_alike_int2(target, current, curr_sub, set);
 }

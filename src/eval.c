@@ -290,7 +290,7 @@ SEXP VALC_evaluate(
   struct VALC_settings set
 ) {
   if(!IS_LANG(arg_lang))
-    error("Argument `arg_lang` must be language.");
+    error("Internal Error: argument `arg_lang` must be language.");  // nocov
 
   SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, set));
   SEXP res = PROTECT(
@@ -343,7 +343,5 @@ SEXP VALC_evaluate_ext(
   SEXP rho
 ) {
   struct VALC_settings set = VALC_settings_vet(R_NilValue, rho);
-  if(TYPEOF(rho) != ENVSXP)
-    error("Argument `rho` must be an environment.");
   return VALC_evaluate(lang, arg_lang, arg_tag, arg_value, lang_full, set);
 }
