@@ -153,39 +153,3 @@ SEXP VALC_track_hash_test(SEXP keys, SEXP size) {
   UNPROTECT(1);
   return(res);
 }
-/*
- * Checks reset by confirming that we can set and find values first, but then
- * we only find them to the rest point after
- *
- *
- */
-SEXP VALC_track_hash_rest_test(SEXP keys, SEXP reset) {
-  if(TYPEOF(keys) != STRSXP) error("Arg keys must be character");
-  if(TYPEOF(size) != INTSXP) error("Arg size must be integer");
-
-  int reset_int = asInteger(reset);
-  if(reset_int < 0) error("Internal Error: reset index must be positive.");
-  R_xlen_t i, key_size = XLENGTH(keys);
-  SEXP res = PROTECT(allocVector(INTSXP, key_size));
-
-  struct track_hash * track_hash = VALC_create_track_hash(asInteger(size));
-  struct VALC_settings set = VALC_settings_init();
-
-  for(i = 0; i < key_size; ++i) {
-    if(STRING_ELT(keys, i) == NA_STRING) {
-      INTEGER(res)[i] = NA_INTEGER;
-      if(++i < key_size) {
-        int reset_int = atoi(CHAR(STRING_ELT(keys, i)));
-        if(reset_int < 0) error("Internal Error: negative reset key.");
-        VALC_reset_track_hash(track_hash, (size_t) reset_int);
-        INTEGER(res)[i] = reset_int;
-      }
-    } else {
-      INTEGER(res)[i] = VALC_add_to_track_hash(
-        track_hash, CHAR(STRING_ELT(keys, i)), "42", set.nchar_max
-      );
-    }
-  }
-  UNPROTECT(1);
-  return(res);
-}
