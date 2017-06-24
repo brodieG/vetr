@@ -123,6 +123,12 @@ size_t VALC_add_to_track_hash(
  *
  * Any NA values in `keys` are taken to mean to take the `as.numeric` value
  * of the next element as the reset index.
+ *
+
+   hash tracking, uses a hash to detect potential collisions, 1 means a value
+   is added, >1 means a value was added and tracking array had to be resized
+   to that size, 0 means it existed already, NA is a reset instruction, value
+   following a reset instruction is what the reset was to
  */
 
 SEXP VALC_track_hash_test(SEXP keys, SEXP size) {
