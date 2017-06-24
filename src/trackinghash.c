@@ -33,7 +33,9 @@ struct track_hash * VALC_create_track_hash(size_t size_init) {
  * Modifies the hash table by reference.
  */
 
-void VALC_reset_track_hash(struct track_hash * track_hash, size_t idx) {
+void VALC_reset_track_hash(
+  struct track_hash * track_hash, size_t idx
+) {
   for(size_t i = track_hash->idx; i > idx; --i) {
 
     int del_res = pfHashDel(track_hash->hash, track_hash->contents[i - 1]);
@@ -56,7 +58,8 @@ void VALC_reset_track_hash(struct track_hash * track_hash, size_t idx) {
  */
 
 size_t VALC_add_to_track_hash(
-  struct track_hash * track_hash, const char * key, const char * value
+  struct track_hash * track_hash, const char * key, const char * value,
+  size_t max_nchar
 ) {
   size_t res = 1;
   int res_set = pfHashSet(track_hash->hash, key, value);
@@ -109,7 +112,7 @@ size_t VALC_add_to_track_hash(
     // present for the duration of execution, but cost is probably reasonably
     // low.  Should revisit if this turns out to be wrong.
 
-    char * key_cpy = CSR_strmcpy(key, CSR_MAX_CHAR);
+    char * key_cpy = CSR_strmcpy(key, max_nchar);
     track_hash->contents[track_hash->idx] = key_cpy;
     track_hash->idx++;  // shouldn't be overflowable
   }
@@ -120,6 +123,12 @@ size_t VALC_add_to_track_hash(
  *
  * Any NA values in `keys` are taken to mean to take the `as.numeric` value
  * of the next element as the reset index.
+ *
+
+   hash tracking, uses a hash to detect potential collisions, 1 means a value
+   is added, >1 means a value was added and tracking array had to be resized
+   to that size, 0 means it existed already, NA is a reset instruction, value
+   following a reset instruction is what the reset was to
  */
 
 SEXP VALC_track_hash_test(SEXP keys, SEXP size) {
@@ -130,6 +139,7 @@ SEXP VALC_track_hash_test(SEXP keys, SEXP size) {
   SEXP res = PROTECT(allocVector(INTSXP, key_size));
 
   struct track_hash * track_hash = VALC_create_track_hash(asInteger(size));
+  struct VALC_settings set = VALC_settings_init();
 
   for(i = 0; i < key_size; ++i) {
     if(STRING_ELT(keys, i) == NA_STRING) {
@@ -141,8 +151,9 @@ SEXP VALC_track_hash_test(SEXP keys, SEXP size) {
         INTEGER(res)[i] = reset_int;
       }
     } else {
-      INTEGER(res)[i] =
-        VALC_add_to_track_hash(track_hash, CHAR(STRING_ELT(keys, i)), "42");
+      INTEGER(res)[i] = VALC_add_to_track_hash(
+        track_hash, CHAR(STRING_ELT(keys, i)), "42", set.nchar_max
+      );
     }
   }
   UNPROTECT(1);

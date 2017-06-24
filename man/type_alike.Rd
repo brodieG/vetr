@@ -5,20 +5,14 @@
 \alias{.type_alike}
 \title{Compare Types of Objects}
 \usage{
-type_alike(target, current, mode = 0L, fuzzy.int.max.len = 100)
+type_alike(target, current, settings = NULL)
 }
 \arguments{
 \item{target}{the object to test type alikeness against}
 
 \item{current}{the object to test the type alikeness of}
 
-\item{mode}{integer(1L) in 0:2, see details}
-
-\item{fuzzy.int.max.len}{max length of numeric vectors to consider for
-integer likeness (e.g. \code{c(1, 2)} can be considered "integer", even
-though it is numeric); currently we limit this check to vectors
-shorter than 100 to avoid a potentially expensive computation on large
-vectors}
+\item{settings}{see}
 }
 \description{
 By default, checks \code{\link{type_of}} objects and two objects are
@@ -45,7 +39,10 @@ corresponding to more relaxed comparison level.
   \item 2: types must be equal for all objects types (for functions, this is
     unchanged from 1)
 }
+DEVNOTE RATIONALIZE THE BELOW WITH vetr_settings
+
+mode integer(1L) in 0:2, see details
 }
 \seealso{
-type_of, alike
+type_of, alike, [vetr_settings()]
 }

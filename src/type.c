@@ -6,7 +6,7 @@ success, otherwise outputs an a character string explaining why the types are
 not alike
 */
 struct ALIKEC_res_strings ALIKEC_type_alike_internal(
-  SEXP target, SEXP current, int mode, R_xlen_t max_len
+  SEXP target, SEXP current, struct VALC_settings set
 ) {
   SEXPTYPE tar_type, cur_type, tar_type_raw, cur_type_raw;
   int int_like = 0;
@@ -21,12 +21,14 @@ struct ALIKEC_res_strings ALIKEC_type_alike_internal(
   tar_type = tar_type_raw;
   cur_type = cur_type_raw;
 
-  if(mode == 0) {
+  if(set.type_mode == 0) {
     if(
-        tar_type_raw == INTSXP && (
-          max_len < 0 ||
-          (xlength(target) <= max_len && xlength(current) <= max_len)
-      )
+      tar_type_raw == INTSXP && (
+        set.fuzzy_int_max_len < 0 ||
+        (
+          xlength(target) <= set.fuzzy_int_max_len &&
+          xlength(current) <= set.fuzzy_int_max_len
+      ) )
     ) {
       int_like = 1;
     }
@@ -41,17 +43,17 @@ struct ALIKEC_res_strings ALIKEC_type_alike_internal(
   }
   if(tar_type == cur_type) return res;
   if(
-    cur_type == INTSXP && mode < 2 &&
+    cur_type == INTSXP && set.type_mode < 2 &&
     (tar_type == INTSXP || tar_type == REALSXP)
   ) {
     return res;
   }
   const char * what;
-  if(mode == 0 && int_like) {
+  if(set.type_mode == 0 && int_like) {
     what = "integer-like";
-  } else if (mode < 2 && tar_type == REALSXP) {
+  } else if (set.type_mode < 2 && tar_type == REALSXP) {
     what = "numeric";
-  } else if (mode == 0 && tar_type == CLOSXP) {
+  } else if (set.type_mode == 0 && tar_type == CLOSXP) {
     what = "function";
   } else {
     what = type2char(tar_type);
@@ -59,30 +61,18 @@ struct ALIKEC_res_strings ALIKEC_type_alike_internal(
   struct ALIKEC_res_strings res_fin;
   res_fin.tar_pre = "be";
   res_fin.target=
-    CSR_smprintf4(ALIKEC_MAX_CHAR, "type \"%s\"", what, "", "", "");
+    CSR_smprintf4(set.nchar_max, "type \"%s\"", what, "", "", "");
   res_fin.act_pre = "is";
   res_fin.actual = CSR_smprintf4(
-    ALIKEC_MAX_CHAR, "\"%s\"", type2char(cur_type), "", "", ""
+    set.nchar_max, "\"%s\"", type2char(cur_type), "", "", ""
   );
   return res_fin;
 }
-SEXP ALIKEC_type_alike(SEXP target, SEXP current, SEXP mode, SEXP max_len) {
-  SEXPTYPE mod_type, max_len_type;
+SEXP ALIKEC_type_alike(SEXP target, SEXP current, SEXP settings) {
   struct ALIKEC_res_strings res;
+  struct VALC_settings set = VALC_settings_vet(settings, R_BaseEnv);
 
-  mod_type = TYPEOF(mode);
-  max_len_type = TYPEOF(max_len);
-
-  if((mod_type != INTSXP && mod_type != REALSXP) || XLENGTH(mode) != 1)
-    error("Argument `mode` must be a one length integer like vector");
-  if((max_len_type != INTSXP && max_len_type != REALSXP) || XLENGTH(max_len) != 1)
-    error(
-      "Argument `fuzzy.int.max.len` must be a one length integer like vector"
-    );
-
-  res = ALIKEC_type_alike_internal(
-    target, current, asInteger(mode), asInteger(max_len)
-  );
+  res = ALIKEC_type_alike_internal(target, current, set);
   if(res.target[0]) {
     return(ALIKEC_res_strings_to_SEXP(res));
   } else {

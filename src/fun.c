@@ -22,7 +22,9 @@ fun(a, b, e, f, ..., g, c, e)
 
 */
 
-struct ALIKEC_res_strings ALIKEC_fun_alike_internal(SEXP target, SEXP current) {
+struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
+  SEXP target, SEXP current, struct VALC_settings set
+) {
   if(!isFunction(target) || !isFunction(current))
     error("Arguments must be functions.");
 
@@ -70,7 +72,7 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(SEXP target, SEXP current) {
       if(CAR(tar_form) != R_MissingArg && CAR(cur_form) == R_MissingArg) {
         res.tar_pre = "have";
         res.target = CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "a default value for argument `%s`",
+          set.nchar_max, "a default value for argument `%s`",
           CHAR(PRINTNAME(tar_tag)), "", "", ""
         );
         break;
@@ -112,7 +114,7 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(SEXP target, SEXP current) {
       const char * arg_mod = "";
       if(last_match != R_NilValue) {
         arg_type = (const char *) CSR_smprintf4(
-          ALIKEC_MAX_CHAR, "after argument `%s`",
+          set.nchar_max, "after argument `%s`",
           CHAR(PRINTNAME(last_match)), "", "", ""
       );}
       if(tar_form != R_NilValue || !tag_match){
@@ -128,9 +130,9 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(SEXP target, SEXP current) {
         // nocov end
       }
       res.tar_pre =
-        CSR_smprintf4(ALIKEC_MAX_CHAR, "%shave", arg_mod, "", "", "");
+        CSR_smprintf4(set.nchar_max, "%shave", arg_mod, "", "", "");
       res.target =  CSR_smprintf4(
-        ALIKEC_MAX_CHAR, "argument `%s` %s", arg_name, arg_type, "", ""
+        set.nchar_max, "argument `%s` %s", arg_name, arg_type, "", ""
   );} }
   // Success
 
@@ -138,7 +140,9 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(SEXP target, SEXP current) {
   return res;
 }
 SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current) {
-  struct ALIKEC_res_strings res = ALIKEC_fun_alike_internal(target, current);
+  struct VALC_settings set = VALC_settings_init();
+  struct ALIKEC_res_strings res =
+    ALIKEC_fun_alike_internal(target, current, set);
   if(res.target[0]) return ALIKEC_res_strings_to_SEXP(res);
   return(ScalarLogical(1));
 }

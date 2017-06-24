@@ -19,53 +19,19 @@
 #' Note that the semantics of alikeness for language objects, formulas, and
 #' functions may change in the future.
 #'
-#' @section \code{.alike}:
-#'
-#' \code{.alike} is identical to \code{alike}, except that it exposes the
-#' \code{settings} parameter that modifies certain aspects of how "alikeness" is
-#' computed. There is only one \code{settings} parameter to minimize the
-#' overhead associated with \code{.alike}.  If you intend to run \code{.alike}
-#' as part of a process that runs many times, consider defining the value for
-#' \code{settings} outside of the function call once:\preformatted{
-#'   sets <- alike_settings(...)                  # specify settings once
-#'   for(i in 1e5) .alike(x[[i]], y[[i]], sets)   # re-use settings 1e5 times
-#' }
 #' @export
 #' @seealso \code{\link{type_alike}}, \code{\link{type_of}},
-#'   \code{\link{abstract}}
+#'   \code{\link{abstract}}, \code{\link{vetr_settings}} for more control of
+#'   settings
 #' @param target the template to compare the object to
 #' @param current the object to determine alikeness of to the template
-#' @param settings a list of settings for \code{.alike} generated using
-#'   \code{alike_settings}
-#' @param type.mode integer(1L) in 0:2, see \code{mode} parameter to
-#'   \code{\link{type_alike}}
-#' @param attr.mode integer(1L) in 0:2 determines strictness of attribute
-#'   comparison: \itemize{
-#'     \item \code{0} only checks attributes that are present in target, and
-#'       uses special comparisons for the special attributes (\code{class},
-#'       \code{dim}, \code{dimnames}, \code{names}, \code{row.names},
-#'       \code{levels}, \code{srcref}, and \code{tsp}) while requiring other
-#'       attributes to be \code{alike}
-#'     \item \code{1} is like \code{0}, except all atributes must be
-#'       \code{alike}
-#'     \item \code{2} requires all attributes to be present in \code{target} and
-#'       \code{current} and to be alike
-#'   }
-#' @param lang.mode integer(1L) in 0:1 controls language matching, set to `1` to
-#'   turn off use of \code{\link{match.call}}
-#' @param rec.mode integer(1L) `0` currently unused, intended to control how
-#'   recursive structures (other than language objects) are compared
-#' @param fuzzy.int.max.len see same parameter for \code{\link{type_alike}}
+#' @param settings a list of settings generated using \code{vetr_settings}, NULL
+#'   for default
 #' @param env environment used internally when evaluating expressions; currently
 #'   used only when looking up functions to \code{\link{match.call}} when
-#'   testing language objects
-#' @param suppress.warnings logical(1L)
-#' @param width to use when deparsing expressions; defaults to
-#'   \code{getOption("width")}
-#' @param env.limit integer(1L) maximum number of nested environments to recurse
-#'   through; these are tracked to make sure we do not get into an infinite
-#'   recursion loop, but because they are tracked we keep a limit on how many
-#'   we will go through.
+#'   testing language objects, note that this will be overridden by the
+#'   environment specified in \code{settings} if any, defaults to the parent
+#'   frame.
 #' @return TRUE if target and current are alike, character(1L) describing why
 #'   they are not if they are not
 #' @examples
@@ -151,24 +117,6 @@
 #' ## FALSE, inconsistent symbols
 #' alike(quote(x + y), quote(a + a))
 
-alike <- function(target, current)
-  .Call(VALC_alike_ext, target, current, substitute(current), parent.frame())
+alike <- function(target, current, env=parent.frame(), settings=NULL)
+  .Call(VALC_alike_ext, target, current, substitute(current), env, settings)
 
-#' @rdname alike
-#' @export
-
-.alike <- function(target, current, settings=alike_settings(env=parent.frame()))
-  .Call(VALC_alike_fast1, target, current, substitute(current), settings)
-
-#' @rdname alike
-#' @export
-
-alike_settings <- function(
-  type.mode=0L, attr.mode=0L, lang.mode=0L, rec.mode=0L,
-  env=parent.frame(), fuzzy.int.max.len=100L, suppress.warnings=FALSE,
-  width=-1L, env.limit=65536L
-)
-  list(
-    type.mode, attr.mode, env, fuzzy.int.max.len, suppress.warnings, lang.mode,
-    width, env.limit
-  )

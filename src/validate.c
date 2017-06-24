@@ -16,7 +16,8 @@
  */
 
 SEXP VALC_process_error(
-  SEXP val_res, SEXP val_tag, SEXP fun_call, int ret_mode, int stop
+  SEXP val_res, SEXP val_tag, SEXP fun_call, int ret_mode, int stop,
+  struct VALC_settings set
 ) {
   // - Failure / Validation ----------------------------------------------------
 
@@ -51,12 +52,12 @@ SEXP VALC_process_error(
 
   if(ret_mode == 1) {
     err_arg_msg = CSR_smprintf4(
-      VALC_MAX_CHAR, err_very_base, err_arg, "", "", ""
+      set.nchar_max, err_very_base, err_arg, "", "", ""
     );
   }
   const char * err_base = "%s%%s%%s";
   char * err_base_msg = CSR_smprintf4(
-    VALC_MAX_CHAR, err_base, err_arg_msg, "", "", ""
+    set.nchar_max, err_base, err_arg_msg, "", "", ""
   );
   // Translate to VECSXP; need to do so because the merging logic is based on
   // VECSXP; obviously the translation back and forth isn't optimal and we
@@ -85,7 +86,7 @@ SEXP VALC_process_error(
   // Collapse similar entries into one; from this point on every entry in the
   // list should be a character(1L)
 
-  SEXP err_msg_c = PROTECT(ALIKEC_merge_msg_ext(err_msg_full));
+  SEXP err_msg_c = PROTECT(ALIKEC_merge_msg_2(err_msg_full, set));
   R_xlen_t i, err_len = XLENGTH(err_msg_c);
 
   // Transfer to a character vector from list, also convert to bullets if
@@ -114,7 +115,7 @@ SEXP VALC_process_error(
 
     if(err_len > 1 && ret_mode != 2) {
       new_elt = PROTECT(
-        mkChar(CSR_bullet(CHAR(old_elt), "  - ", "    ", VALC_MAX_CHAR))
+        mkChar(CSR_bullet(CHAR(old_elt), "  - ", "    ", set.nchar_max))
       );
     } else {
       new_elt = PROTECT(old_elt);
@@ -131,14 +132,14 @@ SEXP VALC_process_error(
       // one correct value for the arg
 
       const char * err_msg_orig = CHAR(asChar(err_vec_res));
-      char * err_msg = CSR_strmcpy(err_msg_orig, VALC_MAX_CHAR);
+      char * err_msg = CSR_strmcpy(err_msg_orig, set.nchar_max);
       if(err_msg) err_msg[0] = tolower(err_msg[0]);
 
       const char * err_interim = "";
       if(ret_mode == 1) err_interim = ", ";
 
       char * err_full = CSR_smprintf4(
-        VALC_MAX_CHAR, err_base_msg, err_interim, err_msg, "", ""
+        set.nchar_max, err_base_msg, err_interim, err_msg, "", ""
       );
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_full));
     } else if(has_header) {
@@ -151,7 +152,7 @@ SEXP VALC_process_error(
         err_interim = "At least one of these should pass:";
       }
       char * err_head = CSR_smprintf4(
-        VALC_MAX_CHAR, err_base_msg, err_interim, "", "", ""
+        set.nchar_max, err_base_msg, err_interim, "", "", ""
       );
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_head));
     }
@@ -160,7 +161,7 @@ SEXP VALC_process_error(
   if(!stop) {
     return err_vec_res;
   } else {
-    char * err_full = CSR_collapse(err_vec_res, "\n", VALC_MAX_CHAR);
+    char * err_full = CSR_collapse(err_vec_res, "\n", set.nchar_max);
     VALC_stop(fun_call, err_full);
   }
   error("%s",
@@ -172,26 +173,28 @@ SEXP VALC_process_error(
 
 SEXP VALC_validate(
   SEXP target, SEXP current, SEXP cur_sub, SEXP par_call, SEXP rho,
-  SEXP ret_mode_sxp, SEXP stop
+  SEXP ret_mode_sxp, SEXP stop, SEXP settings
 ) {
   SEXP res;
+  struct VALC_settings set = VALC_settings_vet(settings, rho);
   res = PROTECT(
-    VALC_evaluate(target, cur_sub, VALC_SYM_current, current, par_call, rho)
+    VALC_evaluate(
+      target, cur_sub, VALC_SYM_current, current, par_call, set
+    )
   );
-
   if(IS_TRUE(res)) {
     UNPROTECT(1);
     return(ScalarLogical(1));
   }
   if(TYPEOF(ret_mode_sxp) != STRSXP && XLENGTH(ret_mode_sxp) != 1)
-    error("Argument `format` must be character(1L)");
+    error("`vet` usage error: argument `format` must be character(1L)");
   int stop_int;
 
   if(
     (TYPEOF(stop) != LGLSXP && XLENGTH(stop) != 1) ||
     ((stop_int = asInteger(stop)) == NA_INTEGER)
   )
-    error("Argument `stop` must be TRUE or FALSE");
+    error("`vet` usage error: argument `stop` must be TRUE or FALSE");
 
   const char * ret_mode_chr = CHAR(asChar(ret_mode_sxp));
   int ret_mode;
@@ -203,10 +206,14 @@ SEXP VALC_validate(
   } else if(!strcmp(ret_mode_chr, "full")) {
     ret_mode = 1;
   } else
-    error("Argument `format` must be one of \"text\", \"raw\",\"full\"");
+    error(
+      "%s%s",
+      "`vet` usage error: argument `format` must be one of \"text\", \"raw\", ",
+      "\"full\""
+    );
 
   SEXP out = VALC_process_error(
-    res, VALC_SYM_current, par_call, ret_mode, stop_int
+    res, VALC_SYM_current, par_call, ret_mode, stop_int, set
   );
   UNPROTECT(1);
   return out;
@@ -216,8 +223,13 @@ SEXP VALC_validate(
 \* -------------------------------------------------------------------------- */
 
 SEXP VALC_validate_args(
-  SEXP fun, SEXP fun_call, SEXP val_call, SEXP fun_frame
+  SEXP fun, SEXP fun_call, SEXP val_call, SEXP fun_frame, SEXP settings
 ) {
+  // For now just use default settings
+
+  struct VALC_settings set = VALC_settings_vet(settings, fun_frame);
+  set.env = fun_frame;
+
   // For the elements with validation call setup, check for errors;  Note that
   // we need to skip the first element of the calls since we only care about the
   // args.
@@ -316,13 +328,12 @@ SEXP VALC_validate_args(
     // Evaluate the validation expression
 
     SEXP val_res = PROTECT(
-      VALC_evaluate(
-        val_tok, fun_tok, arg_tag, fun_val, val_call, fun_frame
-    ) );
+      VALC_evaluate(val_tok, fun_tok, arg_tag, fun_val, val_call, set)
+    );
     if(!IS_TRUE(val_res)) {
       // fail, produce error message: NOTE - might change if we try to use full
       // expression instead of just arg name
-      VALC_process_error(val_res, arg_tag, fun_call, 1, 1);
+      VALC_process_error(val_res, arg_tag, fun_call, 1, 1, set);
       // nocov start
       error("Internal Error: should never get here 2487; contact maintainer");
       // nocov end

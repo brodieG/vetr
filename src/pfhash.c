@@ -326,4 +326,62 @@ SEXP pfHashTest(SEXP keys, SEXP values) {
   UNPROTECT(1);
   return res;
 }
+/*
+ * Test add and delete
+ *
+ * add logical same length as keys if TRUE add, else delete
+ *
+ * return value same length as keys with return values of add and delete
+ */
+
+SEXP pfHashTest2(SEXP keys, SEXP add) {
+  pfHashTable * hash = pfHashCreate(NULL);
+
+  if(TYPEOF(keys) != STRSXP)
+    error("Internal Error: `keys` must be a string");  // nocov
+  if(TYPEOF(add) != LGLSXP)
+    error("Internal Error: argument `add` must be a logical");  // nocov
+  if(XLENGTH(keys) != XLENGTH(add))
+    error("Internal Error: arguments must be same length");  // nocov
+
+  R_xlen_t ki;
+
+  SEXP res = PROTECT(allocVector(INTSXP, xlength(keys)));
+
+  for(ki = 0; ki < XLENGTH(keys); ki++) {
+    const char * key = CHAR(STRING_ELT(keys, ki));
+
+    if(LOGICAL(add)[ki]) {
+      INTEGER(res)[ki] = pfHashSet(hash, key, key);
+    } else {
+      INTEGER(res)[ki] = pfHashDel(hash, key);
+    }
+  }
+  UNPROTECT(1);
+  return res;
+}
+
+/*
+ * Use the default hash function and return hashed value
+ *
+ * For testing mostly, when we were looking to see what values might cause a
+ * collision so we can test deletion, but it itself is not tested since not part
+ * of normal use (hence nocov)
+ */
+// nocov start
+SEXP VALC_default_hash_fun(SEXP keys) {
+  if(TYPEOF(keys) != STRSXP)
+    error("Internal Error: keys must be character."); // nocov
+
+  R_xlen_t key_len = xlength(keys);
+  // putting u_int32 into int, but all values should be 255 or less
+  SEXP res = PROTECT(allocVector(INTSXP, key_len));
+
+  for(R_xlen_t i = 0; i < key_len; ++i) {
+    INTEGER(res)[i] = defaultFnBJ(CHAR(STRING_ELT(keys, i)));
+  }
+  UNPROTECT(1);
+  return res;
+}
+// nocov end
 

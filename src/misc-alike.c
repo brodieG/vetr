@@ -100,7 +100,7 @@ keep at end of deparsed when shortening (e.g. `i_m_deparsed(xyz..)` is keeping
 the last parenthesis
 */
 const char * ALIKEC_deparse_oneline(
-    SEXP obj, size_t max_chars, size_t keep_at_end
+  SEXP obj, size_t max_chars, size_t keep_at_end, struct VALC_settings set
 ) {
   if(max_chars < 8)
     error("Internal Error: argument `max_chars` must be >= 8");  // nocov
@@ -108,7 +108,7 @@ const char * ALIKEC_deparse_oneline(
     error("Internal Error: arg `keep_at_end` too large");  // nocov
 
   const char * res, * dep_line = CHAR(asChar(ALIKEC_deparse_core(obj, 500)));
-  size_t dep_len = CSR_strmlen(dep_line, ALIKEC_MAX_CHAR);
+  size_t dep_len = CSR_strmlen(dep_line, set.nchar_max);
 
   if(dep_len > max_chars) {
     // truncate string and use '..' at the end
@@ -135,8 +135,9 @@ SEXP ALIKEC_deparse_oneline_ext(SEXP obj, SEXP max_chars, SEXP keep_at_end) {
     error("Internal Error: arg max_chars and keep_at_end must be positive");
     // nocov end
   }
+  struct VALC_settings set = VALC_settings_init();
   return mkString(
-    ALIKEC_deparse_oneline(obj, (size_t) char_int, (size_t) keep_int)
+    ALIKEC_deparse_oneline(obj, (size_t) char_int, (size_t) keep_int, set)
   );
 }
 SEXP ALIKEC_deparse(SEXP obj, int width_cutoff) {
@@ -169,7 +170,9 @@ Pad a character vector
   - 0-n pad with that many spaces
 @param lines how many lines to show, append `...` a end; set to -1 to ignore
 */
-const char * ALIKEC_pad(SEXP obj, R_xlen_t lines, int pad) {
+const char * ALIKEC_pad(
+  SEXP obj, R_xlen_t lines, int pad, struct VALC_settings set
+) {
   if(TYPEOF(obj) != STRSXP)
     error("Internal Error: argument `obj` should be STRSXP");  // nocov
   R_xlen_t line_max = XLENGTH(obj), i;
@@ -216,14 +219,15 @@ const char * ALIKEC_pad(SEXP obj, R_xlen_t lines, int pad) {
     const char * dep_err = CHAR(STRING_ELT(obj, i));
     if(!i) dep_pad = dep_prompt; else dep_pad = dep_continue;
     res = CSR_smprintf6(
-      ALIKEC_MAX_CHAR, "%s%s%s%s%s", res, dep_pad, dep_err,
+      set.nchar_max, "%s%s%s%s%s", res, dep_pad, dep_err,
       i == lines - 1 && lines < line_max ? "..." : "",
       lines > 1 && line_max > 1 ? "\n" : "", ""
   );}
   return res;
 }
 SEXP ALIKEC_pad_ext(SEXP obj, SEXP lines, SEXP pad) {
-  return mkString(ALIKEC_pad(obj, asInteger(lines), asInteger(pad)));
+  struct VALC_settings set = VALC_settings_init();
+  return mkString(ALIKEC_pad(obj, asInteger(lines), asInteger(pad), set));
 }
 /*
  * Check whether a language call is an operator call
@@ -335,7 +339,9 @@ SEXP ALIKEC_syntactic_names_exp(SEXP lang) {
  *   Note that this only matters if the language expression deparses to no more
  *   than one line.
  */
-const char * ALIKEC_pad_or_quote(SEXP lang, int width, int syntactic) {
+const char * ALIKEC_pad_or_quote(
+  SEXP lang, int width, int syntactic, struct VALC_settings set
+) {
 
   switch(syntactic) {
     case -1: syntactic = ALIKEC_syntactic_names(lang); break;
@@ -355,13 +361,13 @@ const char * ALIKEC_pad_or_quote(SEXP lang, int width, int syntactic) {
   const char * dep_chr = CHAR(asChar(lang_dep));
 
   if(XLENGTH(lang_dep) == 1) {
-    size_t dep_chr_len = CSR_strmlen(dep_chr, ALIKEC_MAX_CHAR);
+    size_t dep_chr_len = CSR_strmlen(dep_chr, set.nchar_max);
     if(dep_chr_len <= width - 2) multi_line = 0;
   }
   const char * call_char, * call_pre = "", * call_post = "";
   if(multi_line) {
     call_pre = "";
-    call_char = ALIKEC_pad(lang_dep, -1, 0);
+    call_char = ALIKEC_pad(lang_dep, -1, 0, set);
     call_post = "";
   } else {
     // In case there are non syntactic names in the call, use braces instead of
@@ -378,15 +384,17 @@ const char * ALIKEC_pad_or_quote(SEXP lang, int width, int syntactic) {
   }
   UNPROTECT(1);
   return CSR_smprintf4(
-    ALIKEC_MAX_CHAR, "%s%s%s%s", call_pre, call_char, call_post, ""
+    set.nchar_max, "%s%s%s%s", call_pre, call_char, call_post, ""
   );
 }
 /*
  * external version for testing
  */
 SEXP ALIKEC_pad_or_quote_ext(SEXP lang, SEXP width, SEXP syntactic) {
-  const char * padded =
-    ALIKEC_pad_or_quote(lang, INTEGER(width)[0], INTEGER(syntactic)[0]);
+  struct VALC_settings set = VALC_settings_init();
+  const char * padded = ALIKEC_pad_or_quote(
+    lang, INTEGER(width)[0], INTEGER(syntactic)[0], set
+  );
   return mkString(padded);
 }
 
@@ -396,8 +404,10 @@ deparse into character
 @param width_cutoff to use as `width.cutoff` param to `deparse`
 @param lines to use as `lines` arg to ALIKEC_pad
 */
-const char * ALIKEC_deparse_chr(SEXP obj, int width_cutoff) {
-  return ALIKEC_pad(ALIKEC_deparse_core(obj, width_cutoff), -1, 0);
+const char * ALIKEC_deparse_chr(
+  SEXP obj, int width_cutoff, struct VALC_settings set
+) {
+  return ALIKEC_pad(ALIKEC_deparse_core(obj, width_cutoff), -1, 0, set);
 }
 
 /*
@@ -448,17 +458,17 @@ SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho) {
 Convert convention of zero length string == TRUE to SEXP
 */
 
-SEXP ALIKEC_string_or_true(struct ALIKEC_res_fin res) {
+SEXP ALIKEC_string_or_true(struct ALIKEC_res_fin res, struct VALC_settings set) {
   if(res.actual[0] && res.target[0]) {
     const char * res_str = CSR_smprintf6(
-      ALIKEC_MAX_CHAR,
+      set.nchar_max,
       "%sshould %s %s (%s %s)",
       res.call, res.tar_pre, res.target, res.act_pre, res.actual, ""
     );
     return(mkString(res_str));
   } else if (res.target[0]) {
     const char * res_str = CSR_smprintf4(
-      ALIKEC_MAX_CHAR, "%sshould %s %s", res.call, res.tar_pre, res.target,  ""
+      set.nchar_max, "%sshould %s %s", res.call, res.tar_pre, res.target,  ""
     );
     return(mkString(res_str));
   }

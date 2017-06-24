@@ -16,7 +16,7 @@ unitizer_sect("Class Matching", {
   alike(obj1, obj2)      # TRUE
   obj2 <- structure(numeric(), class=c("x", "a", "b", "c"))
   alike(obj1, obj2)      # TRUE
-  .alike(obj1, obj2, alike_settings(attr.mode=1))   # FALSE
+  alike(obj1, obj2, settings=vetr_settings(attr.mode=1))   # FALSE
 } )
 unitizer_sect("S4", {
   bn <- .BaseNamespaceEnv
@@ -59,7 +59,6 @@ unitizer_sect("S4", {
 
   inherits <- function(x, y) stop("pwned!!!")
   alike(y, v)  # TRUE
-  .alike(y, v) # TRUE
 } )
 unitizer_sect("R5", {
   Foo <- setRefClass("Foo", where=bn)
@@ -81,5 +80,6 @@ unitizer_sect("Non-Standard Class", {
   var.2 <- list("hello", list(1, 2, 3), 5)
   class(var.1) <- "marbles"
   class(var.2) <- "marbles"
-  alike(var.1, var.2)        # "mis-match at index [[1]]: should be integer instead of character"
+  # "mis-match at index [[1]]: should be integer instead of character"
+  alike(var.1, var.2)
 } )

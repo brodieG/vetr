@@ -1,5 +1,6 @@
 #include "cstringr.h"
 #include "pfhash.h"
+#include "settings.h"
 
 #ifndef _TRACK_HASH_H
 #define _TRACK_HASH_H
@@ -17,9 +18,12 @@
   };
   struct track_hash * VALC_create_track_hash(size_t size_init);
   size_t VALC_add_to_track_hash(
-    struct track_hash * track_hash, const char * key, const char * value
+    struct track_hash * track_hash, const char * key, const char * value,
+    size_t max_nchar
   );
-  void VALC_reset_track_hash(struct track_hash * track_hash, size_t idx);
+  void VALC_reset_track_hash(
+    struct track_hash * track_hash, size_t idx
+  );
   SEXP VALC_track_hash_test(SEXP keys, SEXP size);
 
 #endif

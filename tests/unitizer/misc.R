@@ -11,3 +11,8 @@ unitizer_sect("All", {
   vetr:::val_all(NA)  # -3
   vetr:::val_all(c(TRUE, TRUE, NA, TRUE))  # -4
 })
+
+unitizer_sect("Hash", {
+  # these should all equal 193
+  vetr:::hash_fun(c("f b", "n b", "n d", "t m", "b r", "n w", "q w", "o x"))
+})

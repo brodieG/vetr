@@ -90,7 +90,11 @@ find_fun <- function(fun.name, env)
 
 hash_test <- function(values, keys) .Call(VALC_hash_test, values, keys);
 
+hash_test2 <- function(keys, add) .Call(VALC_hash_test2, keys, add);
+
 track_hash <- function(keys, size) .Call(VALC_track_hash, keys, size);
+
+hash_fun <- function(x) .Call(VALC_default_hash_fun, x)
 
 #' Pre-calculated Precision Level
 #'

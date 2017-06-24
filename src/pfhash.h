@@ -41,5 +41,7 @@ lifted directly from: http://powerfield-software.com/?p=615 under license:
     const char *pfHashFind (pfHashTable*,const char*);
     void pfHashDebug (pfHashTable*,char*);
     SEXP pfHashTest(SEXP keys, SEXP values);
+    SEXP pfHashTest2(SEXP keys, SEXP add);
+    SEXP VALC_default_hash_fun(SEXP keys);
 
 #endif

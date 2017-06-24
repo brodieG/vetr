@@ -457,6 +457,25 @@ unitizer_sect("Hash", {
     "goodbye", "b"
   )
   vetr:::track_hash(keys, 8L)
+
+  # all of these resolve to the same hash value, so should all be stored under
+  # the same spot in the hash table.  We use this to test that additions and
+  # removals from pairlists work
+
+  collisions <- c("f b", "n b", "n d", "t m", "b r", "n w", "q w", "o x")
+  keys.1 <- c(collisions, NA, 0, collisions)
+
+  vetr:::track_hash(keys.1, 64L)
+
+  keys.2 <- c(collisions, NA, 4, collisions)
+  vetr:::track_hash(keys.2, 64L)
+
+  # test additions and deletions under collisions
+
+  vetr:::hash_test2(
+    c(collisions[1:3], collisions[1:3], "hello"),
+    c(T, T, T, F, F, F, F)
+  )
 })
 unitizer_sect("Mode", {
   vetr:::alike_mode(NULL)

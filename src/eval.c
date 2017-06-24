@@ -9,7 +9,7 @@
 
 SEXP VALC_evaluate_recurse(
   SEXP lang, SEXP act_codes, SEXP arg_value, SEXP arg_lang, SEXP arg_tag,
-  SEXP lang_full, SEXP rho
+  SEXP lang_full, struct VALC_settings set
 ) {
   /*
   check act_codes:
@@ -76,7 +76,7 @@ SEXP VALC_evaluate_recurse(
         eval_res = PROTECT(
           VALC_evaluate_recurse(
             CAR(lang), CAR(act_codes), arg_value, arg_lang, arg_tag, lang_full,
-            rho
+            set
         ) );
         if(TYPEOF(eval_res) == LISTSXP) {
           if(mode == 1) {
@@ -133,7 +133,7 @@ SEXP VALC_evaluate_recurse(
     SEXP eval_res, eval_tmp;
     int err_val = 0, eval_res_c;
     int * err_point = &err_val;
-    eval_tmp = PROTECT(R_tryEval(lang, rho, err_point));
+    eval_tmp = PROTECT(R_tryEval(lang, set.env, err_point));
     if(* err_point) {
       VALC_arg_error(
         arg_tag, lang_full,
@@ -144,7 +144,7 @@ SEXP VALC_evaluate_recurse(
       eval_res_c = VALC_all(eval_tmp);
       eval_res = PROTECT(ScalarLogical(eval_res_c > 0));
     } else {
-      eval_res = PROTECT(ALIKEC_alike_ext2(eval_tmp, arg_value, arg_lang, rho));
+      eval_res = PROTECT(ALIKEC_alike_int2(eval_tmp, arg_value, arg_lang, set));
     }
     // Sanity checks
 
@@ -187,14 +187,14 @@ SEXP VALC_evaluate_recurse(
               "\"err.msg\" attribute for validation token for argument `%s` must be a one length character vector."
             );
           }
-          err_call = ALIKEC_pad_or_quote(arg_lang, -1, -1);
+          err_call = ALIKEC_pad_or_quote(arg_lang, -1, -1, set);
 
           // Need to make copy of string, modify it, and turn it back into
           // string
 
           const char * err_attrib_msg = CHAR(STRING_ELT(err_attrib, 0));
           char * err_attrib_mod = CSR_smprintf4(
-            VALC_MAX_CHAR, err_attrib_msg, err_call, "", "", ""
+            set.nchar_max, err_attrib_msg, err_call, "", "", ""
           );
           // not protecting mkString since assigning to protected object
           SETCAR(err_msg, mkString(err_attrib_mod));
@@ -202,7 +202,7 @@ SEXP VALC_evaluate_recurse(
           // message attribute not defined, must construct error message based
           // on result of evaluation
 
-          err_call = ALIKEC_pad_or_quote(lang, -1, -1);
+          err_call = ALIKEC_pad_or_quote(lang, -1, -1, set);
 
           char * err_str;
           char * err_tok;
@@ -283,23 +283,21 @@ TBD if this should call `VALC_parse` directly or not
 @param arg_tag the variable name being validated
 @param arg_value the value being validated
 @param lang_full solely so that we can produce error message with original call
-@param rho the environment in which to evaluate the validation function
+@param set the settings
 */
 SEXP VALC_evaluate(
   SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
-  SEXP rho
+  struct VALC_settings set
 ) {
   if(!IS_LANG(arg_lang))
-    error("Argument `arg_lang` must be language.");
-  if(TYPEOF(rho) != ENVSXP)
-    error("Argument `rho` must be an environment.");
+    error("Internal Error: argument `arg_lang` must be language.");  // nocov
 
-  SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, rho));
+  SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, set));
   SEXP res = PROTECT(
     VALC_evaluate_recurse(
       VECTOR_ELT(lang_parsed, 0),
       VECTOR_ELT(lang_parsed, 1),
-      arg_value, arg_lang, arg_tag, lang_full, rho
+      arg_value, arg_lang, arg_tag, lang_full, set
   ) );
   // Remove duplicates, if any
 
@@ -339,4 +337,11 @@ SEXP VALC_evaluate(
   }
   UNPROTECT(2);  // This seems a bit stupid, PROTECT/UNPROTECT
   return(res);
+}
+SEXP VALC_evaluate_ext(
+  SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
+  SEXP rho
+) {
+  struct VALC_settings set = VALC_settings_vet(R_NilValue, rho);
+  return VALC_evaluate(lang, arg_lang, arg_tag, arg_value, lang_full, set);
 }

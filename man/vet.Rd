@@ -7,13 +7,17 @@
 \alias{vet}
 \title{Vet Objects and Function Arguments}
 \usage{
-vetr(...)
+vetr(..., .VETR_SETTINGS = NULL)
 
-vet(target, current, format = "text", stop = FALSE)
+vet(target, current, format = "text", stop = FALSE, settings = NULL)
 }
 \arguments{
 \item{...}{arguments to vetr; they will be matched to the enclosing
 function formals as with \code{\link{match.call}}}
+
+\item{.VETR_SETTINGS}{same as `settings`, but for `vetr`.  Note that this
+means you cannot use `vetr` with a function that takes a `.VETR_SETTINGS`
+argument}
 
 \item{target}{a template, a vetting expression, or a compound expression}
 
@@ -30,6 +34,9 @@ function formals as with \code{\link{match.call}}}
 
 \item{stop}{TRUE or FALSE whether to call \code{\link{stop}} on failure
 (default) or not}
+
+\item{settings}{a settings list as produced by [vetr_settings()], or NULL to
+use the default settings}
 }
 \value{
 TRUE if validation succeeds, otherwise \code{stop} for
