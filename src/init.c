@@ -44,6 +44,7 @@ R_CallMethodDef callMethods[] = {
   {"msg_merge", (DL_FUNC) &ALIKEC_merge_msg, 1},
   {"msg_merge_ext", (DL_FUNC) &ALIKEC_merge_msg_2_ext, 1},
   {"hash_test", (DL_FUNC) &pfHashTest, 2},
+  {"hash_test2", (DL_FUNC) &pfHashTest2, 2},
   {"find_fun", (DL_FUNC) &ALIKEC_findFun_ext, 2},
 
   {"len_chr_len_ext", (DL_FUNC) &CSR_len_chr_len_ext, 1},
