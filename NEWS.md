@@ -8,3 +8,7 @@
   NSE
 * [#11](https://github.com/brodieG/validate/issues/11): segfault when validating
   language objects
+* [#28](https://github.com/brodieG/validate/issues/28): expose alike and vetr
+  setting control
+* [#30](https://github.com/brodieG/validate/issues/30): allow specification of
+  substitution / matching / evaluation environment
