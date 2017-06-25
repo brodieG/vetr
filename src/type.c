@@ -69,6 +69,7 @@ struct ALIKEC_res_fin ALIKEC_type_alike_internal(
   res_fin.actual = CSR_smprintf4(
     set.nchar_max, "\"%s\"", type2char(cur_type), "", "", ""
   );
+  res_fin.call = res.call;
   return res_fin;
 }
 SEXP ALIKEC_type_alike(
