@@ -22,7 +22,7 @@ for default}
 }
 \value{
 TRUE if target and current are alike, character(1L) describing why
-  they are not if they are not
+they are not if they are not
 }
 \description{
 Similar to \code{\link{all.equal}}, but compares object structure rather than
@@ -131,6 +131,6 @@ alike(quote(x + y), quote(a + a))
 }
 \seealso{
 \code{\link{type_alike}}, \code{\link{type_of}},
-  \code{\link{abstract}}, \code{\link{vetr_settings}} for more control of
-  settings
+\code{\link{abstract}}, \code{\link{vetr_settings}} for more control of
+settings
 }

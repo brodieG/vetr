@@ -109,13 +109,13 @@
     SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_typeof(SEXP object);
-  SEXP ALIKEC_type_alike(SEXP target, SEXP current, SEXP mode);
+  SEXP ALIKEC_type_alike(SEXP target, SEXP current, SEXP call, SEXP mode);
 
   // - Internal Funs ----------------------------------------------------------
 
   SEXPTYPE ALIKEC_typeof_internal(SEXP object);
-  struct ALIKEC_res_strings ALIKEC_type_alike_internal(
-    SEXP target, SEXP current, struct VALC_settings set
+  struct ALIKEC_res_fin ALIKEC_type_alike_internal(
+    SEXP target, SEXP current, SEXP call, struct VALC_settings set
   );
   SEXP ALIKEC_compare_attributes(SEXP target, SEXP current, SEXP attr_mode);
   SEXP ALIKEC_compare_special_char_attrs(SEXP target, SEXP current);

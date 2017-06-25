@@ -52,7 +52,7 @@ with \code{collapse}}
 }
 \value{
 integer(1L) for \code{strmlen}, character(1L) for \code{strmcpy}
-  and \code{smprintf2}
+and \code{smprintf2}
 }
 \description{
 Implements variants of \code{strlcpy}, \code{strnlen}, etc.
@@ -63,9 +63,9 @@ for testing purposes.  They differ from similar existing versions in these
 respects:
 
 \itemize{
-  \item Input strings are never modified; if changes are required to comply
-    with length limits a copy that is \code{R_alloc}ed is returned
-  \item Only C99 code is used
+\item Input strings are never modified; if changes are required to comply
+with length limits a copy that is \code{R_alloc}ed is returned
+\item Only C99 code is used
 }
 Function specific details follow.  Pay attention, the interfaces are not
 exactly the same as the \code{C} functions they intend to replace.  For
@@ -74,23 +74,23 @@ example \code{smprintf} does not have a \code{str} parameter like
 modifying one passed as an argument.).
 
 \itemize{
-  \item \code{strmlen}: roughly equivalent to POSIX \code{strnlen}, but
-    should be fully portable
-  \item \code{strmcpy}: if \code{strmlen(str)} is greater than \code{maxlen},
-    returns a copy of \code{str} with \code{'\0'} as the \code{maxlen + 1}th
-    character (note return character array is not allocated beyond this NULL),
-    otherwise returns a copy of \code{str}.
-  \item \code{smprintf2}: returns a newly \code{R_alloc}ed string that is just
-    large enough to fit the combination of the format string and the tokens
-    to sub in (note that tokens must be character so only "%s" is meaningful
-    as a formatting element).  To achieve this without overflow, ensures that
-    \code{format} and each token is limited to \code{maxlen - 1} characters.
-    Fails if result string is longer than a \code{size_t} could index.  Note
-    that internally we define \code{smprintf1} - \code{smprintf6}, but we are
-    only exporting the one function directly to R for testing.
-  \item \code{strbullet} ads a bullet at front of string and padding after
-    each new line
-  \item \code{collapse} is essentially the same as \code{paste0(x,
+\item \code{strmlen}: roughly equivalent to POSIX \code{strnlen}, but
+should be fully portable
+\item \code{strmcpy}: if \code{strmlen(str)} is greater than \code{maxlen},
+returns a copy of \code{str} with \code{'\0'} as the \code{maxlen + 1}th
+character (note return character array is not allocated beyond this NULL),
+otherwise returns a copy of \code{str}.
+\item \code{smprintf2}: returns a newly \code{R_alloc}ed string that is just
+large enough to fit the combination of the format string and the tokens
+to sub in (note that tokens must be character so only "%s" is meaningful
+as a formatting element).  To achieve this without overflow, ensures that
+\code{format} and each token is limited to \code{maxlen - 1} characters.
+Fails if result string is longer than a \code{size_t} could index.  Note
+that internally we define \code{smprintf1} - \code{smprintf6}, but we are
+only exporting the one function directly to R for testing.
+\item \code{strbullet} ads a bullet at front of string and padding after
+each new line
+\item \code{collapse} is essentially the same as \code{paste0(x,
     collapse=sep}
 }
 }

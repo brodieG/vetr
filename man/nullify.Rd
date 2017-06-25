@@ -37,8 +37,8 @@ for it.
 }
 \note{
 attributes are copied from original object and re-applied to final
-  object before return, which may
-  not make sense in some circumstances.
+object before return, which may
+not make sense in some circumstances.
 }
 \examples{
 nullify(list(1, 2, 3), 2)

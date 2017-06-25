@@ -1,5 +1,9 @@
-## 0.3
+## 0.1.0
 
+Initial release.
+
+* [#39](https://github.com/brodieG/validate/issues/39): `type_alike` return
+  values structured like `alike`, doc fixes
 * [#34](https://github.com/brodieG/validate/issues/34): allow substitution of
   `.` symbol when part of `..`.
 * [#33](https://github.com/brodieG/validate/issues/33): prevent infinite
