@@ -95,7 +95,8 @@ struct ALIKEC_res ALIKEC_alike_obj(
   const char * err_tok1, * err_tok2, * msg_tmp;
   err_tok1 = err_tok2 = msg_tmp = "";
 
-  struct ALIKEC_res_strings err_type, err_fun;
+  struct ALIKEC_res_strings err_fun;
+  struct ALIKEC_res_fin err_type;
   struct ALIKEC_res res = ALIKEC_res_def();
 
   tar_type = TYPEOF(target);
