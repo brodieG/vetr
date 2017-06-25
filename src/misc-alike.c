@@ -331,7 +331,8 @@ SEXP ALIKEC_syntactic_names_exp(SEXP lang) {
  * lines and offset otherwise
  *
  * @param lang a language object to deparse and turn into character
- * @param width screen width, use -1 to use `getOption('width')`
+ * @param width screen width, use -1 to use `getOption('width')`, this is a
+ *   leftover from before the `set` argument was added to this function
  * @param syntactic whether the names in the language object are syntactic or
  *   not.  If there are some that are not, we do not want to quote with
  *   backticks as that gets confusing.  Instead we use braces.  Set to 0 if
@@ -342,7 +343,6 @@ SEXP ALIKEC_syntactic_names_exp(SEXP lang) {
 const char * ALIKEC_pad_or_quote(
   SEXP lang, int width, int syntactic, struct VALC_settings set
 ) {
-
   switch(syntactic) {
     case -1: syntactic = ALIKEC_syntactic_names(lang); break;
     case 0:

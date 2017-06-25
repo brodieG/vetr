@@ -225,7 +225,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
     //  to symbol symbol
 
     if(!err && !is_lang) {
-      err_type = ALIKEC_type_alike_internal(target, current, set);
+      err_type = ALIKEC_type_alike_internal(target, current, R_NilValue, set);
       if(err_type.target[0]) {
         err = 1;
         msg_tar_pre = err_type.tar_pre;

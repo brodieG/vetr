@@ -4,17 +4,20 @@
 compare types, accounting for "integer like" numerics; empty string means
 success, otherwise outputs an a character string explaining why the types are
 not alike
+
+call is substituted current, only used when this is called by type_alike directly otherwise doesn't do much
 */
-struct ALIKEC_res_strings ALIKEC_type_alike_internal(
-  SEXP target, SEXP current, struct VALC_settings set
+struct ALIKEC_res_fin ALIKEC_type_alike_internal(
+  SEXP target, SEXP current, SEXP call, struct VALC_settings set
 ) {
   SEXPTYPE tar_type, cur_type, tar_type_raw, cur_type_raw;
   int int_like = 0;
   tar_type_raw = TYPEOF(target);
   cur_type_raw = TYPEOF(current);
 
-  struct ALIKEC_res_strings res =
-    (struct ALIKEC_res_strings) {.target="", .actual=""};
+  struct ALIKEC_res_fin res = (struct ALIKEC_res_fin) {.target="", .actual=""};
+
+  res.call = ALIKEC_pad_or_quote(call, set.width, -1, set);
 
   if(tar_type_raw == cur_type_raw) return res;
 
@@ -58,7 +61,7 @@ struct ALIKEC_res_strings ALIKEC_type_alike_internal(
   } else {
     what = type2char(tar_type);
   }
-  struct ALIKEC_res_strings res_fin;
+  struct ALIKEC_res_fin res_fin;
   res_fin.tar_pre = "be";
   res_fin.target=
     CSR_smprintf4(set.nchar_max, "type \"%s\"", what, "", "", "");
@@ -68,13 +71,15 @@ struct ALIKEC_res_strings ALIKEC_type_alike_internal(
   );
   return res_fin;
 }
-SEXP ALIKEC_type_alike(SEXP target, SEXP current, SEXP settings) {
-  struct ALIKEC_res_strings res;
+SEXP ALIKEC_type_alike(
+  SEXP target, SEXP current, SEXP call, SEXP settings
+) {
+  struct ALIKEC_res_fin res;
   struct VALC_settings set = VALC_settings_vet(settings, R_BaseEnv);
 
-  res = ALIKEC_type_alike_internal(target, current, set);
+  res = ALIKEC_type_alike_internal(target, current, call, set);
   if(res.target[0]) {
-    return(ALIKEC_res_strings_to_SEXP(res));
+    return(ALIKEC_string_or_true(res, set));
   } else {
     return ScalarLogical(1);
   }

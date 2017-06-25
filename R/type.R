@@ -39,4 +39,4 @@ type_of <- function(object)
 #' @export
 
 type_alike <- function(target, current, settings=NULL)
-  .Call(VALC_type_alike, target, current, settings)
+  .Call(VALC_type_alike, target, current, substitute(current), settings)
