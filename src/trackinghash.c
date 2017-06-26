@@ -61,6 +61,7 @@ size_t VALC_add_to_track_hash(
   struct track_hash * track_hash, const char * key, const char * value,
   size_t max_nchar
 ) {
+  Rprintf("start add\n");
   size_t res = 1;
   int res_set = pfHashSet(track_hash->hash, key, value);
 
@@ -116,6 +117,7 @@ size_t VALC_add_to_track_hash(
     track_hash->contents[track_hash->idx] = key_cpy;
     track_hash->idx++;  // shouldn't be overflowable
   }
+  Rprintf("end add\n");
   return res;
 }
 /*
@@ -141,7 +143,10 @@ SEXP VALC_track_hash_test(SEXP keys, SEXP size) {
   struct track_hash * track_hash = VALC_create_track_hash(asInteger(size));
   struct VALC_settings set = VALC_settings_init();
 
+  Rprintf("Key size %zu\n", key_size);
+
   for(i = 0; i < key_size; ++i) {
+    Rprintf("Loop %d\n", i);
     if(STRING_ELT(keys, i) == NA_STRING) {
       INTEGER(res)[i] = NA_INTEGER;
       if(++i < key_size) {
@@ -151,9 +156,13 @@ SEXP VALC_track_hash_test(SEXP keys, SEXP size) {
         INTEGER(res)[i] = reset_int;
       }
     } else {
-      INTEGER(res)[i] = VALC_add_to_track_hash(
+      Rprintf("start set int i %d\n", i);
+      size_t add_res = VALC_add_to_track_hash(
         track_hash, CHAR(STRING_ELT(keys, i)), "42", set.nchar_max
       );
+      Rprintf("add_res: %zu\n", add_res);
+      INTEGER(res)[i] = (int) add_res;
+      Rprintf("done set int\n");
     }
   }
   UNPROTECT(1);
