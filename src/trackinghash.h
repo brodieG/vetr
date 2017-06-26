@@ -17,7 +17,7 @@
     size_t idx_max;            // how big the contents are
   };
   struct track_hash * VALC_create_track_hash(size_t size_init);
-  size_t VALC_add_to_track_hash(
+  int VALC_add_to_track_hash(
     struct track_hash * track_hash, const char * key, const char * value,
     size_t max_nchar
   );

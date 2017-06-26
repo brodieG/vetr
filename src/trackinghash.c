@@ -57,12 +57,12 @@ void VALC_reset_track_hash(
  * Modifies track_hash by reference
  */
 
-size_t VALC_add_to_track_hash(
+int VALC_add_to_track_hash(
   struct track_hash * track_hash, const char * key, const char * value,
   size_t max_nchar
 ) {
   Rprintf("start add\n");
-  size_t res = 1;
+  int res = 1;
   int res_set = pfHashSet(track_hash->hash, key, value);
 
   if(res_set < 0) {
@@ -91,18 +91,24 @@ size_t VALC_add_to_track_hash(
         // nocov start
         error(
           "Internal Error: attempted to allocate hash content vector bigger ",
-          "than long limit"
+          "than int size."
         );
         // nocov end
       }
       // re-allocate, note that we are re-allocating an array of pointers to
       // strings, but `S_realloc` is looking for a (char *) hence the coersion
 
-      S_realloc(
-        (char *) track_hash->contents, new_size, track_hash->idx_max,
+      Rprintf(
+        "Realloc! new %zu old %zu size %d\n", new_size, track_hash->idx_max,
         sizeof(char *)
       );
-      track_hash->idx_max = res = new_size;
+      track_hash->contents = (char **) S_realloc(
+        (char *) track_hash->contents, (long) new_size,
+        (long) track_hash->idx_max,
+        sizeof(char *)
+      );
+      res = (int) new_size;
+      track_hash->idx_max = new_size;
     } else if (track_hash->idx > track_hash->idx_max) {
       // nocov start
       error("Internal Error: hash index corrupted; contact maintainer.");
@@ -137,7 +143,8 @@ SEXP VALC_track_hash_test(SEXP keys, SEXP size) {
   if(TYPEOF(keys) != STRSXP) error("Arg keys must be character");
   if(TYPEOF(size) != INTSXP) error("Arg size must be integer");
 
-  R_xlen_t i, key_size = XLENGTH(keys);
+  R_xlen_t i;
+  R_xlen_t key_size = xlength(keys);
   SEXP res = PROTECT(allocVector(INTSXP, key_size));
 
   struct track_hash * track_hash = VALC_create_track_hash(asInteger(size));
@@ -157,11 +164,13 @@ SEXP VALC_track_hash_test(SEXP keys, SEXP size) {
       }
     } else {
       Rprintf("start set int i %d\n", i);
-      size_t add_res = VALC_add_to_track_hash(
+      Rprintf("type0: %s\n", type2char(TYPEOF(res)));
+      int add_res = VALC_add_to_track_hash(
         track_hash, CHAR(STRING_ELT(keys, i)), "42", set.nchar_max
       );
       Rprintf("add_res: %zu\n", add_res);
-      INTEGER(res)[i] = (int) add_res;
+      Rprintf("type: %s\n", type2char(TYPEOF(res)));
+      INTEGER(res)[i] = add_res;
       Rprintf("done set int\n");
     }
   }
