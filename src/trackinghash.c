@@ -98,10 +98,6 @@ int VALC_add_to_track_hash(
       // re-allocate, note that we are re-allocating an array of pointers to
       // strings, but `S_realloc` is looking for a (char *) hence the coersion
 
-      Rprintf(
-        "Realloc! new %zu old %zu size %d\n", new_size, track_hash->idx_max,
-        sizeof(char *)
-      );
       track_hash->contents = (char **) S_realloc(
         (char *) track_hash->contents, (long) new_size,
         (long) track_hash->idx_max,
