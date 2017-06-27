@@ -4,6 +4,7 @@ Initial release.
 
 * [#39](https://github.com/brodieG/validate/issues/39): `type_alike` return
   values structured like `alike`, doc fixes
+* [#36](https://github.com/brodieG/validate/issues/36): Fix INTEGER C bug
 * [#34](https://github.com/brodieG/validate/issues/34): allow substitution of
   `.` symbol when part of `..`.
 * [#33](https://github.com/brodieG/validate/issues/33): prevent infinite
