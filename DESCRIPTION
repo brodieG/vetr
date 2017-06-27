@@ -3,7 +3,7 @@ Title: Vet Your Inputs!
 Description: A template based vetting mechanism for your function inputs that
     simplifies argument checking for both complex and simple values while
     providing informative messages to your users.
-Version: 0.0.2.9011
+Version: 0.0.2.9012
 Authors@R: c(
     person("Brodie", "Gaslam", email="brodie.gaslam@yahoo.com",
     role=c("aut", "cre")),
