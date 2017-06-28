@@ -162,6 +162,8 @@ note:
 - will over-allocate by the amount of formatting characters
 - maxlen limits the length of individual components and the formatting string,
 not the output
+- If you submit more %s tokens than there are args, bad stuff starts to happen
+and we don't actually check the formatting tokens
 */
 
 char * CSR_smprintf6(

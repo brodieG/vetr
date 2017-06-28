@@ -42,6 +42,23 @@ SEXP CSR_smprintf2_ext(SEXP maxlen, SEXP format, SEXP a, SEXP b) {
   );
   return mkString(res);
 }
+SEXP CSR_smprintf6_ext(
+  SEXP maxlen, SEXP format, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f
+) {
+  is_scalar_chr(format);
+  is_scalar_chr(a);
+  is_scalar_chr(b);
+  is_scalar_chr(c);
+  is_scalar_chr(d);
+  is_scalar_chr(e);
+  is_scalar_chr(f);
+  is_scalar_pos_int(maxlen);
+  char * res = CSR_smprintf6(
+    asInteger(maxlen), CHAR(asChar(format)), CHAR(asChar(a)), CHAR(asChar(b)),
+    CHAR(asChar(c)), CHAR(asChar(d)), CHAR(asChar(e)), CHAR(asChar(f))
+  );
+  return mkString(res);
+}
 SEXP CSR_ucfirst_ext(SEXP str, SEXP maxlen) {
   is_scalar_chr(str);
   is_scalar_pos_int(maxlen);

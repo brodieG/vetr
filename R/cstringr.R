@@ -87,6 +87,9 @@ strmcpy <- function(str, maxlen=10000L) .Call(VALC_strmcpy_ext, str, maxlen)
 smprintf2 <- function(format, a, b, maxlen=10000L)
   .Call(VALC_smprintf2_ext, maxlen, format, a, b)
 
+smprintf6 <- function(format, a, b, c, d, e, f, maxlen=10000L)
+  .Call(VALC_smprintf6_ext, maxlen, format, a, b, c, d, e, f)
+
 #' @rdname strmlen
 #' @export
 
