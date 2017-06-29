@@ -219,7 +219,7 @@ const char * ALIKEC_pad(
     const char * dep_err = CHAR(STRING_ELT(obj, i));
     if(!i) dep_pad = dep_prompt; else dep_pad = dep_continue;
     res = CSR_smprintf6(
-      set.nchar_max, "%s%s%s%s%s", res, dep_pad, dep_err,
+      set.nchar_max, "%s%s%s%s%s%s", res, dep_pad, dep_err,
       i == lines - 1 && lines < line_max ? "..." : "",
       lines > 1 && line_max > 1 ? "\n" : "", ""
   );}
