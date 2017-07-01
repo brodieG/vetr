@@ -77,7 +77,6 @@ char * CSR_strmcpy(const char * str, size_t maxlen) {
       "size_t value."
     );
   }
-
   size_t len = CSR_strmlen_x(str, maxlen);
   if(len == maxlen && str[len])
     warning("CSR_strmcpy: truncated string longer than %d", maxlen);
@@ -162,6 +161,8 @@ note:
 - will over-allocate by the amount of formatting characters
 - maxlen limits the length of individual components and the formatting string,
 not the output
+- If you submit more %s tokens than there are args, bad stuff starts to happen
+and we don't actually check the formatting tokens
 */
 
 char * CSR_smprintf6(
@@ -177,13 +178,18 @@ char * CSR_smprintf6(
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(e, maxlen));
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(f, maxlen));
 
-
   char * res;
+
+  char * a_cpy = CSR_strmcpy(a, maxlen);
+  char * b_cpy = CSR_strmcpy(b, maxlen);
+  char * c_cpy = CSR_strmcpy(c, maxlen);
+  char * d_cpy = CSR_strmcpy(d, maxlen);
+  char * e_cpy = CSR_strmcpy(e, maxlen);
+  char * f_cpy = CSR_strmcpy(f, maxlen);
+
   res = R_alloc(full_len + 1, sizeof(char));
   int res_len = sprintf(
-    res, CSR_strmcpy(format, maxlen), CSR_strmcpy(a, maxlen),
-    CSR_strmcpy(b, maxlen), CSR_strmcpy(c, maxlen),
-    CSR_strmcpy(d, maxlen), CSR_strmcpy(e, maxlen), CSR_strmcpy(f, maxlen)
+    res, CSR_strmcpy(format, maxlen), a_cpy, b_cpy, c_cpy, d_cpy, e_cpy, f_cpy
   );
   if(res_len < 0) {
     // nocov start

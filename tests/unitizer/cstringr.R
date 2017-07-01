@@ -42,8 +42,22 @@ unitizer_sect("Basic Tests", {
   collapse(letters[1:5])
   collapse(letters[1:5], sep="\n")
   collapse(character())
-
-
+})
+unitizer_sect("smprintf6", {
+  vetr:::smprintf6(
+    "%s %s %s %s %s %s", "a", "bb", "ccc", "dddd", "eeeee", "ffffff"
+  )
+  vetr:::smprintf6(
+    "%s %s %s %s %s %s", "a", "bb", "ccc", "dddd", "eeeee", "ffffff", 10L
+  )
+  # bad format strings
+  vetr:::smprintf6(
+    "%s %s %s %s", "a", "bb", "ccc", "dddd", "eeeee", "ffffff"
+  )
+  # bad format strings2 - this one reads memeory it shouldn't
+  # vetr:::smprintf6(
+  #   "%s %s %s %s %s %s %s %s", "a", "bb", "ccc", "dddd", "eeeee", "ffffff"
+  # )
 })
 unitizer_sect("Corner Cases", {
   # test maxlen overflows

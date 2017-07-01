@@ -16,6 +16,9 @@
   SEXP CSR_strmlen_ext(SEXP str, SEXP maxlen);
   SEXP CSR_strmcpy_ext(SEXP str, SEXP maxlen);
   SEXP CSR_smprintf2_ext(SEXP maxlen, SEXP format, SEXP a, SEXP b);
+  SEXP CSR_smprintf6_ext(
+    SEXP maxlen, SEXP format, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f
+  );
   SEXP CSR_ucfirst_ext(SEXP str, SEXP maxlen);
   SEXP CSR_lcfirst_ext(SEXP str, SEXP maxlen);
   SEXP CSR_bullet_ext(SEXP str, SEXP bullet, SEXP ctd, SEXP maxlen);

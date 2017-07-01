@@ -48,14 +48,14 @@ SEXP VALC_process_error(
 
   char * err_arg_msg = "";
   const char * err_arg = CHAR(PRINTNAME(val_tag));
-  const char * err_very_base = "For argument `%s`";
+  const char * err_very_base = "For argument `%s`%s%s%s";
 
   if(ret_mode == 1) {
     err_arg_msg = CSR_smprintf4(
       set.nchar_max, err_very_base, err_arg, "", "", ""
     );
   }
-  const char * err_base = "%s%%s%%s";
+  const char * err_base = "%s%%s%%s%s%s%s";
   char * err_base_msg = CSR_smprintf4(
     set.nchar_max, err_base, err_arg_msg, "", "", ""
   );
