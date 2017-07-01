@@ -66,7 +66,9 @@
 #'   recursive symbol substitution.  If the tracking vector fills up it will be
 #'   grown by 2x.  This parameter is exposed mostly for developer use.
 #' @param nchar.max integer(1L) defaults to 65535L, threshold after which
-#'   strings encountered in C code are truncated.
+#'   strings encountered in C code are truncated.  This is the read limit.  In
+#'   theory `vetr` can produce strings longer than that by combining multiple
+#'   shorter pieces.
 #' @param env what environment to use to match calls and evaluate vetting
 #'   expressions, although typically you would specify this with the `env`
 #'   argument to `vet`; if NULL will use the calling frame to

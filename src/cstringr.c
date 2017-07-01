@@ -96,7 +96,7 @@ char * CSR_strmcpy(const char * str, size_t maxlen) {
 
   if(!len) {
     str_new[0] = '\0';
-  } else if(str_new[len - 1]) str_new[len] = '\0';
+  } else str_new[len] = '\0';
 
   return str_new;
 }
@@ -170,8 +170,13 @@ char * CSR_smprintf6(
   const char * c, const char * d, const char * e, const char * f
 ) {
   size_t full_len;
-  full_len =
-    CSR_add_szt(CSR_strmlen_x(format, maxlen), CSR_strmlen_x(a, maxlen));
+  size_t format_len = CSR_strmlen_x(format, maxlen);
+  if(format_len >= maxlen)
+    error(
+      "Internal Error: formatting string length longer that `nchar.max` %s,",
+      "contact maintainer."
+    );
+  full_len = CSR_add_szt(format_len, CSR_strmlen_x(a, maxlen));
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(b, maxlen));
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(c, maxlen));
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(d, maxlen));
