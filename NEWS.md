@@ -2,6 +2,7 @@
 
 Initial release.
 
+* Internal: formatting strings longer than `nchar.max` no longer allowed
 * [#39](https://github.com/brodieG/validate/issues/39): `type_alike` return
   values structured like `alike`, doc fixes
 * [#38](https://github.com/brodieG/validate/issues/38): Run with valgrind
