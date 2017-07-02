@@ -175,7 +175,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>This feature is designed to simplify checks for integer-like numbers. The following two expressions are roughly equivalent:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">stopifnot</span>(<span class="kw">length</span>(x) ==<span class="st"> </span>1L &amp;&amp;<span class="st"> </span>(<span class="kw">is.integer</span>(x) ||<span class="st"> </span><span class="kw">is.numeric</span>(x) &amp;&amp;<span class="st"> </span><span class="kw">floor</span>(x) ==<span class="st"> </span>x))
 <span class="kw">stopifnot</span>(<span class="kw">alike</span>(<span class="kw">integer</span>(1L), x))</code></pre></div>
-<p><a name="fuzzylen"></a>Note that we only check numerics of length &lt;= 100 for integerness to avoid full scans on large vectors. We expect that the primary source of these integer-like numerics is hand input vectors (e.g. <code>c(1, 2, 3)</code>), so hopefully this compromise is not too limiting.</p>
+<p><a name="fuzzylen"></a>Note that we only check numerics of length &lt;= 100 for integerness to avoid full scans on large vectors. We expect that the primary source of these integer-like numerics is hand input vectors (e.g. <code>c(1, 2, 3)</code>), so hopefully this compromise is not too limiting. You can modify the threshold length for this treatment via the <code>fuzzy.int.max.len</code> parameter to the <code>settings</code> objects (see <code>?vetr_settings</code>).</p>
 </div>
 <div id="functions" class="section level4">
 <h4>Functions</h4>
@@ -418,25 +418,23 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">type_and_len &lt;-<span class="st"> </span>function(a, b)
   <span class="kw">typeof</span>(a) ==<span class="st"> </span><span class="kw">typeof</span>(b) &amp;&amp;<span class="st"> </span><span class="kw">length</span>(a) ==<span class="st"> </span><span class="kw">length</span>(b)  <span class="co"># for reference</span>
 
-<span class="kw">mb</span>(  <span class="co"># a wrapper around `microbenchmark`</span>
+<span class="kw">bench_mark</span>(
   <span class="kw">identical</span>(rivers, rivers),
   <span class="kw">alike</span>(rivers, rivers),
   <span class="kw">type_and_len</span>(rivers, rivers)
 )</code></pre></div>
-<pre><code>## nanoseconds 
-##                           expr  min     lq     mean median
-## 1    identical(rivers, rivers) 1009 1209.0  1638.13 1344.5
-## 2        alike(rivers, rivers) 1532 1716.5  2527.51 1839.0
-## 3 type_and_len(rivers, rivers)  913 1045.5 33955.02 1166.5</code></pre>
+<pre><code>## Mean eval time from 1000 evals, in microseconds:
+##   identical(rivers, rivers)     ~  2.583
+##   alike(rivers, rivers)         ~  3.745
+##   type_and_len(rivers, rivers)  ~  5.860</code></pre>
 <p>While <code>alike</code> is slower than <code>identical</code> and the comparable bare bones R function, it is competitive., it is competitive and is actually faster than a bare bones R function that checks types and length. As objects grow more complex, <code>identical</code> will obviously pull ahead, though <code>alike</code> should be sufficiently fast for most applications:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">mb</span>(
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(
   <span class="kw">identical</span>(mtcars, mtcars),
   <span class="kw">alike</span>(mtcars, mtcars)
 )</code></pre></div>
-<pre><code>## nanoseconds 
-##                        expr  min     lq    mean median
-## 1 identical(mtcars, mtcars)  948 1175.5 1318.74 1261.5
-## 2     alike(mtcars, mtcars) 3820 4034.5 4420.32 4123.5</code></pre>
+<pre><code>## Mean eval time from 1000 evals, in microseconds:
+##   identical(mtcars, mtcars)  ~  2.674
+##   alike(mtcars, mtcars)      ~  7.512</code></pre>
 <p>In the above example, we are comparing the data frames, their attributes, and the 11 columns individually.</p>
 <p>Keep in mind that the complexity of the <code>alike</code> comparison is driven by the complexity of the template, not the object we are checking, so we can always manage the expense of the <code>alike</code> evaluation.</p>
 <p>Comparisons that succeed will be substantially faster than comparisons that fail as the construction of error messages is non-trivial and we have prioritized optimization in the success case.</p>
@@ -445,16 +443,15 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
 <p>Large objects will be slower to evaluate. Let us revisit the <code>lm</code> example, though this time we compare our template to itself to ensure that the comparisons succeed for <code>alike</code>, <code>all.equal</code>, and <code>identical</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span class="kw">lm</span>(y ~<span class="st"> </span>x +<span class="st"> </span>z, <span class="kw">data.frame</span>(<span class="dt">x=</span><span class="kw">runif</span>(<span class="dv">3</span>), <span class="dt">y=</span><span class="kw">runif</span>(<span class="dv">3</span>), <span class="dt">z=</span><span class="kw">runif</span>(<span class="dv">3</span>))))
 <span class="co"># compare mdl.tpl to itself to ensure success in all three scenarios</span>
-<span class="kw">mb</span>(
+<span class="kw">bench_mark</span>(
   <span class="kw">alike</span>(mdl.tpl, mdl.tpl),
   <span class="kw">all.equal</span>(mdl.tpl, mdl.tpl),   <span class="co"># for reference</span>
   <span class="kw">identical</span>(mdl.tpl, mdl.tpl)
 )</code></pre></div>
-<pre><code>## microseconds 
-##                          expr      min        lq       mean    median
-## 1     alike(mdl.tpl, mdl.tpl)   84.904   90.7265  102.41121   98.7660
-## 2 all.equal(mdl.tpl, mdl.tpl) 1524.761 1561.3395 1758.06387 1596.8200
-## 3 identical(mdl.tpl, mdl.tpl)    1.044    2.0505    2.58111    2.6595</code></pre>
+<pre><code>## Mean eval time from 1000 evals, in microseconds:
+##   alike(mdl.tpl, mdl.tpl)      ~   119.000
+##   all.equal(mdl.tpl, mdl.tpl)  ~  1836.000
+##   identical(mdl.tpl, mdl.tpl)  ~     2.345</code></pre>
 <p>Even with template as large as <code>lm</code> results (check <code>str(mdl.tpl)</code>) we can evaluate <code>alike</code> thousands of times before the overhead becomes noticeable.</p>
 </div>
 <div id="pre-defining-templates" class="section level3">
@@ -463,17 +460,13 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">integer</span>(), <span class="dt">b=</span><span class="kw">numeric</span>())
 df.cur &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="dv">1</span>:<span class="dv">10</span>, <span class="dt">b=</span><span class="dv">1</span>:<span class="dv">10</span> +<span class="st"> </span>.<span class="dv">1</span>)
 
-<span class="kw">mb</span>(
+<span class="kw">bench_mark</span>(
   <span class="kw">alike</span>(df.tpl, df.cur),
   <span class="kw">alike</span>(<span class="kw">data.frame</span>(<span class="kw">integer</span>(), <span class="kw">numeric</span>()), df.cur)
 )</code></pre></div>
-<pre><code>## microseconds 
-##                                              expr     min       lq
-## 1                           alike(df.tpl, df.cur)   3.291   3.8650
-## 2 alike(data.frame(integer(), numeric()), df.cur) 322.985 327.2255
-##       mean   median
-## 1   5.8776   6.2020
-## 2 390.4004 331.9925</code></pre>
+<pre><code>## Mean eval time from 1000 evals, in microseconds:
+##   alike(df.tpl, df.cur)                            ~    8.356
+##   alike(data.frame(integer(), numeric()), df.cur)  ~  391.900</code></pre>
 <p><code>data.frame</code> is a particularly slow constructor, but in general you are best served by defining your templates (including calls to <code>abstract</code>) outside of your function so they are created on package load rather than every time your function is called.</p>
 </div>
 </div>

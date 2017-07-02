@@ -312,30 +312,35 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <h2>Performance Considerations</h2>
 <div id="benchmarks" class="section level3">
 <h3>Benchmarks</h3>
-<p><code>vetr</code> is written primarily in C to minimize the performance impact of adding validation checks to your functions. Performance should be faster than using <code>stopifnot</code>. The <code>vetr</code> function itself carries some additional overhead from matching arguments, but it should still be faster than <code>stopifnot</code> except in the simplest of cases. Here we run our checks on valid iris objects we used to illustrate <a href="#declarative-checks-with-templates">declarative checks</a>:</p>
+<p><code>vetr</code> is written primarily in C to minimize the performance impact of adding validation checks to your functions. Performance should be faster than using <code>stopifnot</code> except for the most trivial of checks. The <code>vetr</code> function itself carries some additional overhead from matching arguments, but it should still be faster than <code>stopifnot</code> except in the simplest of cases. Here we run our checks on valid iris objects we used to illustrate <a href="#declarative-checks-with-templates">declarative checks</a>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vetr_iris &lt;-<span class="st"> </span>function(x) <span class="kw">vetr</span>(tpl.iris)
 
-<span class="kw">mb</span>(  <span class="co"># wrapper around microbenchmark</span>
+<span class="kw">bench_mark</span>(
   <span class="kw">vet</span>(tpl.iris, iris),
   <span class="kw">vetr_iris</span>(iris),
   <span class="kw">stopifnot_iris</span>(iris)   <span class="co"># defined in &quot;Templates&quot; section</span>
 )</code></pre></div>
-<pre><code>## microseconds 
-##                   expr    min      lq     mean  median
-## 1  vet(tpl.iris, iris)  6.179  7.2835  8.59369  7.6935
-## 2      vetr_iris(iris) 14.228 15.6515 30.57223 17.1640
-## 3 stopifnot_iris(iris) 85.158 89.5365 95.20954 90.8335</code></pre>
+<pre><code>## Mean eval time from 1000 evals, in microseconds:
+##   vet(tpl.iris, iris)   ~   11.24
+##   vetr_iris(iris)       ~   23.55
+##   stopifnot_iris(iris)  ~  104.40</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
 <h3>Templates and Performance</h3>
 <p>Complex templates will be slower to evaluate than simple ones, particularly for lists with lots of nested elements. Note however that the cost of the vetting expression is a function of the complexity of the template, not that of the value being vetted.</p>
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">mb</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
-<pre><code>## microseconds 
-##                        expr     min      lq     mean  median
-## 1 data.frame(a = numeric()) 119.664 122.232 127.9718 123.237</code></pre>
-<p>In this case the <code>data.frame</code> call alone take over 100us.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
+<pre><code>## Mean eval time from 1000 evals, in microseconds:
+##   data.frame(a = numeric())  ~  154.9</code></pre>
+<p>In this case the <code>data.frame</code> call alone take over 100us. In your package code you could use:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>())
+
+my_fun &lt;-<span class="st"> </span>function(x) {
+  <span class="kw">vetr</span>(<span class="dt">x=</span>df.tpl)
+  <span class="ot">TRUE</span>    <span class="co"># do work</span>
+}</code></pre></div>
+<p>This way the template is created once on package load and re-used each time your function is called.</p>
 </div>
 </div>
 <div id="alternatives" class="section level2">
@@ -356,37 +361,9 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <ul>
 <li>Declarative template based vetting</li>
 <li>Auto-composition of helpful error messages</li>
-<li>Minimal computational overhead</li>
+<li>Written in C so it is <a href="https://gist.github.com/brodieG/01bdb9b664c39cd892e9cd755be0e449">substantially faster</a> (e.g. ~ order of magnitude in simple checks)</li>
 </ul>
-<p>Here we borrow an example from the <code>valaddin</code> vignette to illustrate the last point:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">secant &lt;-<span class="st"> </span>function(f, x, dx) (<span class="kw">f</span>(x +<span class="st"> </span>dx) -<span class="st"> </span><span class="kw">f</span>(x)) /<span class="st"> </span>dx
-
-if(<span class="kw">require</span>(valaddin, <span class="dt">quietly=</span><span class="ot">TRUE</span>)) {
-  secant_valaddin &lt;-<span class="st"> </span>valaddin::<span class="kw">firmly</span>(secant, <span class="kw">list</span>(~x, ~dx) ~<span class="st"> </span>is.numeric)
-} else {
-  secant_valaddin &lt;-<span class="st"> </span>function(...) <span class="kw">warning</span>(<span class="st">&quot;valaddin not available.&quot;</span>)
-}
-
-secant_stopifnot &lt;-<span class="st"> </span>function(f, x, dx) {
-  <span class="kw">stopifnot</span>(<span class="kw">is.numeric</span>(x), <span class="kw">is.numeric</span>(dx))
-  <span class="kw">secant</span>(f, x, dx)
-}
-secant_vetr &lt;-<span class="st"> </span>function(f, x, dx) {
-  <span class="kw">vetr</span>(<span class="dt">x=</span><span class="kw">numeric</span>(), <span class="dt">dx=</span><span class="kw">numeric</span>())
-  <span class="kw">secant</span>(f, x, dx)
-}
-
-<span class="kw">mb</span>(
-  <span class="kw">secant_valaddin</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>),
-  <span class="kw">secant_stopifnot</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>),
-  <span class="kw">secant_vetr</span>(log, <span class="dv">1</span>, .<span class="dv">1</span>)
-)</code></pre></div>
-<pre><code>## microseconds 
-##                            expr     min      lq      mean   median
-## 1  secant_valaddin(log, 1, 0.1) 184.508 191.311 379.33456 195.3495
-## 2 secant_stopifnot(log, 1, 0.1)   9.693  11.575  36.57268  12.6840
-## 3      secant_vetr(log, 1, 0.1)  17.768  19.761  94.22996  22.1130</code></pre>
-<p>In many cases ~100us is not enough of a difference to be concerned with, but if an R function must be applied repeatedly (e.g. split-apply-combine analysis with many groups) then it becomes meaningful.</p>
+<p><a href="https://github.com/egnha/valaddin">valaddin</a> definitely has its own advantages though, so you should review its vignette to decide what works best for you.</p>
 </div>
 <div id="other-third-party-packages" class="section level3">
 <h3>Other Third Party Packages</h3>

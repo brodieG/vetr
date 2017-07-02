@@ -2,20 +2,6 @@
 knitr::opts_chunk$set(error=TRUE)
 library(vetr)
 
-## ----echo=FALSE----------------------------------------------------------
-mb <- function(..., times=25) {
-  if(require(microbenchmark, quietly=TRUE)) {
-    mb.c <- match.call()
-    mb.c[[1]] <- quote(microbenchmark::microbenchmark)
-    res <- eval(mb.c, parent.frame())
-    res.sum <- summary(res)
-    cat(attr(res.sum, "unit"), "\n")
-    print(res.sum[1:5])
-  } else {
-    warning("Package microbenchmark not available.")
-  }
-}
-
 ## ------------------------------------------------------------------------
 tpl <- numeric(1L)
 vet(tpl, 1:3)
@@ -149,36 +135,20 @@ fun(matrix(1:12, 4), TRUE, "bar")
 ## ------------------------------------------------------------------------
 vetr_iris <- function(x) vetr(tpl.iris)
 
-mb(  # wrapper around microbenchmark
+bench_mark(
   vet(tpl.iris, iris),
   vetr_iris(iris),
   stopifnot_iris(iris)   # defined in "Templates" section
 )
 
 ## ------------------------------------------------------------------------
-mb(data.frame(a=numeric()))
+bench_mark(data.frame(a=numeric()))
 
 ## ------------------------------------------------------------------------
-secant <- function(f, x, dx) (f(x + dx) - f(x)) / dx
+df.tpl <- data.frame(a=numeric())
 
-if(require(valaddin, quietly=TRUE)) {
-  secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
-} else {
-  secant_valaddin <- function(...) warning("valaddin not available.")
+my_fun <- function(x) {
+  vetr(x=df.tpl)
+  TRUE    # do work
 }
-
-secant_stopifnot <- function(f, x, dx) {
-  stopifnot(is.numeric(x), is.numeric(dx))
-  secant(f, x, dx)
-}
-secant_vetr <- function(f, x, dx) {
-  vetr(x=numeric(), dx=numeric())
-  secant(f, x, dx)
-}
-
-mb(
-  secant_valaddin(log, 1, .1),
-  secant_stopifnot(log, 1, .1),
-  secant_vetr(log, 1, .1)
-)
 
