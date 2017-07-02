@@ -44,9 +44,8 @@ unitizer_sect("lm", {
 
   alike(abstract(mdl), mdl4)
 })
-unitizer_sect("ggplot", {
+if(require(ggplot2)) unitizer_sect("ggplot", {
   # Rather experimental
-  library(ggplot2)
   df1 <- data.frame(x=runif(20), y=runif(20))
   df2 <- data.frame(x=runif(20), y=runif(20), z=rep(c("a", "b"), 10))
   df3 <- data.frame(a=runif(30), b=runif(30))

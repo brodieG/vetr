@@ -37,8 +37,8 @@ attributes to be \code{alike}
 \code{current} and to be alike
 }}
 
-\item{lang.mode}{integer(1L) in 0:1 controls language matching, set to \code{1} to
-turn off use of \code{\link{match.call}}}
+\item{lang.mode}{integer(1L) in 0:1, defaults to 0, controls language
+matching, set to \code{1} to turn off use of \code{\link[=match.call]{match.call()}}}
 
 \item{fun.mode}{NOT IMPLEMENTED, controls how functions are compared}
 
@@ -51,26 +51,31 @@ recursive structures (other than language objects) are compared}
 integer likeness (e.g. \code{c(1, 2)} can be considered "integer", even
 though it is numeric); currently we limit this check to vectors
 shorter than 100 to avoid a potentially expensive computation on large
-vectors, set to -1 to apply to all vectors}
+vectors, set to -1 to apply to all vectors irrespective of length}
 
 \item{width}{to use when deparsing expressions; default \code{-1}
 equivalent to \code{getOption("width")}}
 
 \item{env.depth.max}{integer(1L) maximum number of nested environments to
-recurse through; these are tracked to make sure we do not get into an
-infinite recursion loop, but because they are tracked we keep a limit on
-how many we will go through, set to -1 to allow unlimited recursion depth.}
+recurse through, defaults to 65535L; these are tracked to make sure we do
+not get into an infinite recursion loop, but because they are tracked we
+keep a limit on how many we will go through, set to -1 to allow unlimited
+recursion depth.  You should not need to change this unless you are running
+into the recursion limit.}
 
 \item{symb.sub.depth.max}{integer(1L) maximum recursion depth when
-recursively substituting symbols in vetting expression}
+recursively substituting symbols in vetting expression, defaults to 65535L}
 
 \item{symb.size.max}{integer(1L) maximum number of characters that a symbol
-is allowed to have in vetting expressions.}
+is allowed to have in vetting expressions, defaults to 15000L.}
 
-\item{track.hash.content.size}{integer(1L) used to set the initial size of
-the symbol tracking vector used with the hash table that detects recursive
-symbol substitution.  If the tracking vector fills up it will be grown by
-2x.}
+\item{nchar.max}{integer(1L) defaults to 65535L, threshold after which
+strings encountered in C code are truncated.}
+
+\item{track.hash.content.size}{integer(1L) (advanced) used to set the initial
+size of the symbol tracking vector used with the hash table that detects
+recursive symbol substitution.  If the tracking vector fills up it will be
+grown by 2x.  This parameter is exposed mostly for developer use.}
 
 \item{env}{what environment to use to match calls and evaluate vetting
 expressions, although typically you would specify this with the \code{env}
@@ -93,6 +98,12 @@ for testing purposes.  You should generally not need to use them.
 Note that a successful evaluation of this function does not guarantee a
 correct settings list.  Those checks are carried out internally by
 \code{vet/vetr/alike}.
+}
+\examples{
+type_alike(1L, 1.0, settings=vetr_settings(type.mode=2))
+## better if you are going to re-use settings to reduce overhead
+set <- vetr_settings(type.mode=2)
+type_alike(1L, 1.0, settings=set)
 }
 \seealso{
 \code{\link{type_alike}}, \code{\link{alike}}, \code{\link{vetr}}

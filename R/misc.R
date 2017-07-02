@@ -64,16 +64,6 @@ is_dfish <- function(obj)
 alike_mode <- function(obj)
   .Call(VALC_mode, obj)
 
-#' Used for testing C code
-#'
-#' @keywords internal
-#' @export
-
-alike_test <- function(obj) .Call(VALC_test, substitute(obj)) # nocov
-
-# alike_test2 <- function(target, current)
-#   .Call(VALC_test, target, current, sys.frame(sys.nframe()))
-
 syntactic_names <- function(lang) .Call(VALC_syntactic_names, lang)
 
 msg_sort <- function(messages)

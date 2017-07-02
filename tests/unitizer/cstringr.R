@@ -50,6 +50,9 @@ unitizer_sect("smprintf6", {
   vetr:::smprintf6(
     "%s %s %s %s %s %s", "a", "bb", "ccc", "dddd", "eeeee", "ffffff", 10L
   )
+  vetr:::smprintf6(
+    "%s %s %s %s %s %s", "a", "bb", "ccc", "dddd", "eeeee", "ffffff", 18L
+  )
   # bad format strings
   vetr:::smprintf6(
     "%s %s %s %s", "a", "bb", "ccc", "dddd", "eeeee", "ffffff"
