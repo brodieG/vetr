@@ -287,39 +287,7 @@ function in another.  `vetr` does have some advantages though:
 
 * Declarative template based vetting
 * Auto-composition of helpful error messages
-* Minimal computational overhead
-
-Here we borrow an example from the `valaddin` vignette to illustrate the
-last point:
-
-```{r}
-secant <- function(f, x, dx) (f(x + dx) - f(x)) / dx
-
-if(require(valaddin, quietly=TRUE)) {
-  secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
-} else {
-  secant_valaddin <- function(...) warning("valaddin not available.")
-}
-
-secant_stopifnot <- function(f, x, dx) {
-  stopifnot(is.numeric(x), is.numeric(dx))
-  secant(f, x, dx)
-}
-secant_vetr <- function(f, x, dx) {
-  vetr(x=numeric(), dx=numeric())
-  secant(f, x, dx)
-}
-
-mb(
-  secant_valaddin(log, 1, .1),
-  secant_stopifnot(log, 1, .1),
-  secant_vetr(log, 1, .1)
-)
-```
-
-In many cases ~100us is not enough of a difference to be concerned with, but
-if an R function must be applied repeatedly (e.g. split-apply-combine analysis
-with many groups) then it becomes meaningful.
+* Written in C so has less computation overhead
 
 ### Other Third Party Packages
 
