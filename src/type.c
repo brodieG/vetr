@@ -17,7 +17,7 @@ struct ALIKEC_res_fin ALIKEC_type_alike_internal(
 
   struct ALIKEC_res_fin res = (struct ALIKEC_res_fin) {.target="", .actual=""};
 
-  res.call = ALIKEC_pad_or_quote(call, set.width, -1, set);
+  res.call = "";
 
   if(tar_type_raw == cur_type_raw) return res;
 
@@ -51,7 +51,12 @@ struct ALIKEC_res_fin ALIKEC_type_alike_internal(
   ) {
     return res;
   }
+  // This is slow, so we only compute it if we definitely need it (~100us)
+
+  res.call = ALIKEC_pad_or_quote(call, set.width, -1, set);
+
   const char * what;
+
   if(set.type_mode == 0 && int_like) {
     what = "integer-like";
   } else if (set.type_mode < 2 && tar_type == REALSXP) {
