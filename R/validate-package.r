@@ -14,9 +14,12 @@
 #
 # Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
-#' vetr
+#' vetr - Trust, but Verify
 #'
-#' Check your function's arguments
+#' A template based vetting mechanism for your function inputs that simplifies
+#' argument checking for both complex and simple values while providing
+#' informative messages to your users.
+#'
 #' @name vetr
 #' @docType package
 
