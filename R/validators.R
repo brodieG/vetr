@@ -18,40 +18,41 @@
 #'
 #' Utility function to generate vetting tokens with attached error messages.
 #' You should only need to use this if the error message produced naturally by
-#' \code{vetr} is unclear.  Several predefined tokens created by this function
+#' `vetr` is unclear.  Several predefined tokens created by this function
 #' are also documented here.
 #'
 #' Allows you to supply error messages for vetting to use for each error
-#' token.  Your token should not contain top level \code{&&} or \code{||}.  If
-#' it does your error message will not be reported because \code{vetr} looks for
+#' token.  Your token should not contain top level `&&` or `||`.  If
+#' it does your error message will not be reported because `vetr` looks for
 #' error messages attached to atomic tokens.  If your token must involve
-#' top level \code{&&} or \code{||}, use \code{I(x && y)} to ensure that
-#' your error message is used by \code{vet}, but beware than in doing so you do
-#' not use templates within the \code{I} call as everything therein will be
+#' top level `&&` or `||`, use `I(x && y)` to ensure that
+#' your error message is used by `vet`, but beware than in doing so you do
+#' not use templates within the `I` call as everything therein will be
 #' interpreted as a vetting expression rather than a template.
 #'
 #' Error messages are typically of the form \dQuote{\%sshould be XXX}.
 #'
 #' This package ships with many predefined tokens for common use cases. They
 #' are listed in the \dQuote{Usage} section of this documentation.  The tokens
-#' are named in format \dQuote{TYPE[.LENGTH][.OTHER]}.  For example \code{INT}
-#' will vet an integer vector, \code{INT.1} will vet a scalar integer vector,
-#' and \code{INT.1.POS.STR} will vet a strictly positive integer vector.  At
-#' this time tokens are predefined for the basic types as scalars or any-length
-#' vectors.  Some additional checks are available (e.g. positive only values).
+#' are named in format `TYPE[.LENGTH][.OTHER]`.  For example
+#' `INT` will vet an integer vector, `INT.1` will vet a scalar integer
+#' vector, and `INT.1.POS.STR` will vet a strictly positive integer vector.
+#' At this time tokens are predefined for the basic types as scalars or
+#' any-length vectors.  Some additional checks are available (e.g. positive only
+#' values).
 #'
 #' Every one of the predefined vetting tokens documented here implicitly
 #' disallows NAs.  Numeric tokens also disallow infinite values. If you wish
 #' to allow NAs or infinite values just use a template object (e.g.
-#' \code{integer(1L)}).
+#' `integer(1L)`).
 #'
 #' @export
-#' @seealso \code{\link{vet}}
+#' @seealso [vet()]
 #' @param exp an expression which will be captured but not evaluated
 #' @param err.msg character(1L) a message that tells the user what the
-#'   expected value should be, should contain a \dQuote{\%s} for \code{sprintf}
+#'   expected value should be, should contain a \dQuote{\%s} for `sprintf`
 #'   to use (e.g. \dQuote{\%sshould be greater than 2})
-#' @return a quoted expressions with \code{err.msg} attribute set
+#' @return a quoted expressions with `err.msg` attribute set
 #' @examples
 #' ## Predefined tokens:
 #' vet(INT.1, 1:2)
