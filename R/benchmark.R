@@ -1,6 +1,18 @@
-# Lightweight benchmarking function
+#' Lightweight benchmarking function
+#'
+#' Evaluates provided expression in a loop and reports mean evaluation time.
+#' This is inferior to `microbenchmark` and other benchmarking tools in many
+#' ways except that it has zero dependencies or suggests which helps with
+#' package build and test times.  Used in vignettes.
+#'
+#' Runs [gc()] before first evaluation.
+#'
+#' @export
+#' @param ... expressions to benchmark, are captured unevaluated
+#' @param times how many times to loop, defaults to 1000
+#' @return NULL, invisibly, reports timings as a side effect as screen output
 
-bench <- function(..., times=1000L) {
+bench_mark <- function(..., times=1000L) {
   stopifnot(is.integer(times), length(times) == 1, times > 0)
   dots <- as.list(match.call(expand.dots=FALSE)[["..."]])
   p.f <- parent.frame()
@@ -41,7 +53,8 @@ bench <- function(..., times=1000L) {
   cat(
     paste0(
       "  ",
-      format(exps), "  ",  format(timings, justify='right'), "\n"
+      format(exps), "  ",
+      format(signif(timings, 4), justify='right'), "\n"
     ),
     sep=""
   )
