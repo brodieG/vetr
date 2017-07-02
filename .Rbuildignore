@@ -1,2 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\DEVNOTES\.md$
+^\CRAN\.md$
+^\.travis\.yml$
+.Rdata
