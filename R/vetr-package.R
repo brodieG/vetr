@@ -14,11 +14,13 @@
 #
 # Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
-## Remove DLLs when package is unloaded
+#' vetr - Trust, but Verify
+#'
+#' A template based vetting mechanism for your function inputs that simplifies
+#' argument checking for both complex and simple values while providing
+#' informative messages to your users.
+#'
+#' @name vetr
+#' @docType package
 
-# nocov start
-
-.onUnload <- function(libpath) {
-  library.dynam.unload("vetr", libpath)
-}
-# nocov end
+NULL

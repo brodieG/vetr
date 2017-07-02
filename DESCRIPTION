@@ -11,7 +11,7 @@ Authors@R: c(
     table implementation in src/pfhash.h"),
     person(family="R Core Team",
     email="R-core@r-project.org", role="cph",
-    comment="Used/adapted several code snippets from R sources, see COPYRIGHTS"
+    comment="Used/adapted several code snippets from R sources, see src/misc-alike.c and src/valname.c"
     ))
 Depends:
     R (>= 3.2.2)
