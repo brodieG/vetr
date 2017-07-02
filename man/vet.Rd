@@ -88,9 +88,11 @@ try(vet(numeric(2L), letters, stop=TRUE))
 
 ## `tev` just reverses target and current for use with maggrittr
 
-if(require(magrittr)) {
-  runif(2) \%>\% tev(numeric(2L))
-  runif(3) \%>\% tev(numeric(2L))
+\dontrun{
+  if(require(magrittr)) {
+    runif(2) \%>\% tev(numeric(2L))
+    runif(3) \%>\% tev(numeric(2L))
+  }
 }
 ## Zero length templates are wild cards
 vet(numeric(), runif(2))

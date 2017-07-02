@@ -39,8 +39,6 @@
 #' @note `vetr` will force evaluation of any arguments that are being
 #'   checked (you may omit arguments that should not be evaluate from
 #'   `vetr`)
-#' @name vet
-#' @rdname vet
 #' @aliases vetr tev
 #' @export
 #' @seealso [alike()] for how templates are used,
@@ -80,9 +78,11 @@
 #'
 #' ## `tev` just reverses target and current for use with maggrittr
 #'
-#' if(require(magrittr)) {
-#'   runif(2) %>% tev(numeric(2L))
-#'   runif(3) %>% tev(numeric(2L))
+#' \dontrun{
+#'   if(require(magrittr)) {
+#'     runif(2) %>% tev(numeric(2L))
+#'     runif(3) %>% tev(numeric(2L))
+#'   }
 #' }
 #' ## Zero length templates are wild cards
 #' vet(numeric(), runif(2))

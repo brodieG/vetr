@@ -20,7 +20,7 @@
 #' argument checking for both complex and simple values while providing
 #' informative messages to your users.
 #'
-#' @name vetr
+#' @name vetr-package
 #' @docType package
 
 NULL
