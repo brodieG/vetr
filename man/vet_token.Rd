@@ -149,11 +149,12 @@ Error messages are typically of the form \dQuote{\%sshould be XXX}.
 
 This package ships with many predefined tokens for common use cases. They
 are listed in the \dQuote{Usage} section of this documentation.  The tokens
-are named in format \dQuote{TYPE\link[=.OTHER]{.LENGTH}}.  For example \code{INT}
-will vet an integer vector, \code{INT.1} will vet a scalar integer vector,
-and \code{INT.1.POS.STR} will vet a strictly positive integer vector.  At
-this time tokens are predefined for the basic types as scalars or any-length
-vectors.  Some additional checks are available (e.g. positive only values).
+are named in format \code{TYPE[.LENGTH][.OTHER]}.  For example
+\code{INT} will vet an integer vector, \code{INT.1} will vet a scalar integer
+vector, and \code{INT.1.POS.STR} will vet a strictly positive integer vector.
+At this time tokens are predefined for the basic types as scalars or
+any-length vectors.  Some additional checks are available (e.g. positive only
+values).
 
 Every one of the predefined vetting tokens documented here implicitly
 disallows NAs.  Numeric tokens also disallow infinite values. If you wish
@@ -191,6 +192,6 @@ SQR.NUM.MX.V2 <-
 vet(SQR.NUM.MX.V2, mx)
 }
 \seealso{
-\code{\link{vet}}
+\code{\link[=vet]{vet()}}
 }
 \keyword{datasets}

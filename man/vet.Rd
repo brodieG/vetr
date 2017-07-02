@@ -4,22 +4,19 @@
 \alias{vet}
 \alias{vetr}
 \alias{tev}
-\alias{vet}
+\alias{tev}
+\alias{vetr}
 \title{Vet Objects and Function Arguments}
 \usage{
-vetr(..., .VETR_SETTINGS = NULL)
-
 vet(target, current, env = parent.frame(), format = "text", stop = FALSE,
   settings = NULL)
+
+tev(current, target, env = parent.frame(), format = "text", stop = FALSE,
+  settings = NULL)
+
+vetr(..., .VETR_SETTINGS = NULL)
 }
 \arguments{
-\item{...}{arguments to vetr; they will be matched to the enclosing
-function formals as with \code{\link{match.call}}}
-
-\item{.VETR_SETTINGS}{same as \code{settings}, but for \code{vetr}.  Note that this
-means you cannot use \code{vetr} with a function that takes a \code{.VETR_SETTINGS}
-argument}
-
 \item{target}{a template, a vetting expression, or a compound expression}
 
 \item{current}{an object to vet}
@@ -37,11 +34,18 @@ but actually returned instead of thrown as an error
 with none of the formatting or surrounding verbiage
 }}
 
-\item{stop}{TRUE or FALSE whether to call \code{\link{stop}} on failure
+\item{stop}{TRUE or FALSE whether to call \code{\link[=stop]{stop()}} on failure
 (default) or not}
 
 \item{settings}{a settings list as produced by \code{\link[=vetr_settings]{vetr_settings()}}, or NULL to
 use the default settings}
+
+\item{...}{arguments to vetr; they will be matched to the enclosing
+function formals as with \code{\link[=match.call]{match.call()}}}
+
+\item{.VETR_SETTINGS}{same as \code{settings}, but for \code{vetr}.  Note that this
+means you cannot use \code{vetr} with a function that takes a \code{.VETR_SETTINGS}
+argument}
 }
 \value{
 TRUE if validation succeeds, otherwise \code{stop} for
@@ -51,12 +55,21 @@ parameter \code{stop}
 \description{
 Use templates and expressions to vet objects or function arguments.
 \code{vet} vets objects, and \code{vetr} vets the formals of the
-function that encloses it.
+function that encloses it. \code{tev} is a version of \code{vet} compatible with
+\code{magrittr} pipes.
 }
 \details{
-The \code{target} argument for \code{vet} and the \code{...} arguments are
+The \code{target} argument for \code{vet}/\code{tev} and the \code{...} arguments for \code{vetr} are
 recursively substituted.  If you wish to programmatically specify a vetting
 expression you can provide it as quoted language.
+
+\code{tev} just reverses the \code{target} and \code{current} arguments for better
+integration with \code{magrittr}.  There are two major caveats:
+\itemize{
+\item error messages will be less useful since you will get \code{.} instead
+of the deparsed call
+\item \code{x \\\%>\\\% tev(y)} is much slower than \code{vet(y, x)} (or even \code{tev(x, y)})
+}
 
 See \code{vignette('vetr', package='vetr')} and examples for details on how
 to use these functions.
@@ -73,6 +86,12 @@ vet(numeric(2L), runif(3))
 vet(numeric(2L), letters)
 try(vet(numeric(2L), letters, stop=TRUE))
 
+## `tev` just reverses target and current for use with maggrittr
+
+if(require(magrittr)) {
+  runif(2) \%>\% tev(numeric(2L))
+  runif(3) \%>\% tev(numeric(2L))
+}
 ## Zero length templates are wild cards
 vet(numeric(), runif(2))
 vet(numeric(), runif(100))
@@ -143,7 +162,7 @@ val.1.a[[2]] <- val.1.a[[2]][, 1:8]
 try(fun3(val.1, val.1.a))
 }
 \seealso{
-\code{\link{alike}} for how templates are used,
-\code{\link{vet_token}} for how to specify custom error messages and also
+\code{\link[=alike]{alike()}} for how templates are used,
+\code{\link[=vet_token]{vet_token()}} for how to specify custom error messages and also
 for predefined validation tokens for common use cases.
 }

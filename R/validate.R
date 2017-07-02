@@ -17,52 +17,60 @@
 #' Vet Objects and Function Arguments
 #'
 #' Use templates and expressions to vet objects or function arguments.
-#' \code{vet} vets objects, and \code{vetr} vets the formals of the
-#' function that encloses it.
+#' `vet` vets objects, and `vetr` vets the formals of the
+#' function that encloses it. `tev` is a version of `vet` compatible with
+#' `magrittr` pipes.
 #'
-#' The \code{target} argument for \code{vet} and the \code{...} arguments are
+#' The `target` argument for `vet`/`tev` and the `...` arguments for `vetr` are
 #' recursively substituted.  If you wish to programmatically specify a vetting
 #' expression you can provide it as quoted language.
 #'
-#' See \code{vignette('vetr', package='vetr')} and examples for details on how
+#' `tev` just reverses the `target` and `current` arguments for better
+#' integration with `magrittr`.  There are two major caveats:
+#'
+#' * error messages will be less useful since you will get `.` instead
+#'   of the deparsed call
+#' * `x \\%>\\% tev(y)` is much slower than `vet(y, x)` (or even `tev(x, y)`)
+#'
+#' See `vignette('vetr', package='vetr')` and examples for details on how
 #' to use these functions.
 #'
 #' @useDynLib vetr, .registration=TRUE, .fixes="VALC_"
-#' @note \code{vetr} will force evaluation of any arguments that are being
+#' @note `vetr` will force evaluation of any arguments that are being
 #'   checked (you may omit arguments that should not be evaluate from
-#'   \code{vetr})
+#'   `vetr`)
 #' @name vet
 #' @rdname vet
 #' @aliases vetr tev
 #' @export
-#' @seealso \code{\link{alike}} for how templates are used,
-#'   \code{\link{vet_token}} for how to specify custom error messages and also
+#' @seealso [alike()] for how templates are used,
+#'   [vet_token()] for how to specify custom error messages and also
 #'   for predefined validation tokens for common use cases.
 #' @param ... arguments to vetr; they will be matched to the enclosing
-#'   function formals as with \code{\link{match.call}}
+#'   function formals as with [match.call()]
 #' @param target a template, a vetting expression, or a compound expression
 #' @param current an object to vet
 #' @param env the environment to match calls and evaluate vetting expressions
 #'   in; will be ignored if an environment is also specified via
 #'   [vetr_settings()].  Defaults to calling frame.
 #' @param format character(1L), controls the format of the return value for
-#'   \code{vet}, in case of failure.  One of:\itemize{
+#'   `vet`, in case of failure.  One of:\itemize{
 #'     \item "text": (default) character(1L) message for use elsewhere in code
 #'     \item "full": character(1L) the full error message used in "stop" mode,
 #'       but actually returned instead of thrown as an error
 #'     \item "raw": character(N) least processed version of the error message
 #'       with none of the formatting or surrounding verbiage
 #' }
-#' @param stop TRUE or FALSE whether to call \code{\link{stop}} on failure
+#' @param stop TRUE or FALSE whether to call [stop()] on failure
 #'   (default) or not
 #' @param settings a settings list as produced by [vetr_settings()], or NULL to
 #'   use the default settings
 #' @param .VETR_SETTINGS same as `settings`, but for `vetr`.  Note that this
 #'   means you cannot use `vetr` with a function that takes a `.VETR_SETTINGS`
 #'   argument
-#' @return TRUE if validation succeeds, otherwise \code{stop} for
-#'   \code{vetr} and varies for \code{vet} according to value chosen with
-#'   parameter \code{stop}
+#' @return TRUE if validation succeeds, otherwise `stop` for
+#'   `vetr` and varies for `vet` according to value chosen with
+#'   parameter `stop`
 #' @examples
 #' ## template vetting
 #' vet(numeric(2L), runif(2))
