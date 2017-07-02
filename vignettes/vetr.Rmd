@@ -17,9 +17,6 @@ knitr::opts_chunk$set(error=TRUE)
 library(vetr)
 ```
 
-```{r child='./rmdhunks/microbenchmark.Rmd'}
-```
-
 ```{r child='./rmdhunks/trust-but-verify.Rmd'}
 ```
 
@@ -229,7 +226,7 @@ illustrate [declarative checks](#declarative-checks-with-templates):
 ```{r}
 vetr_iris <- function(x) vetr(tpl.iris)
 
-mb(  # wrapper around microbenchmark
+bench_mark(
   vet(tpl.iris, iris),
   vetr_iris(iris),
   stopifnot_iris(iris)   # defined in "Templates" section
@@ -251,7 +248,7 @@ validation expression since some seemingly innocuous template creation
 expressions carry substantial overhead:
 
 ```{r}
-mb(data.frame(a=numeric()))
+bench_mark(data.frame(a=numeric()))
 ```
 
 In this case the `data.frame` call alone take over 100us.
@@ -287,7 +284,10 @@ function in another.  `vetr` does have some advantages though:
 
 * Declarative template based vetting
 * Auto-composition of helpful error messages
-* Written in C so has less computation overhead
+* Written in C so it is [substantially faster](https://gist.github.com/brodieG/01bdb9b664c39cd892e9cd755be0e449) (e.g. ~ order of magnitude in simple checks)
+
+[valaddin](https://github.com/egnha/valaddin) definitely has its own advantages
+though, so you should review its vignette to decide what works best for you.
 
 ### Other Third Party Packages
 
