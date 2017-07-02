@@ -70,6 +70,12 @@
 #' vet(numeric(2L), letters)
 #' try(vet(numeric(2L), letters, stop=TRUE))
 #'
+#' ## `tev` just reverses target and current for use with maggrittr
+#'
+#' if(require(magrittr)) {
+#'   runif(2) %>% tev(numeric(2L))
+#'   runif(3) %>% tev(numeric(2L))
+#' }
 #' ## Zero length templates are wild cards
 #' vet(numeric(), runif(2))
 #' vet(numeric(), runif(100))
@@ -139,6 +145,29 @@
 #' val.1.a[[2]] <- val.1.a[[2]][, 1:8]
 #' try(fun3(val.1, val.1.a))
 
+vet <- function(
+  target, current, env=parent.frame(), format="text", stop=FALSE, settings=NULL
+)
+  # note sys.call not matched, which is why we need substitute(current)
+  .Call(
+    VALC_validate, substitute(target), current, substitute(current),
+    sys.call(), env, format, stop, settings
+  )
+#' @rdname vet
+#' @export
+
+tev <- function(
+  current, target, env=parent.frame(), format="text", stop=FALSE, settings=NULL
+)
+  # note sys.call not matched, which is why we need substitute(current)
+  .Call(
+    VALC_validate, substitute(target), current, substitute(current),
+    sys.call(), env, format, stop, settings
+  )
+
+#' @rdname vet
+#' @export
+
 vetr <- function(..., .VETR_SETTINGS=NULL)
   .Call(
     VALC_validate_args,
@@ -152,17 +181,3 @@ vetr <- function(..., .VETR_SETTINGS=NULL)
     par.frame,
     .VETR_SETTINGS
   )
-
-# Do we need both `substitute(target)` and sys.call??
-
-#' @rdname vet
-#' @export
-
-vet <- function(
-  target, current, env=parent.frame(), format="text", stop=FALSE, settings=NULL
-)
-  .Call(
-    VALC_validate, substitute(target), current, substitute(current),
-    sys.call(), env, format, stop, settings
-  )
-
