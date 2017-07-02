@@ -2,20 +2,6 @@
 knitr::opts_chunk$set(error=TRUE)
 library(vetr)
 
-## ----echo=FALSE----------------------------------------------------------
-mb <- function(..., times=25) {
-  if(require(microbenchmark, quietly=TRUE)) {
-    mb.c <- match.call()
-    mb.c[[1]] <- quote(microbenchmark::microbenchmark)
-    res <- eval(mb.c, parent.frame())
-    res.sum <- summary(res)
-    cat(attr(res.sum, "unit"), "\n")
-    print(res.sum[1:5])
-  } else {
-    warning("Package microbenchmark not available.")
-  }
-}
-
 ## ------------------------------------------------------------------------
 library(vetr)
 alike(integer(5), 1:5)      # different values, but same structure
@@ -149,14 +135,14 @@ cat(alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width, iris)))
 type_and_len <- function(a, b)
   typeof(a) == typeof(b) && length(a) == length(b)  # for reference
 
-mb(  # a wrapper around `microbenchmark`
+bench_mark(
   identical(rivers, rivers),
   alike(rivers, rivers),
   type_and_len(rivers, rivers)
 )
 
 ## ------------------------------------------------------------------------
-mb(
+bench_mark(
   identical(mtcars, mtcars),
   alike(mtcars, mtcars)
 )
@@ -164,7 +150,7 @@ mb(
 ## ------------------------------------------------------------------------
 mdl.tpl <- abstract(lm(y ~ x + z, data.frame(x=runif(3), y=runif(3), z=runif(3))))
 # compare mdl.tpl to itself to ensure success in all three scenarios
-mb(
+bench_mark(
   alike(mdl.tpl, mdl.tpl),
   all.equal(mdl.tpl, mdl.tpl),   # for reference
   identical(mdl.tpl, mdl.tpl)
@@ -174,7 +160,7 @@ mb(
 df.tpl <- data.frame(a=integer(), b=numeric())
 df.cur <- data.frame(a=1:10, b=1:10 + .1)
 
-mb(
+bench_mark(
   alike(df.tpl, df.cur),
   alike(data.frame(integer(), numeric()), df.cur)
 )

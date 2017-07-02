@@ -17,9 +17,6 @@ knitr::opts_chunk$set(error=TRUE)
 library(vetr)
 ```
 
-```{r child='./rmdhunks/microbenchmark.Rmd'}
-```
-
 ## What is Alikeness?
 
 `alike` is similar to `all.equal` from base R except it only compares object
@@ -144,7 +141,9 @@ stopifnot(alike(integer(1L), x))
 <a name="fuzzylen"></a>Note that we only check numerics of length <= 100 for
 integerness to avoid full scans on large vectors.  We  expect that the primary
 source of these integer-like numerics is hand input vectors (e.g. `c(1, 2, 3)`),
-so hopefully this compromise is not too limiting.
+so hopefully this compromise is not too limiting.  You can modify the threshold
+length for this treatment via the `fuzzy.int.max.len` parameter to the
+`settings` objects (see `?vetr_settings`).
 
 #### Functions
 
@@ -491,7 +490,7 @@ other functions without concerns for what overhead:
 type_and_len <- function(a, b)
   typeof(a) == typeof(b) && length(a) == length(b)  # for reference
 
-mb(  # a wrapper around `microbenchmark`
+bench_mark(
   identical(rivers, rivers),
   alike(rivers, rivers),
   type_and_len(rivers, rivers)
@@ -505,7 +504,7 @@ grow more complex, `identical` will obviously pull ahead, though `alike` should
 be sufficiently fast for most applications:
 
 ```{r}
-mb(
+bench_mark(
   identical(mtcars, mtcars),
   alike(mtcars, mtcars)
 )
@@ -535,7 +534,7 @@ comparisons succeed for `alike`, `all.equal`, and `identical`:
 ```{r}
 mdl.tpl <- abstract(lm(y ~ x + z, data.frame(x=runif(3), y=runif(3), z=runif(3))))
 # compare mdl.tpl to itself to ensure success in all three scenarios
-mb(
+bench_mark(
   alike(mdl.tpl, mdl.tpl),
   all.equal(mdl.tpl, mdl.tpl),   # for reference
   identical(mdl.tpl, mdl.tpl)
@@ -552,7 +551,7 @@ Some fairly innocuous R expressions carry substantial overhead.  Consider:
 df.tpl <- data.frame(a=integer(), b=numeric())
 df.cur <- data.frame(a=1:10, b=1:10 + .1)
 
-mb(
+bench_mark(
   alike(df.tpl, df.cur),
   alike(data.frame(integer(), numeric()), df.cur)
 )

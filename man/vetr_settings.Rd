@@ -70,7 +70,9 @@ recursively substituting symbols in vetting expression, defaults to 65535L}
 is allowed to have in vetting expressions, defaults to 15000L.}
 
 \item{nchar.max}{integer(1L) defaults to 65535L, threshold after which
-strings encountered in C code are truncated.}
+strings encountered in C code are truncated.  This is the read limit.  In
+theory \code{vetr} can produce strings longer than that by combining multiple
+shorter pieces.}
 
 \item{track.hash.content.size}{integer(1L) (advanced) used to set the initial
 size of the symbol tracking vector used with the hash table that detects

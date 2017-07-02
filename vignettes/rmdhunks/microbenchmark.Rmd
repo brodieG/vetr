@@ -1,3 +1,4 @@
+<!--- No longer in use since we removed microbenchmark suggests -->
 
 ```{r echo=FALSE}
 mb <- function(..., times=25) {

@@ -24,8 +24,6 @@ Suggests:
     knitr,
     rmarkdown,
     unitizer,
-    covr,
-    microbenchmark,
-    valaddin
+    covr
 RoxygenNote: 6.0.1
 Roxygen: list(markdown = TRUE)

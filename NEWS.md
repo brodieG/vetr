@@ -2,6 +2,9 @@
 
 Initial release.
 
+* [#40](https://github.com/brodieG/validate/issues/40): Removed `suggests`
+  dependencies to ggplot, microbenchmark, and valaddin to improve travis build
+  time
 * Internal: formatting strings longer than `nchar.max` no longer allowed
 * [#39](https://github.com/brodieG/validate/issues/39): `type_alike` return
   values structured like `alike`, doc fixes
