@@ -44,15 +44,20 @@ unitizer_sect("lm", {
 
   alike(abstract(mdl), mdl4)
 })
-if(require(ggplot2)) unitizer_sect("ggplot", {
-  # Rather experimental
+unitizer_sect("ggplot", {
+  # Rather experimental; we store the ggplot objects to avoid the suggests
   df1 <- data.frame(x=runif(20), y=runif(20))
   df2 <- data.frame(x=runif(20), y=runif(20), z=rep(c("a", "b"), 10))
   df3 <- data.frame(a=runif(30), b=runif(30))
-  g1 <- ggplot(df1) + geom_point(aes(x=x, y=y))
-  g2 <- ggplot(df1) + geom_line(aes(x=x, y=y))
-  g3 <- ggplot(df3) + geom_point(aes(x=a, y=b))
-  g4 <- ggplot(df1, aes(x=x, y=y)) + geom_point() + geom_line()
+  # g1 <- ggplot(df1) + geom_point(aes(x=x, y=y))
+  # g2 <- ggplot(df1) + geom_line(aes(x=x, y=y))
+  # g3 <- ggplot(df3) + geom_point(aes(x=a, y=b))
+  # g4 <- ggplot(df1, aes(x=x, y=y)) + geom_point() + geom_line()
+  g1 <- readRDS('helper/ggplot-g1.rds')
+  g2 <- readRDS('helper/ggplot-g2.rds')
+  g3 <- readRDS('helper/ggplot-g3.rds')
+  g4 <- readRDS('helper/ggplot-g4.rds')
+
   g.abs <- abstract(g1)
 
   alike(g.abs, g1)
