@@ -49,11 +49,11 @@ bench_mark <- function(..., times=1000L) {
   }
   timings <- timings * 10 ^ mult
 
-  cat(sprintf("Mean eval time from %d evals, in %s\n", times, unit))
+  cat(sprintf("Mean eval time from %d evals, in %s:\n", times, unit))
   cat(
     paste0(
       "  ",
-      format(exps), "  ",
+      format(exps), "  ~  ",
       format(signif(timings, 4), justify='right'), "\n"
     ),
     sep=""
