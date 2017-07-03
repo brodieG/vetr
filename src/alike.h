@@ -224,6 +224,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   struct ALIKEC_rec_track ALIKEC_rec_dec(struct ALIKEC_rec_track);
   SEXP ALIKEC_syntactic_names_exp(SEXP lang);
   SEXP ALIKEC_sort_msg(SEXP msgs, struct VALC_settings set);
+  SEXP ALIKEC_sort_msg_ext(SEXP msgs);
   SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set);
   SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set);
   SEXP ALIKEC_merge_msg_2_ext(SEXP msgs);

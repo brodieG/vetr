@@ -58,7 +58,7 @@ R_CallMethodDef callMethods[] = {
   {"match_call", (DL_FUNC) &ALIKEC_match_call, 3},
   {"abstract_ts", (DL_FUNC) &ALIKEC_abstract_ts, 2},
   {"env_track", (DL_FUNC) &ALIKEC_env_track_test, 3},
-  {"msg_sort", (DL_FUNC) &ALIKEC_sort_msg, 1},
+  {"msg_sort", (DL_FUNC) &ALIKEC_sort_msg_ext, 1},
   {"msg_merge", (DL_FUNC) &ALIKEC_merge_msg, 1},
   {"msg_merge_ext", (DL_FUNC) &ALIKEC_merge_msg_2_ext, 1},
   {"hash_test", (DL_FUNC) &pfHashTest, 2},

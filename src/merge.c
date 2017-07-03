@@ -81,7 +81,6 @@ SEXP ALIKEC_sort_msg(SEXP msgs, struct VALC_settings set) {
       // delimiters to minimize susceptibility to frame shift, but obviously not
       // a guarantee
 
-      Rprintf("nchar max: %zu\n", set.nchar_max);
       sort_string = CSR_smprintf6(
         set.nchar_max, "%s <:> %s <:> %s <:> %s <:> %s%s",
         CHAR(STRING_ELT(str_elt, 0)), CHAR(STRING_ELT(str_elt, 1)),
@@ -103,6 +102,10 @@ SEXP ALIKEC_sort_msg(SEXP msgs, struct VALC_settings set) {
   }
   UNPROTECT(1);
   return(msg_sort);
+}
+SEXP ALIKEC_sort_msg_ext(SEXP msgs) {
+  struct VALC_settings set = VALC_settings_vet(R_NilValue, R_BaseEnv);
+  return ALIKEC_sort_msg(msgs, set);
 }
 
 /*
