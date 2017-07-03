@@ -81,6 +81,7 @@ SEXP ALIKEC_sort_msg(SEXP msgs, struct VALC_settings set) {
       // delimiters to minimize susceptibility to frame shift, but obviously not
       // a guarantee
 
+      Rprintf("nchar max: %zu\n", set.nchar_max);
       sort_string = CSR_smprintf6(
         set.nchar_max, "%s <:> %s <:> %s <:> %s <:> %s%s",
         CHAR(STRING_ELT(str_elt, 0)), CHAR(STRING_ELT(str_elt, 1)),
@@ -116,7 +117,6 @@ SEXP ALIKEC_sort_msg(SEXP msgs, struct VALC_settings set) {
 SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set) {
   R_xlen_t len = XLENGTH(msgs);
   SEXP res;
-
 
   if(len > 1) {
     // 1. Sort the strings (really only need to do this if longer than 3, but oh
@@ -232,6 +232,6 @@ SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set) {
   return msg_c;
 }
 SEXP ALIKEC_merge_msg_2_ext(SEXP msgs) {
-  struct VALC_settings set = VALC_settings_init();
+  struct VALC_settings set = VALC_settings_vet(R_NilValue, R_BaseEnv);
   return ALIKEC_merge_msg_2(msgs, set);
 }

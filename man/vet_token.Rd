@@ -161,6 +161,10 @@ disallows NAs.  Numeric tokens also disallow infinite values. If you wish
 to allow NAs or infinite values just use a template object (e.g.
 \code{integer(1L)}).
 }
+\note{
+\strong{This will only work with custom expressions containing \code{.}}.  Anything
+else will be interpreted as a template token.
+}
 \examples{
 ## Predefined tokens:
 vet(INT.1, 1:2)
