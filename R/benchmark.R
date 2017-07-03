@@ -23,10 +23,13 @@
 #'
 #' Runs [gc()] before each expression is evaluated.  Expressions are evaluated
 #' in the order provided.  Attempts to estimate the overhead of the loop by
-#' running a loop that evaluates `NULL` the `times` times.  Unfortunately the
-#' overhead estimation is not great and does not seem to work well when
-#' iterations are less than a thousand.
+#' running a loop that evaluates `NULL` the `times` times.
 #'
+#' Unfortunately because this computes the average of all iterations it is very
+#' susceptible to outliers in small sample runs, particularly with fast running
+#' code.  For that reason the default number of iterations is one thousand.
+#'
+#' @importFrom stats median
 #' @export
 #' @param ... expressions to benchmark, are captured unevaluated
 #' @param times how many times to loop, defaults to 1000
@@ -45,6 +48,7 @@ bench_mark <- function(..., times=1000L) {
     dots, function(x) {
       call.q <- bquote({
         gc()
+        Sys.time()          # warmup
         for(i in 1:2) .(x)  # warmup
         start <- Sys.time()
         for(i in 1:.(times)) .(x)
@@ -58,11 +62,12 @@ bench_mark <- function(..., times=1000L) {
   # try to compute overhead
 
   o.h.times <- 10
+  gc()
   overhead <- vapply(
     seq.int(o.h.times), function(x) {
       call.q.baseline <- bquote({
-        gc()
-        for(j in 1:2) NULL   # warmup
+        Sys.time()          # warmup
+        for(j in 1:2) NULL  # warmup
         start <- Sys.time()
         for(j in 1:.(times)) NULL
         stop <- Sys.time()
