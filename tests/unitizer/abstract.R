@@ -49,20 +49,26 @@ unitizer_sect("ggplot", {
   df1 <- data.frame(x=runif(20), y=runif(20))
   df2 <- data.frame(x=runif(20), y=runif(20), z=rep(c("a", "b"), 10))
   df3 <- data.frame(a=runif(30), b=runif(30))
-  # g1 <- ggplot(df1) + geom_point(aes(x=x, y=y))
-  # g2 <- ggplot(df1) + geom_line(aes(x=x, y=y))
-  # g3 <- ggplot(df3) + geom_point(aes(x=a, y=b))
-  # g4 <- ggplot(df1, aes(x=x, y=y)) + geom_point() + geom_line()
-  g1 <- readRDS('helper/ggplot-g1.rds')
-  g2 <- readRDS('helper/ggplot-g2.rds')
-  g3 <- readRDS('helper/ggplot-g3.rds')
-  g4 <- readRDS('helper/ggplot-g4.rds')
 
-  g.abs <- abstract(g1)
+  if(suppressPackageStartupMessages(require(ggplot2, quietly=TRUE))) {
+    g1 <- ggplot(df1) + geom_point(aes(x=x, y=y))
+    g2 <- ggplot(df1) + geom_line(aes(x=x, y=y))
+    g3 <- ggplot(df3) + geom_point(aes(x=a, y=b))
+    g4 <- ggplot(df1, aes(x=x, y=y)) + geom_point() + geom_line()
 
-  alike(g.abs, g1)
-  alike(g.abs, g2)
-  alike(g.abs, g3)
+    g.abs <- abstract(g1)
+
+    list(alike(g.abs, g1), alike(g.abs, g2), alike(g.abs, g3))
+  } else {
+    # this is what the result should be so that this works when we skip the
+    # tests for lack of ggplot2
+
+    list(
+      TRUE,
+      "`class(g2$layers[[1]]$geom)[2]` should be \"GeomPoint\" (is \"GeomPath\")",
+      TRUE
+    )
+  }
 })
 unitizer_sect("nullify", {
   nullify(list(1, 2, 3), 2)
