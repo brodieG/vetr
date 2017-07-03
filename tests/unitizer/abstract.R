@@ -50,7 +50,11 @@ unitizer_sect("ggplot", {
   df2 <- data.frame(x=runif(20), y=runif(20), z=rep(c("a", "b"), 10))
   df3 <- data.frame(a=runif(30), b=runif(30))
 
-  if(suppressPackageStartupMessages(require(ggplot2, quietly=TRUE))) {
+  if(
+    suppressWarnings(
+      suppressPackageStartupMessages(
+        require(ggplot2, quietly=TRUE)
+  ) ) ) {
     g1 <- ggplot(df1) + geom_point(aes(x=x, y=y))
     g2 <- ggplot(df1) + geom_line(aes(x=x, y=y))
     g3 <- ggplot(df3) + geom_point(aes(x=a, y=b))
