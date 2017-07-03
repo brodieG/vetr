@@ -14,11 +14,13 @@ Initial release.
   `.` symbol when part of `..`.
 * [#33](https://github.com/brodieG/validate/issues/33): prevent infinite
   recursion with recursive symbol substitution
+* [#30](https://github.com/brodieG/validate/issues/30): allow specification of
+  substitution / matching / evaluation environment
+* [#28](https://github.com/brodieG/validate/issues/28): expose alike and vetr
+  setting control
+* [#24](https://github.com/brodieG/validate/issues/24): clarify use of
+  `vet_token`
 * [#18](https://github.com/brodieG/validate/issues/18): better documentation for
   NSE
 * [#11](https://github.com/brodieG/validate/issues/11): segfault when validating
   language objects
-* [#28](https://github.com/brodieG/validate/issues/28): expose alike and vetr
-  setting control
-* [#30](https://github.com/brodieG/validate/issues/30): allow specification of
-  substitution / matching / evaluation environment
