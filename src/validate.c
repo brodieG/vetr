@@ -182,9 +182,11 @@ SEXP VALC_process_error(
     char * err_full = CSR_collapse(err_vec_res, "\n", set.nchar_max);
     VALC_stop(fun_call, err_full);
   }
+  // nocov start
   error("%s",
     "Internal Error: this code should not evaluate; contact maintainer 2745."
   );
+  // nocov end
 }
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
