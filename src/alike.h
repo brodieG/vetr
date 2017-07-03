@@ -226,6 +226,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_sort_msg(SEXP msgs, struct VALC_settings set);
   SEXP ALIKEC_sort_msg_ext(SEXP msgs);
   SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set);
+  SEXP ALIKEC_merge_msg_ext(SEXP msgs);
   SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set);
   SEXP ALIKEC_merge_msg_2_ext(SEXP msgs);
 
