@@ -483,8 +483,7 @@ enough information to figure out the problem.
 
 ### Sample Timings
 
-We have gone to great lengths to make `alike` fast so that it can be included in
-other functions without concerns for what overhead:
+`alike` is written in C to minimize the computational burden of including it in other functions:
 
 ```{r}
 type_and_len <- function(a, b)

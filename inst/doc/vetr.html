@@ -320,10 +320,10 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
   <span class="kw">vetr_iris</span>(iris),
   <span class="kw">stopifnot_iris</span>(iris)   <span class="co"># defined in &quot;Templates&quot; section</span>
 )</code></pre></div>
-<pre><code>## Mean eval time from 1000 evals, in microseconds:
-##   vet(tpl.iris, iris)   ~   11.24
-##   vetr_iris(iris)       ~   23.55
-##   stopifnot_iris(iris)  ~  104.40</code></pre>
+<pre><code>## Mean eval time from 1000 iterations, in microseconds:
+##   vet(tpl.iris, iris)   ~   12.57
+##   vetr_iris(iris)       ~   18.52
+##   stopifnot_iris(iris)  ~  106.50</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -331,8 +331,8 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <p>Complex templates will be slower to evaluate than simple ones, particularly for lists with lots of nested elements. Note however that the cost of the vetting expression is a function of the complexity of the template, not that of the value being vetted.</p>
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
-<pre><code>## Mean eval time from 1000 evals, in microseconds:
-##   data.frame(a = numeric())  ~  154.9</code></pre>
+<pre><code>## Mean eval time from 1000 iterations, in microseconds:
+##   data.frame(a = numeric())  ~  149</code></pre>
 <p>In this case the <code>data.frame</code> call alone take over 100us. In your package code you could use:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>())
 
