@@ -16,3 +16,15 @@ unitizer_sect("Hash", {
   # these should all equal 193
   vetr:::hash_fun(c("f b", "n b", "n d", "t m", "b r", "n w", "q w", "o x"))
 })
+unitizer_sect("bench_mark", {
+  # three different time frames that should trigger all the code, need to remove
+  # the time piece so that the tests don't fail due to variations
+
+  capt_wo_time <- function(x) {
+    txt <- capture.output(x)
+    gsub("~ *-?[0-9.]*", "~", txt)
+  }
+  capt_wo_time(bench_mark(Sys.sleep(1), times=1))
+  capt_wo_time(bench_mark(Sys.sleep(.01), times=10))
+  capt_wo_time(bench_mark(1 + 1, NULL, times=100))
+})

@@ -48,12 +48,10 @@ bench_mark <- function(..., times=1000L) {
     dots, function(x) {
       call.q <- bquote({
         gc()
-        Sys.time()          # warmup
-        for(i in 1:2) .(x)  # warmup
-        start <- Sys.time()
+        start <- proc.time()
         for(i in 1:.(times)) .(x)
-        stop <- Sys.time()
-        stop - start
+        stop <- proc.time()
+        stop[['elapsed']] - start[['elapsed']]
       })
       eval(call.q, p.f)
     },
@@ -66,12 +64,10 @@ bench_mark <- function(..., times=1000L) {
   overhead <- vapply(
     seq.int(o.h.times), function(x) {
       call.q.baseline <- bquote({
-        Sys.time()          # warmup
-        for(j in 1:2) NULL  # warmup
-        start <- Sys.time()
+        start <- proc.time()
         for(j in 1:.(times)) NULL
-        stop <- Sys.time()
-        stop - start
+        stop <- proc.time()
+        stop[['elapsed']] - start[['elapsed']]
       })
       eval(call.q.baseline, p.f)
     },
@@ -100,7 +96,7 @@ bench_mark <- function(..., times=1000L) {
   cat(
     sprintf(
       "Mean eval time from %d iteration%s, in %s:\n", times,
-      if(times > 1) "s", unit
+      if(times > 1) "s" else "", unit
   ) )
   cat(
     paste0(
