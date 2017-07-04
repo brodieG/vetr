@@ -173,7 +173,7 @@ tev <- function(
     sys.call(), env, format, stop, settings
   )
 
-#' @rdname vet
+#' @inherit vet
 #' @export
 
 vetr <- function(..., .VETR_SETTINGS=NULL)

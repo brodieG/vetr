@@ -5,7 +5,6 @@
 \alias{vetr}
 \alias{tev}
 \alias{tev}
-\alias{vetr}
 \title{Vet Objects and Function Arguments}
 \usage{
 vet(target, current, env = parent.frame(), format = "text", stop = FALSE,
@@ -13,8 +12,6 @@ vet(target, current, env = parent.frame(), format = "text", stop = FALSE,
 
 tev(current, target, env = parent.frame(), format = "text", stop = FALSE,
   settings = NULL)
-
-vetr(..., .VETR_SETTINGS = NULL)
 }
 \arguments{
 \item{target}{a template, a vetting expression, or a compound expression}

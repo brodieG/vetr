@@ -3,7 +3,7 @@
 \name{nullify}
 \alias{nullify}
 \alias{nullify.default}
-\title{NULLs value in an object without removing slot from object}
+\title{Set Element to NULL Without Removing It}
 \usage{
 nullify(obj, index)
 
@@ -18,9 +18,9 @@ nullify(obj, index)
 object with selected values NULLified
 }
 \description{
-This function is required because there is no straightforward way to over-write
-a value in a list with NULL without completely removing the entry from the
-list as well.
+This function is required because there is no straightforward way to
+over-write a value in a list with NULL without completely removing the entry
+from the list as well.
 }
 \details{
 This returns a copy of the object modified with null slots; it does
