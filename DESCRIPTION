@@ -1,5 +1,5 @@
 Package: vetr
-Title: vetr - Trust, but Verify
+Title: Trust, but Verify
 Description: Declarative template-based framework for verifying that objects
   meet structural requirements, and auto-composing error messages when they do
   not.

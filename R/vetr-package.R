@@ -14,7 +14,7 @@
 #
 # Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
-#' vetr - Trust, but Verify
+#' Trust, but Verify
 #'
 #' Declarative template-based framework for verifying that objects meet
 #' structural requirements, and auto-composing error messages when they do not.
