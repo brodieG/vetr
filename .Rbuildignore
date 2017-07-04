@@ -4,3 +4,6 @@
 ^\CRAN\.md$
 ^\.travis\.yml$
 .Rdata
+covr\.R
+scratch\.R
+README\.Rmd
