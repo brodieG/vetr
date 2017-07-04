@@ -490,7 +490,7 @@ other functions without concerns for what overhead:
 type_and_len <- function(a, b)
   typeof(a) == typeof(b) && length(a) == length(b)  # for reference
 
-bench_mark(
+bench_mark(times=1e4,
   identical(rivers, rivers),
   alike(rivers, rivers),
   type_and_len(rivers, rivers)
@@ -504,7 +504,7 @@ grow more complex, `identical` will obviously pull ahead, though `alike` should
 be sufficiently fast for most applications:
 
 ```{r}
-bench_mark(
+bench_mark(times=1e4,
   identical(mtcars, mtcars),
   alike(mtcars, mtcars)
 )

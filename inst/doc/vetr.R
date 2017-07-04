@@ -135,7 +135,7 @@ fun(matrix(1:12, 4), TRUE, "bar")
 ## ------------------------------------------------------------------------
 vetr_iris <- function(x) vetr(tpl.iris)
 
-bench_mark(
+bench_mark(times=1e4,
   vet(tpl.iris, iris),
   vetr_iris(iris),
   stopifnot_iris(iris)   # defined in "Templates" section
