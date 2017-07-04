@@ -102,9 +102,3 @@ track_hash <- function(keys, size) .Call(VALC_track_hash, keys, size);
 
 hash_fun <- function(x) .Call(VALC_default_hash_fun, x)
 
-#' Pre-calculated Precision Level
-#'
-#' Used to limit overhead of calls the require use of
-#' \code{.Machine$double.eps ^ 0.5}
-
-MachDblEpsSqrt <- .Machine$double.eps ^ 0.5
