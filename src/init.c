@@ -91,6 +91,8 @@ void R_init_vetr(DllInfo *info)
     so pass those arrays as NULL.
   */
   R_registerRoutines(info, NULL, callMethods, NULL, NULL);
+  R_useDynamicSymbols(info, FALSE);
+  R_forceSymbols(info, FALSE);
   VALC_SYM_quote = install("quote");
   VALC_SYM_deparse = install("deparse");
   VALC_SYM_one_dot = install(".");
