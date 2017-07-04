@@ -230,7 +230,7 @@ nullify.default <- function (obj, index) {
   if(is.numeric(index)) {
     if(min(index) < min(seq.along) || max(index) > max(seq.along)) {
       stop(
-        "Argument `index` can only contain values that exist within  ",
+        "Argument `index` can only contain values that exist within ",
         "seq_along(`obj`)."
       )
     }
