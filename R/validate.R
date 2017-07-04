@@ -14,16 +14,10 @@
 #
 # Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
-#' Vet Objects and Function Arguments
+#' Verify Objects Meet Structural Requirements
 #'
-#' Use templates and expressions to vet objects or function arguments.
-#' `vet` vets objects, and `vetr` vets the formals of the
-#' function that encloses it. `tev` is a version of `vet` compatible with
-#' `magrittr` pipes.
-#'
-#' The `target` argument for `vet`/`tev` and the `...` arguments for `vetr` are
-#' recursively substituted.  If you wish to programmatically specify a vetting
-#' expression you can provide it as quoted language.
+#' Use vetting expressions to enforce structural requirements for objects.
+#' `tev` is a version of `vet` compatible with `magrittr` pipes.
 #'
 #' `tev` just reverses the `target` and `current` arguments for better
 #' integration with `magrittr`.  There are two major caveats:
@@ -32,20 +26,24 @@
 #'   of the deparsed call
 #' * `x \\%>\\% tev(y)` is much slower than `vet(y, x)` (or even `tev(x, y)`)
 #'
+#' @section Vetting Expressions:
+#'
+#' Vetting expressions can be template tokens, custom tokens, or any
+#' combination of template and custom tokens combined with `&&` and/or `||`.
+#' Template tokens are R objects that define the required structure, much like
+#' the `FUN.VALUE` argument to [vapply()].  Custom tokens are tokens that
+#' contain the `.` symbol and are used to vet values.
+#'
 #' See `vignette('vetr', package='vetr')` and examples for details on how
-#' to use these functions.
+#' to craft vetting expressions.
 #'
 #' @useDynLib vetr, .registration=TRUE, .fixes="VALC_"
-#' @note `vetr` will force evaluation of any arguments that are being
-#'   checked (you may omit arguments that should not be evaluate from
-#'   `vetr`)
-#' @aliases vetr tev
+#' @aliases tev
 #' @export
-#' @seealso [alike()] for how templates are used,
-#'   [vet_token()] for how to specify custom error messages and also
-#'   for predefined validation tokens for common use cases.
-#' @param ... arguments to vetr; they will be matched to the enclosing
-#'   function formals as with [match.call()]
+#' @seealso [vetr()] for a version optimized to vet function arguments,
+#'   [alike()] for how templates are used, [vet_token()] for how to specify
+#'   custom error messages and also for predefined validation tokens for common
+#'   use cases.
 #' @param target a template, a vetting expression, or a compound expression
 #' @param current an object to vet
 #' @param env the environment to match calls and evaluate vetting expressions
@@ -63,12 +61,8 @@
 #'   (default) or not
 #' @param settings a settings list as produced by [vetr_settings()], or NULL to
 #'   use the default settings
-#' @param .VETR_SETTINGS same as `settings`, but for `vetr`.  Note that this
-#'   means you cannot use `vetr` with a function that takes a `.VETR_SETTINGS`
-#'   argument
-#' @return TRUE if validation succeeds, otherwise `stop` for
-#'   `vetr` and varies for `vet` according to value chosen with
-#'   parameter `stop`
+#' @return TRUE if validation succeeds, otherwise varies according to value
+#'   chosen with parameter `stop`
 #' @examples
 #' ## template vetting
 #' vet(numeric(2L), runif(2))
@@ -77,12 +71,11 @@
 #' try(vet(numeric(2L), letters, stop=TRUE))
 #'
 #' ## `tev` just reverses target and current for use with maggrittr
-#'
 #' \dontrun{
-#'   if(require(magrittr)) {
-#'     runif(2) %>% tev(numeric(2L))
-#'     runif(3) %>% tev(numeric(2L))
-#'   }
+#' if(require(magrittr)) {
+#'   runif(2) %>% tev(numeric(2L))
+#'   runif(3) %>% tev(numeric(2L))
+#' }
 #' }
 #' ## Zero length templates are wild cards
 #' vet(numeric(), runif(2))
@@ -90,7 +83,7 @@
 #' vet(numeric(), letters)
 #'
 #' ## This extends to data.frames
-#' iris.tpl <- iris[0,]   # zero row
+#' iris.tpl <- iris[0,]   # zero row matches any # of rows
 #' iris.1 <- iris[1:10,]
 #' iris.2 <- iris[1:10, c(1,2,3,5,4)]  # change col order
 #' vet(iris.tpl, iris.1)
@@ -110,11 +103,14 @@
 #' vet(tpl, val.1)
 #' vet(tpl, val.2)
 #'
-#' ## Vetting expression
+#' ## See `example(alike)` for more template examples
+#'
+#' ## Custom tokens allow you to check values
 #' vet(. > 0, runif(10))
 #' vet(. > 0, -runif(10))
 #'
-#' ## Compound expressions (template(s) + expression(s)):
+#' ## You can combine templates and custom tokens with
+#' ## `&&` and/or `||`
 #' vet(numeric(2L) && . > 0, runif(2))
 #' vet(numeric(2L) && . > 0, runif(10))
 #' vet(numeric(2L) && . > 0, -runif(2))
@@ -126,32 +122,17 @@
 #' vet(INT.1 && . %in% 0:1 || LGL.1, 1)
 #' vet(INT.1 && . %in% 0:1 || LGL.1, NA)
 #'
-#' ## Function parameter vetting
-#' fun1 <- function(x, y) {
-#'   vetr(integer(), LGL.1)
-#'   TRUE   # do some work
-#' }
-#' fun1(1:10, TRUE)
-#' try(fun1(1:10, 1:10))
+#' ## Vetting expressions can be assembled from previously
+#' ## defined tokens
 #'
-#' ## only vet the second argument
-#' fun2 <- function(x, y) {
-#'   vetr(y=LGL.1)
-#'   TRUE   # do some work
-#' }
-#' try(fun2(letters, 1:10))
+#' scalar.num.pos <- quote(numeric(1L) && . > 0)
+#' foo.or.bar <- quote(character(1L) && . %in% c('foo', 'bar'))
+#' vet.exp <- quote(scalar.num.pos || foo.or.bar)
 #'
-#' ## more complex vetting (`tpl`, `val.1`, and `val.2` defined in
-#' ## earlier examples)
-#' fun3 <- function(x, y) {
-#'   vetr(x=tpl, y=tpl && ncol(.[[2]]) == ncol(x[[2]]))
-#'   TRUE   # do some work
-#' }
-#' fun3(val.1, val.1)
-#' try(fun3(val.1, val.2))
-#' val.1.a <- val.1
-#' val.1.a[[2]] <- val.1.a[[2]][, 1:8]
-#' try(fun3(val.1, val.1.a))
+#' vet(vet.exp, 42)
+#' vet(scalar.num.pos || foo.or.bar, 42)  # equivalently
+#' vet(vet.exp, "foo")
+#' vet(vet.exp, "baz")
 
 vet <- function(
   target, current, env=parent.frame(), format="text", stop=FALSE, settings=NULL
@@ -173,8 +154,58 @@ tev <- function(
     sys.call(), env, format, stop, settings
   )
 
-#' @inherit vet
+#' Verify Function Arguments Meet Structural Requirements
+#'
+#' Use vetting expressions to enforce structural requirements for function
+#' arguments.  Works just like [vet()], except that the formals of the
+#' enclosing function automatically matched to the vetting expressions provided
+#' in `...`.
+#'
+#' @inheritSection vet Vetting Expressions
+#'
+#' @note `vetr` will force evaluation of any arguments that are being
+#'   checked (you may omit arguments that should not be evaluate from
+#'   `vetr`)
+#' @seealso [vet()], in particular `example(vet)`.
+#' @param ... vetting expressions, each will be matched to the enclosing
+#'   function formals as with [match.call()] and will be used to validate the
+#'   value of the matching formal.
+#' @param .VETR_SETTINGS a settings list as produced by [vetr_settings()], or
+#'   NULL to use the default settings.  Note that this means you cannot use
+#'   `vetr` with a function that takes a `.VETR_SETTINGS` argument
+#' @return TRUE if validation succeeds, otherwise `stop` with error message
+#'   detailing nature of failure.
 #' @export
+#' @examples
+#' fun1 <- function(x, y) {
+#'   vetr(integer(), LGL.1)
+#'   TRUE   # do some work
+#' }
+#' fun1(1:10, TRUE)
+#' try(fun1(1:10, 1:10))
+#'
+#' ## only vet the second argument
+#' fun2 <- function(x, y) {
+#'   vetr(y=LGL.1)
+#'   TRUE   # do some work
+#' }
+#' try(fun2(letters, 1:10))
+#'
+#' ## Nested templates; note, in packages you should consider
+#' ## defining templates outside of `vet` or `vetr` so that
+#' ## they are computed on load rather that at runtime
+#' tpl <- list(numeric(1L), matrix(integer(), 3))
+#' val.1 <- list(runif(1), rbind(1:10, 1:10, 1:10))
+#' val.2 <- list(runif(1), cbind(1:10, 1:10, 1:10))
+#' fun3 <- function(x, y) {
+#'   vetr(x=tpl, y=tpl && ncol(.[[2]]) == ncol(x[[2]]))
+#'   TRUE   # do some work
+#' }
+#' fun3(val.1, val.1)
+#' try(fun3(val.1, val.2))
+#' val.1.a <- val.1
+#' val.1.a[[2]] <- val.1.a[[2]][, 1:8]
+#' try(fun3(val.1, val.1.a))
 
 vetr <- function(..., .VETR_SETTINGS=NULL)
   .Call(

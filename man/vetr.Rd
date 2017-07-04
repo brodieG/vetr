@@ -2,47 +2,78 @@
 % Please edit documentation in R/validate.R
 \name{vetr}
 \alias{vetr}
-\title{Vet Objects and Function Arguments}
+\title{Verify Function Arguments Meet Structural Requirements}
 \usage{
 vetr(..., .VETR_SETTINGS = NULL)
 }
 \arguments{
-\item{...}{arguments to vetr; they will be matched to the enclosing
-function formals as with \code{\link[=match.call]{match.call()}}}
+\item{...}{vetting expressions, each will be matched to the enclosing
+function formals as with \code{\link[=match.call]{match.call()}} and will be used to validate the
+value of the matching formal.}
 
-\item{.VETR_SETTINGS}{same as \code{settings}, but for \code{vetr}.  Note that this
-means you cannot use \code{vetr} with a function that takes a \code{.VETR_SETTINGS}
-argument}
+\item{.VETR_SETTINGS}{a settings list as produced by \code{\link[=vetr_settings]{vetr_settings()}}, or
+NULL to use the default settings.  Note that this means you cannot use
+\code{vetr} with a function that takes a \code{.VETR_SETTINGS} argument}
 }
 \value{
-TRUE if validation succeeds, otherwise \code{stop} for
-\code{vetr} and varies for \code{vet} according to value chosen with
-parameter \code{stop}
+TRUE if validation succeeds, otherwise \code{stop} with error message
+detailing nature of failure.
 }
 \description{
-Use templates and expressions to vet objects or function arguments.
-\code{vet} vets objects, and \code{vetr} vets the formals of the
-function that encloses it. \code{tev} is a version of \code{vet} compatible with
-\code{magrittr} pipes.
+Use vetting expressions to enforce structural requirements for function
+arguments.  Works just like \code{\link[=vet]{vet()}}, except that the formals of the
+enclosing function automatically matched to the vetting expressions provided
+in \code{...}.
 }
-\details{
-The \code{target} argument for \code{vet}/\code{tev} and the \code{...} arguments for \code{vetr} are
-recursively substituted.  If you wish to programmatically specify a vetting
-expression you can provide it as quoted language.
+\note{
+\code{vetr} will force evaluation of any arguments that are being
+checked (you may omit arguments that should not be evaluate from
+\code{vetr})
+}
+\section{Vetting Expressions}{
 
-\code{tev} just reverses the \code{target} and \code{current} arguments for better
-integration with \code{magrittr}.  There are two major caveats:
-\itemize{
-\item error messages will be less useful since you will get \code{.} instead
-of the deparsed call
-\item \code{x \\\%>\\\% tev(y)} is much slower than \code{vet(y, x)} (or even \code{tev(x, y)})
-}
+
+Vetting expressions can be template tokens, custom tokens, or any
+combination of template and custom tokens combined with \code{&&} and/or \code{||}.
+Template tokens are R objects that define the required structure, much like
+the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Custom tokens are tokens that
+contain the \code{.} symbol and are used to vet values.
 
 See \code{vignette('vetr', package='vetr')} and examples for details on how
-to use these functions.
+to craft vetting expressions.
+}
+
+\examples{
+fun1 <- function(x, y) {
+  vetr(integer(), LGL.1)
+  TRUE   # do some work
+}
+fun1(1:10, TRUE)
+try(fun1(1:10, 1:10))
+
+## only vet the second argument
+fun2 <- function(x, y) {
+  vetr(y=LGL.1)
+  TRUE   # do some work
+}
+try(fun2(letters, 1:10))
+
+## Nested templates; note, in packages you should consider
+## defining templates outside of `vet` or `vetr` so that
+## they are computed on load rather that at runtime
+tpl <- list(numeric(1L), matrix(integer(), 3))
+val.1 <- list(runif(1), rbind(1:10, 1:10, 1:10))
+val.2 <- list(runif(1), cbind(1:10, 1:10, 1:10))
+fun3 <- function(x, y) {
+  vetr(x=tpl, y=tpl && ncol(.[[2]]) == ncol(x[[2]]))
+  TRUE   # do some work
+}
+fun3(val.1, val.1)
+try(fun3(val.1, val.2))
+val.1.a <- val.1
+val.1.a[[2]] <- val.1.a[[2]][, 1:8]
+try(fun3(val.1, val.1.a))
 }
 \seealso{
-\code{\link[=alike]{alike()}} for how templates are used,
-\code{\link[=vet_token]{vet_token()}} for how to specify custom error messages and also
-for predefined validation tokens for common use cases.
+\code{\link[=vet]{vet()}}, in particular \code{example(vet)}.
 }
