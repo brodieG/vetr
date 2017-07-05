@@ -47,7 +47,7 @@ See [vignette][1] for additional details on how the `vetr` function works.
 
 ## Additional Documentation
 
-* [`vetr` vignette][1], `?vetr`, `example(vetr)`
+* [`vetr` vignette][1], `?vet`, `?vetr`, `example(vet)`, `example(vetr)`
 * [`alike` vignette][2], `?alike`, and `example(alike)` for discussion of
   templates
 
@@ -61,8 +61,11 @@ long as every named element in the template exists in the object).
 
 ## Installation
 
-`vetr` will shortly be available on CRAN.  In the meantime, you can get it from
-github:
+```{r, eval=FALSE}
+install.packages('vetr')
+```
+
+Or for the development version:
 
 ```{r, eval=FALSE}
 # install.packages('devtools')
