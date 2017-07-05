@@ -106,8 +106,8 @@ stopifnot_iris(iris.fake)
 ## Error: identical(levels(x$Species), c("setosa", "versicolor", "virginica")) is not TRUE
 ```
 
-`vetr` saved us typing, and time to come up with the things that need to be
-compared.
+`vetr` saved us typing, and the time and though needed to come up with the
+things that need to be compared.
 
 You could just as easily have created templates for nested lists, or data frames
 in lists.  Templates are compared to objects with the `alike`.  For a
@@ -128,7 +128,7 @@ It tells us:
 
 * The reason for the failure
 * What structure would be acceptable instead
-* The location of failure `levels((iris.fake[1:10, ])$Species)[3]`
+* The location of failure `levels(iris.fake$Species)[3]`
 
 `vetr` does what it can to reduce the time from error to resolution.  The
 location of failure is generated such that you can easily copy it in part or
@@ -149,7 +149,7 @@ vet(numeric(1L) || NULL, "foo")
 ## [1] "`\"foo\"` should be \"NULL\", or type \"numeric\" (is \"character\")"
 ```
 
-When you need to check values use `.` to reference the object:
+Templates only check structure.  When you need to check values use `.` to reference the object:
 
 
 ```r
@@ -268,7 +268,7 @@ devtools::install_github('brodieg/vetr@development')
 
 Thank you to:
 
-* R Core for developing and maintaining such a wonderfully language.
+* R Core for developing and maintaining such a wonderful language.
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
   the repository, and Uwe Ligges in particular for maintaining
   [Winbuilder](http://win-builder.r-project.org/).

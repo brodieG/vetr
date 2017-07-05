@@ -84,7 +84,7 @@ devtools::install_github('brodieg/vetr@development')
 
 Thank you to:
 
-* R Core for developing and maintaining such a wonderfully language.
+* R Core for developing and maintaining such a wonderful language.
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
   the repository, and Uwe Ligges in particular for maintaining
   [Winbuilder](http://win-builder.r-project.org/).
