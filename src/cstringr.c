@@ -18,7 +18,11 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 #include "cstringr.h"
 
-/* Estimate how many characters a R_xlen_t number can be represented with*/
+/* Estimate how many characters a R_xlen_t number can be represented with
+ *
+ * Implicitly we're assuming R_XLEN_T_MAX < DOUBLE_MAX, which seems like a
+ * pretty safe assumption.
+ */
 
 size_t CSR_len_chr_len(R_xlen_t a) {
   if(a < 0) {
@@ -27,7 +31,7 @@ size_t CSR_len_chr_len(R_xlen_t a) {
     // nocov end
   }
   // + 1.00001 to account for 0
-  size_t log_len = (size_t) ceil(log10(a + 1.00001));
+  size_t log_len = (size_t) ceil(log10((double) a + 1.00001));
   return log_len;
 }
 /*
@@ -38,7 +42,16 @@ allocates with R_alloc so in theory don't need to worry about freeing memory
 char * CSR_len_as_chr(R_xlen_t a) {
   char * res;
   res = R_alloc(CSR_len_chr_len(a) + 1, sizeof(char));
-  if(!sprintf(res, "%zd", a))    // used to be %td, but doesn't work on windows?
+
+  if(pow((double) 2, 53) < a) {
+    error("Internal Error: can't handle values greater than 2^53");  // nocov
+  }
+  // used to be %td, but doesn't work on windows, then %zd apparently doesn't
+  // work on the mingw compiler (at least without tweaks), so we're trying
+  // doubles which in theory should represent anything we could possibly get
+  // from R_xlen_t
+
+  if(!sprintf(res, "%.0f", (double) a))
     error("Logic Error: r_xlen_to_char conversion failed");  // nocov
   return res;
 }
