@@ -24,7 +24,7 @@ unitizer_sect("bench_mark", {
     txt <- capture.output(x)
     gsub("~ *-?[0-9.]*", "~", txt)
   }
-  capt_wo_time(bench_mark(Sys.sleep(1), times=1))
+  capt_wo_time(bench_mark(Sys.sleep(1.2), times=1))
   capt_wo_time(bench_mark(Sys.sleep(.01), times=10))
   capt_wo_time(bench_mark(1 + 1, NULL, times=100))
 })
