@@ -134,7 +134,7 @@ expression.  So<sup>1</sup>:
 ```{r, eval=FALSE}
 vet(logical(1) || (numeric(1) && (. > 0 & . < 1)), 42)
 # becomes:
-alike(logical(1L), 42) || (alike(numeric(1L)) && all(42 > 0 & 42 < 1))
+alike(logical(1L), 42) || (alike(numeric(1L), 42) && all(42 > 0 & 42 < 1))
 # becomes:
 FALSE || (TRUE && FALSE)
 # becomes:
@@ -151,10 +151,10 @@ vet(logical(1) || (numeric(1) && (. > 0 & . < 1)), 42)
 
 If you need to reference a literal dot (`.`) in a token, you can escape it by
 adding another dot so that `.` becomes `..`.  If you want to reference `...`
-you'll need to use `....`.  If you have a vetting expression that does not
+you'll need to use `....`.  If you have a custom token that does not
 reference the vetting object (i.e. does not use `.`) you can mark it as a
-vetting expression by wrapping it in `.()` (if you want to use a literal
-`.()` you can use `..()`).
+custom token by wrapping it in `.()` (if you want to use a literal `.()` you can
+use `..()`).
 
 If you need `&&` or `||` to be interpreted literally you can wrap the call in
 `I` to tell `vet` to treat the entire call as a single token:
@@ -174,7 +174,7 @@ results.  For example:
 I(logical(1L) && my_special_fun(.))
 ```
 
-will always fail because `logical(1L)` is part of a custom token and evaluated
+will always fail because `logical(1L)` is part of a custom token and is evaluated
 as `FALSE` rather than used a template token for a scalar logical.
 
 ## In Functions

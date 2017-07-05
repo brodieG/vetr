@@ -161,7 +161,7 @@ iris.fake &lt;-<span class="st"> </span>iris
 }
 <span class="kw">stopifnot_iris</span>(iris.fake)</code></pre></div>
 <pre><code>## Error: identical(levels(x$Species), c(&quot;setosa&quot;, &quot;versicolor&quot;, &quot;virginica&quot;)) is not TRUE</code></pre>
-<p><code>vetr</code> saved us typing, and time to come up with the things that need to be compared.</p>
+<p><code>vetr</code> saved us typing, and the time and though needed to come up with the things that need to be compared.</p>
 <p>You could just as easily have created templates for nested lists, or data frames in lists. Templates are compared to objects with the <code>alike</code>. For a thorough description of templates and how they work see the <a href="./alike.html"><code>alike</code> vignette</a>. For template examples see <code>example(alike)</code>.</p>
 </div>
 <div id="auto-generated-error-messages" class="section level3">
@@ -173,7 +173,7 @@ iris.fake &lt;-<span class="st"> </span>iris
 <ul>
 <li>The reason for the failure</li>
 <li>What structure would be acceptable instead</li>
-<li>The location of failure <code>levels((iris.fake[1:10, ])$Species)[3]</code></li>
+<li>The location of failure <code>levels(iris.fake$Species)[3]</code></li>
 </ul>
 <p><code>vetr</code> does what it can to reduce the time from error to resolution. The location of failure is generated such that you can easily copy it in part or full to the R prompt for further examination.</p>
 </div>
@@ -189,7 +189,7 @@ iris.fake &lt;-<span class="st"> </span>iris
 <pre><code>## [1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) ||<span class="st"> </span><span class="ot">NULL</span>, <span class="st">&quot;foo&quot;</span>)</code></pre></div>
 <pre><code>## [1] &quot;`\&quot;foo\&quot;` should be \&quot;NULL\&quot;, or type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
-<p>When you need to check values use <code>.</code> to reference the object:</p>
+<p>Templates only check structure. When you need to check values use <code>.</code> to reference the object:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) &amp;&amp;<span class="st"> </span>. &gt;<span class="st"> </span><span class="dv">0</span>, -<span class="dv">42</span>)  <span class="co"># strictly positive scalar numeric</span></code></pre></div>
 <pre><code>## [1] &quot;`-42 &gt; 0` is not TRUE (FALSE)&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) &amp;&amp;<span class="st"> </span>. &gt;<span class="st"> </span><span class="dv">0</span>, <span class="dv">42</span>)</code></pre></div>
@@ -258,7 +258,7 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <p>Finally, the result of evaluating each token is plugged back into the original expression. So<sup>1</sup>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">logical</span>(<span class="dv">1</span>) ||<span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>(. &gt;<span class="st"> </span><span class="dv">0</span> &amp;<span class="st"> </span>. &lt;<span class="st"> </span><span class="dv">1</span>)), <span class="dv">42</span>)
 <span class="co"># becomes:</span>
-<span class="kw">alike</span>(<span class="kw">logical</span>(1L), <span class="dv">42</span>) ||<span class="st"> </span>(<span class="kw">alike</span>(<span class="kw">numeric</span>(1L)) &amp;&amp;<span class="st"> </span><span class="kw">all</span>(<span class="dv">42</span> &gt;<span class="st"> </span><span class="dv">0</span> &amp;<span class="st"> </span><span class="dv">42</span> &lt;<span class="st"> </span><span class="dv">1</span>))
+<span class="kw">alike</span>(<span class="kw">logical</span>(1L), <span class="dv">42</span>) ||<span class="st"> </span>(<span class="kw">alike</span>(<span class="kw">numeric</span>(1L), <span class="dv">42</span>) &amp;&amp;<span class="st"> </span><span class="kw">all</span>(<span class="dv">42</span> &gt;<span class="st"> </span><span class="dv">0</span> &amp;<span class="st"> </span><span class="dv">42</span> &lt;<span class="st"> </span><span class="dv">1</span>))
 <span class="co"># becomes:</span>
 <span class="ot">FALSE</span> ||<span class="st"> </span>(<span class="ot">TRUE</span> &amp;&amp;<span class="st"> </span><span class="ot">FALSE</span>)
 <span class="co"># becomes:</span>
@@ -272,12 +272,12 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 </div>
 <div id="special-cases" class="section level3">
 <h3>Special Cases</h3>
-<p>If you need to reference a literal dot (<code>.</code>) in a token, you can escape it by adding another dot so that <code>.</code> becomes <code>..</code>. If you want to reference <code>...</code> you’ll need to use <code>....</code>. If you have a vetting expression that does not reference the vetting object (i.e. does not use <code>.</code>) you can mark it as a vetting expression by wrapping it in <code>.()</code> (if you want to use a literal <code>.()</code> you can use <code>..()</code>).</p>
+<p>If you need to reference a literal dot (<code>.</code>) in a token, you can escape it by adding another dot so that <code>.</code> becomes <code>..</code>. If you want to reference <code>...</code> you’ll need to use <code>....</code>. If you have a custom token that does not reference the vetting object (i.e. does not use <code>.</code>) you can mark it as a custom token by wrapping it in <code>.()</code> (if you want to use a literal <code>.()</code> you can use <code>..()</code>).</p>
 <p>If you need <code>&amp;&amp;</code> or <code>||</code> to be interpreted literally you can wrap the call in <code>I</code> to tell <code>vet</code> to treat the entire call as a single token:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">I</span>(<span class="kw">length</span>(a) ==<span class="st"> </span><span class="kw">length</span>(b) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="dv">0</span>:<span class="dv">1</span>)</code></pre></div>
 <p><code>vet</code> will stop searching for tokens at the first call to a function other than <code>(</code>, <code>&amp;&amp;</code>, and <code>||</code>. The use of <code>I</code> here is just an example of this behavior and convenient since <code>I</code> does not change the meaning of the vetting token. An implication of this is you should not nest template tokens inside functions as <code>vet</code> will not identify them as template tokens and you may get unexpected results. For example:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">I</span>(<span class="kw">logical</span>(1L) &amp;&amp;<span class="st"> </span><span class="kw">my_special_fun</span>(.))</code></pre></div>
-<p>will always fail because <code>logical(1L)</code> is part of a custom token and evaluated as <code>FALSE</code> rather than used a template token for a scalar logical.</p>
+<p>will always fail because <code>logical(1L)</code> is part of a custom token and is evaluated as <code>FALSE</code> rather than used a template token for a scalar logical.</p>
 </div>
 </div>
 <div id="in-functions" class="section level2">
@@ -321,9 +321,9 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
   <span class="kw">stopifnot_iris</span>(iris)   <span class="co"># defined in &quot;Templates&quot; section</span>
 )</code></pre></div>
 <pre><code>## Mean eval time from 10000 iterations, in microseconds:
-##   vet(tpl.iris, iris)   ~   10.9
+##   vet(tpl.iris, iris)   ~   10.3
 ##   vetr_iris(iris)       ~   20.4
-##   stopifnot_iris(iris)  ~  107.8</code></pre>
+##   stopifnot_iris(iris)  ~  119.7</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -332,7 +332,7 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
 <pre><code>## Mean eval time from 1000 iterations, in microseconds:
-##   data.frame(a = numeric())  ~  150</code></pre>
+##   data.frame(a = numeric())  ~  145</code></pre>
 <p>In this case the <code>data.frame</code> call alone take over 100us. In your package code you could use:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>())
 

@@ -60,8 +60,8 @@ stopifnot_iris <- function(x) {
 stopifnot_iris(iris.fake)
 ```
 
-`vetr` saved us typing, and time to come up with the things that need to be
-compared.
+`vetr` saved us typing, and the time and though needed to come up with the
+things that need to be compared.
 
 You could just as easily have created templates for nested lists, or data frames
 in lists.  Templates are compared to objects with the `alike`.  For a
@@ -80,7 +80,7 @@ It tells us:
 
 * The reason for the failure
 * What structure would be acceptable instead
-* The location of failure `levels((iris.fake[1:10, ])$Species)[3]`
+* The location of failure `levels(iris.fake$Species)[3]`
 
 `vetr` does what it can to reduce the time from error to resolution.  The
 location of failure is generated such that you can easily copy it in part or

@@ -78,10 +78,10 @@ tpl.iris <- iris[0, ]      # 0 row DF matches any number of rows in object
 iris.fake <- iris
 levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
 
-vet(tpl.iris, iris[1:10, ])
+vet(tpl.iris, iris)
 ## [1] TRUE
-vet(tpl.iris, iris.fake[1:10, ])
-## [1] "`levels((iris.fake[1:10, ])$Species)[3]` should be \"virginica\" (is \"sibirica\")"
+vet(tpl.iris, iris.fake)
+## [1] "`levels(iris.fake$Species)[3]` should be \"virginica\" (is \"sibirica\")"
 ```
 
 From our declared template `iris[0, ]`, `vetr` infers all the required checks.
@@ -89,7 +89,7 @@ In this case, `vet(iris[0, ], iris.fake, stop=TRUE)` is equivalent to:
 
 
 ```r
-vet_stopifnot <- function(x) {
+stopifnot_iris <- function(x) {
   stopifnot(
     is.list(x), inherits(x, "data.frame"),
     length(x) == 5, is.integer(attr(x, 'row.names')),
@@ -102,7 +102,7 @@ vet_stopifnot <- function(x) {
     identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
   )
 }
-vet_stopifnot(iris.fake[1:10, ])
+stopifnot_iris(iris.fake)
 ## Error: identical(levels(x$Species), c("setosa", "versicolor", "virginica")) is not TRUE
 ```
 
@@ -110,7 +110,7 @@ vet_stopifnot(iris.fake[1:10, ])
 compared.
 
 You could just as easily have created templates for nested lists, or data frames
-in lists.  Templates are compared to objects with the `alike` functions.  For a
+in lists.  Templates are compared to objects with the `alike`.  For a
 thorough description of templates and how they work see the [`alike`
 vignette][2].  For template examples see `example(alike)`.
 
@@ -120,8 +120,8 @@ Let's revisit the error message:
 
 
 ```r
-vet(tpl.iris, iris.fake[1:10, ])
-## [1] "`levels((iris.fake[1:10, ])$Species)[3]` should be \"virginica\" (is \"sibirica\")"
+vet(tpl.iris, iris.fake)
+## [1] "`levels(iris.fake$Species)[3]` should be \"virginica\" (is \"sibirica\")"
 ```
 
 It tells us:
@@ -308,3 +308,4 @@ Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 [1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html
 [2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/alike.html
 [3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#non-standard-evaluation
+[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#in-functions

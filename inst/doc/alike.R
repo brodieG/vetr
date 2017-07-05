@@ -128,8 +128,7 @@ df.dummy <- data.frame(x=runif(3), y=runif(3), z=runif(3))
 mdl.tpl <- abstract(lm(y ~ x + z, df.dummy))
 # TRUE, expecting bi-variate model
 alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width + Petal.Width, iris))
-# `cat` here to make error message legible
-cat(alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width, iris)))
+alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width, iris))
 
 ## ------------------------------------------------------------------------
 type_and_len <- function(a, b)

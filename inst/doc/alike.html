@@ -287,7 +287,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h3>Special Attributes</h3>
 <div id="overview-1" class="section level4">
 <h4>Overview</h4>
-<p>The special attributes are <code>names</code>, <code>row.names</code>, <code>dim</code>, <code>dimnames</code>, <code>class</code>, <code>tsp</code>, and <code>levels</code>. These attributes are discussed in sections <a href="http://cran.r-project.org/doc/manuals/r-release/R-lang.html#Attributes">2.2 and 2.3 of the R Language Definition</a>, and have well defined and consistently applied semantics in R. Since the semantics of these attributes are well known, we are able to define “alikeness” for them in a more granular way than we can for arbitrary attributes.</p>
+<p>The special attributes are <code>names</code>, <code>row.names</code>, <code>dim</code>, <code>dimnames</code>, <code>class</code>, <code>tsp</code>, and <code>levels</code>. These attributes are discussed in sections <a href="https://cran.r-project.org/doc/manuals/r-release/R-lang.html#Attributes">2.2 and 2.3 of the R Language Definition</a>, and have well defined and consistently applied semantics in R. Since the semantics of these attributes are well known, we are able to define “alikeness” for them in a more granular way than we can for arbitrary attributes.</p>
 <p>We also consider <code>srcref</code> to be a special attribute. This attribute is not checked.</p>
 </div>
 <div id="row.names-and-names" class="section level4">
@@ -370,7 +370,7 @@ cur2 &lt;-<span class="st"> </span><span class="kw">structure</span>(<span class
 </div>
 <div id="modifying-comparison-behavior" class="section level2">
 <h2>Modifying Comparison Behavior</h2>
-<p><code>.alike</code> is a sister function to <code>alike</code> with some additional options exposed through the <code>settings</code> argument. Among other things, you can modify how attributes and types are compared with the <code>attr.mode</code> and <code>type.mode</code> parameters. See the documentation for those parameters in <code>?alike</code>.</p>
+<p>You can use the <code>settings</code> parameter to <code>alike</code> to modify comparison behavior. See <code>?vetr_settings</code> for details.</p>
 </div>
 <div id="creating-templates" class="section level2">
 <h2>Creating Templates</h2>
@@ -404,9 +404,8 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
 <span class="co"># TRUE, expecting bi-variate model</span>
 <span class="kw">alike</span>(mdl.tpl, <span class="kw">lm</span>(Sepal.Length ~<span class="st"> </span>Sepal.Width +<span class="st"> </span>Petal.Width, iris))</code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># `cat` here to make error message legible</span>
-<span class="kw">cat</span>(<span class="kw">alike</span>(mdl.tpl, <span class="kw">lm</span>(Sepal.Length ~<span class="st"> </span>Sepal.Width, iris)))</code></pre></div>
-<pre><code>## `lm(Sepal.Length ~ Sepal.Width, iris)$terms[[3]]` should be a call to `+` (is &quot;symbol&quot;)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(mdl.tpl, <span class="kw">lm</span>(Sepal.Length ~<span class="st"> </span>Sepal.Width, iris))</code></pre></div>
+<pre><code>## [1] &quot;`lm(Sepal.Length ~ Sepal.Width, iris)$terms[[3]]` should be a call to `+` (is \&quot;symbol\&quot;)&quot;</code></pre>
 <p>The error message is telling us that at index <code>&quot;terms&quot;</code> (i.e. <code>lm(Sepal.Length ~ Sepal.Width, iris)$terms</code>) <code>alike</code> was expecting a call to <code>+</code> instead of a symbol (i.e <code>Sepal.Width + &lt;somevar&gt;</code> instead of <code>Sepal.Width</code>). The message could certainly be more eloquent, but with a little context it should provide enough information to figure out the problem.</p>
 </div>
 </div>
@@ -425,16 +424,16 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
 )</code></pre></div>
 <pre><code>## Mean eval time from 10000 iterations, in microseconds:
 ##   identical(rivers, rivers)     ~  0.6
-##   alike(rivers, rivers)         ~  2.5
-##   type_and_len(rivers, rivers)  ~  1.7</code></pre>
-<p>While <code>alike</code> is slower than <code>identical</code> and the comparable bare bones R function, it is competitive., it is competitive and is actually faster than a bare bones R function that checks types and length. As objects grow more complex, <code>identical</code> will obviously pull ahead, though <code>alike</code> should be sufficiently fast for most applications:</p>
+##   alike(rivers, rivers)         ~  2.3
+##   type_and_len(rivers, rivers)  ~  1.6</code></pre>
+<p>While <code>alike</code> is slower than <code>identical</code> and the comparable bare bones R function, it is competitive with a bare bones R function that checks types and length. As objects grow more complex, <code>identical</code> will obviously pull ahead, though <code>alike</code> should be sufficiently fast for most applications:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(<span class="dt">times=</span><span class="fl">1e4</span>,
   <span class="kw">identical</span>(mtcars, mtcars),
   <span class="kw">alike</span>(mtcars, mtcars)
 )</code></pre></div>
 <pre><code>## Mean eval time from 10000 iterations, in microseconds:
-##   identical(mtcars, mtcars)  ~  0.7
-##   alike(mtcars, mtcars)      ~  5.5</code></pre>
+##   identical(mtcars, mtcars)  ~  0.6
+##   alike(mtcars, mtcars)      ~  6.1</code></pre>
 <p>In the above example, we are comparing the data frames, their attributes, and the 11 columns individually.</p>
 <p>Keep in mind that the complexity of the <code>alike</code> comparison is driven by the complexity of the template, not the object we are checking, so we can always manage the expense of the <code>alike</code> evaluation.</p>
 <p>Comparisons that succeed will be substantially faster than comparisons that fail as the construction of error messages is non-trivial and we have prioritized optimization in the success case.</p>
@@ -449,8 +448,8 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
   <span class="kw">identical</span>(mdl.tpl, mdl.tpl)
 )</code></pre></div>
 <pre><code>## Mean eval time from 1000 iterations, in microseconds:
-##   alike(mdl.tpl, mdl.tpl)      ~   123
-##   all.equal(mdl.tpl, mdl.tpl)  ~  1843
+##   alike(mdl.tpl, mdl.tpl)      ~   116
+##   all.equal(mdl.tpl, mdl.tpl)  ~  1792
 ##   identical(mdl.tpl, mdl.tpl)  ~     2</code></pre>
 <p>Even with template as large as <code>lm</code> results (check <code>str(mdl.tpl)</code>) we can evaluate <code>alike</code> thousands of times before the overhead becomes noticeable.</p>
 </div>
@@ -465,8 +464,8 @@ df.cur &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span cl
   <span class="kw">alike</span>(<span class="kw">data.frame</span>(<span class="kw">integer</span>(), <span class="kw">numeric</span>()), df.cur)
 )</code></pre></div>
 <pre><code>## Mean eval time from 1000 iterations, in microseconds:
-##   alike(df.tpl, df.cur)                            ~    5
-##   alike(data.frame(integer(), numeric()), df.cur)  ~  420</code></pre>
+##   alike(df.tpl, df.cur)                            ~    4
+##   alike(data.frame(integer(), numeric()), df.cur)  ~  375</code></pre>
 <p><code>data.frame</code> is a particularly slow constructor, but in general you are best served by defining your templates (including calls to <code>abstract</code>) outside of your function so they are created on package load rather than every time your function is called.</p>
 </div>
 </div>

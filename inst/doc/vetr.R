@@ -96,7 +96,7 @@ vet(. > 0, 1:3)
 ## ---- eval=FALSE---------------------------------------------------------
 #  vet(logical(1) || (numeric(1) && (. > 0 & . < 1)), 42)
 #  # becomes:
-#  alike(logical(1L), 42) || (alike(numeric(1L)) && all(42 > 0 & 42 < 1))
+#  alike(logical(1L), 42) || (alike(numeric(1L), 42) && all(42 > 0 & 42 < 1))
 #  # becomes:
 #  FALSE || (TRUE && FALSE)
 #  # becomes:

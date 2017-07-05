@@ -424,7 +424,8 @@ If an object contains one of the special attributes, but the attribute value is 
 
 ## Modifying Comparison Behavior
 
-`.alike` is a sister function to `alike` with some additional options exposed through the `settings` argument.  Among other things, you can modify how attributes and types are compared with the `attr.mode` and `type.mode` parameters.  See the documentation for those parameters in `?alike`.
+You can use the `settings` parameter to `alike` to modify comparison behavior.
+See `?vetr_settings` for details.
 
 ## Creating Templates
 
@@ -469,8 +470,7 @@ df.dummy <- data.frame(x=runif(3), y=runif(3), z=runif(3))
 mdl.tpl <- abstract(lm(y ~ x + z, df.dummy))
 # TRUE, expecting bi-variate model
 alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width + Petal.Width, iris))
-# `cat` here to make error message legible
-cat(alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width, iris)))
+alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width, iris))
 ```
 
 The error message is telling us that at index `"terms"` (i.e. `lm(Sepal.Length ~
@@ -498,10 +498,9 @@ bench_mark(times=1e4,
 ```
 
 While `alike` is slower than `identical` and the comparable bare bones R
-function, it is competitive., it is competitive and is actually
-faster than a bare bones R function that checks types and length.  As objects
-grow more complex, `identical` will obviously pull ahead, though `alike` should
-be sufficiently fast for most applications:
+function, it is competitive with a bare bones R function that checks types and
+length.  As objects grow more complex, `identical` will obviously pull ahead,
+though `alike` should be sufficiently fast for most applications:
 
 ```{r}
 bench_mark(times=1e4,
