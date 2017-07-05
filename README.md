@@ -40,11 +40,11 @@ the rest:
 ```r
 tpl <- numeric(1L)
 vet(tpl, 1:3)
-## [1] "`1:3` should be length 1 (is 3)"
+## Error in vet(tpl, 1:3): could not find function "vet"
 vet(tpl, "hello")
-## [1] "`\"hello\"` should be type \"numeric\" (is \"character\")"
+## Error in vet(tpl, "hello"): could not find function "vet"
 vet(tpl, 42)
-## [1] TRUE
+## Error in vet(tpl, 42): could not find function "vet"
 ```
 
 Zero length templates match any length:
@@ -53,9 +53,9 @@ Zero length templates match any length:
 ```r
 tpl <- integer()
 vet(tpl, 1L:3L)
-## [1] TRUE
+## Error in vet(tpl, 1L:3L): could not find function "vet"
 vet(tpl, 1L)
-## [1] TRUE
+## Error in vet(tpl, 1L): could not find function "vet"
 ```
 
 And for convenience short (<= 100 length) integer-like numerics are considered
@@ -65,9 +65,9 @@ integer:
 ```r
 tpl <- integer(1L)
 vet(tpl, 1)       # this is a numeric, not an integer
-## [1] TRUE
+## Error in vet(tpl, 1): could not find function "vet"
 vet(tpl, 1.0001)
-## [1] "`1.0001` should be type \"integer-like\" (is \"double\")"
+## Error in vet(tpl, 1.0001): could not find function "vet"
 ```
 
 `vetr` can compare recursive objects such as lists, or data.frames:
@@ -79,9 +79,9 @@ iris.fake <- iris
 levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
 
 vet(tpl.iris, iris)
-## [1] TRUE
+## Error in vet(tpl.iris, iris): could not find function "vet"
 vet(tpl.iris, iris.fake)
-## [1] "`levels(iris.fake$Species)[3]` should be \"virginica\" (is \"sibirica\")"
+## Error in vet(tpl.iris, iris.fake): could not find function "vet"
 ```
 
 From our declared template `iris[0, ]`, `vetr` infers all the required checks.
@@ -106,7 +106,7 @@ stopifnot_iris(iris.fake)
 ## Error: identical(levels(x$Species), c("setosa", "versicolor", "virginica")) is not TRUE
 ```
 
-`vetr` saved us typing, and the time and though needed to come up with the
+`vetr` saved us typing, and the time and thought needed to come up with the
 things that need to be compared.
 
 You could just as easily have created templates for nested lists, or data frames
@@ -121,7 +121,7 @@ Let's revisit the error message:
 
 ```r
 vet(tpl.iris, iris.fake)
-## [1] "`levels(iris.fake$Species)[3]` should be \"virginica\" (is \"sibirica\")"
+## Error in vet(tpl.iris, iris.fake): could not find function "vet"
 ```
 
 It tells us:
@@ -142,21 +142,22 @@ You can combine templates with `&&` / `||`:
 
 ```r
 vet(numeric(1L) || NULL, NULL)
-## [1] TRUE
+## Error in vet(numeric(1L) || NULL, NULL): could not find function "vet"
 vet(numeric(1L) || NULL, 42)
-## [1] TRUE
+## Error in vet(numeric(1L) || NULL, 42): could not find function "vet"
 vet(numeric(1L) || NULL, "foo")
-## [1] "`\"foo\"` should be \"NULL\", or type \"numeric\" (is \"character\")"
+## Error in vet(numeric(1L) || NULL, "foo"): could not find function "vet"
 ```
 
-Templates only check structure.  When you need to check values use `.` to reference the object:
+Templates only check structure.  When you need to check values use `.` to
+reference the object:
 
 
 ```r
 vet(numeric(1L) && . > 0, -42)  # strictly positive scalar numeric
-## [1] "`-42 > 0` is not TRUE (FALSE)"
+## Error in vet(numeric(1L) && . > 0, -42): could not find function "vet"
 vet(numeric(1L) && . > 0, 42)
-## [1] TRUE
+## Error in vet(numeric(1L) && . > 0, 42): could not find function "vet"
 ```
 
 You can compose vetting expressions as language objects and combine them:
@@ -168,13 +169,11 @@ foo.or.bar <- quote(character(1L) && . %in% c('foo', 'bar'))
 vet.exp <- quote(scalar.num.pos || foo.or.bar)
 
 vet(vet.exp, 42)
-## [1] TRUE
+## Error in vet(vet.exp, 42): could not find function "vet"
 vet(vet.exp, "foo")
-## [1] TRUE
+## Error in vet(vet.exp, "foo"): could not find function "vet"
 vet(vet.exp, "baz")
-## [1] "At least one of these should pass:"                         
-## [2] "  - `\"baz\"` should be type \"numeric\" (is \"character\")"
-## [3] "  - `\"baz\" %in% c(\"foo\", \"bar\")` is not TRUE (FALSE)"
+## Error in vet(vet.exp, "baz"): could not find function "vet"
 ```
 
 There are a number of predefined vetting tokens you can use in your
@@ -183,9 +182,9 @@ vetting expressions:
 
 ```r
 vet(NUM.POS, -runif(5))    # positive numeric
-## [1] "`-runif(5)` should contain only positive values, but has negatives"
+## Error in vet(NUM.POS, -runif(5)): could not find function "vet"
 vet(LGL.1, NA)             # TRUE or FALSE
-## [1] "`NA` should not contain NAs, but does"
+## Error in vet(LGL.1, NA): could not find function "vet"
 ```
 
 See `?vet_token` for a full listing, and for instructions on how to define your
@@ -209,9 +208,9 @@ fun <- function(x, y) {
   TRUE   # do work...
 }
 fun(1:2, "foo")
-## Error in fun(x = 1:2, y = "foo"): For argument `x`, `1:2` should be length 1 (is 2)
+## Error in vetr(numeric(1L), logical(1L)): could not find function "vetr"
 fun(1, "foo")
-## Error in fun(x = 1, y = "foo"): For argument `y`, `"foo"` should be type "logical" (is "character")
+## Error in vetr(numeric(1L), logical(1L)): could not find function "vetr"
 ```
 
 `vetr` automatically matches the vetting expressions to the corresponding

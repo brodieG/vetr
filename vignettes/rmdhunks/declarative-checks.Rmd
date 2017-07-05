@@ -60,7 +60,7 @@ stopifnot_iris <- function(x) {
 stopifnot_iris(iris.fake)
 ```
 
-`vetr` saved us typing, and the time and though needed to come up with the
+`vetr` saved us typing, and the time and thought needed to come up with the
 things that need to be compared.
 
 You could just as easily have created templates for nested lists, or data frames
