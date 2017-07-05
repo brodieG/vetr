@@ -321,9 +321,9 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
   <span class="kw">stopifnot_iris</span>(iris)   <span class="co"># defined in &quot;Templates&quot; section</span>
 )</code></pre></div>
 <pre><code>## Mean eval time from 10000 iterations, in microseconds:
-##   vet(tpl.iris, iris)   ~   10.3
-##   vetr_iris(iris)       ~   20.4
-##   stopifnot_iris(iris)  ~  119.7</code></pre>
+##   vet(tpl.iris, iris)   ~   10.8
+##   vetr_iris(iris)       ~   25.0
+##   stopifnot_iris(iris)  ~  115.1</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -332,7 +332,7 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
 <pre><code>## Mean eval time from 1000 iterations, in microseconds:
-##   data.frame(a = numeric())  ~  145</code></pre>
+##   data.frame(a = numeric())  ~  160</code></pre>
 <p>In this case the <code>data.frame</code> call alone take over 100us. In your package code you could use:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>())
 

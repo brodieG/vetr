@@ -174,8 +174,8 @@ results.  For example:
 I(logical(1L) && my_special_fun(.))
 ```
 
-will always fail because `logical(1L)` is part of a custom token and is evaluated
-as `FALSE` rather than used a template token for a scalar logical.
+will always fail because `logical(1L)` is part of a custom token and is
+evaluated as `FALSE` rather than used a template token for a scalar logical.
 
 ## In Functions
 

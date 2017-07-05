@@ -6,7 +6,8 @@ vet(numeric(1L) || NULL, 42)
 vet(numeric(1L) || NULL, "foo")
 ```
 
-Templates only check structure.  When you need to check values use `.` to reference the object:
+Templates only check structure.  When you need to check values use `.` to
+reference the object:
 
 ```{r}
 vet(numeric(1L) && . > 0, -42)  # strictly positive scalar numeric
