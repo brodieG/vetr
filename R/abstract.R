@@ -133,6 +133,7 @@ abstract.lm <- function(x, ...) {
   x$call <- call(as.character(x$call[[1L]]))
   NextMethod()
 }
+# nocov start
 #' Experimental Abstraction Method for GGPlot
 #'
 #' Not entirely sure this can ever work well since so much of \code{ggplot} is
@@ -147,6 +148,7 @@ abstract.ggplot <- function(x, ...) {
   x$data <- data.frame()
   x
 }
+# nocov end
 #' @rdname abstract
 #' @export
 
