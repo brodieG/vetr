@@ -375,7 +375,9 @@ const char * ALIKEC_pad_or_quote(
     }
   }
   if(width != set.width)
+    // nocov start
     error("Internal Error: mismatched width values; contact maintainer.");
+    // nocov end
 
   if(width < 0) width = asInteger(ALIKEC_getopt("width"));
   if(width <= 0 || width == NA_INTEGER) width = 80;
