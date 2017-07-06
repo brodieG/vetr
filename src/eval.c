@@ -205,7 +205,7 @@ SEXP VALC_evaluate_recurse(
               "\"err.msg\" attribute for validation token for argument `%s` must be a one length character vector."
             );
           }
-          err_call = ALIKEC_pad_or_quote(arg_lang, -1, -1, set);
+          err_call = ALIKEC_pad_or_quote(arg_lang, set.width, -1, set);
 
           // Need to make copy of string, modify it, and turn it back into
           // string
@@ -220,7 +220,7 @@ SEXP VALC_evaluate_recurse(
           // message attribute not defined, must construct error message based
           // on result of evaluation
 
-          err_call = ALIKEC_pad_or_quote(lang, -1, -1, set);
+          err_call = ALIKEC_pad_or_quote(lang, set.width, -1, set);
 
           char * err_str;
           char * err_tok;

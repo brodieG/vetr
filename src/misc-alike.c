@@ -418,6 +418,7 @@ const char * ALIKEC_pad_or_quote(
  */
 SEXP ALIKEC_pad_or_quote_ext(SEXP lang, SEXP width, SEXP syntactic) {
   struct VALC_settings set = VALC_settings_init();
+  set.width = INTEGER(width)[0];
   const char * padded = ALIKEC_pad_or_quote(
     lang, INTEGER(width)[0], INTEGER(syntactic)[0], set
   );
