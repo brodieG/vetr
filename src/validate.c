@@ -299,7 +299,7 @@ SEXP VALC_validate_args(
     // reference other arguments, we can't just assume that the default value is
     // completely reasonable, although.
 
-    SEXP val_tok, fun_tok;
+    SEXP val_tok, fun_tok = R_MissingArg;
     if(arg_tag != frm_tag) {
       if(CAR(fun_form_cpy) != R_MissingArg) {
         arg_tag = frm_tag;

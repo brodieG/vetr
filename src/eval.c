@@ -149,7 +149,8 @@ SEXP VALC_evaluate_recurse(
     }
   } else if(mode == 10 || mode == 999) {
     SEXP eval_res, eval_tmp;
-    int err_val = 0, eval_res_c;
+    int err_val = 0;
+    int eval_res_c = -1000;  // initialize to illegal value
     int * err_point = &err_val;
     eval_tmp = PROTECT(R_tryEval(lang, set.env, err_point));
     if(* err_point) {

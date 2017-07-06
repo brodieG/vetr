@@ -378,7 +378,7 @@ const char * ALIKEC_pad_or_quote(
     error("Internal Error: mismatched width values; contact maintainer.");
 
   if(width < 0) width = asInteger(ALIKEC_getopt("width"));
-  if(width < 0 || width == NA_INTEGER) width = 80;
+  if(width <= 0 || width == NA_INTEGER) width = 80;
   SEXP lang_dep = PROTECT(ALIKEC_deparse_width(lang, width));
 
   // Handle the different deparse scenarios
@@ -388,7 +388,7 @@ const char * ALIKEC_pad_or_quote(
 
   if(XLENGTH(lang_dep) == 1) {
     size_t dep_chr_len = CSR_strmlen(dep_chr, set.nchar_max);
-    if(dep_chr_len <= width - 2) multi_line = 0;
+    if(width > 2 && dep_chr_len <= (size_t) (width - 2)) multi_line = 0;
   }
   const char * call_char, * call_pre = "", * call_post = "";
   if(multi_line) {

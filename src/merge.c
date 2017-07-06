@@ -152,7 +152,7 @@ SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set) {
       R_xlen_t j = 0;      // count how many elements in group
       // this will be the concatented second value in our vectors
 
-      const char * target;
+      const char * target = "";
 
       for(R_xlen_t i=0; i < len; i++) {
 
