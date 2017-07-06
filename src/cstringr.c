@@ -289,12 +289,15 @@ const char * CSR_bullet(
   const char * string, const char * bullet, const char * ctd, size_t max_len
 ) {
   size_t newlines=0;
+  size_t chars=0;
   const char * string_copy = string;
 
   while(*string_copy) {
     if(*string_copy == '\n' && *(string_copy + 1)) ++newlines;
     ++string_copy;
-    if(string_copy - string + 1 > max_len)
+    ++chars;
+
+    if(chars > max_len)
       error("Exceeded `max_len` when trying to bullet `string`");
   }
   size_t ctd_size = CSR_strmlen(ctd, max_len);

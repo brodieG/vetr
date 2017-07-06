@@ -107,8 +107,7 @@ stop recursion since we're not returning the nested error message.
 */
 
 struct ALIKEC_res_sub ALIKEC_alike_attr(
-  SEXP target, SEXP current, SEXP attr_symb,
-  struct VALC_settings set, int attr_attr
+  SEXP target, SEXP current, SEXP attr_symb, struct VALC_settings set
 ) {
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
   struct ALIKEC_res_sub res_sub = ALIKEC_res_sub_def();
@@ -120,17 +119,6 @@ struct ALIKEC_res_sub ALIKEC_alike_attr(
         "be", "`alike` the corresponding element in target", "", ""
       )
     );
-    // if(attr_attr) {
-    //   wrap_call = PROTECT(
-    //     lang3(ALIKEC_SYM_attr, R_NilValue, mkString(attr_name))
-    //   );
-    // } else {
-    //   wrap_call = PROTECT(lang2(R_NilValue, R_NilValue));
-    //   SET_CAR(
-    //     wrap_call,
-    //     special ? install(attr_name) : ALIKEC_SYM_attributes
-    //   );
-    // }
     SEXP wrap = PROTECT(ALIKEC_attr_wrap(attr_symb, R_NilValue));
     SET_VECTOR_ELT(res_sub.message, 1, wrap);
     UNPROTECT(2);
@@ -571,9 +559,9 @@ struct ALIKEC_res_sub ALIKEC_compare_dimnames(
   SEXP prim_names = getAttrib(prim, R_NamesSymbol);
   SEXP sec_names = getAttrib(sec, R_NamesSymbol);
   R_xlen_t prim_len, sec_len;
-  SEXPTYPE prim_type = TYPEOF(prim);
+  SEXPTYPE prim_type = TYPEOF(prim), sec_type = TYPEOF(sec);
   if( // not a standard dimnames attribute
-    prim_type != TYPEOF(sec) || prim_type != VECSXP ||
+    prim_type != sec_type || prim_type != VECSXP ||
     (
       prim_names != R_NilValue &&
       !ALIKEC_are_special_char_attrs_internal(prim_names, sec_names)
@@ -762,10 +750,10 @@ display that can handle floats
 struct ALIKEC_res_sub ALIKEC_compare_ts(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
-  SEXPTYPE tar_type = TYPEOF(target);
+  SEXPTYPE tar_type = TYPEOF(target), cur_type = TYPEOF(current);
   struct ALIKEC_res_sub res = ALIKEC_res_sub_def();
   if(
-    tar_type == REALSXP && TYPEOF(current) == tar_type &&
+    tar_type == REALSXP && cur_type == tar_type &&
     XLENGTH(target) == 3 && XLENGTH(current) == 3
   ) {
     double * tar_real = REAL(target), * cur_real = REAL(current);
