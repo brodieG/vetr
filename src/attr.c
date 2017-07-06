@@ -101,7 +101,11 @@ stop recursion since we're not returning the nested error message.
 - `special` parameter indicates attributes that are known to have accessor
   functions (e.g. `names`).
 
-We removed the `attr_attr` arg when we switched to settings.  Everything seems to still work but it is worth noting that we were manually setting that variable in calls to this fun in this file to either 0 or 1 depending on case, so it is possible that we broke the treatment of some attributes.  Leaving these docs in case we did do that and end up trying to figure out what happened.
+We removed the `attr_attr` arg when we switched to settings.  Everything seems
+to still work but it is worth noting that we were manually setting that variable
+in calls to this fun in this file to either 0 or 1 depending on case, so it is
+possible that we broke the treatment of some attributes.  Leaving these docs in
+case we did do that and end up trying to figure out what happened.
 - `attr_attr` indicates we are checking the attributes of an attribute; NOTE:
   can currently no longer remember how/why this should be used, we used to
   use `attr` when this was TRUE, and `attributes` when not, but that doesn't
