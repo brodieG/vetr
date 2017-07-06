@@ -100,6 +100,8 @@ stop recursion since we're not returning the nested error message.
 
 - `special` parameter indicates attributes that are known to have accessor
   functions (e.g. `names`).
+
+We removed the `attr_attr` arg when we switched to settings.  Everything seems to still work but it is worth noting that we were manually setting that variable in calls to this fun in this file to either 0 or 1 depending on case, so it is possible that we broke the treatment of some attributes.  Leaving these docs in case we did do that and end up trying to figure out what happened.
 - `attr_attr` indicates we are checking the attributes of an attribute; NOTE:
   can currently no longer remember how/why this should be used, we used to
   use `attr` when this was TRUE, and `attributes` when not, but that doesn't
@@ -140,7 +142,7 @@ struct ALIKEC_res_sub ALIKEC_compare_class(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
   if(TYPEOF(current) != STRSXP || TYPEOF(target) != STRSXP)
-    return ALIKEC_alike_attr(target, current, R_ClassSymbol, set, 0);
+    return ALIKEC_alike_attr(target, current, R_ClassSymbol, set);
 
   int tar_class_len, cur_class_len, len_delta, tar_class_i, cur_class_i,
       is_df = 0;
@@ -227,9 +229,8 @@ struct ALIKEC_res_sub ALIKEC_compare_class(
 
   if(res.success) {
     UNPROTECT(1);
-    res = ALIKEC_alike_attr(
-      ATTRIB(target), ATTRIB(current), R_ClassSymbol, set, 1
-    );
+    res = 
+      ALIKEC_alike_attr(ATTRIB(target), ATTRIB(current), R_ClassSymbol, set);
     PROTECT(res.message);
   }
   UNPROTECT(1);
@@ -265,7 +266,7 @@ struct ALIKEC_res_sub ALIKEC_compare_dims(
     (TYPEOF(target) != INTSXP && target != R_NilValue) ||
     (TYPEOF(current) != INTSXP && current != R_NilValue)
   )
-    return ALIKEC_alike_attr(target, current, R_DimSymbol, set, 0);
+    return ALIKEC_alike_attr(target, current, R_DimSymbol, set);
 
   // Dims -> implicit class
 
@@ -383,7 +384,7 @@ struct ALIKEC_res_sub ALIKEC_compare_dims(
       ));
       return res;
   } }
-  return ALIKEC_alike_attr(target, current, R_DimSymbol, set, 1);
+  return ALIKEC_alike_attr(target, current, R_DimSymbol, set);
 }
 SEXP ALIKEC_compare_dim_ext(
   SEXP target, SEXP current, SEXP tar_obj, SEXP cur_obj
@@ -788,7 +789,7 @@ struct ALIKEC_res_sub ALIKEC_compare_ts(
         return res;
     } }
   } else {
-    return ALIKEC_alike_attr(target, current, R_TspSymbol, set, 0);
+    return ALIKEC_alike_attr(target, current, R_TspSymbol, set);
   }
   return res;
 }
@@ -821,7 +822,7 @@ struct ALIKEC_res_sub  ALIKEC_compare_levels(
     UNPROTECT(1);
     return res;
   }
-  return ALIKEC_alike_attr(target, current, R_LevelsSymbol, set, 0);
+  return ALIKEC_alike_attr(target, current, R_LevelsSymbol, set);
 }
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
@@ -917,7 +918,7 @@ struct ALIKEC_res_sub ALIKEC_compare_attributes_internal_simple(
       UNPROTECT(1);
     }
   } else {
-    res = ALIKEC_alike_attr(target, current, attr_sym, set, 0);
+    res = ALIKEC_alike_attr(target, current, attr_sym, set);
     PROTECT(res.message);
   }
   UNPROTECT(1);
