@@ -170,7 +170,6 @@ version that uses default deparse width if console is wide enought, otherwise
 based on console width
 */
 SEXP ALIKEC_deparse_width(SEXP obj, int width) {
-  if(width < 0) width = asInteger(ALIKEC_getopt("width"));
   if(width < 10 || width > 1000) width = 80;
 
   int dep_cutoff;
@@ -375,6 +374,11 @@ const char * ALIKEC_pad_or_quote(
       // nocov end
     }
   }
+  if(width != set.width)
+    error("Internal Error: mismatched width values; contact maintainer.");
+
+  if(width < 0) width = asInteger(ALIKEC_getopt("width"));
+  if(width < 0 || width == NA_INTEGER) width = 80;
   SEXP lang_dep = PROTECT(ALIKEC_deparse_width(lang, width));
 
   // Handle the different deparse scenarios
