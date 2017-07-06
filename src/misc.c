@@ -24,7 +24,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 SEXP VALC_test(SEXP a, SEXP b) {
   error("stop testing function shouldn't be in use");
-
+  a;
+  b;
   UNPROTECT(2);
   return(R_NilValue);
 }
@@ -35,10 +36,12 @@ SEXP VALC_test1(SEXP a) {
 }
 SEXP VALC_test2(SEXP a, SEXP b) {
   // VALC_stop(a, "error!", b);
+  b;
   return(a);
 }
 SEXP VALC_test3(SEXP a, SEXP b) {
   // VALC_stop(a, "error!", b);
+  b;
   return(a);
 }
 // nocov end
