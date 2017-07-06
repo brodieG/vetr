@@ -71,7 +71,7 @@ SEXP ALIKEC_abstract_ts(SEXP x, SEXP attr) {
 
   // Get to last attribute, and make sure tsp is not set
 
-  SEXP attrs = ATTRIB(x_cp), attrs_cpy, attrs_last;
+  SEXP attrs = ATTRIB(x_cp), attrs_cpy, attrs_last = R_NilValue;
   for(attrs_cpy = attrs; attrs_cpy != R_NilValue; attrs_cpy = CDR(attrs_cpy)) {
     attrs_last = attrs_cpy;
     if(TAG(attrs_cpy) == R_TspSymbol) break;
@@ -81,7 +81,11 @@ SEXP ALIKEC_abstract_ts(SEXP x, SEXP attr) {
     error("Internal Error: object already has a `tsp` attribute");
     // nocov end
   }
-
+  if(attrs_last == R_NilValue) {
+    // nocov start
+    error("Internal Error: failed finding last attribute when adding tsp");
+    // nocov end
+  }
   // Illegally append non-kosher tsp attribute
 
   SETCDR(attrs_last, list1(attr));
