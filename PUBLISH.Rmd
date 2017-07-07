@@ -1,0 +1,12 @@
+## Notes for Publication Materials
+
+```
+mx.3.col.num <- matrix(numeric(), ncol=3)
+mx1 <- matrix(1:12, 4)
+mx2 <- matrix(1:12, 3)
+microbenchmark(
+  vet(mx.3.col.num, mx1),
+  stopifnot(is.matrix(mx1), is.numeric(mx1), ncol(mx1) == 3)
+)
+
+```
