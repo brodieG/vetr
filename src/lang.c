@@ -348,7 +348,7 @@ struct ALIKEC_res_lang ALIKEC_lang_alike_rec(
         tar_sub = CDR(tar_sub), cur_sub = CDR(cur_sub), prev_tag = cur_sub_tag,
         arg_num++
       ) {
-        if(arg_num_prev > arg_num) {
+        if(arg_num > R_XLEN_T_MAX - 1) {
           // nocov start
           error(
             "Internal Error: %s; contact maintainer.",

@@ -32,7 +32,7 @@ struct VALC_settings VALC_settings_init() {
     .suppress_warnings = 0,
     .in_attr = 0,
     .env = R_NilValue,
-    .width = 0,
+    .width = -1,
     .env_depth_max = 65535L,
     .symb_sub_depth_max = 65535L,
     .nchar_max = 65535L,

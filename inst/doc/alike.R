@@ -128,21 +128,20 @@ df.dummy <- data.frame(x=runif(3), y=runif(3), z=runif(3))
 mdl.tpl <- abstract(lm(y ~ x + z, df.dummy))
 # TRUE, expecting bi-variate model
 alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width + Petal.Width, iris))
-# `cat` here to make error message legible
-cat(alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width, iris)))
+alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width, iris))
 
 ## ------------------------------------------------------------------------
 type_and_len <- function(a, b)
   typeof(a) == typeof(b) && length(a) == length(b)  # for reference
 
-bench_mark(
+bench_mark(times=1e4,
   identical(rivers, rivers),
   alike(rivers, rivers),
   type_and_len(rivers, rivers)
 )
 
 ## ------------------------------------------------------------------------
-bench_mark(
+bench_mark(times=1e4,
   identical(mtcars, mtcars),
   alike(mtcars, mtcars)
 )

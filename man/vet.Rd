@@ -2,19 +2,15 @@
 % Please edit documentation in R/validate.R
 \name{vet}
 \alias{vet}
-\alias{vetr}
 \alias{tev}
 \alias{tev}
-\alias{vetr}
-\title{Vet Objects and Function Arguments}
+\title{Verify Objects Meet Structural Requirements}
 \usage{
 vet(target, current, env = parent.frame(), format = "text", stop = FALSE,
   settings = NULL)
 
 tev(current, target, env = parent.frame(), format = "text", stop = FALSE,
   settings = NULL)
-
-vetr(..., .VETR_SETTINGS = NULL)
 }
 \arguments{
 \item{target}{a template, a vetting expression, or a compound expression}
@@ -39,30 +35,16 @@ with none of the formatting or surrounding verbiage
 
 \item{settings}{a settings list as produced by \code{\link[=vetr_settings]{vetr_settings()}}, or NULL to
 use the default settings}
-
-\item{...}{arguments to vetr; they will be matched to the enclosing
-function formals as with \code{\link[=match.call]{match.call()}}}
-
-\item{.VETR_SETTINGS}{same as \code{settings}, but for \code{vetr}.  Note that this
-means you cannot use \code{vetr} with a function that takes a \code{.VETR_SETTINGS}
-argument}
 }
 \value{
-TRUE if validation succeeds, otherwise \code{stop} for
-\code{vetr} and varies for \code{vet} according to value chosen with
-parameter \code{stop}
+TRUE if validation succeeds, otherwise varies according to value
+chosen with parameter \code{stop}
 }
 \description{
-Use templates and expressions to vet objects or function arguments.
-\code{vet} vets objects, and \code{vetr} vets the formals of the
-function that encloses it. \code{tev} is a version of \code{vet} compatible with
-\code{magrittr} pipes.
+Use vetting expressions to enforce structural requirements for objects.
+\code{tev} is a version of \code{vet} compatible with \code{magrittr} pipes.
 }
 \details{
-The \code{target} argument for \code{vet}/\code{tev} and the \code{...} arguments for \code{vetr} are
-recursively substituted.  If you wish to programmatically specify a vetting
-expression you can provide it as quoted language.
-
 \code{tev} just reverses the \code{target} and \code{current} arguments for better
 integration with \code{magrittr}.  There are two major caveats:
 \itemize{
@@ -70,15 +52,20 @@ integration with \code{magrittr}.  There are two major caveats:
 of the deparsed call
 \item \code{x \\\%>\\\% tev(y)} is much slower than \code{vet(y, x)} (or even \code{tev(x, y)})
 }
+}
+\section{Vetting Expressions}{
+
+
+Vetting expressions can be template tokens, custom tokens, or any
+combination of template and custom tokens combined with \code{&&} and/or \code{||}.
+Template tokens are R objects that define the required structure, much like
+the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Custom tokens are tokens that
+contain the \code{.} symbol and are used to vet values.
 
 See \code{vignette('vetr', package='vetr')} and examples for details on how
-to use these functions.
+to craft vetting expressions.
 }
-\note{
-\code{vetr} will force evaluation of any arguments that are being
-checked (you may omit arguments that should not be evaluate from
-\code{vetr})
-}
+
 \examples{
 ## template vetting
 vet(numeric(2L), runif(2))
@@ -87,12 +74,11 @@ vet(numeric(2L), letters)
 try(vet(numeric(2L), letters, stop=TRUE))
 
 ## `tev` just reverses target and current for use with maggrittr
-
 \dontrun{
-  if(require(magrittr)) {
-    runif(2) \%>\% tev(numeric(2L))
-    runif(3) \%>\% tev(numeric(2L))
-  }
+if(require(magrittr)) {
+  runif(2) \%>\% tev(numeric(2L))
+  runif(3) \%>\% tev(numeric(2L))
+}
 }
 ## Zero length templates are wild cards
 vet(numeric(), runif(2))
@@ -100,7 +86,7 @@ vet(numeric(), runif(100))
 vet(numeric(), letters)
 
 ## This extends to data.frames
-iris.tpl <- iris[0,]   # zero row
+iris.tpl <- iris[0,]   # zero row matches any # of rows
 iris.1 <- iris[1:10,]
 iris.2 <- iris[1:10, c(1,2,3,5,4)]  # change col order
 vet(iris.tpl, iris.1)
@@ -120,11 +106,14 @@ val.2 <- list(runif(1), cbind(1:10, 1:10, 1:10))
 vet(tpl, val.1)
 vet(tpl, val.2)
 
-## Vetting expression
+## See `example(alike)` for more template examples
+
+## Custom tokens allow you to check values
 vet(. > 0, runif(10))
 vet(. > 0, -runif(10))
 
-## Compound expressions (template(s) + expression(s)):
+## You can combine templates and custom tokens with
+## `&&` and/or `||`
 vet(numeric(2L) && . > 0, runif(2))
 vet(numeric(2L) && . > 0, runif(10))
 vet(numeric(2L) && . > 0, -runif(2))
@@ -136,35 +125,21 @@ vet(INT.1 && . \%in\% 0:1 || LGL.1, TRUE)
 vet(INT.1 && . \%in\% 0:1 || LGL.1, 1)
 vet(INT.1 && . \%in\% 0:1 || LGL.1, NA)
 
-## Function parameter vetting
-fun1 <- function(x, y) {
-  vetr(integer(), LGL.1)
-  TRUE   # do some work
-}
-fun1(1:10, TRUE)
-try(fun1(1:10, 1:10))
+## Vetting expressions can be assembled from previously
+## defined tokens
 
-## only vet the second argument
-fun2 <- function(x, y) {
-  vetr(y=LGL.1)
-  TRUE   # do some work
-}
-try(fun2(letters, 1:10))
+scalar.num.pos <- quote(numeric(1L) && . > 0)
+foo.or.bar <- quote(character(1L) && . \%in\% c('foo', 'bar'))
+vet.exp <- quote(scalar.num.pos || foo.or.bar)
 
-## more complex vetting (`tpl`, `val.1`, and `val.2` defined in
-## earlier examples)
-fun3 <- function(x, y) {
-  vetr(x=tpl, y=tpl && ncol(.[[2]]) == ncol(x[[2]]))
-  TRUE   # do some work
-}
-fun3(val.1, val.1)
-try(fun3(val.1, val.2))
-val.1.a <- val.1
-val.1.a[[2]] <- val.1.a[[2]][, 1:8]
-try(fun3(val.1, val.1.a))
+vet(vet.exp, 42)
+vet(scalar.num.pos || foo.or.bar, 42)  # equivalently
+vet(vet.exp, "foo")
+vet(vet.exp, "baz")
 }
 \seealso{
-\code{\link[=alike]{alike()}} for how templates are used,
-\code{\link[=vet_token]{vet_token()}} for how to specify custom error messages and also
-for predefined validation tokens for common use cases.
+\code{\link[=vetr]{vetr()}} for a version optimized to vet function arguments,
+\code{\link[=alike]{alike()}} for how templates are used, \code{\link[=vet_token]{vet_token()}} for how to specify
+custom error messages and also for predefined validation tokens for common
+use cases.
 }

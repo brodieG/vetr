@@ -3,6 +3,7 @@ knitr::opts_chunk$set(error=TRUE)
 library(vetr)
 
 ## ------------------------------------------------------------------------
+library(vetr)
 tpl <- numeric(1L)
 vet(tpl, 1:3)
 vet(tpl, "hello")
@@ -96,7 +97,7 @@ vet(. > 0, 1:3)
 ## ---- eval=FALSE---------------------------------------------------------
 #  vet(logical(1) || (numeric(1) && (. > 0 & . < 1)), 42)
 #  # becomes:
-#  alike(logical(1L), 42) || (alike(numeric(1L)) && all(42 > 0 & 42 < 1))
+#  alike(logical(1L), 42) || (alike(numeric(1L), 42) && all(42 > 0 & 42 < 1))
 #  # becomes:
 #  FALSE || (TRUE && FALSE)
 #  # becomes:
@@ -135,7 +136,7 @@ fun(matrix(1:12, 4), TRUE, "bar")
 ## ------------------------------------------------------------------------
 vetr_iris <- function(x) vetr(tpl.iris)
 
-bench_mark(
+bench_mark(times=1e4,
   vet(tpl.iris, iris),
   vetr_iris(iris),
   stopifnot_iris(iris)   # defined in "Templates" section

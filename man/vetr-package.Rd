@@ -3,9 +3,8 @@
 \docType{package}
 \name{vetr-package}
 \alias{vetr-package}
-\title{vetr - Trust, but Verify}
+\title{Trust, but Verify}
 \description{
-A template based vetting mechanism for your function inputs that simplifies
-argument checking for both complex and simple values while providing
-informative messages to your users.
+Declarative template-based framework for verifying that objects meet
+structural requirements, and auto-composing error messages when they do not.
 }

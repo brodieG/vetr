@@ -429,7 +429,7 @@ unitizer_sect("Merge messages", {
   vetr:::msg_merge(msgs[1:3])  # no merging required here
   vetr:::msg_merge(msgs[1])    # no merging required here
 
-  vetr:::msg_merge_ext(msgs)
+  vetr:::msg_merge_2(msgs)
 })
 unitizer_sect("Hash", {
   keys <- vapply(

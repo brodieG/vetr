@@ -52,14 +52,13 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
 
   // Translate specials and builtins to formals, if possible
 
+  args = PROTECT(list2(ALIKEC_SYM_args, R_NilValue));
   if(
     tar_type == SPECIALSXP || tar_type == BUILTINSXP ||
     cur_type == SPECIALSXP || cur_type == BUILTINSXP
   ) {
-    args = PROTECT(list2(ALIKEC_SYM_args, R_NilValue));
     SET_TYPEOF(args, LANGSXP);
-  } else PROTECT(R_NilValue);
-
+  }
   if(tar_type == SPECIALSXP || tar_type == BUILTINSXP) {
     SETCADR(args, target);
     target = PROTECT(eval(args, R_BaseEnv));

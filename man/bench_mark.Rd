@@ -2,7 +2,7 @@
 % Please edit documentation in R/benchmark.R
 \name{bench_mark}
 \alias{bench_mark}
-\title{Lightweight benchmarking function}
+\title{Lightweight Benchmarking Function}
 \usage{
 bench_mark(..., times = 1000L)
 }
@@ -13,6 +13,7 @@ bench_mark(..., times = 1000L)
 }
 \value{
 NULL, invisibly, reports timings as a side effect as screen output
+bench_mark(runif(1000), Sys.sleep(0.1))
 }
 \description{
 Evaluates provided expression in a loop and reports mean evaluation time.
@@ -21,5 +22,11 @@ ways except that it has zero dependencies or suggests which helps with
 package build and test times.  Used in vignettes.
 }
 \details{
-Runs \code{\link[=gc]{gc()}} before first evaluation.
+Runs \code{\link[=gc]{gc()}} before each expression is evaluated.  Expressions are evaluated
+in the order provided.  Attempts to estimate the overhead of the loop by
+running a loop that evaluates \code{NULL} the \code{times} times.
+
+Unfortunately because this computes the average of all iterations it is very
+susceptible to outliers in small sample runs, particularly with fast running
+code.  For that reason the default number of iterations is one thousand.
 }

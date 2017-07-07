@@ -38,10 +38,24 @@
 #'
 #' S4 and RC objects are returned unchanged.
 #'
+#' @section Time Series:
+#'
+#' \code{\link{alike}} will treat time series parameter components with zero in
+#' them as wildcards.  This function allows you to create these wild card time
+#' series attributes since R does not allow direct creation/modification of
+#' \code{ts} attributes with zero values.
+#'
+#' Make sure you do not try to use the templates you create with this for
+#' anything other than as \code{\link{alike}} templates since the result is
+#' likely undefined given R expects non zero values for the \code{ts}
+#' attribute and attempts to prevent such attributes.
+#'
 #' @export
-#' @seealso \code{\link{abstract.ts}}
 #' @param x the object to abstract
 #' @param ... arguments for methods that require further arguments
+#' @param what, for time series which portion of the \code{ts} attribute to
+#'   abstract, by default all three are abstracted, but you can select, any one,
+#'   two, or all
 #' @return abstracted object
 #' @examples
 #' iris.tpl <- abstract(iris)
@@ -115,9 +129,11 @@ abstract.lm <- function(x, ...) {
   names(attr(attr(x$model, "terms"), "dataClasses")) <- NULL
   attr(attr(x$model, "terms"), ".Environment") <- emptyenv()
   attr(x$terms, ".Environment") <- emptyenv()
-  x$call <- call(as.character(x$call[[1L]]))  # zero length call should match any call
+  # zero length call should match any call
+  x$call <- call(as.character(x$call[[1L]]))
   NextMethod()
 }
+# nocov start
 #' Experimental Abstraction Method for GGPlot
 #'
 #' Not entirely sure this can ever work well since so much of \code{ggplot} is
@@ -132,28 +148,13 @@ abstract.ggplot <- function(x, ...) {
   x$data <- data.frame()
   x
 }
+# nocov end
 #' @rdname abstract
 #' @export
 
 abstract.environment <- function(x, ...) x
 
-#' Abstract Time Series
-#'
-#' \code{\link{alike}} will treat time series parameter components with zero in
-#' them as wildcards.  This function allows you to create these wild card time
-#' series attributes since R does not allow direct creation/modification of
-#' \code{ts} attributes with zero values.
-#'
-#' Make sure you do not try to use the templates you create with this for
-#' anything other than as \code{\link{alike}} templates since the result is
-#' likely undefined given R expects non zero values for the \code{ts}
-#' attribute and attempts to prevent such attributes.
-#'
-#' @seealso \code{\link{abstract}}
-#' @inheritParams abstract
-#' @param what which portion of the \code{ts} attribute to abstract, by default
-#'   all three are abstracted, but you can select, any one, two, or all
-#' @return a \code{ts} object with the \code{ts} parameter modified
+#' @rdname abstract
 #' @export
 
 abstract.ts <- function(x, what=c("start", "end", "frequency"), ...) {
@@ -174,11 +175,11 @@ abstract.ts <- function(x, what=c("start", "end", "frequency"), ...) {
   tsp[match(unique(what), what.valid)] <- 0
   .Call(VALC_abstract_ts, x, tsp)
 }
-#' NULLs value in an object without removing slot from object
+#' Set Element to NULL Without Removing It
 #'
-#' This function is required because there is no straightforward way to over-write
-#' a value in a list with NULL without completely removing the entry from the
-#' list as well.
+#' This function is required because there is no straightforward way to
+#' over-write a value in a list with NULL without completely removing the entry
+#' from the list as well.
 #'
 #' This returns a copy of the object modified with null slots; it does
 #' not modify the input argument.
@@ -215,15 +216,25 @@ nullify.default <- function (obj, index) {
   if(!is.list(obj)) {
     not.list <- TRUE
     class <- class(obj)
-    if(inherits(try(obj <- as.list(obj), silent=TRUE), "try-error")) stop("Could not coerce `obj` to list")
+    if(inherits(try(obj <- as.list(obj), silent=TRUE), "try-error"))
+      stop("Could not coerce `obj` to list")
   }
-  if(!is.character(index) && !(is.numeric(index) && all(index >= 1L)) && !is.logical(index)) {
-    stop("Argument `index` must be a valid subsetting index and if numeric must be greater than or equal to one.")
+  if(
+    !is.character(index) &&
+    !(is.numeric(index) && all(index >= 1L)) && !is.logical(index)
+  ) {
+    stop(
+      "Argument `index` must be a valid subsetting index and if numeric must ",
+      "be greater than or equal to one."
+    )
   }
   seq.along <- seq_along(obj)
   if(is.numeric(index)) {
     if(min(index) < min(seq.along) || max(index) > max(seq.along)) {
-      stop("Argument `index` can only contain values that exist within seq_along(`obj`).")
+      stop(
+        "Argument `index` can only contain values that exist within ",
+        "seq_along(`obj`)."
+      )
     }
     vec.subset <- seq.along %in% index
   } else if(is.logical(index)) {
@@ -246,7 +257,14 @@ nullify.default <- function (obj, index) {
   }
   res <- ifelse(vec.subset, lapply(seq.along, function(x) NULL), obj)
   if(not.list) {  # try to reconvert object
-    if(inherits(try(res.conv <- eval(call(paste0("as.", class[[1L]]), res)), silent=TRUE), "try-error")) {
+    if(
+      inherits(
+        try(
+          res.conv <- eval(call(paste0("as.", class[[1L]]), res)), silent=TRUE
+        ),
+        "try-error"
+      )
+    ) {
       warning("Unable to convert object back to class \"", class[[1L]],"\"")
     } else {
       res <- res.conv

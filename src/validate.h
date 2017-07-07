@@ -47,9 +47,6 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   );
   SEXP VALC_remove_parens(SEXP lang);
   SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name);
-  SEXP VALC_test(SEXP a, SEXP b);
-  SEXP VALC_test1(SEXP a);
-  SEXP VALC_test2(SEXP a, SEXP b);
   void VALC_stop(SEXP call, const char * msg);
   void VALC_stop2(SEXP call, const char * msg, SEXP rho);
   SEXP VALC_all_ext(SEXP vec);
