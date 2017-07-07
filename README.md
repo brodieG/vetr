@@ -38,6 +38,7 @@ the rest:
 
 
 ```r
+library(vetr)
 tpl <- numeric(1L)
 vet(tpl, 1:3)
 ## [1] "`1:3` should be length 1 (is 3)"
@@ -254,7 +255,7 @@ devtools::install_github('brodieg/vetr@development')
 <ul>
   <li><a href='https://github.com/egnha/valaddin'>valaddin</a> by Eugene Ha (see
   <a
-  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#valaddin'>vignette</a>
+  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#valaddin'>vignette</a>
   for a more detailed comparison) has very similar objectives to `vetr`
 
   <li><a href='https://github.com/smbache/ensurer'>ensurer</a> by Stefan M Bache
@@ -310,7 +311,7 @@ Thank you to:
 
 Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 
-[1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html
-[2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/alike.html
-[3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#non-standard-evaluation
-[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#in-functions
+[1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html
+[2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/alike.html
+[3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#non-standard-evaluation
+[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#in-functions

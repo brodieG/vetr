@@ -6,6 +6,7 @@ Declare a template that an object should conform to, and let `vetr` take care of
 the rest:
 
 ```{r}
+library(vetr)
 tpl <- numeric(1L)
 vet(tpl, 1:3)
 vet(tpl, "hello")

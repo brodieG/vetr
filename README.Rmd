@@ -6,6 +6,7 @@ knitr::opts_chunk$set(
   comment = "##",
   fig.path = "README-"
 )
+library(vetr)
 ```
 
 # vetr - Trust, but Verify
@@ -77,7 +78,7 @@ devtools::install_github('brodieg/vetr@development')
 <ul>
   <li><a href='https://github.com/egnha/valaddin'>valaddin</a> by Eugene Ha (see
   <a
-  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#valaddin'>vignette</a>
+  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#valaddin'>vignette</a>
   for a more detailed comparison) has very similar objectives to `vetr`
 ```{r child='vignettes/rmdhunks/related-packages.Rmd'}
 ```
@@ -124,7 +125,7 @@ Thank you to:
 
 Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 
-[1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html
-[2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/alike.html
-[3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#non-standard-evaluation
-[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#in-functions
+[1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html
+[2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/alike.html
+[3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#non-standard-evaluation
+[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#in-functions

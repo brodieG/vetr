@@ -3,6 +3,7 @@ knitr::opts_chunk$set(error=TRUE)
 library(vetr)
 
 ## ------------------------------------------------------------------------
+library(vetr)
 tpl <- numeric(1L)
 vet(tpl, 1:3)
 vet(tpl, "hello")
