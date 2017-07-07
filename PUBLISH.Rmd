@@ -1,12 +1,28 @@
 ## Notes for Publication Materials
 
 ```
+## Fast, comparable to `stopifnot` for simple checks
+## faster for complex ones
+
 mx.3.col.num <- matrix(numeric(), ncol=3)
 mx1 <- matrix(1:12, 4)
 mx2 <- matrix(1:12, 3)
+
 microbenchmark(
   vet(mx.3.col.num, mx1),
   stopifnot(is.matrix(mx1), is.numeric(mx1), ncol(mx1) == 3)
 )
 
+x <- iris
+microbenchmark(
+    is.list(x), inherits(x, "data.frame"),
+    length(x) == 5, is.integer(attr(x, 'row.names')),
+    identical(
+      names(x),
+      c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+    ),
+    all(vapply(x[1:4], is.numeric, logical(1L))),
+    typeof(x$Species) == "integer", is.factor(x$Species),
+    identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
+  )
 ```
