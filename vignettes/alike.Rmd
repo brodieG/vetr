@@ -1,0 +1,571 @@
+---
+title: "alike"
+author: "Brodie Gaslam"
+output:
+    rmarkdown::html_vignette:
+        toc: true
+        css: styles.css
+
+vignette: >
+  %\VignetteIndexEntry{alike}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r global_options, echo=FALSE}
+knitr::opts_chunk$set(error=TRUE)
+library(vetr)
+```
+
+## What is Alikeness?
+
+`alike` is similar to `all.equal` from base R except it only compares object
+structure.  As with `all.equal`, the first argument (`target`) must be matched
+by the second (`current`).
+
+```{r}
+library(vetr)
+alike(integer(5), 1:5)      # different values, but same structure
+alike(integer(5), 1:4)      # wrong size
+alike(integer(26), letters) # same size, but different types
+```
+
+`alike` only compares structural elements that are defined in `target` (a.k.a.
+the template).  This allows "wildcard" templates.  For example, we consider
+length zero vectors to have undefined length so those match vectors of any
+length:
+
+```{r}
+alike(integer(), 1:5)
+alike(integer(), 1:4)
+alike(integer(), letters)  # type is still defined and must match
+```
+
+Similarly, if a template does not specify an attribute, objects with any value
+for that attribute will match:
+
+```{r}
+alike(list(), data.frame())  # a data frame is a list with a attributes
+alike(data.frame(), list())  # but a list does not have the data.frame attributes
+```
+
+As an extension to the wildcard concept, we interpret partially specified [core
+R attributes](#Special Attributes).  Here we allow any three column integer
+matrix to match:
+
+```{r}
+mx.tpl <- matrix(integer(), ncol=3)          # partially specified matrix
+alike(mx.tpl, matrix(sample(1:12), nrow=4))  # any number of rows match
+alike(mx.tpl, matrix(sample(1:12), nrow=3))  # but column count must match
+```
+
+or a data frame of arbitrary number of rows, but same column structure as `iris`:
+
+```{r}
+iris.tpl <- iris[0, ]                        # no rows, but structure is defined
+alike(iris.tpl, iris[1:10, ])                # any number of rows match
+alike(iris.tpl, CO2)                         # but column structure must match
+```
+
+"alikeness" is complex to describe, but should be intuitive to grasp. We
+recommend you look `example(alike)` to get a sense of "alikeness".  If you want
+to understand the specifics, read on.
+
+## Declarative Comparison
+
+`alike`'s template based comparison is declarative.  You declare what structure
+an object is expected to implement, and `vetr` infers all the computations
+required to verify that is so.  This makes is particularly well suited for
+enforcing structural requirements for S3 objects.  The S4 system does this and
+more, but S3 objects are still used extensively in R code, and sometimes S4
+classes are not appropriate.
+
+There are several advantages to template based comparisons:
+
+* Often times it is simpler to define a template than to write out all the
+  checks to confirm an object conforms to a particular structure.
+* We can generate the template from a known correct instance of an object and
+  [abstract away](#Abstracting-Existing-Objects) the elements that are not
+  specific to the prototype (this is particularly valuable for otherwise complex
+  objects).
+* We can produce plainish-english interpretations of structural mismatches since
+  we are dealing with a known limited set of comparisons.
+
+## Object Comparison
+
+### Overview
+
+`alike` compares objects on [type](#type-comparison),
+[length](length-comparison), and attributes. Recursive structures are compared
+element by element.  [Language objects](#language-objects) and
+[functions](#functions) are compared specially because the concept of a value
+within those is more complex (e.g., is the `+` in `x + y` just a value?).
+
+We will defer discussion of attribute comparison to the [attributes
+section](#attribute-comparison).
+
+### Length Comparison
+
+Objects must be the same length to be `alike`, unless the template (`target`) is
+zero length, in which case the object may be any length.
+[Environments](#environments) are an exception: we only require that all the
+elements present in `target` be present in `current`.  Also, note that calls to
+`(` are ignored in [language objects](#language-objects), which may affect
+length computation.
+
+### Type Comparison
+
+Type comparison is done on type (i.e. the `typeof`) with some adjustments to
+better align comparisons to "percieved" types as opposed to internal storage
+types.
+
+#### Numerics and Integers
+
+We allow integer vectors to be considered numeric, and [short](#fuzzylen)
+integer-like numerics to be treated as integers:
+
+```{r}
+alike(1L, 1)     # `1` is not technically integer, but we treat it as such
+alike(1L, 1.1)   # 1.1 is not integer-like
+alike(1.1, 1L)   # integers can match numerics
+```
+
+This feature is designed to simplify checks for integer-like numbers.  The
+following two expressions are roughly equivalent:
+
+```{r, eval=FALSE}
+stopifnot(length(x) == 1L && (is.integer(x) || is.numeric(x) && floor(x) == x))
+stopifnot(alike(integer(1L), x))
+```
+
+<a name="fuzzylen"></a>Note that we only check numerics of length <= 100 for
+integerness to avoid full scans on large vectors.  We  expect that the primary
+source of these integer-like numerics is hand input vectors (e.g. `c(1, 2, 3)`),
+so hopefully this compromise is not too limiting.  You can modify the threshold
+length for this treatment via the `fuzzy.int.max.len` parameter to the
+`settings` objects (see `?vetr_settings`).
+
+#### Functions
+
+Closures, builtins, and specials are all treated as a single type, even though
+internally they are stored as different types.
+
+### Recursive Objects
+
+`alike` will recurse through lists (and by extension data frames), pairlists,
+expressions, and environments and will check pairwise alikeness between the
+corresponding elements of the `target` and `current` objects.
+
+<a name="environments"></a>Environments have slightly different comparison rules
+in two respects:
+
+* only the elements present in the template are checked, so `current` may have
+  additional items
+* if the template is the global environment, then `current` must be too (this is
+  because the global environment is often littered with many objects, and
+  explicitly comparing it to another environment could be computationally
+  expensive)
+
+`NULL` elements within templates in recursive objects are considered undefined
+and as such act like wildcards:
+
+```{r}
+## two NULLs match two length list
+alike(list(NULL, NULL), list(1:10, letters))
+## but not three length list
+alike(list(NULL, NULL), list(1:10, letters, iris))
+```
+
+Note that top level `NULL`s do not act as wildcards:
+
+```{r}
+alike(NULL, 1:10)                   # NULL only matches NULL
+```
+
+Treating `NULL` inconsistently depending on whether it is nested or not is a
+compromise designed to make `alike` a better fit for argument validation because
+arguments that are `NULL` by default are fairly common.
+
+`alike` will check for self-referential loops in nested environments and prevent
+infinite recursion.  If you somehow introduce a self-referential structure in a
+template without using environments then `alike` will get stuck in an infinite
+recursion loop.
+
+We are currently considering adding new comparison modes for lists that would
+allow for checks more similar to environments (see
+[#29](https://github.com/brodieG/vetr/issues/29)).
+
+### Language Objects, Formulas, and Functions
+
+Alikeness for these types of objects is a little harder to define.  We have
+settled on somewhat arbitrary semantics, though hopefully they are intuitive.
+These may change in the future as we gain experience using `alike` with these
+types of objects.  This is particularly true of functions.
+
+Language objects are also compared recursively, but alikeness has a slightly
+different meaning for them:
+
+#### Language Objects
+
+```{r}
+alike(quote(sum(a, b)), quote(sum(x, y)))   # calls are consistent
+alike(quote(sum(a, b)), quote(sum(x, x)))   # calls are inconsistent
+alike(quote(mean(a, b)), quote(sum(x, y)))  # functions are different
+```
+
+Since variables can contain anything we do not require them to match directly
+across calls.  In the examples above the second call fails because the template
+defines different variables for each argument, but the `current` object uses the
+same variable twice.  The third call fails because the functions are different
+and as such the calls are fundamentally different.
+
+If a function is defined in the calling frame, `alike` will `match.call` it
+prior to testing alikeness:
+
+```{r}
+fun <- function(a, b, c) NULL
+alike(quote(fun(p, q, p)), quote(fun(y, x, x)))
+# `match.call` re-orders arguments
+alike(quote(fun(p, q, p)), quote(fun(b=y, x, x)))
+```
+
+Constants match any constants, but keep in mind that expressions like `1:10` or
+`c(1, 2, 3)` are calls to `:` and `c` respectively, not constants in the context
+of language objects.
+
+`NULL` is a wild card in calls as well:
+
+```{r}
+str(one.arg.tpl <- as.call(list(NULL, NULL)))
+alike(one.arg.tpl, quote(log(10)))
+alike(one.arg.tpl, quote(sd(runif(20))))
+alike(one.arg.tpl, quote(log(10, 10)))
+```
+
+Calls to `(` are ignored when comparing calls since parentheses are redundant in
+call trees because the tree structure encodes operation precedence independent
+of operator precedence.
+
+We concede that the rules for "alikeness" of language objects are arbitrary, but
+hope the outcomes of those rules is generally intuitive.  Unfortunately value
+and structure are somewhat intertwined for language objects so we must impose
+our own view of what is value and what is structure.
+
+#### Formulas
+
+Formulas are treated like calls, except that constants must match:
+
+```{r}
+alike(y ~ x ^ 2, a ~ b ^ 2)
+alike(y ~ x ^ 2, a ~ b ^ 3)
+```
+
+#### Functions
+
+Functions are `alike` if the signature of the `current` function can reasonably
+be interpreted as a valid method for the `target` function.
+
+```{r}
+alike(print, print.default)   # print can be the generic for print.default
+alike(print.default, print)   # but not vice versa
+```
+
+A method of a generic must have all arguments present in the generic, with the
+same default values if those are defined.  If the generic contains `...` then
+the method may have additional arguments, but must also contain `...`.
+
+Potential changes / improvements for function comparison are being considered in
+[#35](https://github.com/brodieG/vetr/issues/35).
+
+### S4 and R5 (RC Objects)
+
+S4 and RC objects are considered alike if `current` inherits from
+`class(target)`.  Since these objects embed structural information in their
+definitions `alike` relies on class alone to establish alikeness.
+
+### Pointer Objects
+
+Objects of the following types are actually references to specific memory
+locations:
+
+* External Pointers
+* Weak References
+* Byte codes
+
+These are typically attached as attributes to other objects that contain the
+information required to establish alikeness (e.g. `data.table`, byte-compiled
+functions), so we only check their type.
+
+## Attribute Comparison
+
+### Normal Attributes
+
+Much of the structure of an object is determined by attributes.  `alike`
+recursively compares object attributes and requires them to be `alike`, unless
+the attribute is a [special attribute](#special-attributes) or an environment.
+Environments within attributes in the template must be matched by an
+environment, but nothing is checked about the environments to avoid expensive
+computations on objects that commonly include environments in their attributes
+(e.g. formulas); note this is different than the treatment of environments as
+actual objects.
+
+Only attributes present in the template object are checked:
+
+```{r}
+alike(structure(logical(1L), a=integer(3L)), structure(TRUE, a=1:3, b=letters))
+alike(structure(TRUE, a=1:3, b=letters), structure(logical(1L), a=integer(3L)))
+```
+
+Attributes present in `current` but missing in `target` may be anything at all.
+
+### Special Attributes
+
+#### Overview
+
+The special attributes are `names`, `row.names`, `dim`, `dimnames`, `class`,
+`tsp`, and `levels`.  These attributes are discussed in sections [2.2 and 2.3 of
+the R Language
+Definition](https://cran.r-project.org/doc/manuals/r-release/R-lang.html#Attributes),
+and have well defined and consistently applied semantics in R.  Since the
+semantics of these attributes are well known, we are able to define "alikeness"
+for them in a more granular way than we can for arbitrary attributes.
+
+We also consider `srcref` to be a special attribute.  This attribute is not
+checked.
+
+#### row.names and names
+
+If present in `target`, then must be matched exactly by the corresponding
+attribute in `current`, except that:
+
+* zero length `target` `names`/`row.names` (i.e. `character(0L)`) will match any
+  character `names`/`row.names`
+* a zero character _element_ (i.e. `""`) in a `target` `names`/`row.names`
+  character vector will allow any value to match at the corresponding position
+  of the `current` `names`/`row.names` vector
+
+```{r}
+alike(setNames(integer(), character()), 1:3)
+alike(setNames(integer(), character()), c(a=1, b=2, c=3))
+alike(setNames(integer(3), c("", "", "Z")), c(a=1, b=2, c=3))
+alike(setNames(integer(3), c("", "", "Z")), c(a=1, b=2, Z=3))
+```
+
+#### dim
+
+`dim` attributes must be identical between `target` and `current`, except that
+if a value of the `dim` _vector_ is zero in `target` then the corresponding
+value in `current` can be any value.  This is how comparisons like the following
+succeed:
+
+```{r}
+mx.tpl <- matrix(integer(), ncol=3)                # partially specified matrix
+alike(mx.tpl, matrix(sample(1:12), nrow=4))
+alike(mx.tpl, matrix(sample(1:12), nrow=3))        # wrong number of columns
+str(mx.tpl)    # notice 0 for 1st dimension
+```
+
+#### dimnames
+
+Must also be identical, except that if the `target` value of the `dimnames` list
+for a particular dimension is `NULL`, then the corresponding `dimnames` value in
+`current` may be anything.  As with `names`, zero character `dimname` element
+elements match any name.
+
+```{r}
+mx.tpl <- matrix(integer(), ncol=3, dimnames=list(row.id=NULL, c("R", "G", "")))
+mx.cur <- matrix(sample(0:255, 12), ncol=3, dimnames=list(row.id=1:4, rgb=c("R", "G", "Blue")))
+mx.cur2 <- matrix(sample(0:255, 12), ncol=3, dimnames=list(1:4, c("R", "G", "b")))
+
+alike(mx.tpl, mx.cur)
+alike(mx.tpl, mx.cur2)
+```
+
+Note that `dimnames` can have a `names` attribute.  This `names` attributed is treated as described in [row.names and names](#row.names-and-names).
+
+```{r}
+names(dimnames(mx.tpl))
+```
+
+#### class
+
+S3 objects are considered alike if the `current` class inherits from the `target` class.  Note that "inheritance" here is used in a stricter context than in the typical S3 application:
+
+* Every class present in `target` must be present in `current`
+* The overlapping classes must be in the same order
+* The last class in `current` must be the same as the last class in `target`
+
+To illustrate:
+
+```{r}
+tpl <- structure(TRUE, class=c("a", "b", "c"))
+cur <- structure(TRUE, class=c("x", "a", "b", "c"))
+cur2 <- structure(TRUE, class=c("a", "b", "c", "x"))
+
+alike(tpl, cur)
+alike(tpl, cur2)
+```
+
+#### tsp
+
+The `tsp` attribute of `ts` objects behaves similarly to the [`dim` attribute](#dim).  Any component (i.e. start, end, frequency) that is set to zero will act as a wild card.  Other components must be identical.  It is illegal to set `tsp` components to zero throught the standard R interface, but you may use `abstract` as a work-around.
+
+#### levels
+
+Levels are compared like [row.names and names](#row.names-and-names).
+
+#### srcref
+
+This attribute is completely ignored.
+
+#### Normal Attributes that Happen To Have Special Names
+
+If an object contains one of the special attributes, but the attribute value is inconsistent with the standard definition of the attribute, `alike` will silently treat that attribute as any other normal attribute.
+
+## Modifying Comparison Behavior
+
+You can use the `settings` parameter to `alike` to modify comparison behavior.
+See `?vetr_settings` for details.
+
+## Creating Templates
+
+### From The Ground Up
+
+You can always create your own templates by manually building R structures:
+
+```{r}
+int.scalar <- integer(1L)
+int.mat.2.by.4 <- matrix(integer(), 2, 4)
+# A df without column names
+df.chr.num.num <- structure(
+  list(character(), numeric(), numeric()), class="data.frame"
+)
+```
+
+### Abstracting Existing Structures
+
+Alternatively, you can start with a known structure, and abstract away the instance-specific details.  For example, suppose we are sending sample collectors out on the field to record information about iris flowers:
+
+```{r, eval=FALSE}
+iris.tpl <- iris[0, ]
+alike(iris.tpl, iris.sample.1)  # make sure they submit data correctly
+```
+
+Or equivalently:
+
+```{r, eval=FALSE}
+iris.tpl <- abstract(iris)
+```
+
+`abstract` is an S3 generic defined by `alike` along with methods for common objects.  `abstract` primarily sets the `length` of atomic vectors to zero:
+
+```{r}
+abstract(list(c(a=1, b=2, c=3), letters))
+```
+
+and also abstracts the `dim`, `dimnames`, and `tsp` attributes if present.  Other attributes are left untouched unless a specific `abstract` method exists for a particular object that also modifies attributes.  One example of such a method is `abstract.lm`, and it does some minor tweaking to the base abstractions to allow us to match models produced by `lm`:
+
+```{r}
+df.dummy <- data.frame(x=runif(3), y=runif(3), z=runif(3))
+mdl.tpl <- abstract(lm(y ~ x + z, df.dummy))
+# TRUE, expecting bi-variate model
+alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width + Petal.Width, iris))
+alike(mdl.tpl, lm(Sepal.Length ~ Sepal.Width, iris))
+```
+
+The error message is telling us that at index `"terms"` (i.e. `lm(Sepal.Length ~
+Sepal.Width, iris)$terms`) `alike` was expecting a call to `+` instead of a
+symbol (i.e `Sepal.Width + <somevar>` instead of `Sepal.Width`).  The message
+could certainly be more eloquent, but with a little context it should provide
+enough information to figure out the problem.
+
+## Performance Considerations
+
+### Sample Timings
+
+We have gone to great lengths to make `alike` fast so that it can be included in
+other functions without concerns for what overhead:
+
+```{r}
+type_and_len <- function(a, b)
+  typeof(a) == typeof(b) && length(a) == length(b)  # for reference
+
+bench_mark(times=1e4,
+  identical(rivers, rivers),
+  alike(rivers, rivers),
+  type_and_len(rivers, rivers)
+)
+```
+
+While `alike` is slower than `identical` and the comparable bare bones R
+function, it is competitive with a bare bones R function that checks types and
+length.  As objects grow more complex, `identical` will obviously pull ahead,
+though `alike` should be sufficiently fast for most applications:
+
+```{r}
+bench_mark(times=1e4,
+  identical(mtcars, mtcars),
+  alike(mtcars, mtcars)
+)
+```
+In the above example, we are comparing the data frames, their attributes, and
+the 11 columns individually.
+
+Keep in mind that the complexity of the `alike` comparison is driven by the
+complexity of the template, not the object we are checking, so we can always
+manage the expense of the `alike` evaluation.
+
+Comparisons that succeed will be substantially faster than comparisons that fail
+as the construction of error messages is non-trivial and we have prioritized
+optimization in the success case.
+
+Language object comparison is relatively slow.  We intend to optimize this some day.
+
+Templates with large numbers of attributes (e.g. > 25) may scale non-linearly.
+We intend to optimize this some day, though in our experience objects with that
+many attributes are rare (note having multiple objects each with a handful
+attributes nested in recursive structures is not a problem).
+
+Large objects will be slower to evaluate.  Let us revisit the `lm` example,
+though this time we compare our template to itself to ensure that the
+comparisons succeed for `alike`, `all.equal`, and `identical`:
+
+```{r}
+mdl.tpl <- abstract(lm(y ~ x + z, data.frame(x=runif(3), y=runif(3), z=runif(3))))
+# compare mdl.tpl to itself to ensure success in all three scenarios
+bench_mark(
+  alike(mdl.tpl, mdl.tpl),
+  all.equal(mdl.tpl, mdl.tpl),   # for reference
+  identical(mdl.tpl, mdl.tpl)
+)
+```
+
+Even with template as large as `lm` results (check `str(mdl.tpl)`) we can evaluate `alike` thousands of times before the overhead becomes noticeable.
+
+### Pre-defining Templates
+
+Some fairly innocuous R expressions carry substantial overhead.  Consider:
+
+```{r}
+df.tpl <- data.frame(a=integer(), b=numeric())
+df.cur <- data.frame(a=1:10, b=1:10 + .1)
+
+bench_mark(
+  alike(df.tpl, df.cur),
+  alike(data.frame(integer(), numeric()), df.cur)
+)
+```
+
+`data.frame` is a particularly slow constructor, but in general you are best
+served by defining your templates (including calls to `abstract`) outside of
+your function so they are created on package load rather than every time your
+function is called.
+
+## Miscellaneous
+
+### `alike` as an S3 generic
+
+`alike` is not currently an S3 generic, but will likely one in the future
+provided we can create an implementation with and acceptable performance
+profile.
+

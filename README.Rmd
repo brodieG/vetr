@@ -1,0 +1,131 @@
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "##",
+  fig.path = "README-"
+)
+library(vetr)
+```
+
+# vetr - Trust, but Verify
+
+[![](https://travis-ci.org/brodieG/vetr.svg?branch=master)](https://travis-ci.org/brodieG/vetr)
+[![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://codecov.io/github/brodieG/vetr?branch=master)
+[![](http://www.r-pkg.org/badges/version/vetr)](https://cran.r-project.org/package=vetr)
+[![Project Status: WIP - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip)
+
+```{r child='vignettes/rmdhunks/trust-but-verify.Rmd'}
+```
+
+```{r child='vignettes/rmdhunks/declarative-checks.Rmd'}
+```
+
+## Vetting Expressions
+
+```{r child='vignettes/rmdhunks/vetting-expressions.Rmd'}
+```
+
+## `vetr` in Functions
+
+If you are vetting function inputs, you can use the `vetr` function, which works
+just like `vet` except that it is streamlined for use within functions:
+
+```{r}
+fun <- function(x, y) {
+  vetr(numeric(1L), logical(1L))
+  TRUE   # do work...
+}
+fun(1:2, "foo")
+fun(1, "foo")
+```
+
+`vetr` automatically matches the vetting expressions to the corresponding
+arguments and fetches the argument values from the function environment.
+
+See [vignette][1] for additional details on how the `vetr` function works.
+
+## Additional Documentation
+
+* [`vetr` vignette][1], `?vet`, `?vetr`, `example(vet)`, `example(vetr)`
+* [`alike` vignette][2], `?alike`, and `example(alike)` for discussion of
+  templates
+
+## Development Status
+
+`vetr` is still in development, although most of the features are considered
+mature.  The most likely area of change is the treatment of function and
+language templates (e.g.  `alike(sum, max)`), and more flexible treatment of
+list templates (e.g. in future lists may be allowed to be different lengths so
+long as every named element in the template exists in the object).
+
+## Installation
+
+```{r, eval=FALSE}
+install.packages('vetr')
+```
+
+Or for the development version:
+
+```{r, eval=FALSE}
+# install.packages('devtools')
+devtools::install_github('brodieg/vetr@development')
+```
+
+## Related Packages
+
+<ul>
+  <li><a href='https://github.com/egnha/valaddin'>valaddin</a> by Eugene Ha (see
+  <a
+  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#valaddin'>vignette</a>
+  for a more detailed comparison) has very similar objectives to `vetr`
+```{r child='vignettes/rmdhunks/related-packages.Rmd'}
+```
+</ul>
+
+## Acknowledgments
+
+Thank you to:
+
+* R Core for developing and maintaining such a wonderful language.
+* CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
+  the repository, and Uwe Ligges in particular for maintaining
+  [Winbuilder](http://win-builder.r-project.org/).
+* [Jim Hester](https://github.com/jimhester) because
+  [covr](https://cran.r-project.org/package=covr) rocks.
+* [Dirk Eddelbuettel](https://github.com/eddelbuettel) and [Carl
+  Boettiger](https://github.com/cboettig) for the
+  [rocker](https://github.com/rocker-org/rocker) project, and [Gábor
+  Csárdi](https://github.com/gaborcsardi) and the R-consortium for
+  [Rhub](https://github.com/r-hub/rhub), without which testing bugs on R-devel
+  and other platforms would be a nightmare.
+* [Yihui Xie](https://github.com/yihui) for
+  [knitr](https://cran.r-project.org/package=knitr) and  [J.J.
+  Allaire](https://github.com/jjallaire) etal for
+  [rmarkdown](https://cran.r-project.org/package=rmarkdown), and by extension
+  John MacFarlane for [pandoc](http://pandoc.org/).
+* Stefan M. Bache for the idea of having a function for testing objects directly
+  (originally `vetr` only worked with function arguments), which I took from
+  ensurer.
+* Hadley Wickham for [devtools](https://cran.r-project.org/package=devtools),
+  and for pointing me to Stefan M. Bache's ensurer package.
+* Olaf Mersmann for [microbenchmark](https://cran.r-project.org/package=microbenchmark), because microsecond matter.
+* All open source developers out there that make their work freely available
+  for others to use.
+* [Github](https://github.com/), [Travis-CI](https://travis-ci.org/),
+  [Codecov](https://codecov.io/), [Vagrant](https://www.vagrantup.com/),
+  [Docker](https://www.docker.com/), [Ubuntu](https://www.ubuntu.com/),
+  [Brew](https://brew.sh/) for providing infrastructure that greatly simplifies
+  open source development.
+* [Free Software Foundation](http://fsf.org/) for developing the GPL license and
+  promotion of the free software movement.
+
+## About the Author
+
+Brodie Gaslam is a hobbyist programmer based on the US East Coast.
+
+[1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html
+[2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/alike.html
+[3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#non-standard-evaluation
+[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#in-functions

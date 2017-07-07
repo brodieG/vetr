@@ -1,123 +1,222 @@
-#' Validate Function Arguments
+# Copyright (C) 2017  Brodie Gaslam
+#
+# This file is part of "vetr - Trust, but Verify"
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
+
+#' Verify Objects Meet Structural Requirements
 #'
-#' Each argument to this function (\dfn{Checkarg} hereafter) will be matched to an
-#' argument of the enclosing closure (\dfn{Closarg} hereafter) in order to validate
-#' it. Matching is either name based (no partial matching), positional, or a
-#' combination of both, with name based matching done first, and positional
-#' matching used for the remaining \dfn{Closeargs}.
+#' Use vetting expressions to enforce structural requirements for objects.
+#' `tev` is a version of `vet` compatible with `magrittr` pipes.
 #'
-#' \dfn{Checkargs} fall into two categories:
-#' \enumerate{
-#'   \item objects, or expressions producing objects that do not reference the
-#'     matching \dfn{Closarg}
-#'   \item expressions that reference the matching \dfn{Closarg}
-#' }
-#' For example, in:
-#' \preformatted{
-#' function(a, b) {
-#'   check_args(numeric(), nrow(b) == 3)
-#' }
-#' }
-#' the first \dfn{Checkarg} is of Type 1 since it contains no references to \code{`a`}
-#' and the second \dfn{Checkarg} is of Type 2, since it references \code{`b`}, the
-#' matching \dfn{Closarg}.
+#' `tev` just reverses the `target` and `current` arguments for better
+#' integration with `magrittr`.  There are two major caveats:
 #'
-#' @section Type 1 \dfn{Checkargs}:
-#' Type 1 \dfn{Checkargs} are taken to be templates to compare \dfn{Closargs} against.
-#' These \dfn{Checkargs} are used as the \code{`obj.reference`} in a
-#' \code{`\link{alike}`} comparison.  The exact nature of what is considered
-#'  a valid match to a template is somewhat complex to explain, but should be
-#' intuitive to grasp (see examples for \code{`\link{alike}`}).
+#' * error messages will be less useful since you will get `.` instead
+#'   of the deparsed call
+#' * `x \\%>\\% tev(y)` is much slower than `vet(y, x)` (or even `tev(x, y)`)
 #'
-#' @section Type 2 \dfn{Checkargs}:
-#' Type 2 \dfn{Checkargs} need to evaluate to TRUE in order to pass (see examples).
+#' @section Vetting Expressions:
 #'
-#' @note Will force evaluation of the closure's arguments that are being checked,
-#'   so do not check a formal if that is a particularly undesirable side effect
-#'   for that formal
-#' @note checks against default values along the lines of those made with
-#'   \code{`\link{match.arg}`} are not supported (this is a conscious design
-#'   decision)
-#' @note Hack alert: in order to get the error message to look like it came from
-#'   the enclosing closure rather than this function, we use a carriage return
-#'   to overwrite the first part of the error message (if you know of a better
-#'   way that won't mess with try/catch handling, let me know)
+#' Vetting expressions can be template tokens, custom tokens, or any
+#' combination of template and custom tokens combined with `&&` and/or `||`.
+#' Template tokens are R objects that define the required structure, much like
+#' the `FUN.VALUE` argument to [vapply()].  Custom tokens are tokens that
+#' contain the `.` symbol and are used to vet values.
+#'
+#' See `vignette('vetr', package='vetr')` and examples for details on how
+#' to craft vetting expressions.
+#'
+#' @useDynLib vetr, .registration=TRUE, .fixes="VALC_"
+#' @aliases tev
 #' @export
-#' @param ... arguments to validate; if they are named the names must match
-#'   the names of the arguments from enclosing closure (no partial matching)
-#' @return NULL if validation succeeds, throws an error with \code{`\link{stop}`}
-#'   otherwise
+#' @seealso [vetr()] for a version optimized to vet function arguments,
+#'   [alike()] for how templates are used, [vet_token()] for how to specify
+#'   custom error messages and also for predefined validation tokens for common
+#'   use cases.
+#' @param target a template, a vetting expression, or a compound expression
+#' @param current an object to vet
+#' @param env the environment to match calls and evaluate vetting expressions
+#'   in; will be ignored if an environment is also specified via
+#'   [vetr_settings()].  Defaults to calling frame.
+#' @param format character(1L), controls the format of the return value for
+#'   `vet`, in case of failure.  One of:\itemize{
+#'     \item "text": (default) character(1L) message for use elsewhere in code
+#'     \item "full": character(1L) the full error message used in "stop" mode,
+#'       but actually returned instead of thrown as an error
+#'     \item "raw": character(N) least processed version of the error message
+#'       with none of the formatting or surrounding verbiage
+#' }
+#' @param stop TRUE or FALSE whether to call [stop()] on failure
+#'   (default) or not
+#' @param settings a settings list as produced by [vetr_settings()], or NULL to
+#'   use the default settings
+#' @return TRUE if validation succeeds, otherwise varies according to value
+#'   chosen with parameter `stop`
+#' @examples
+#' ## template vetting
+#' vet(numeric(2L), runif(2))
+#' vet(numeric(2L), runif(3))
+#' vet(numeric(2L), letters)
+#' try(vet(numeric(2L), letters, stop=TRUE))
+#'
+#' ## `tev` just reverses target and current for use with maggrittr
+#' \dontrun{
+#' if(require(magrittr)) {
+#'   runif(2) %>% tev(numeric(2L))
+#'   runif(3) %>% tev(numeric(2L))
+#' }
+#' }
+#' ## Zero length templates are wild cards
+#' vet(numeric(), runif(2))
+#' vet(numeric(), runif(100))
+#' vet(numeric(), letters)
+#'
+#' ## This extends to data.frames
+#' iris.tpl <- iris[0,]   # zero row matches any # of rows
+#' iris.1 <- iris[1:10,]
+#' iris.2 <- iris[1:10, c(1,2,3,5,4)]  # change col order
+#' vet(iris.tpl, iris.1)
+#' vet(iris.tpl, iris.2)
+#'
+#' ## Short (<100 length) integer-like numerics will
+#' ## pass for integer
+#' vet(integer(), c(1, 2, 3))
+#' vet(integer(), c(1, 2, 3) + 0.1)
+#'
+#' ## Nested templates; note, in packages you should consider
+#' ## defining templates outside of `vet` or `vetr` so that
+#' ## they are computed on load rather that at runtime
+#' tpl <- list(numeric(1L), matrix(integer(), 3))
+#' val.1 <- list(runif(1), rbind(1:10, 1:10, 1:10))
+#' val.2 <- list(runif(1), cbind(1:10, 1:10, 1:10))
+#' vet(tpl, val.1)
+#' vet(tpl, val.2)
+#'
+#' ## See `example(alike)` for more template examples
+#'
+#' ## Custom tokens allow you to check values
+#' vet(. > 0, runif(10))
+#' vet(. > 0, -runif(10))
+#'
+#' ## You can combine templates and custom tokens with
+#' ## `&&` and/or `||`
+#' vet(numeric(2L) && . > 0, runif(2))
+#' vet(numeric(2L) && . > 0, runif(10))
+#' vet(numeric(2L) && . > 0, -runif(2))
+#'
+#' ## Using pre-defined tokens (see `?vet_token`)
+#' vet(INT.1, 1)
+#' vet(INT.1, 1:2)
+#' vet(INT.1 && . %in% 0:1 || LGL.1, TRUE)
+#' vet(INT.1 && . %in% 0:1 || LGL.1, 1)
+#' vet(INT.1 && . %in% 0:1 || LGL.1, NA)
+#'
+#' ## Vetting expressions can be assembled from previously
+#' ## defined tokens
+#'
+#' scalar.num.pos <- quote(numeric(1L) && . > 0)
+#' foo.or.bar <- quote(character(1L) && . %in% c('foo', 'bar'))
+#' vet.exp <- quote(scalar.num.pos || foo.or.bar)
+#'
+#' vet(vet.exp, 42)
+#' vet(scalar.num.pos || foo.or.bar, 42)  # equivalently
+#' vet(vet.exp, "foo")
+#' vet(vet.exp, "baz")
 
-validate <- function(...) {
-  if(identical(parent.frame(1L), sys.frame(0L))) {
-    stop("Parent frame is R_GlobalEnv, so it seems you are not running this function from a closure")
-  }
-  par.frame <- parent.frame()
-  par.call <- match_call(dots="include", n=2L, default.formals=TRUE, empty.formals=TRUE)
-  frms <- as.list(par.call)[-1L]    # The formals to the function that uses `check_args`
-  args <- as.list(sys.call())[-1L]  # The arguments to `check_args`
-
-  named.match <- intersect(names(frms), names(args))
-  if(is.null(named.match)) named.match <- character(0L)
-  frms.matched <- frms[names(frms) %in% named.match]
-  frms.remaining <- frms[!(names(frms) %in% named.match)]
-  arg.names <- names(args)
-  if(is.null(arg.names)) arg.names <- character(length(args))
-  args.matched <- args[arg.names %in% named.match]
-  args.remaining <- args[!(arg.names %in% named.match)]
-
-  if(length(args.remaining) > length(frms.remaining)) {
-    stop("Cannot check arguments ", length(frms.remaining) + 1L, " and greater ",
-      "since `", par.call[[1]], "` only has ", length(frms.remaining), " arguments.")
-  } else if (length(args.remaining) > 0L) {
-    frms.final <- c(frms.matched, frms.remaining[1L:length(args.remaining)])
-  } else {
-    frms.final <-frms.matched
-  }
-  args.final <- c(args.matched, args.remaining)
-
-  rm(frms, args, frms.matched, frms.remaining, args.matched, args.remaining)
-
-  # Eval formals and the check args values; for the former eval the names in
-  # parent environment so that user set variables are evaluated in the grandparent
-  # and default ones in the parent.
-
-  if(inherits(
-    try(frms.final.ev <- lapply(lapply(names(frms.final), as.name), eval, parent.frame())),
-    "try-error"
-  ) ) {
-    stop("Failed attempting to evaluate `", par.call[[1]], "` formals.")
-  }
-  # If check is not of c_group type, make it so to simplify rest of process; note
-  # this is computationally expensive so we should reconsider
-
-  args.final.ev <- tryCatch(
-    lapply(
-      args.final,
-      function(arg.final) {
-        arg.final.ev <- eval(arg.final, par.frame)
-        if(!inherits(arg.final.ev, "c_group")) {
-          new.call <- as.call(list(quote(c_and), arg.final))
-          arg.final.ev <- eval(new.call, par.frame)
-        }
-        arg.final.ev
-    } ),
-    error=function(e) stop("Improper Arguments; see previous error.")
+vet <- function(
+  target, current, env=parent.frame(), format="text", stop=FALSE, settings=NULL
+)
+  # note sys.call not matched, which is why we need substitute(current)
+  .Call(
+    VALC_validate, substitute(target), current, substitute(current),
+    sys.call(), env, format, stop, settings
   )
-  # Compare the formals to the check args values
+#' @rdname vet
+#' @export
 
-  frms.raw <- formals(as.character(par.call[[1L]]))
+tev <- function(
+  current, target, env=parent.frame(), format="text", stop=FALSE, settings=NULL
+)
+  # note sys.call not matched, which is why we need substitute(current)
+  .Call(
+    VALC_validate, substitute(target), current, substitute(current),
+    sys.call(), env, format, stop, settings
+  )
 
-  for(i in seq_along(args.final.ev)) {
-    res <- process(args.final.ev[[i]], frms.final.ev[[i]], args.final[[i]], names(frms.final)[[i]])
-    errors <- unlist(Filter(is.character, res))
-    if(length(errors) > 0L) {
-      if(length(errors) > 1L) {
-        err.opts <- paste(paste0(errors[-length(errors)], collapse=", "), errors[length(errors)], sep=", and ")
-      } else {
-        err.opts <- errors
-      }
-      msg <- paste0("Problem with argument `", names(frms.final)[[i]], "`: ", err.opts)
+#' Verify Function Arguments Meet Structural Requirements
+#'
+#' Use vetting expressions to enforce structural requirements for function
+#' arguments.  Works just like [vet()], except that the formals of the
+#' enclosing function automatically matched to the vetting expressions provided
+#' in `...`.
+#'
+#' @inheritSection vet Vetting Expressions
+#'
+#' @note `vetr` will force evaluation of any arguments that are being
+#'   checked (you may omit arguments that should not be evaluate from
+#'   `vetr`)
+#' @seealso [vet()], in particular `example(vet)`.
+#' @param ... vetting expressions, each will be matched to the enclosing
+#'   function formals as with [match.call()] and will be used to validate the
+#'   value of the matching formal.
+#' @param .VETR_SETTINGS a settings list as produced by [vetr_settings()], or
+#'   NULL to use the default settings.  Note that this means you cannot use
+#'   `vetr` with a function that takes a `.VETR_SETTINGS` argument
+#' @return TRUE if validation succeeds, otherwise `stop` with error message
+#'   detailing nature of failure.
+#' @export
+#' @examples
+#' fun1 <- function(x, y) {
+#'   vetr(integer(), LGL.1)
+#'   TRUE   # do some work
+#' }
+#' fun1(1:10, TRUE)
+#' try(fun1(1:10, 1:10))
+#'
+#' ## only vet the second argument
+#' fun2 <- function(x, y) {
+#'   vetr(y=LGL.1)
+#'   TRUE   # do some work
+#' }
+#' try(fun2(letters, 1:10))
+#'
+#' ## Nested templates; note, in packages you should consider
+#' ## defining templates outside of `vet` or `vetr` so that
+#' ## they are computed on load rather that at runtime
+#' tpl <- list(numeric(1L), matrix(integer(), 3))
+#' val.1 <- list(runif(1), rbind(1:10, 1:10, 1:10))
+#' val.2 <- list(runif(1), cbind(1:10, 1:10, 1:10))
+#' fun3 <- function(x, y) {
+#'   vetr(x=tpl, y=tpl && ncol(.[[2]]) == ncol(x[[2]]))
+#'   TRUE   # do some work
+#' }
+#' fun3(val.1, val.1)
+#' try(fun3(val.1, val.2))
+#' val.1.a <- val.1
+#' val.1.a[[2]] <- val.1.a[[2]][, 1:8]
+#' try(fun3(val.1, val.1.a))
 
-      stop(simpleError(msg, par.call))
-} } }
+vetr <- function(..., .VETR_SETTINGS=NULL)
+  .Call(
+    VALC_validate_args,
+    fun.match <- sys.function(sys.parent(1)),
+    match.call(
+      definition=fun.match,
+      call=sys.call(sys.parent(1)),
+      envir=parent.frame(2L)
+    ),
+    match.call(definition=fun.match, envir=(par.frame <- parent.frame())),
+    par.frame,
+    .VETR_SETTINGS
+  )

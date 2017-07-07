@@ -1,0 +1,18 @@
+language: r
+r:
+  - oldrel
+  - release
+  - devel
+
+sudo: false
+
+cache: packages
+
+branches:
+  only:
+    - master
+    - development
+    - rc
+
+after_success:
+  - Rscript covr.R

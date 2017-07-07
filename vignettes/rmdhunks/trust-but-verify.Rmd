@@ -1,0 +1,17 @@
+## Trust, but Verify
+
+### Easily
+
+When you write functions that operate on  S3 or unclassed objects you can either
+trust that your inputs will be structured as expected, or tediously check that
+they are.
+
+`vetr` takes the tedium out of structure verification, so that you can trust,
+but verify.  It lets you express structural requirements declaratively with
+templates, and it auto-generates human-friendly error messages as needed.
+
+### Quickly
+
+`vetr` is written in C to minimize overhead from parameter checks in your
+functions.  It has no dependencies.
+

@@ -1,0 +1,16 @@
+<!--- No longer in use since we removed microbenchmark suggests -->
+
+```{r echo=FALSE}
+mb <- function(..., times=25) {
+  if(require(microbenchmark, quietly=TRUE)) {
+    mb.c <- match.call()
+    mb.c[[1]] <- quote(microbenchmark::microbenchmark)
+    res <- eval(mb.c, parent.frame())
+    res.sum <- summary(res)
+    cat(attr(res.sum, "unit"), "\n")
+    print(res.sum[1:5])
+  } else {
+    warning("Package microbenchmark not available.")
+  }
+}
+```

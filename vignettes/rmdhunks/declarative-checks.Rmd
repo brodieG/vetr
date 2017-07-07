@@ -1,0 +1,88 @@
+## Declarative Checks with Templates
+
+### Templates
+
+Declare a template that an object should conform to, and let `vetr` take care of
+the rest:
+
+```{r}
+library(vetr)
+tpl <- numeric(1L)
+vet(tpl, 1:3)
+vet(tpl, "hello")
+vet(tpl, 42)
+```
+
+Zero length templates match any length:
+
+```{r}
+tpl <- integer()
+vet(tpl, 1L:3L)
+vet(tpl, 1L)
+```
+
+And for convenience short (<= 100 length) integer-like numerics are considered
+integer:
+
+```{r}
+tpl <- integer(1L)
+vet(tpl, 1)       # this is a numeric, not an integer
+vet(tpl, 1.0001)
+```
+
+`vetr` can compare recursive objects such as lists, or data.frames:
+
+```{r}
+tpl.iris <- iris[0, ]      # 0 row DF matches any number of rows in object
+iris.fake <- iris
+levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
+
+vet(tpl.iris, iris)
+vet(tpl.iris, iris.fake)
+```
+
+From our declared template `iris[0, ]`, `vetr` infers all the required checks.
+In this case, `vet(iris[0, ], iris.fake, stop=TRUE)` is equivalent to:
+
+```{r}
+stopifnot_iris <- function(x) {
+  stopifnot(
+    is.list(x), inherits(x, "data.frame"),
+    length(x) == 5, is.integer(attr(x, 'row.names')),
+    identical(
+      names(x),
+      c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+    ),
+    all(vapply(x[1:4], is.numeric, logical(1L))),
+    typeof(x$Species) == "integer", is.factor(x$Species),
+    identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
+  )
+}
+stopifnot_iris(iris.fake)
+```
+
+`vetr` saved us typing, and the time and thought needed to come up with the
+things that need to be compared.
+
+You could just as easily have created templates for nested lists, or data frames
+in lists.  Templates are compared to objects with the `alike`.  For a
+thorough description of templates and how they work see the [`alike`
+vignette][2].  For template examples see `example(alike)`.
+
+### Auto-Generated Error Messages
+
+Let's revisit the error message:
+
+```{r}
+vet(tpl.iris, iris.fake)
+```
+
+It tells us:
+
+* The reason for the failure
+* What structure would be acceptable instead
+* The location of failure `levels(iris.fake$Species)[3]`
+
+`vetr` does what it can to reduce the time from error to resolution.  The
+location of failure is generated such that you can easily copy it in part or
+full to the R prompt for further examination.

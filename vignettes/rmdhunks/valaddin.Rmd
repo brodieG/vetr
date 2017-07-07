@@ -1,0 +1,29 @@
+# Valaddin
+
+Snippet used to compare `valaddin` to `vetr` performance.  This is not actually
+generated as part of vignettes because it will then require `valaddin` as part
+of the build package, which brings in unwanted dependencies (via suggests) that
+make the build process slow on travis.
+
+```{r}
+secant <- function(f, x, dx) (f(x + dx) - f(x)) / dx
+
+secant_valaddin <- valaddin::firmly(secant, list(~x, ~dx) ~ is.numeric)
+
+secant_stopifnot <- function(f, x, dx) {
+  stopifnot(is.numeric(x), is.numeric(dx))
+  secant(f, x, dx)
+}
+
+secant_vetr <- function(f, x, dx) {
+  vetr(x=numeric(), dx=numeric())
+  secant(f, x, dx)
+}
+
+library(microbenchmark)
+microbenchmark(
+  secant_valaddin(log, 1, .1),
+  secant_stopifnot(log, 1, .1),
+  secant_vetr(log, 1, .1)
+)
+```

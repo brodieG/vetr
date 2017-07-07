@@ -1,13 +1,29 @@
-Package: validate
-Title:
-Description:
-Version: 0.0.0.9000
-Author: Brodie Gaslam
-Maintainer: Brodie Gaslam <brodie.gaslam@yahoo.com>
+Package: vetr
+Title: Trust, but Verify
+Description: Declarative template-based framework for verifying that objects
+  meet structural requirements, and auto-composing error messages when they do
+  not.
+Version: 0.1.0
+Authors@R: c(
+    person("Brodie", "Gaslam", email="brodie.gaslam@yahoo.com",
+    role=c("aut", "cre")),
+    person(family="Paxdiablo", role="cph", comment="Hash
+    table implementation in src/pfhash.h"),
+    person(family="R Core Team",
+    email="R-core@r-project.org", role="cph",
+    comment="Used/adapted several code snippets from R sources, see src/misc-alike.c and src/valname.c"
+    ))
 Depends:
-    R (>= 3.1.1)
-Imports:
-    alike,
-    matchcall
-License: GPL-3
+    R (>= 3.2.2)
+License: GPL (>=2)
 LazyData: true
+URL: https://github.com/brodieG/vetr
+BugReports: https://github.com/brodieG/vetr/issues
+VignetteBuilder: knitr
+Suggests:
+    knitr,
+    rmarkdown,
+    unitizer,
+    covr
+RoxygenNote: 6.0.1
+Roxygen: list(markdown = TRUE)
