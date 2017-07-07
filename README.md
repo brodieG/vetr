@@ -219,7 +219,7 @@ fun(1, "foo")
 `vetr` automatically matches the vetting expressions to the corresponding
 arguments and fetches the argument values from the function environment.
 
-See [vignette][1] for additional details on how the `vetr` function works.
+See [vignette][4] for additional details on how the `vetr` function works.
 
 ## Additional Documentation
 
