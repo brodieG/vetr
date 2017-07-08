@@ -4,12 +4,14 @@
 \alias{bench_mark}
 \title{Lightweight Benchmarking Function}
 \usage{
-bench_mark(..., times = 1000L)
+bench_mark(..., times = 1000L, deparse.width = 40)
 }
 \arguments{
 \item{...}{expressions to benchmark, are captured unevaluated}
 
 \item{times}{how many times to loop, defaults to 1000}
+
+\item{deparse.width}{how many characters to deparse for labels}
 }
 \value{
 NULL, invisibly, reports timings as a side effect as screen output
