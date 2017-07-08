@@ -1,10 +1,11 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^\DEVNOTES\.md$
-^\CRAN\.md$
+^DEVNOTES\.md$
+^CRAN\.md$
 ^\.travis\.yml$
 .Rdata
-covr\.R
-scratch\.R
-README\.Rmd
-README\.html
+^covr\.R
+^scratch\.R
+^README\.Rmd
+^README\.html
+^PUBLISH\.
