@@ -5,7 +5,7 @@
 ^\.travis\.yml$
 .Rdata
 ^covr\.R
+^extra$
 ^scratch\.R
 ^README\.Rmd
 ^README\.html
-^PUBLISH\.
