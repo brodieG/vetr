@@ -114,12 +114,13 @@ welcome (4/4)
 
 # R Package Announce
 
-`vetr` is a new package that implements a declarative template-based framework
-to verify that objects meet structural requirements, and auto-compose error
-messages when they do not.  This package is intended to simplify a more formal
-use of S3 objects.
+Announcing New Package vetr on CRAN
 
-The concept of templates is borrowed from `vapply`:
+`vetr` implements a declarative template-based approach to verify that objects
+meet structural requirements, and auto-compose error messages when they do not.
+This package is intended to simplify a more formal use of S3 objects.
+
+The template concept is borrowed from `vapply`:
 
 >> vet(numeric(1L), 1:3)
 >  [1] "`1:3` should be length 1 (is 3)"
@@ -128,10 +129,8 @@ The concept of templates is borrowed from `vapply`:
 >> vet(numeric(1L), 42)
 >  [1] TRUE
 
-Complex templates are allowed:
+There is no limit on template complexity:
 
->> vet(matrix(integer(), ncol=3), matrix(1:12, 4))
->  [1] TRUE
 >> vet(matrix(integer(), ncol=3), matrix(1:12, 3))
 >  [1] "`matrix(1:12, 3)` should have 3 columns (has 4)"
 >
@@ -141,23 +140,20 @@ Complex templates are allowed:
 >  [1] "`levels((iris[1:10, ])$Species)[3]` should be \"virginica\"
 >  (is \"sibirica\")"
 
-Templates are evaluated recursively so there is no limit on template complexity.
-
 `vetr` implements programmable non-standard evaluation via recursive
 substitution of language objects:
 
 >> a <- quote(integer() && . > 0)
 >> b <- quote(logical(1L) && !is.na(.))
 >> c <- quote(a || b)
->> vet(c, 1:3)
->  [1] TRUE
 >> vet(c, -1)
 >  [1] "At least one of these should pass:"
 >  [2] "  - `-1 > 0` is not TRUE (FALSE)"
 >  [3] "  - `-1` should be type \"logical\" (is \"double\")"
 
-Performance is comparable to `stopifnot` for simple checks, and faster for
-complex (template based) ones.
+Performance is comparable to `stopifnot` for simple checks, and is faster for
+complex (template based) ones.  There is a mode that further streamlines
+parameter vetting in functions.
 
 The package is still under development, but the features should be mostly
 stable.  Feedback welcome (https://github.com/brodieG/vetr).
