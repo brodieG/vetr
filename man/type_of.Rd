@@ -2,7 +2,7 @@
 % Please edit documentation in R/type.R
 \name{type_of}
 \alias{type_of}
-\title{A Fuzzier Version \code{\link{typeof}}}
+\title{A Fuzzier Version of \code{\link[=typeof]{typeof()}}}
 \usage{
 type_of(object)
 }
