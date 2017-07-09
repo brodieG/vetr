@@ -9,6 +9,7 @@
 \alias{abstract.list}
 \alias{abstract.lm}
 \alias{abstract.environment}
+\alias{abstract.ts}
 \title{Turn S3 Objects Into Templates}
 \usage{
 abstract(x, ...)
@@ -26,11 +27,17 @@ abstract(x, ...)
 \method{abstract}{lm}(x, ...)
 
 \method{abstract}{environment}(x, ...)
+
+\method{abstract}{ts}(x, what = c("start", "end", "frequency"), ...)
 }
 \arguments{
 \item{x}{the object to abstract}
 
 \item{...}{arguments for methods that require further arguments}
+
+\item{what, }{for time series which portion of the \code{ts} attribute to
+abstract, by default all three are abstracted, but you can select, any one,
+two, or all}
 }
 \value{
 abstracted object
@@ -59,6 +66,20 @@ wish further abstraction based on implicit classes do not use
 
 S4 and RC objects are returned unchanged.
 }
+\section{Time Series}{
+
+
+\code{\link{alike}} will treat time series parameter components with zero in
+them as wildcards.  This function allows you to create these wild card time
+series attributes since R does not allow direct creation/modification of
+\code{ts} attributes with zero values.
+
+Make sure you do not try to use the templates you create with this for
+anything other than as \code{\link{alike}} templates since the result is
+likely undefined given R expects non zero values for the \code{ts}
+attribute and attempts to prevent such attributes.
+}
+
 \examples{
 iris.tpl <- abstract(iris)
 alike(iris.tpl, iris[1:10, ])
@@ -67,7 +88,4 @@ alike(iris.tpl, transform(iris, Species=as.character(Species)))
 abstract(1:10)
 abstract(matrix(1:9, nrow=3))
 abstract(list(1:9, runif(10)))
-}
-\seealso{
-\code{\link{abstract.ts}}
 }

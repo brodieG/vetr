@@ -6,9 +6,10 @@ knitr::opts_chunk$set(
   comment = "##",
   fig.path = "README-"
 )
+library(vetr)
 ```
 
-# vetr - Trust, but Verify
+# vetr
 
 [![](https://travis-ci.org/brodieG/vetr.svg?branch=master)](https://travis-ci.org/brodieG/vetr)
 [![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://codecov.io/github/brodieG/vetr?branch=master)
@@ -43,11 +44,11 @@ fun(1, "foo")
 `vetr` automatically matches the vetting expressions to the corresponding
 arguments and fetches the argument values from the function environment.
 
-See [vignette][1] for additional details on how the `vetr` function works.
+See [vignette][4] for additional details on how the `vetr` function works.
 
 ## Additional Documentation
 
-* [`vetr` vignette][1], `?vetr`, `example(vetr)`
+* [`vetr` vignette][1], `?vet`, `?vetr`, `example(vet)`, `example(vetr)`
 * [`alike` vignette][2], `?alike`, and `example(alike)` for discussion of
   templates
 
@@ -61,8 +62,11 @@ long as every named element in the template exists in the object).
 
 ## Installation
 
-`vetr` will shortly be available on CRAN.  In the meantime, you can get it from
-github:
+```{r, eval=FALSE}
+install.packages('vetr')
+```
+
+Or for the development version:
 
 ```{r, eval=FALSE}
 # install.packages('devtools')
@@ -74,7 +78,7 @@ devtools::install_github('brodieg/vetr@development')
 <ul>
   <li><a href='https://github.com/egnha/valaddin'>valaddin</a> by Eugene Ha (see
   <a
-  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#valaddin'>vignette</a>
+  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#valaddin'>vignette</a>
   for a more detailed comparison) has very similar objectives to `vetr`
 ```{r child='vignettes/rmdhunks/related-packages.Rmd'}
 ```
@@ -84,7 +88,7 @@ devtools::install_github('brodieg/vetr@development')
 
 Thank you to:
 
-* R Core for developing and maintaining such a wonderfully language.
+* R Core for developing and maintaining such a wonderful language.
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
   the repository, and Uwe Ligges in particular for maintaining
   [Winbuilder](http://win-builder.r-project.org/).
@@ -121,7 +125,7 @@ Thank you to:
 
 Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 
-[1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html
-[2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/alike.html
-[3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#non-standard-evaluation
-[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#in-functions
+[1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html
+[2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/alike.html
+[3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#non-standard-evaluation
+[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#in-functions

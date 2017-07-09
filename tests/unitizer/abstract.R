@@ -10,6 +10,9 @@ unitizer_sect("Standard Methods", {
   alike(abstract(iris), iris[1:10, ])
   alike(abstract(iris), iris[1:10, 1:3])
   alike(abstract(iris), transform(iris, Species=as.character(Species)))
+
+  my.env <- new.env()
+  identical(my.env, abstract(my.env))
 })
 unitizer_sect("Time Series", {
   y <- ts(runif(12), start=1970, freq=12)

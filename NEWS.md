@@ -1,6 +1,13 @@
+## 0.1.0.9000
+
+
 ## 0.1.0
 
 Initial release.
+
+## 0.0.2
+
+Finalizing initial release.
 
 * [#40](https://github.com/brodieG/validate/issues/40): Removed `suggests`
   dependencies to ggplot, microbenchmark, and valaddin to improve travis build

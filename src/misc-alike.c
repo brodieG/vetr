@@ -71,7 +71,7 @@ SEXP ALIKEC_abstract_ts(SEXP x, SEXP attr) {
 
   // Get to last attribute, and make sure tsp is not set
 
-  SEXP attrs = ATTRIB(x_cp), attrs_cpy, attrs_last;
+  SEXP attrs = ATTRIB(x_cp), attrs_cpy, attrs_last = R_NilValue;
   for(attrs_cpy = attrs; attrs_cpy != R_NilValue; attrs_cpy = CDR(attrs_cpy)) {
     attrs_last = attrs_cpy;
     if(TAG(attrs_cpy) == R_TspSymbol) break;
@@ -81,7 +81,11 @@ SEXP ALIKEC_abstract_ts(SEXP x, SEXP attr) {
     error("Internal Error: object already has a `tsp` attribute");
     // nocov end
   }
-
+  if(attrs_last == R_NilValue) {
+    // nocov start
+    error("Internal Error: failed finding last attribute when adding tsp");
+    // nocov end
+  }
   // Illegally append non-kosher tsp attribute
 
   SETCDR(attrs_last, list1(attr));
@@ -166,7 +170,6 @@ version that uses default deparse width if console is wide enought, otherwise
 based on console width
 */
 SEXP ALIKEC_deparse_width(SEXP obj, int width) {
-  if(width < 0) width = asInteger(ALIKEC_getopt("width"));
   if(width < 10 || width > 1000) width = 80;
 
   int dep_cutoff;
@@ -371,6 +374,13 @@ const char * ALIKEC_pad_or_quote(
       // nocov end
     }
   }
+  if(width != set.width)
+    // nocov start
+    error("Internal Error: mismatched width values; contact maintainer.");
+    // nocov end
+
+  if(width < 0) width = asInteger(ALIKEC_getopt("width"));
+  if(width <= 0 || width == NA_INTEGER) width = 80;
   SEXP lang_dep = PROTECT(ALIKEC_deparse_width(lang, width));
 
   // Handle the different deparse scenarios
@@ -380,7 +390,7 @@ const char * ALIKEC_pad_or_quote(
 
   if(XLENGTH(lang_dep) == 1) {
     size_t dep_chr_len = CSR_strmlen(dep_chr, set.nchar_max);
-    if(dep_chr_len <= width - 2) multi_line = 0;
+    if(width > 2 && dep_chr_len <= (size_t) (width - 2)) multi_line = 0;
   }
   const char * call_char, * call_pre = "", * call_post = "";
   if(multi_line) {
@@ -410,6 +420,7 @@ const char * ALIKEC_pad_or_quote(
  */
 SEXP ALIKEC_pad_or_quote_ext(SEXP lang, SEXP width, SEXP syntactic) {
   struct VALC_settings set = VALC_settings_init();
+  set.width = INTEGER(width)[0];
   const char * padded = ALIKEC_pad_or_quote(
     lang, INTEGER(width)[0], INTEGER(syntactic)[0], set
   );

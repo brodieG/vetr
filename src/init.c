@@ -23,14 +23,11 @@ static const
 R_CallMethodDef callMethods[] = {
   {"validate", (DL_FUNC) &VALC_validate, 8},
   {"validate_args", (DL_FUNC) &VALC_validate_args, 5},
-  {"test", (DL_FUNC) &VALC_test, 2},
   {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
   {"symb_sub", (DL_FUNC) &VALC_sub_symbol_ext, 2},
   {"parse", (DL_FUNC) &VALC_parse_ext, 3},
   {"remove_parens", (DL_FUNC) &VALC_remove_parens, 1},
   {"eval_check", (DL_FUNC) &VALC_evaluate_ext, 6},
-  {"test1", (DL_FUNC) &VALC_test1, 1},
-  {"test2", (DL_FUNC) &VALC_test2, 2},
   {"all", (DL_FUNC) &VALC_all_ext, 1},
   {"track_hash", (DL_FUNC) &VALC_track_hash_test, 2},
   {"default_hash_fun", (DL_FUNC) &VALC_default_hash_fun, 1},
@@ -58,9 +55,9 @@ R_CallMethodDef callMethods[] = {
   {"match_call", (DL_FUNC) &ALIKEC_match_call, 3},
   {"abstract_ts", (DL_FUNC) &ALIKEC_abstract_ts, 2},
   {"env_track", (DL_FUNC) &ALIKEC_env_track_test, 3},
-  {"msg_sort", (DL_FUNC) &ALIKEC_sort_msg, 1},
-  {"msg_merge", (DL_FUNC) &ALIKEC_merge_msg, 1},
-  {"msg_merge_ext", (DL_FUNC) &ALIKEC_merge_msg_2_ext, 1},
+  {"msg_sort", (DL_FUNC) &ALIKEC_sort_msg_ext, 1},
+  {"msg_merge", (DL_FUNC) &ALIKEC_merge_msg_ext, 1},
+  {"msg_merge_2", (DL_FUNC) &ALIKEC_merge_msg_2_ext, 1},
   {"hash_test", (DL_FUNC) &pfHashTest, 2},
   {"hash_test2", (DL_FUNC) &pfHashTest2, 2},
   {"find_fun", (DL_FUNC) &ALIKEC_findFun_ext, 2},
@@ -91,6 +88,8 @@ void R_init_vetr(DllInfo *info)
     so pass those arrays as NULL.
   */
   R_registerRoutines(info, NULL, callMethods, NULL, NULL);
+  R_useDynamicSymbols(info, FALSE);
+  R_forceSymbols(info, FALSE);
   VALC_SYM_quote = install("quote");
   VALC_SYM_deparse = install("deparse");
   VALC_SYM_one_dot = install(".");

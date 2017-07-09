@@ -100,6 +100,12 @@ stop recursion since we're not returning the nested error message.
 
 - `special` parameter indicates attributes that are known to have accessor
   functions (e.g. `names`).
+
+We removed the `attr_attr` arg when we switched to settings.  Everything seems
+to still work but it is worth noting that we were manually setting that variable
+in calls to this fun in this file to either 0 or 1 depending on case, so it is
+possible that we broke the treatment of some attributes.  Leaving these docs in
+case we did do that and end up trying to figure out what happened.
 - `attr_attr` indicates we are checking the attributes of an attribute; NOTE:
   can currently no longer remember how/why this should be used, we used to
   use `attr` when this was TRUE, and `attributes` when not, but that doesn't
@@ -107,8 +113,7 @@ stop recursion since we're not returning the nested error message.
 */
 
 struct ALIKEC_res_sub ALIKEC_alike_attr(
-  SEXP target, SEXP current, SEXP attr_symb,
-  struct VALC_settings set, int attr_attr
+  SEXP target, SEXP current, SEXP attr_symb, struct VALC_settings set
 ) {
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
   struct ALIKEC_res_sub res_sub = ALIKEC_res_sub_def();
@@ -120,17 +125,6 @@ struct ALIKEC_res_sub ALIKEC_alike_attr(
         "be", "`alike` the corresponding element in target", "", ""
       )
     );
-    // if(attr_attr) {
-    //   wrap_call = PROTECT(
-    //     lang3(ALIKEC_SYM_attr, R_NilValue, mkString(attr_name))
-    //   );
-    // } else {
-    //   wrap_call = PROTECT(lang2(R_NilValue, R_NilValue));
-    //   SET_CAR(
-    //     wrap_call,
-    //     special ? install(attr_name) : ALIKEC_SYM_attributes
-    //   );
-    // }
     SEXP wrap = PROTECT(ALIKEC_attr_wrap(attr_symb, R_NilValue));
     SET_VECTOR_ELT(res_sub.message, 1, wrap);
     UNPROTECT(2);
@@ -152,7 +146,7 @@ struct ALIKEC_res_sub ALIKEC_compare_class(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
   if(TYPEOF(current) != STRSXP || TYPEOF(target) != STRSXP)
-    return ALIKEC_alike_attr(target, current, R_ClassSymbol, set, 0);
+    return ALIKEC_alike_attr(target, current, R_ClassSymbol, set);
 
   int tar_class_len, cur_class_len, len_delta, tar_class_i, cur_class_i,
       is_df = 0;
@@ -239,9 +233,8 @@ struct ALIKEC_res_sub ALIKEC_compare_class(
 
   if(res.success) {
     UNPROTECT(1);
-    res = ALIKEC_alike_attr(
-      ATTRIB(target), ATTRIB(current), R_ClassSymbol, set, 1
-    );
+    res = 
+      ALIKEC_alike_attr(ATTRIB(target), ATTRIB(current), R_ClassSymbol, set);
     PROTECT(res.message);
   }
   UNPROTECT(1);
@@ -277,7 +270,7 @@ struct ALIKEC_res_sub ALIKEC_compare_dims(
     (TYPEOF(target) != INTSXP && target != R_NilValue) ||
     (TYPEOF(current) != INTSXP && current != R_NilValue)
   )
-    return ALIKEC_alike_attr(target, current, R_DimSymbol, set, 0);
+    return ALIKEC_alike_attr(target, current, R_DimSymbol, set);
 
   // Dims -> implicit class
 
@@ -395,7 +388,7 @@ struct ALIKEC_res_sub ALIKEC_compare_dims(
       ));
       return res;
   } }
-  return ALIKEC_alike_attr(target, current, R_DimSymbol, set, 1);
+  return ALIKEC_alike_attr(target, current, R_DimSymbol, set);
 }
 SEXP ALIKEC_compare_dim_ext(
   SEXP target, SEXP current, SEXP tar_obj, SEXP cur_obj
@@ -571,9 +564,9 @@ struct ALIKEC_res_sub ALIKEC_compare_dimnames(
   SEXP prim_names = getAttrib(prim, R_NamesSymbol);
   SEXP sec_names = getAttrib(sec, R_NamesSymbol);
   R_xlen_t prim_len, sec_len;
-  SEXPTYPE prim_type = TYPEOF(prim);
+  SEXPTYPE prim_type = TYPEOF(prim), sec_type = TYPEOF(sec);
   if( // not a standard dimnames attribute
-    prim_type != TYPEOF(sec) || prim_type != VECSXP ||
+    prim_type != sec_type || prim_type != VECSXP ||
     (
       prim_names != R_NilValue &&
       !ALIKEC_are_special_char_attrs_internal(prim_names, sec_names)
@@ -762,10 +755,10 @@ display that can handle floats
 struct ALIKEC_res_sub ALIKEC_compare_ts(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
-  SEXPTYPE tar_type = TYPEOF(target);
+  SEXPTYPE tar_type = TYPEOF(target), cur_type = TYPEOF(current);
   struct ALIKEC_res_sub res = ALIKEC_res_sub_def();
   if(
-    tar_type == REALSXP && TYPEOF(current) == tar_type &&
+    tar_type == REALSXP && cur_type == tar_type &&
     XLENGTH(target) == 3 && XLENGTH(current) == 3
   ) {
     double * tar_real = REAL(target), * cur_real = REAL(current);
@@ -800,7 +793,7 @@ struct ALIKEC_res_sub ALIKEC_compare_ts(
         return res;
     } }
   } else {
-    return ALIKEC_alike_attr(target, current, R_TspSymbol, set, 0);
+    return ALIKEC_alike_attr(target, current, R_TspSymbol, set);
   }
   return res;
 }
@@ -833,7 +826,7 @@ struct ALIKEC_res_sub  ALIKEC_compare_levels(
     UNPROTECT(1);
     return res;
   }
-  return ALIKEC_alike_attr(target, current, R_LevelsSymbol, set, 0);
+  return ALIKEC_alike_attr(target, current, R_LevelsSymbol, set);
 }
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
@@ -929,7 +922,7 @@ struct ALIKEC_res_sub ALIKEC_compare_attributes_internal_simple(
       UNPROTECT(1);
     }
   } else {
-    res = ALIKEC_alike_attr(target, current, attr_sym, set, 0);
+    res = ALIKEC_alike_attr(target, current, attr_sym, set);
     PROTECT(res.message);
   }
   UNPROTECT(1);

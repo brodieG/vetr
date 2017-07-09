@@ -18,31 +18,6 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 #include "validate.h"
 
-// - Testing Function ----------------------------------------------------------
-
-// nocov start
-
-SEXP VALC_test(SEXP a, SEXP b) {
-  error("stop testing function shouldn't be in use");
-
-  UNPROTECT(2);
-  return(R_NilValue);
-}
-
-SEXP VALC_test1(SEXP a) {
-  error("stop!;;;;;");
-  return(a);
-}
-SEXP VALC_test2(SEXP a, SEXP b) {
-  // VALC_stop(a, "error!", b);
-  return(a);
-}
-SEXP VALC_test3(SEXP a, SEXP b) {
-  // VALC_stop(a, "error!", b);
-  return(a);
-}
-// nocov end
-
 // - Helper Functions ----------------------------------------------------------
 
 int IS_TRUE(SEXP x) {

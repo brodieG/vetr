@@ -2,7 +2,7 @@
 
 
 
-# vetr - Trust, but Verify
+# vetr
 
 [![](https://travis-ci.org/brodieG/vetr.svg?branch=master)](https://travis-ci.org/brodieG/vetr)
 [![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://codecov.io/github/brodieG/vetr?branch=master)
@@ -38,6 +38,7 @@ the rest:
 
 
 ```r
+library(vetr)
 tpl <- numeric(1L)
 vet(tpl, 1:3)
 ## [1] "`1:3` should be length 1 (is 3)"
@@ -78,10 +79,10 @@ tpl.iris <- iris[0, ]      # 0 row DF matches any number of rows in object
 iris.fake <- iris
 levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
 
-vet(tpl.iris, iris[1:10, ])
+vet(tpl.iris, iris)
 ## [1] TRUE
-vet(tpl.iris, iris.fake[1:10, ])
-## [1] "`levels((iris.fake[1:10, ])$Species)[3]` should be \"virginica\" (is \"sibirica\")"
+vet(tpl.iris, iris.fake)
+## [1] "`levels(iris.fake$Species)[3]` should be \"virginica\" (is \"sibirica\")"
 ```
 
 From our declared template `iris[0, ]`, `vetr` infers all the required checks.
@@ -89,7 +90,7 @@ In this case, `vet(iris[0, ], iris.fake, stop=TRUE)` is equivalent to:
 
 
 ```r
-vet_stopifnot <- function(x) {
+stopifnot_iris <- function(x) {
   stopifnot(
     is.list(x), inherits(x, "data.frame"),
     length(x) == 5, is.integer(attr(x, 'row.names')),
@@ -102,15 +103,15 @@ vet_stopifnot <- function(x) {
     identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
   )
 }
-vet_stopifnot(iris.fake[1:10, ])
+stopifnot_iris(iris.fake)
 ## Error: identical(levels(x$Species), c("setosa", "versicolor", "virginica")) is not TRUE
 ```
 
-`vetr` saved us typing, and time to come up with the things that need to be
-compared.
+`vetr` saved us typing, and the time and thought needed to come up with the
+things that need to be compared.
 
 You could just as easily have created templates for nested lists, or data frames
-in lists.  Templates are compared to objects with the `alike` functions.  For a
+in lists.  Templates are compared to objects with the `alike`.  For a
 thorough description of templates and how they work see the [`alike`
 vignette][2].  For template examples see `example(alike)`.
 
@@ -120,15 +121,15 @@ Let's revisit the error message:
 
 
 ```r
-vet(tpl.iris, iris.fake[1:10, ])
-## [1] "`levels((iris.fake[1:10, ])$Species)[3]` should be \"virginica\" (is \"sibirica\")"
+vet(tpl.iris, iris.fake)
+## [1] "`levels(iris.fake$Species)[3]` should be \"virginica\" (is \"sibirica\")"
 ```
 
 It tells us:
 
 * The reason for the failure
 * What structure would be acceptable instead
-* The location of failure `levels((iris.fake[1:10, ])$Species)[3]`
+* The location of failure `levels(iris.fake$Species)[3]`
 
 `vetr` does what it can to reduce the time from error to resolution.  The
 location of failure is generated such that you can easily copy it in part or
@@ -149,7 +150,8 @@ vet(numeric(1L) || NULL, "foo")
 ## [1] "`\"foo\"` should be \"NULL\", or type \"numeric\" (is \"character\")"
 ```
 
-When you need to check values use `.` to reference the object:
+Templates only check structure.  When you need to check values use `.` to
+refer to the object:
 
 
 ```r
@@ -217,11 +219,11 @@ fun(1, "foo")
 `vetr` automatically matches the vetting expressions to the corresponding
 arguments and fetches the argument values from the function environment.
 
-See [vignette][1] for additional details on how the `vetr` function works.
+See [vignette][4] for additional details on how the `vetr` function works.
 
 ## Additional Documentation
 
-* [`vetr` vignette][1], `?vetr`, `example(vetr)`
+* [`vetr` vignette][1], `?vet`, `?vetr`, `example(vet)`, `example(vetr)`
 * [`alike` vignette][2], `?alike`, and `example(alike)` for discussion of
   templates
 
@@ -235,8 +237,12 @@ long as every named element in the template exists in the object).
 
 ## Installation
 
-`vetr` will shortly be available on CRAN.  In the meantime, you can get it from
-github:
+
+```r
+install.packages('vetr')
+```
+
+Or for the development version:
 
 
 ```r
@@ -249,7 +255,7 @@ devtools::install_github('brodieg/vetr@development')
 <ul>
   <li><a href='https://github.com/egnha/valaddin'>valaddin</a> by Eugene Ha (see
   <a
-  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#valaddin'>vignette</a>
+  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#valaddin'>vignette</a>
   for a more detailed comparison) has very similar objectives to `vetr`
 
   <li><a href='https://github.com/smbache/ensurer'>ensurer</a> by Stefan M Bache
@@ -268,7 +274,7 @@ devtools::install_github('brodieg/vetr@development')
 
 Thank you to:
 
-* R Core for developing and maintaining such a wonderfully language.
+* R Core for developing and maintaining such a wonderful language.
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
   the repository, and Uwe Ligges in particular for maintaining
   [Winbuilder](http://win-builder.r-project.org/).
@@ -305,6 +311,7 @@ Thank you to:
 
 Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 
-[1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html
-[2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/alike.html
-[3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/inst/doc/vetr.html#non-standard-evaluation
+[1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html
+[2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/alike.html
+[3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#non-standard-evaluation
+[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#in-functions

@@ -1,6 +1,11 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^\DEVNOTES\.md$
-^\CRAN\.md$
+^DEVNOTES\.md$
+^CRAN\.md$
 ^\.travis\.yml$
 .Rdata
+^covr\.R
+^extra$
+^scratch\.R
+^README\.Rmd
+^README\.html

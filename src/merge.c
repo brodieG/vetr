@@ -81,7 +81,6 @@ SEXP ALIKEC_sort_msg(SEXP msgs, struct VALC_settings set) {
       // delimiters to minimize susceptibility to frame shift, but obviously not
       // a guarantee
 
-      Rprintf("nchar max: %zu\n", set.nchar_max);
       sort_string = CSR_smprintf6(
         set.nchar_max, "%s <:> %s <:> %s <:> %s <:> %s%s",
         CHAR(STRING_ELT(str_elt, 0)), CHAR(STRING_ELT(str_elt, 1)),
@@ -103,6 +102,10 @@ SEXP ALIKEC_sort_msg(SEXP msgs, struct VALC_settings set) {
   }
   UNPROTECT(1);
   return(msg_sort);
+}
+SEXP ALIKEC_sort_msg_ext(SEXP msgs) {
+  struct VALC_settings set = VALC_settings_vet(R_NilValue, R_BaseEnv);
+  return ALIKEC_sort_msg(msgs, set);
 }
 
 /*
@@ -149,7 +152,7 @@ SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set) {
       R_xlen_t j = 0;      // count how many elements in group
       // this will be the concatented second value in our vectors
 
-      const char * target;
+      const char * target = "";
 
       for(R_xlen_t i=0; i < len; i++) {
 
@@ -202,6 +205,10 @@ SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set) {
 
   UNPROTECT(2);
   return res;
+}
+SEXP ALIKEC_merge_msg_ext(SEXP msgs) {
+  struct VALC_settings set = VALC_settings_vet(R_NilValue, R_BaseEnv);
+  return ALIKEC_merge_msg(msgs, set);
 }
 /*
  * additional layer just collapses the 5 length char vectors into one

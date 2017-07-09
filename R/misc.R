@@ -88,8 +88,8 @@ msg_sort <- function(messages)
 msg_merge <- function(messages)
   .Call(VALC_msg_merge, messages)
 
-msg_merge_ext <- function(messages)
-  .Call(VALC_msg_merge_ext, messages)
+msg_merge_2 <- function(messages)
+  .Call(VALC_msg_merge_2, messages)
 
 find_fun <- function(fun.name, env)
   .Call(VALC_find_fun, fun.name, env)
@@ -102,9 +102,3 @@ track_hash <- function(keys, size) .Call(VALC_track_hash, keys, size);
 
 hash_fun <- function(x) .Call(VALC_default_hash_fun, x)
 
-#' Pre-calculated Precision Level
-#'
-#' Used to limit overhead of calls the require use of
-#' \code{.Machine$double.eps ^ 0.5}
-
-MachDblEpsSqrt <- .Machine$double.eps ^ 0.5
