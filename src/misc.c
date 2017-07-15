@@ -18,6 +18,16 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 #include "validate.h"
 
+SEXP VALC_test1(SEXP a) {
+  return ScalarReal(REAL(a)[0] + REAL(a)[0] + REAL(a)[0]);
+}
+SEXP VALC_test2(SEXP a, SEXP b) {
+  return ScalarReal(REAL(a)[0] + REAL(b)[0] + REAL(a)[0]);
+}
+SEXP VALC_test3(SEXP a, SEXP b, SEXP c) {
+  return ScalarReal(REAL(a)[0] + REAL(b)[0] + REAL(b)[0]);
+}
+
 // - Helper Functions ----------------------------------------------------------
 
 int IS_TRUE(SEXP x) {

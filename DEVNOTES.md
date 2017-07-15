@@ -113,6 +113,21 @@ It seems like there are no stack imbalance problems when the script finishes wit
 
 ## Optimization
 
+### New Notes (7/14/17)
+
+It seems overall `.Call` has gotten a bit faster, although perhaps this is the
+new machine being faster:
+```
+> microbenchmark(test1(1), test2(1,2), test3(1,2,3))
+Unit: nanoseconds
+           expr min    lq   mean median  uq   max neval
+       test1(1) 488 506.0 953.77  517.5 585 40254   100
+    test2(1, 2) 592 632.0 724.22  664.5 745  3332   100
+ test3(1, 2, 3) 699 748.5 853.18  809.0 881  2741   100
+```
+These all do trivial work, trying to measure overhead from parameters.  Looks
+like 150ns per parameter.  Probably not enough to worry about too much.
+
 ### `.Call` vs. `.External`:
 
 ```
