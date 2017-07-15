@@ -176,13 +176,12 @@ void CSR_strappend(char * target, const char * str, size_t maxlen) {
  */
 
 size_t CSR_add_szt(size_t a, size_t b) {
-  size_t full_len = a + b;
-  if(full_len < a || full_len < b)
+  if(SIZE_T_MAX - a < b)
     error("%s%s",
       "size_t overflow: you tried to add two size_t numbers that together ",
       "overflow size_t"
     );
-  return full_len;
+  return a + b;
 }
 /*
 Returns a character pointer containing the results of using `a` as the parent
