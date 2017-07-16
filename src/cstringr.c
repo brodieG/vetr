@@ -40,19 +40,60 @@ allocates with R_alloc so in theory don't need to worry about freeing memory
 */
 
 char * CSR_len_as_chr(R_xlen_t a) {
-  char * res;
-  res = R_alloc(CSR_len_chr_len(a) + 1, sizeof(char));
+  return CSR_num_as_chr(a, 1);
+}
+/*
+ * Convert number to character representation
+ *
+ * Using .0f due to portability issues.  used to be %td, but doesn't work on
+ * windows, then %zd apparently doesn't work on the mingw compiler (at least
+ * without tweaks), so we're trying doubles which in theory should represent
+ * anything we could possibly get from R_xlen_t
+ */
 
-  if(pow((double) 2, 53) < a) {
-    error("Internal Error: can't handle values greater than 2^53");  // nocov
+char * CSR_num_as_chr(double num, int as_int) {
+  const char * format;
+  if(as_int && pow((double) 2, 53) < a) {
+    // nocov start
+    error(
+      "%s%s",
+      "Internal Error: can't handle values greater than 2^53 in int mode, ",
+      "contact maintainer."
+    );
+    // nocov end
   }
-  // used to be %td, but doesn't work on windows, then %zd apparently doesn't
-  // work on the mingw compiler (at least without tweaks), so we're trying
-  // doubles which in theory should represent anything we could possibly get
-  // from R_xlen_t
+  if(as_int) format = "%.0f"; else format = "%f";
 
-  if(!sprintf(res, "%.0f", (double) a))
-    error("Logic Error: r_xlen_to_char conversion failed");  // nocov
+  // not clear what snprintf does if mem_req would be greater than INT_MAX,
+  // doesn't appear documented.  Likely impossible to hit that here though
+
+  int mem_req = snprintf(NULL, 0, format, num);
+  if(mem_req < 0)
+    // nocov start
+    error(
+      "%s%s",
+      "Internal Error: could not compute as character width of number, ",
+      "contact maintainer."
+    );
+    // nocov end
+  char * res = R_alloc(mem_req + 1, sizeof(char));
+  int write_res = snprintf(res, mem_req + 1, format, num);
+
+  if(write_res < 0)
+    // nocov start
+    error(
+      "%s%s", "Internal Error: failed converting num to string, ",
+      "contact maintainer."
+    );
+    // nocov end
+  else if(write_res > mem_req)
+    // nocov start
+    error(
+      "%s%s", "Internal Error: truncation converting num to string, ",
+      "contact maintainer."
+    );
+    // nocov start
+
   return res;
 }
 /*
@@ -170,11 +211,9 @@ void CSR_strappend(char * target, const char * str, size_t maxlen) {
     } else if(target[len - 1]) target[len] = '\0';
   }
 }
-
 /*
  * Add two size_t if possible, error otherwise
  */
-
 size_t CSR_add_szt(size_t a, size_t b) {
   if(SIZE_T_MAX - a < b)
     error("%s%s",
@@ -214,6 +253,8 @@ char * CSR_smprintf6(
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(f, maxlen));
 
   char * res;
+
+  // Limit each string and format to `maxlen`
 
   char * a_cpy = CSR_strmcpy(a, maxlen);
   char * b_cpy = CSR_strmcpy(b, maxlen);
@@ -262,7 +303,6 @@ char * CSR_smprintf2(
 char * CSR_smprintf1(size_t maxlen, const char * format, const char * a) {
   return(CSR_smprintf6(maxlen, format, a, "", "", "", "", ""));
 }
-
 // - Capitalization functions --------------------------------------------------
 
 /* Make copy and capitalize first letter */
