@@ -16,7 +16,7 @@
 #' @param hi scalar vector of type coercible to the type of `x`, cannot be NA
 #' @param na.rm TRUE or FALSE (default), whether NAs are allowed, NAs are
 #'   normally taken to never meet the `lo`-`hi` value requirements.
-#' @param include.ends `character(1L)` for values between `lo` and `hi`:
+#' @param include.bounds `character(1L)` for values between `lo` and `hi`:
 #'   * "[]" include `lo` and `hi`
 #'   * "()" exclude `lo` and `hi`
 #'   * "[)" include `lo`, exclude `hi`
@@ -27,7 +27,7 @@
 #'   * "](" values outside of `lo`-`hi`, include `lo`, exclude `hi`
 #'   * ")[" values outside of `lo`-`hi`, exclude `lo`, include `hi`
 
-all_bw <- function(x, lo, hi, na.rm=FALSE, include.ends="[]")
-  .Call(VALC_all_bw, x, lo, hi, na.rm, include.ends)
+all_bw <- function(x, lo, hi, na.rm=FALSE, include.bounds="[]")
+  .Call(VALC_all_bw, x, lo, hi, na.rm, include.bounds)
 
 
