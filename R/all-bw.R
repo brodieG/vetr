@@ -11,6 +11,7 @@
 #' values are outside of the integer range then any integer value on that side
 #' of the range will be allowed.
 #'
+#' @export
 #' @param x vector numeric, integer, or character
 #' @param lo scalar vector of type coercible to the type of `x`, cannot be NA
 #' @param hi scalar vector of type coercible to the type of `x`, cannot be NA
@@ -26,6 +27,11 @@
 #'   * ")(" values outside of `lo`-`hi`, exclude `lo` and `hi`
 #'   * "](" values outside of `lo`-`hi`, include `lo`, exclude `hi`
 #'   * ")[" values outside of `lo`-`hi`, exclude `lo`, include `hi`
+#' @return TRUE if all values in `x` conform to the specified bounds, a string
+#'   describing the first position that fails otherwise
+#' @examples
+#' all_bw(runif(100), 0, 1)
+#' all_bw(runif(100) * 2, 0, 1)
 
 all_bw <- function(x, lo, hi, na.rm=FALSE, include.bounds="[]")
   .Call(VALC_all_bw, x, lo, hi, na.rm, include.bounds)

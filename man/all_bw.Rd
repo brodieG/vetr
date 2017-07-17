@@ -4,15 +4,54 @@
 \alias{all_bw}
 \title{Verify Values in Vector are Between Two Others}
 \usage{
-all_bw(x, lo, hi)
+all_bw(x, lo, hi, na.rm = FALSE, include.bounds = "[]")
 }
 \arguments{
-\item{x}{vector numeric or character}
+\item{x}{vector numeric, integer, or character}
 
-\item{lo}{scalar vector of same type as \code{x}}
+\item{lo}{scalar vector of type coercible to the type of \code{x}, cannot be NA}
 
-\item{hi}{scalar vector of same type as \code{y}}
+\item{hi}{scalar vector of type coercible to the type of \code{x}, cannot be NA}
+
+\item{na.rm}{TRUE or FALSE (default), whether NAs are allowed, NAs are
+normally taken to never meet the \code{lo}-\code{hi} value requirements.}
+
+\item{include.bounds}{\code{character(1L)} for values between \code{lo} and \code{hi}:
+\itemize{
+\item "[]" include \code{lo} and \code{hi}
+\item "()" exclude \code{lo} and \code{hi}
+\item "[)" include \code{lo}, exclude \code{hi}
+\item "(]" exclude \code{lo}, include \code{hi}
+and for values outside \code{lo} and \code{hi}
+\item "][" values outside of \code{lo}-\code{hi}, include \code{lo} and \code{hi}
+\item ")(" values outside of \code{lo}-\code{hi}, exclude \code{lo} and \code{hi}
+\item "](" values outside of \code{lo}-\code{hi}, include \code{lo}, exclude \code{hi}
+\item ")[" values outside of \code{lo}-\code{hi}, exclude \code{lo}, include \code{hi}
+}
+
+[)" include \code{lo}, exclude \code{hi}
+\itemize{
+\item "(]: R:)%22%20include%20%60lo%60,%20exclude%20%60hi%60%0A%20%20*%20%22(
+}}
+}
+\value{
+TRUE if all values in \code{x} conform to the specified bounds, a string
+describing the first position that fails otherwise
 }
 \description{
-Verify Values in Vector are Between Two Others
+Default mode includes the bounds, but that can be modified with the
+\code{include.bounds} parameter.  In addition to changing bounds treatment,
+\code{include.bounds} allows you to specify whether you want the values inside or
+outside the range defined by \code{lo}-\code{hi}.  Keep in mind that betweeness of
+character strings will be affected by system collation, etc.
+}
+\details{
+If \code{x} and \code{lo}/\code{hi} are different types, \code{lo}/\code{hi} will be coerced to the
+type of \code{x}.  When \code{lo}/\code{hi} are numeric and \code{x} is integer, if \code{lo}/\code{hi}
+values are outside of the integer range then any integer value on that side
+of the range will be allowed.
+}
+\examples{
+all_bw(runif(100), 0, 1)
+all_bw(runif(100) * 2, 0, 1)
 }
