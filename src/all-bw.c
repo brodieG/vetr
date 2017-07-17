@@ -103,11 +103,57 @@ SEXP VALC_all_bw(
 
     double lo_num = asReal(lo);
     double hi_num = asReal(hi);
+
     if(lo_num > hi_num) {
       hi_num = lo_num;
       lo_num = asReal(hi);
     }
+    if(lo_num == -INFINITY && !bw)
+      error(
+        "Argument `lo` cannot be -infinity when using %s",
+        "`include.ends` in "\"][\", \"](\", \")[\", \")(\".";
+      )
+    if(hi_num == INFINITY && !bw)
+      error(
+        "Argument `hi` cannot be infinity when using %s",
+        "`include.ends` in "\"][\", \"](\", \")[\", \")(\".";
+      )
+    // For simplicity we do the low bound and hi bounds in separate loops; this
+    // is slower but otherwise we're going to have an annoying number of
+    // permuations to deal with
 
+    double less_than = bw ? hi_num : lo_num;
+    double gt_than = bw ? lo_num : hi_num;
+    int lo_unbound = bw && lo_num == -INFINITY;
+    int hi_unbound = bw && hi_num == INFINITY;
+
+    const char * log_err =
+      "Internal Error: unexpected logical result %s, contact maintainer."
+    if(!lo_unbound && !hi_unbound) {
+      if(!inc_lo && !inc_hi) {
+      } else if (inc_lo && inc_hi) {
+      } else if (inc_lo) {
+      } else if (inc_hi) {
+      } else error(log_err, "q34");
+    } else if (lo_unbound && hi_unbound) {
+      if(!inc_lo && !inc_hi) {
+      } else if (inc_lo && inc_hi) {
+      } else if (inc_lo) {
+      } else if (inc_hi) {
+      } else error(log_err, "q34");
+    } else if (lo_unbound) {
+      if(!inc_lo && !inc_hi) {
+      } else if (inc_lo && inc_hi) {
+      } else if (inc_lo) {
+      } else if (inc_hi) {
+      } else error(log_err, "q34");
+    } else if (hi_unbound) {
+      if(!inc_lo && !inc_hi) {
+      } else if (inc_lo && inc_hi) {
+      } else if (inc_lo) {
+      } else if (inc_hi) {
+      } else error(log_err, "q34");
+    } else error(log_err, "hfg89");
 
     if(x_type == INTSXP) {
       int lo_int = asInteger(lo);
