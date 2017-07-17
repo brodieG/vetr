@@ -41,6 +41,24 @@ SEXP VALC_all_bw(
 
   // - Validation --------------------------------------------------------------
 
+  // Note we use char version of number to avoid portability issues with zd and
+  // similar on MinGW
+
+  if(xlength(na_rm) != 1)
+    error(
+      "Argument `na_rm` must be length 1 (is %s).",
+      CSR_len_as_chr(xlength(na_rm))
+    );
+  if(TYPEOF(na_rm) != LGLSXP) {
+    error(
+      "Argument `na_rm` must be logical (is %s).",
+      type2char(TYPEOF(na_rm))
+    );
+  }
+  int na_rm_int = asInteger(na_rm);
+  if(!(na_rm_int == 1 || na_rm_int == 0))
+    error("Argument `na_rm` must be TRUE or FALSE (is NA).");
+
   if(xlength(hi) != 1)
     error(
       "Argument `hi` must be length 1 (is %s).", CSR_len_as_chr(xlength(hi))
@@ -91,6 +109,9 @@ SEXP VALC_all_bw(
 
   // - Numerics ----------------------------------------------------------------
 
+  // We end up doing doubles and ints completely separately, even though they
+  // share the same logic to avoid coercing integers to doubles
+
   if(num_like(x))  {
     if(!num_like(lo))
       error(
@@ -101,12 +122,14 @@ SEXP VALC_all_bw(
         "Argument `x` is numeric-like, but `hi` is %s.", type2char(hi_type)
       );
 
+    // Determine low and high bounds, when using double bounds for integer `x`
+    // need to adjust whether ends are included or not
+
     double lo_num = asReal(lo);
     double hi_num = asReal(hi);
 
     if(lo_num > hi_num) {
-      hi_num = lo_num;
-      lo_num = asReal(hi);
+      error("Argument `hi` must be greater than or equal to `lo`.");
     }
     if(lo_num == -INFINITY && !bw)
       error(
@@ -118,72 +141,193 @@ SEXP VALC_all_bw(
         "Argument `hi` cannot be infinity when using %s",
         "`include.ends` in "\"][\", \"](\", \")[\", \")(\".";
       )
-    // For simplicity we do the low bound and hi bounds in separate loops; this
-    // is slower but otherwise we're going to have an annoying number of
-    // permuations to deal with
 
-    double less_than = bw ? hi_num : lo_num;
-    double gt_than = bw ? lo_num : hi_num;
     int lo_unbound = bw && lo_num == -INFINITY;
     int hi_unbound = bw && hi_num == INFINITY;
 
     const char * log_err =
       "Internal Error: unexpected logical result %s, contact maintainer."
-    if(!lo_unbound && !hi_unbound) {
-      if(!inc_lo && !inc_hi) {
-      } else if (inc_lo && inc_hi) {
-      } else if (inc_lo) {
-      } else if (inc_hi) {
-      } else error(log_err, "q34");
-    } else if (lo_unbound && hi_unbound) {
-      if(!inc_lo && !inc_hi) {
-      } else if (inc_lo && inc_hi) {
-      } else if (inc_lo) {
-      } else if (inc_hi) {
-      } else error(log_err, "q34");
-    } else if (lo_unbound) {
-      if(!inc_lo && !inc_hi) {
-      } else if (inc_lo && inc_hi) {
-      } else if (inc_lo) {
-      } else if (inc_hi) {
-      } else error(log_err, "q34");
-    } else if (hi_unbound) {
-      if(!inc_lo && !inc_hi) {
-      } else if (inc_lo && inc_hi) {
-      } else if (inc_lo) {
-      } else if (inc_hi) {
-      } else error(log_err, "q34");
-    } else error(log_err, "hfg89");
 
-    if(x_type == INTSXP) {
-      int lo_int = asInteger(lo);
-      int hi_int = asInteger(hi);
+    R_xlen_t i;
+    int success = 1;
+    char * err_val;
 
-      if(lo_int = NA_INTEGER)
-        error("Argument `lo` is NA when coerced to integer.");
-      if(hi_int = NA_INTEGER)
-        error("Argument `hi` is NA when coerced to integer.");
+    if(x_type == REALSXP) {
+      // - Numeric -------------------------------------------------------------
 
-      for(R_xlen_t i = 0; i < xlength(x); ++i) {
-        if(INTEGER(x)[i] > hi_int)
-          return ScalarString(
-            CSR_smprintf4(
-              10000, "only contain values less than %s (%s found at index %s)",
-              CSR_num_as_chr(hi, 1), CSR_num_as_chr(INTEGER(x)[i], 1),
-              CSR_len_as_chr(i, 1)
-            )
-          );
+      // probably for not between we just switch lo and high
+      warning("remember to adjust for between and not between");
+
+      double * data = REAL(x);
+
+      if(!lo_unbound && !hi_unbound) {
+        if(!inc_lo && !inc_hi) {
+          if(na_rm_int) {
+            for(i = 0; i < xlength(x); ++i) {
+              if(
+                !((IS_NAN(data[i]) || (data[i] > lo_num && data[i] < hi_num))
+              ) {
+                success = 0;
+                break;
+            } }
+          } else {
+            for(i = 0; i < xlength(x); ++i) {
+              if(!(data[i] > lo_num && data[i] < hi_num)) {
+                success = 0;
+                break;
+          } } }
+        } else if (inc_lo && inc_hi) {
+          if(na_rm_int) {
+            for(i = 0; i < xlength(x); ++i) {
+              if(
+                !((IS_NAN(data[i]) || (data[i] >= lo_num && data[i] <= hi_num))
+              ) {
+                success = 0;
+                break;
+            } }
+          } else {
+            for(i = 0; i < xlength(x); ++i) {
+              if(!(data[i] >= lo_num && data[i] <= hi_num)) {
+                success = 0;
+                break;
+          } } }
+        } else if (inc_lo) {
+          if(na_rm_int) {
+            for(i = 0; i < xlength(x); ++i) {
+              if(
+                !((IS_NAN(data[i]) || (data[i] >= lo_num && data[i] < hi_num))
+              ) {
+                success = 0;
+                break;
+            } }
+          } else {
+            for(i = 0; i < xlength(x); ++i) {
+              if(!(data[i] >= lo_num && data[i] < hi_num)) {
+                success = 0;
+                break;
+          } } }
+        } else if (inc_hi) {
+          if(na_rm_int) {
+            for(i = 0; i < xlength(x); ++i) {
+              if(
+                !((IS_NAN(data[i]) || (data[i] > lo_num && data[i] <= hi_num))
+              ) {
+                success = 0;
+                break;
+            } }
+          } else {
+            for(i = 0; i < xlength(x); ++i) {
+              if(!(data[i] > lo_num && data[i] <= hi_num)) {
+                success = 0;
+                break;
+          } } }
+        } else error(log_err, "q34");
+      } else if (lo_unbound && hi_unbound) {
+        success = 1;
+      } else if (lo_unbound) {
+        if(!inc_hi) {
+          if(na_rm_int) {
+            for(i = 0; i < xlength(x); ++i) {
+              if(!(IS_NAN(data[i]) || data[i] < hi_num)) {
+                success = 0; break;
+            } }
+          } else {
+            for(i = 0; i < xlength(x); ++i) {
+              if(!data[i] < hi_num) {
+                success = 0; break;
+          } } }
+        } else if (inc_hi) {
+          if(na_rm_int) {
+            for(i = 0; i < xlength(x); ++i) {
+              if(!(IS_NAN(data[i]) || data[i] <= hi_num)) {
+                success = 0; break;
+            } }
+          } else {
+            for(i = 0; i < xlength(x); ++i) {
+              if(!data[i] <= hi_num) {
+                success = 0; break;
+          } } }
+        }  else error(log_err, "q243oij");
+      } else if (hi_unbound) {
+        if(!inc_lo) {
+          if(na_rm_int) {
+            for(i = 0; i < xlength(x); ++i) {
+              if(!(IS_NAN(data[i]) || (data[i] > lo_num)) {
+                success = 0; break;
+            } }
+          } else {
+            for(i = 0; i < xlength(x); ++i) {
+              if(!(data[i] > lo_num)) {
+                success = 0; break;
+          } } }
+        } else if (inc_lo) {
+          if(na_rm_int) {
+            for(i = 0; i < xlength(x); ++i) {
+              if(!(IS_NAN(data[i]) || data[i] >= lo_num)) {
+                success = 0; break;
+            } }
+          } else {
+            for(i = 0; i < xlength(x); ++i) {
+              if(!(data[i] >= lo_num)) {
+                success = 0; break;
+          } } }
+        }  else error(log_err, "2945asdf");
+      } else error(log_err, "hfg89");
+
+      if(!success) err_val == CSR_num_as_chr(data[i], 0);
+    } else if(x_type == INTSXP) {
+      // - Integer -------------------------------------------------------------
+      int lo_int, hi_int;
+
+      if(lo_num < INT_MIN) {
+        lo_int = INT_MIN;
+        lo_unbound = 1;
+      } else {
+        lo_int = asInteger(lo);
       }
-    } else if (x_type == REALSXP) {
-    } else error("Internal Error: invalid `x` type %s.", type2char(x_type));
+      if(hi_num > INT_MAX) {
+        hi_max = INT_MAX;
+        hi_unbound = 1;
+      } else {
+        hi_int = asInteger(hi);
+      }
+      if(lo_int == NA_INTEGER || hi_int == NA_INTEGER)
+        // nocov start
+        error("Internal Error: int bounds ended up NA, contact maintianer.");
+        // nocov end
 
+      // When specifying double bounds for integer `x`, can affect whether to
+      // use greater than or equal vs greater than (and same for less than)
+
+      if(lo_num > (double)lo_int) {
+        inc_lo = 0;
+      }
+      if(hi_num > (double)hi_int) {
+        inc_hi = 1;
+      }
+      error("Integers not implemented yet");
+    }
   } else if(x_type == STRSXP) {
+    // - Strings ---------------------------------------------------------------
 
+    error("Strings not implemented yet");
   } else {
     error(
       "Argument `x` must be numeric-like or character (is %s).",
       type2char(x_type)
     );
   }
-  return R_NilValue;
+  if(!success) {
+    char * msg = CSR_smprintf6(
+      10000, "contain only values in range %s%s%s%s (%s at index %s)",
+      inc_lo ? "[" : "(",
+      CSR_num_as_chr(lo_num, 0),
+      CSR_num_as_chr(hi_num, 0),
+      inc_hi ? "]", ")",
+      CSR_num_as_chr((double) data[i], 0),
+      CSR_len_as_chr(i)
+    );
+    return ScalarString(msg);
+  }
+  return ScalarLogical(1);
 }

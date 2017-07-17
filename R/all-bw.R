@@ -7,18 +7,21 @@
 #' character strings will be affected by system collation, etc.
 #'
 #' If `x` and `lo`/`hi` are different types, `lo`/`hi` will be coerced to the
-#' type of `x`.  Coercions resulting in NA will trigger errors.
+#' type of `x`.  When `lo`/`hi` are numeric and `x` is integer, if `lo`/`hi`
+#' values are outside of the integer range then any integer value on that side
+#' of the range will be allowed.
 #'
 #' @param x vector numeric, integer, or character
 #' @param lo scalar vector of type coercible to the type of `x`, cannot be NA
 #' @param hi scalar vector of type coercible to the type of `x`, cannot be NA
 #' @param na.rm TRUE or FALSE (default), whether NAs are allowed, NAs are
 #'   normally taken to never meet the `lo`-`hi` value requirements.
-#' @param include.ends `character(1L)` in:
+#' @param include.ends `character(1L)` for values between `lo` and `hi`:
 #'   * "[]" include `lo` and `hi`
 #'   * "()" exclude `lo` and `hi`
 #'   * "[)" include `lo`, exclude `hi`
 #'   * "(]" exclude `lo`, include `hi`
+#' and for values outside `lo` and `hi`
 #'   * "][" values outside of `lo`-`hi`, include `lo` and `hi`
 #'   * ")(" values outside of `lo`-`hi`, exclude `lo` and `hi`
 #'   * "](" values outside of `lo`-`hi`, include `lo`, exclude `hi`
