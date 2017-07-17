@@ -80,5 +80,4 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   );
   void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base);
   void psh(const char * lab);
-
 #endif
