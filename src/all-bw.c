@@ -114,7 +114,6 @@ SEXP VALC_all_bw(
 
   R_xlen_t i;
   int success = 1;
-  char * err_val;
 
   if(num_like(x))  {
     if(!num_like(lo))
@@ -283,14 +282,14 @@ SEXP VALC_all_bw(
       if(!success) {
         char * msg = CSR_smprintf6(
           10000, "contain only values in range %c%s%s%c (%s at index %s)",
-          inc_end_chr[0],
+          inc_end_chr,
           CSR_num_as_chr(lo_num, 0),
           CSR_num_as_chr(hi_num, 0),
-          inc_end_chr[1],
+          inc_end_chr + 1,
           CSR_num_as_chr((double) data[i], 0),
           CSR_len_as_chr(i)
         );
-        return ScalarString(msg);
+        return mkString(msg);
       }
     } else if(x_type == INTSXP) {
       // - Integer -------------------------------------------------------------

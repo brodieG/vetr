@@ -53,7 +53,7 @@ char * CSR_len_as_chr(R_xlen_t a) {
 
 char * CSR_num_as_chr(double num, int as_int) {
   const char * format;
-  if(as_int && pow((double) 2, 53) < a) {
+  if(as_int && pow((double) 2, 53) < num) {
     // nocov start
     error(
       "%s%s",
