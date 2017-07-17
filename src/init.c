@@ -17,6 +17,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 
 #include "validate.h"
+#include "all-bw.h"
 #include <R_ext/Rdynload.h>
 
 static const
@@ -31,6 +32,7 @@ R_CallMethodDef callMethods[] = {
   {"all", (DL_FUNC) &VALC_all_ext, 1},
   {"track_hash", (DL_FUNC) &VALC_track_hash_test, 2},
   {"default_hash_fun", (DL_FUNC) &VALC_default_hash_fun, 1},
+  {"all_bw", (DL_FUNC) &VALC_all_bw, 5},
 
   {"test1", (DL_FUNC) &VALC_test1, 1},
   {"test2", (DL_FUNC) &VALC_test2, 2},
