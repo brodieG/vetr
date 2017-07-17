@@ -40,7 +40,7 @@ allocates with R_alloc so in theory don't need to worry about freeing memory
 */
 
 char * CSR_len_as_chr(R_xlen_t a) {
-  return CSR_num_as_chr(a, 1);
+  return CSR_num_as_chr((double)a, 1);
 }
 /*
  * Convert number to character representation
