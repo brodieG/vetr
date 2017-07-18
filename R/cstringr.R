@@ -33,7 +33,7 @@ len_chr_len <- function(x) .Call(VALC_len_chr_len_ext, x)
 
 len_as_chr <- function(x) .Call(VALC_len_as_chr_ext, x)
 
-num_as_chr <- function(a, as.int=0) .Call(VALC_num_as_chr, a, as.int)
+num_as_chr <- function(a, as.int=FALSE) .Call(VALC_num_as_chr, a, as.int)
 
 ## "Safe" String Manipulation Functions
 ##

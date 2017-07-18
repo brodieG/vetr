@@ -56,61 +56,74 @@ char * CSR_len_as_chr(R_xlen_t a) {
  */
 
 char * CSR_num_as_chr(double num, int as_int) {
-  const char * format;
-  double max_num_int = pow((double) 2, 53);
-  if(as_int &&  (max_num_int < num || -max_num_int > num)) {
-    // nocov start
-    error(
-      "%s%s",
-      "Internal Error: can't handle values greater than 2^53 in int mode, ",
-      "contact maintainer."
-    );
-    // nocov end
+  char * res = "<INTERNAL ERROR>"; // should always be modified
+
+  // Handle special cases
+
+  if(ISNA(num)) {
+    res = "NA";
+  } else if (ISNAN(num)) {
+    res = "NaN";
+  } else if (num == R_PosInf) {
+    res = "Inf";
+  } else if (num == R_NegInf) {
+    res = "-Inf";
+  } else {
+    const char * format;
+    double max_num_int = pow((double) 2, 53);
+    if(as_int &&  (max_num_int < num || -max_num_int > num)) {
+      // nocov start
+      error(
+        "%s%s",
+        "Internal Error: can't handle values greater than 2^53 in int mode, ",
+        "contact maintainer."
+      );
+      // nocov end
+    }
+    // Force int display for exact ints
+
+    if(
+      !as_int && max_num_int >= num && -max_num_int <= num && !fmod(num, 1)
+    )
+      as_int = 1;
+
+    // Otherwise use floating or scientific if abs value greater than a billion,
+    // not exactly the same as what R does
+
+    if(as_int) format = "%.0f";
+    else if (abs(num >= 1e9)) format = "%e";
+    else format = "%f";
+
+    // not clear what snprintf does if mem_req would be greater than INT_MAX,
+    // doesn't appear documented.  Likely impossible to hit that here though
+
+    int mem_req = snprintf(NULL, 0, format, num);
+    if(mem_req < 0)
+      // nocov start
+      error(
+        "%s%s",
+        "Internal Error: could not compute as character width of number, ",
+        "contact maintainer."
+      );
+      // nocov end
+    res = R_alloc(mem_req + 1, sizeof(char));
+    int write_res = snprintf(res, mem_req + 1, format, num);
+
+    if(write_res < 0)
+      // nocov start
+      error(
+        "%s%s", "Internal Error: failed converting num to string, ",
+        "contact maintainer."
+      );
+      // nocov end
+    else if(write_res > mem_req)
+      // nocov start
+      error(
+        "%s%s", "Internal Error: truncation converting num to string, ",
+        "contact maintainer."
+      );
+      // nocov start
   }
-  // Force int display for exact ints
-
-  if(
-    !as_int && max_num_int >= num && -max_num_int <= num && !fmod(num, 1)
-  )
-    as_int = 1;
-
-  // Otherwise use floating or scientific if abs value greater than a billion,
-  // not exactly the same as what R does
-
-  if(as_int) format = "%.0f";
-  else if (abs(num >= 1e9)) format = "%e";
-  else format = "%f";
-
-  // not clear what snprintf does if mem_req would be greater than INT_MAX,
-  // doesn't appear documented.  Likely impossible to hit that here though
-
-  int mem_req = snprintf(NULL, 0, format, num);
-  if(mem_req < 0)
-    // nocov start
-    error(
-      "%s%s",
-      "Internal Error: could not compute as character width of number, ",
-      "contact maintainer."
-    );
-    // nocov end
-  char * res = R_alloc(mem_req + 1, sizeof(char));
-  int write_res = snprintf(res, mem_req + 1, format, num);
-
-  if(write_res < 0)
-    // nocov start
-    error(
-      "%s%s", "Internal Error: failed converting num to string, ",
-      "contact maintainer."
-    );
-    // nocov end
-  else if(write_res > mem_req)
-    // nocov start
-    error(
-      "%s%s", "Internal Error: truncation converting num to string, ",
-      "contact maintainer."
-    );
-    // nocov start
-
   return res;
 }
 SEXP CSR_num_as_chr_ext(SEXP a, SEXP as_int) {

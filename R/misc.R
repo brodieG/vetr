@@ -102,6 +102,8 @@ track_hash <- function(keys, size) .Call(VALC_track_hash, keys, size);
 
 hash_fun <- function(x) .Call(VALC_default_hash_fun, x)
 
+# Testing C stuff; should be deleted eventually
+
 #' @export
 test1 <- function(a) .Call(VALC_test1, a)
 #' @export

@@ -299,7 +299,7 @@ SEXP VALC_all_bw(
 
       if(!success) {
         char * msg = CSR_smprintf6(
-          10000, "contain only values in range %s%s,%s%s (%s at index %s)",
+          10000, "contain only values in range `%s%s,%s%s` (%s at index %s)",
           inc_lo_str,
           CSR_num_as_chr(lo_num, 0),
           CSR_num_as_chr(hi_num, 0),
