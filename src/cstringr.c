@@ -48,12 +48,17 @@ char * CSR_len_as_chr(R_xlen_t a) {
  * Using .0f due to portability issues.  used to be %td, but doesn't work on
  * windows, then %zd apparently doesn't work on the mingw compiler (at least
  * without tweaks), so we're trying doubles which in theory should represent
- * anything we could possibly get from R_xlen_t
+ * anything we could possibly get from R_xlen_t.
+ *
+ * Note this will try to print as integer if a number can be precisely
+ * represented as an integer.  No accounting for precision is made, so there
+ * must be nothing past decimal point for this to happen.
  */
 
 char * CSR_num_as_chr(double num, int as_int) {
   const char * format;
-  if(as_int && pow((double) 2, 53) < num) {
+  double max_num_int = pow((double) 2, 53);
+  if(as_int &&  (max_num_int < num || -max_num_int > num)) {
     // nocov start
     error(
       "%s%s",
@@ -62,7 +67,19 @@ char * CSR_num_as_chr(double num, int as_int) {
     );
     // nocov end
   }
-  if(as_int) format = "%.0f"; else format = "%f";
+  // Force int display for exact ints
+
+  if(
+    !as_int && max_num_int >= num && -max_num_int <= num && !fmod(num, 1)
+  )
+    as_int = 1;
+
+  // Otherwise use floating or scientific if abs value greater than a billion,
+  // not exactly the same as what R does
+
+  if(as_int) format = "%.0f";
+  else if (abs(num >= 1e9)) format = "%e";
+  else format = "%f";
 
   // not clear what snprintf does if mem_req would be greater than INT_MAX,
   // doesn't appear documented.  Likely impossible to hit that here though
