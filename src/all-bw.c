@@ -35,7 +35,7 @@ static void include_end_err() {
  * See R interface fun for docs
  */
 SEXP VALC_all_bw(
-  SEXP x, SEXP hi, SEXP lo, SEXP na_rm, SEXP include_bounds
+  SEXP x, SEXP lo, SEXP hi, SEXP na_rm, SEXP include_bounds
 ) {
   SEXPTYPE x_type = TYPEOF(x), lo_type = TYPEOF(lo), hi_type = TYPEOF(hi);
 
@@ -107,6 +107,15 @@ SEXP VALC_all_bw(
   inc_lo = inc_end_chr[0] == '[' || inc_end_chr[0] == ']';
   inc_hi = inc_end_chr[1] == '[' || inc_end_chr[1] == ']';
 
+  // Need actualy strings to use with CSR_smprintf
+
+  char * inc_lo_str = R_alloc(2, sizeof(char));
+  inc_lo_str[0] = inc_end_chr[0];
+  inc_lo_str[1] = '\0';
+  char * inc_hi_str = R_alloc(2, sizeof(char));
+  inc_hi_str[0] = inc_end_chr[1];
+  inc_hi_str[1] = '\0';
+
   // - Numerics ----------------------------------------------------------------
 
   // We end up doing doubles and ints completely separately, even though they
@@ -132,22 +141,31 @@ SEXP VALC_all_bw(
     double hi_num = asReal(hi);
 
     if(lo_num > hi_num) {
-      error("Argument `hi` must be greater than or equal to `lo`.");
+      error("Argument `hi` must be greater than or equal to `lo` %f %f.", lo, hi);
     }
-    if(lo_num == -INFINITY && !bw)
-      error(
-        "Argument `lo` cannot be -infinity when using %s",
-        "`include.ends` in \"][\", \"](\", \")[\", \")(\"."
-      );
-    if(hi_num == INFINITY && !bw)
-      error(
-        "Argument `hi` cannot be infinity when using %s",
-        "`include.ends` in \"][\", \"](\", \")[\", \")(\"."
-      );
+    // Handle the between vs. outside ranges by inverting lo and high
 
-    int lo_unbound = bw && lo_num == -INFINITY;
-    int hi_unbound = bw && hi_num == INFINITY;
-
+    int lo_unbound = 0, hi_unbound = 0;
+    if(!bw) {
+      if(lo_num == -INFINITY)
+        error(
+          "Argument `lo` cannot be -infinity when using %s",
+          "`include.ends` in \"][\", \"](\", \")[\", \")(\"."
+        );
+      if(hi_num == INFINITY)
+        error(
+          "Argument `hi` cannot be infinity when using %s",
+          "`include.ends` in \"][\", \"](\", \")[\", \")(\"."
+        );
+      lo_num = hi_num;
+      hi_num = asReal(lo);
+      SEXP lo_tmp = lo;
+      lo = hi;
+      hi = lo_tmp;
+    } else {
+      lo_unbound = lo_num == -INFINITY;
+      hi_unbound = hi_num == INFINITY;
+    }
     const char * log_err =
       "Internal Error: unexpected logical result %s, contact maintainer.";
 
@@ -161,7 +179,6 @@ SEXP VALC_all_bw(
       // - Numeric -------------------------------------------------------------
 
       // probably for not between we just switch lo and high
-      warning("remember to adjust for between and not between");
 
       double * data = REAL(x);
 
@@ -281,13 +298,13 @@ SEXP VALC_all_bw(
 
       if(!success) {
         char * msg = CSR_smprintf6(
-          10000, "contain only values in range %c%s%s%c (%s at index %s)",
-          inc_end_chr,
+          10000, "contain only values in range %s%s,%s%s (%s at index %s)",
+          inc_lo_str,
           CSR_num_as_chr(lo_num, 0),
           CSR_num_as_chr(hi_num, 0),
-          inc_end_chr + 1,
+          inc_hi_str,
           CSR_num_as_chr((double) data[i], 0),
-          CSR_len_as_chr(i)
+          CSR_len_as_chr(i + 1)
         );
         return mkString(msg);
       }

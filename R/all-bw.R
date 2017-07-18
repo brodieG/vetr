@@ -13,20 +13,25 @@
 #'
 #' @export
 #' @param x vector numeric, integer, or character
-#' @param lo scalar vector of type coercible to the type of `x`, cannot be NA
-#' @param hi scalar vector of type coercible to the type of `x`, cannot be NA
+#' @param lo scalar vector of type coercible to the type of `x`, cannot be NA,
+#'   use `-Inf` for numeric and integer `x` to indicate unbounded, although that
+#'   only works for the inside range versions of `include.bounds`.
+#' @param hi scalar vector of type coercible to the type of `x`, cannot be NA,
+#'   use `Inf` for numeric and integer `x` to indicate unbounded, although that
+#'   only works for the inside range versions of `include.bounds`.
 #' @param na.rm TRUE or FALSE (default), whether NAs are allowed, NAs are
 #'   normally taken to never meet the `lo`-`hi` value requirements.
-#' @param include.bounds `character(1L)` for values between `lo` and `hi`:
-#'   * "[]" include `lo` and `hi`
-#'   * "()" exclude `lo` and `hi`
-#'   * "[)" include `lo`, exclude `hi`
-#'   * "(]" exclude `lo`, include `hi`
-#' and for values outside `lo` and `hi`
-#'   * "][" values outside of `lo`-`hi`, include `lo` and `hi`
-#'   * ")(" values outside of `lo`-`hi`, exclude `lo` and `hi`
-#'   * "](" values outside of `lo`-`hi`, include `lo`, exclude `hi`
-#'   * ")[" values outside of `lo`-`hi`, exclude `lo`, include `hi`
+#' @param include.bounds `character(1L)` for values between `lo` and `hi`,
+#'   * Inside a range:
+#'       * "[]" include `lo` and `hi`
+#'       * "()" exclude `lo` and `hi`
+#'       * "[)" include `lo`, exclude `hi`
+#'       * "(]" exclude `lo`, include `hi`
+#'   * Inverse of the range (i.e. all values outside of range):
+#'       * "][" include `lo` and `hi`
+#'       * ")(" exclude `lo` and `hi`
+#'       * "](" include `lo`, exclude `hi`
+#'       * ")[" exclude `lo`, include `hi`
 #' @return TRUE if all values in `x` conform to the specified bounds, a string
 #'   describing the first position that fails otherwise
 #' @examples
