@@ -43,6 +43,24 @@ unitizer_sect("Basic Tests", {
   vetr:::collapse(letters[1:5], sep="\n")
   vetr:::collapse(character())
 })
+unitizer_sect("numbers as character", {
+  vetr:::num_as_chr(100);
+  vetr:::num_as_chr(100, FALSE);
+  vetr:::num_as_chr(100.01);
+
+  # switch ot scientific
+
+  vetr:::num_as_chr(1e9);
+  vetr:::num_as_chr(1e9, FALSE);
+  vetr:::num_as_chr(-1e9);
+  vetr:::num_as_chr(-1e9, FALSE);
+
+  # corner cases
+
+  vetr:::num_as_chr(NA);
+  vetr:::num_as_chr(NaN);
+  vetr:::num_as_chr(Inf);
+})
 unitizer_sect("smprintf6", {
   vetr:::smprintf6(
     "%s %s %s %s %s %s", "a", "bb", "ccc", "dddd", "eeeee", "ffffff"

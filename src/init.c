@@ -70,6 +70,7 @@ R_CallMethodDef callMethods[] = {
 
   {"len_chr_len_ext", (DL_FUNC) &CSR_len_chr_len_ext, 1},
   {"len_as_chr_ext", (DL_FUNC) &CSR_len_as_chr_ext, 1},
+  {"num_as_chr", (DL_FUNC) &CSR_num_as_chr_ext, 2},
   {"strmlen_ext", (DL_FUNC) &CSR_strmlen_ext, 2},
   {"strmcpy_ext", (DL_FUNC) &CSR_strmcpy_ext, 2},
   {"collapse_ext", (DL_FUNC) &CSR_collapse_ext, 3},

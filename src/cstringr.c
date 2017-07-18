@@ -113,6 +113,9 @@ char * CSR_num_as_chr(double num, int as_int) {
 
   return res;
 }
+SEXP CSR_num_as_chr_ext(SEXP a, SEXP as_int) {
+  return mkString(CSR_num_as_chr(asReal(a), asInteger(as_int)));
+}
 /*
 A safe strmlen, errors if exceeds `maxlen`
 
