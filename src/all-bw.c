@@ -122,6 +122,7 @@ SEXP VALC_all_bw(
   // share the same logic to avoid coercing integers to doubles
 
   R_xlen_t i;
+  R_xlen_t x_len = xlength(x);
   int success = 1;
 
   if(num_like(x))  {
@@ -185,7 +186,7 @@ SEXP VALC_all_bw(
       if(!lo_unbound && !hi_unbound) {
         if(!inc_lo && !inc_hi) {
           if(na_rm_int) {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(
                 !(ISNAN(data[i]) || (data[i] > lo_num && data[i] < hi_num))
               ) {
@@ -193,14 +194,14 @@ SEXP VALC_all_bw(
                 break;
             } }
           } else {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(!(data[i] > lo_num && data[i] < hi_num)) {
                 success = 0;
                 break;
           } } }
         } else if (inc_lo && inc_hi) {
           if(na_rm_int) {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(
                 !(ISNAN(data[i]) || (data[i] >= lo_num && data[i] <= hi_num))
               ) {
@@ -208,14 +209,14 @@ SEXP VALC_all_bw(
                 break;
             } }
           } else {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(!(data[i] >= lo_num && data[i] <= hi_num)) {
                 success = 0;
                 break;
           } } }
         } else if (inc_lo) {
           if(na_rm_int) {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(
                 !(ISNAN(data[i]) || (data[i] >= lo_num && data[i] < hi_num))
               ) {
@@ -223,14 +224,14 @@ SEXP VALC_all_bw(
                 break;
             } }
           } else {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(!(data[i] >= lo_num && data[i] < hi_num)) {
                 success = 0;
                 break;
           } } }
         } else if (inc_hi) {
           if(na_rm_int) {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(
                 !(ISNAN(data[i]) || (data[i] > lo_num && data[i] <= hi_num))
               ) {
@@ -238,7 +239,7 @@ SEXP VALC_all_bw(
                 break;
             } }
           } else {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(!(data[i] > lo_num && data[i] <= hi_num)) {
                 success = 0;
                 break;
@@ -249,23 +250,23 @@ SEXP VALC_all_bw(
       } else if (lo_unbound) {
         if(!inc_hi) {
           if(na_rm_int) {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(!(ISNAN(data[i]) || data[i] < hi_num)) {
                 success = 0; break;
             } }
           } else {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(!(data[i] < hi_num)) {
                 success = 0; break;
           } } }
         } else if (inc_hi) {
           if(na_rm_int) {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(!(ISNAN(data[i]) || data[i] <= hi_num)) {
                 success = 0; break;
             } }
           } else {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(!(data[i] <= hi_num)) {
                 success = 0; break;
           } } }
@@ -273,23 +274,23 @@ SEXP VALC_all_bw(
       } else if (hi_unbound) {
         if(!inc_lo) {
           if(na_rm_int) {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(!(ISNAN(data[i]) || (data[i] > lo_num))) {
                 success = 0; break;
             } }
           } else {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(!(data[i] > lo_num)) {
                 success = 0; break;
           } } }
         } else if (inc_lo) {
           if(na_rm_int) {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(!(ISNAN(data[i]) || data[i] >= lo_num)) {
                 success = 0; break;
             } }
           } else {
-            for(i = 0; i < xlength(x); ++i) {
+            for(i = 0; i < x_len; ++i) {
               if(!(data[i] >= lo_num)) {
                 success = 0; break;
           } } }
