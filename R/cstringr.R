@@ -130,9 +130,9 @@ collapse <- function(str, sep="", maxlen=10000L)
 
 ## Purely internal funs for testing
 
-test1 <- function() .Call(VALC_test_strmcpy)
-test2 <- function() .Call(VALC_test_strappend)
-test3 <- function() .Call(VALC_test_add_szt)
-test4 <- function() .Call(VALC_test_smprintfx)
-test5 <- function() .Call(VALC_test_strappend2)
+test_strmcpy <- function() .Call(VALC_test_strmcpy)
+test_strappend <- function() .Call(VALC_test_strappend)
+test_add_szt <- function() .Call(VALC_test_add_szt)
+test_smprintfx <- function() .Call(VALC_test_smprintfx)
+test_strappend2 <- function() .Call(VALC_test_strappend2)
 

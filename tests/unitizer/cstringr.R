@@ -89,15 +89,15 @@ unitizer_sect("Corner Cases", {
 
   # these are all supposed to fail
 
-  vetr:::test1()
-  vetr:::test2()
-  vetr:::test3()
+  vetr:::test_strmcpy()
+  vetr:::test_strappend()
+  vetr:::test_add_szt()
 
   vetr:::strmlen(list(), 100L)
 
   # quickly confirm the other smprintfs work correctly
 
-  vetr:::test4()
+  vetr:::test_smprintfx()
 
-  vetr:::test5()   # warning
+  vetr:::test_strappend2()   # warning
 })
