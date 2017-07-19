@@ -132,12 +132,15 @@ SEXP VALC_all_bw(
     double hi_num = asReal(hi);
 
     if(lo_num > hi_num) {
-      error("Argument `hi` must be greater than or equal to `lo` %f %f.", lo, hi);
+      error(
+        "Argument `hi` (%s) must be greater than or equal to `lo` (%s).",
+        CSR_num_as_chr(hi_num, 0), CSR_num_as_chr(lo_num, 0)
+      );
     }
     // Handle the between vs. outside ranges by inverting lo and high
 
-    int lo_unbound = lo_num == R_NegInf;
-    int hi_unbound = hi_num == R_PosInf;
+    int lo_unbound = (lo_num == R_NegInf && inc_lo);
+    int hi_unbound = (hi_num == R_PosInf && inc_hi);
 
     const char * log_err =
       "Internal Error: unexpected logical result %s, contact maintainer.";

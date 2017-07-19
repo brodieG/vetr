@@ -26,7 +26,8 @@ unitizer_sect('all_bw', {
 })
 unitizer_sect('corner cases', {
   all_bw(x, 0, 0)                        # fail
-  all_bw(x, 0, 0, include.bounds=")(")   # pass
+  all_bw(0, 0, 0)                        # pass
+  all_bw(0, 0, 0, include.bounds="()")   # fail
 })
 unitizer_sect('Infinity', {
   z <- w <- runif(100, 1e-100, 1e100)
