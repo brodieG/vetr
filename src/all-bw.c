@@ -89,8 +89,8 @@ SEXP VALC_all_bw(
   if(CSR_strmlen(inc_end_chr, 3) != 2) include_end_err();
 
   if(
-    inc_end_chr[0] != '[' && inc_end_chr[0] != '(' &&
-    inc_end_chr[1] != ']' && inc_end_chr[1] != ')'
+    !(inc_end_chr[0] == '[' || inc_end_chr[0] == '(') ||
+    !(inc_end_chr[1] == ']' || inc_end_chr[1] == ')')
   ) {
     include_end_err();
   }
