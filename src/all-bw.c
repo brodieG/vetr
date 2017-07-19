@@ -179,7 +179,8 @@ SEXP VALC_all_bw(
     if(x_type == REALSXP) {
       // - Numeric -------------------------------------------------------------
 
-      // probably for not between we just switch lo and high
+      // probably for not between we just switch lo and high; nope, that doesn't
+      // work.
 
       double * data = REAL(x);
 

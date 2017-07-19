@@ -40,7 +40,6 @@ unitizer_sect('exclude', {
 unitizer_sect('corner cases', {
   all_bw(x, 0, 0)                        # fail
   all_bw(x, 0, 0, include.bounds=")(")   # pass
-
 })
 unitizer_sect('Infinity', {
   z <- w <- runif(100, 1e-100, 1e100)
@@ -51,13 +50,13 @@ unitizer_sect('Infinity', {
   w[51] <- Inf
 
   all_bw(w, -Inf, Inf)        # pass?
-  all_bw(w, -Inf, Inf, "[)")  # fail
-  all_bw(w, -Inf, Inf, "(]")  # fail
+  all_bw(w, -Inf, Inf, include.bounds="[)")  # fail
+  all_bw(w, -Inf, Inf, include.bounds="(]")  # fail
 
-  all_bw(w, -Inf, Inf, ")(")  # pass
-  all_bw(w, -Inf, Inf, ")[")  # fail
-  all_bw(w, -Inf, Inf, "](")  # fail
-  all_bw(w, -Inf, Inf, "][")  # fail
+  all_bw(w, -Inf, Inf, include.bounds=")(")  # pass
+  all_bw(w, -Inf, Inf, include.bounds=")[")  # fail
+  all_bw(w, -Inf, Inf, include.bounds="](")  # fail
+  all_bw(w, -Inf, Inf, include.bounds="][")  # fail
 })
 unitizer_sect('errors', {
   all_bw(x, 0, -1)
