@@ -113,6 +113,34 @@ It seems like there are no stack imbalance problems when the script finishes wit
 
 ## Optimization
 
+### Vs. `checkmate`
+
+```
+xx <- runif(1e4)
+xx[1] <- 1
+xx[2] <- 0
+microbenchmark(
+  assertNumeric(xx, any.missing = FALSE, lower = 0, upper = 1),
+  vet(numeric() && all_bw(., 0, 1), xx),
+  assertNumeric(xx, any.missing = FALSE, lower = 0),
+  vet(numeric() && all_bw(., 0, Inf), xx),
+  vet(numeric() && all(. > 0), xx)
+)
+## Unit: microseconds
+##                                                          expr    min       lq
+##  assertNumeric(xx, any.missing = FALSE, lower = 0, upper = 1) 26.627  29.9290
+##                         vet(numeric() && all_bw(., 0, 1), xx) 20.198  22.6825
+##             assertNumeric(xx, any.missing = FALSE, lower = 0) 19.055  20.7130
+##                       vet(numeric() && all_bw(., 0, Inf), xx) 14.885  16.8890
+##                              vet(numeric() && all(. > 0), xx) 73.076 119.4560
+##       mean  median       uq     max neval
+##   42.24239  36.187  55.2480  88.824   100
+##   30.46707  25.055  40.4240  86.059   100
+##   27.72199  23.029  36.6965  54.854   100
+##   23.69168  18.597  30.5225  54.603   100
+##  149.69694 133.635 169.2880 301.521   100
+```
+
 ### New Notes (7/14/17)
 
 It seems overall `.Call` has gotten a bit faster, although perhaps this is the
