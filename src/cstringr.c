@@ -91,7 +91,7 @@ char * CSR_num_as_chr(double num, int as_int) {
     // not exactly the same as what R does
 
     if(as_int) format = "%.0f";
-    else if (abs(num >= 1e9)) format = "%e";
+    else if (fabs(num) >= 1e9) format = "%e";
     else format = "%f";
 
     // not clear what snprintf does if mem_req would be greater than INT_MAX,
