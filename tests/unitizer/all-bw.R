@@ -24,19 +24,6 @@ unitizer_sect('all_bw', {
   all_bw(z, 0, 1)              # fail
   all_bw(z, 0, 1, na.rm=TRUE)  # pass
 })
-unitizer_sect('exclude', {
-  all_bw(x, 1 + 1e-6, 2, include.bounds="][") # pass
-  all_bw(x, 1, 2, include.bounds="][")        # fail
-  all_bw(x, 1, 2, include.bounds=")[")        # fail
-  all_bw(x, 1, 2, include.bounds=")(")        # pass
-  all_bw(x, 1, 2, include.bounds="](")        # pass
-
-  all_bw(x, -1, 0 - 1e-6, include.bounds="][")# pass
-  all_bw(x, -1, 0, include.bounds="][")       # fail
-  all_bw(x, -1, 0, include.bounds="](")       # pass
-  all_bw(x, -1, 0, include.bounds=")[")       # fail
-  all_bw(x, -1, 0, include.bounds=")(")       # pass
-})
 unitizer_sect('corner cases', {
   all_bw(x, 0, 0)                        # fail
   all_bw(x, 0, 0, include.bounds=")(")   # pass
@@ -52,11 +39,6 @@ unitizer_sect('Infinity', {
   all_bw(w, -Inf, Inf)        # pass?
   all_bw(w, -Inf, Inf, include.bounds="[)")  # fail
   all_bw(w, -Inf, Inf, include.bounds="(]")  # fail
-
-  all_bw(w, -Inf, Inf, include.bounds=")(")  # pass
-  all_bw(w, -Inf, Inf, include.bounds=")[")  # fail
-  all_bw(w, -Inf, Inf, include.bounds="](")  # fail
-  all_bw(w, -Inf, Inf, include.bounds="][")  # fail
 })
 unitizer_sect('errors', {
   all_bw(x, 0, -1)

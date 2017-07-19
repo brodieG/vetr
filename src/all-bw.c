@@ -24,7 +24,7 @@ static int scalar_na(SEXP x) {
  */
 static void include_end_err() {
   const char * valid_ends =
-    "\"[]\", \"[)\", \"(]\", \"()\", \"][\", \"](\", \")[\", \")(\".";
+    "\"[]\", \"[)\", \"(]\", \"()\"";
   error(
    "%s%s",
    "Argument `include.ends` must be a two character string in ",
@@ -86,26 +86,17 @@ SEXP VALC_all_bw(
 
   const char * inc_end_chr = CHAR(STRING_ELT(include_bounds, 0));
   int inc_lo = 0, inc_hi = 0;  // track whether to include bounds
-  int bw = 0;  // track whether doing inside or outside
 
   if(CSR_strmlen(inc_end_chr, 3) != 2) include_end_err();
 
-  if(inc_end_chr[0] == '[' || inc_end_chr[0] == '(') {
-    bw = 1;
-  } else if (inc_end_chr[0] == ']' || inc_end_chr[0] == ')') {
-    bw = 0;
-  } else {
+  if(
+    inc_end_chr[0] != '[' && inc_end_chr[0] != '(' &&
+    inc_end_chr[1] != ']' && inc_end_chr[1] != ')'
+  ) {
     include_end_err();
   }
-  if(inc_end_chr[1] == '[' || inc_end_chr[1] == '(') {
-    if(bw) include_end_err();
-  } else if (inc_end_chr[1] == ']' || inc_end_chr[1] == ')') {
-    if(!bw) include_end_err();
-  } else {
-    include_end_err();
-  }
-  inc_lo = inc_end_chr[0] == '[' || inc_end_chr[0] == ']';
-  inc_hi = inc_end_chr[1] == '[' || inc_end_chr[1] == ']';
+  inc_lo = inc_end_chr[0] == '[';
+  inc_hi = inc_end_chr[1] == ']';
 
   // Need actualy strings to use with CSR_smprintf
 
@@ -146,27 +137,9 @@ SEXP VALC_all_bw(
     }
     // Handle the between vs. outside ranges by inverting lo and high
 
-    int lo_unbound = 0, hi_unbound = 0;
-    if(!bw) {
-      if(lo_num == -INFINITY)
-        error(
-          "Argument `lo` cannot be -infinity when using %s",
-          "`include.ends` in \"][\", \"](\", \")[\", \")(\"."
-        );
-      if(hi_num == INFINITY)
-        error(
-          "Argument `hi` cannot be infinity when using %s",
-          "`include.ends` in \"][\", \"](\", \")[\", \")(\"."
-        );
-      lo_num = hi_num;
-      hi_num = asReal(lo);
-      SEXP lo_tmp = lo;
-      lo = hi;
-      hi = lo_tmp;
-    } else {
-      lo_unbound = lo_num == -INFINITY;
-      hi_unbound = hi_num == INFINITY;
-    }
+    int lo_unbound = lo_num == R_NegInf;
+    int hi_unbound = hi_num == R_PosInf;
+
     const char * log_err =
       "Internal Error: unexpected logical result %s, contact maintainer.";
 
