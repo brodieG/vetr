@@ -50,7 +50,7 @@ unitizer_sect("numbers as character", {
   # switch ot scientific
 
   vetr:::num_as_chr(1e9 + 0.1);
-  vetr:::num_as_chr(-1e9 + 0.1);
+  vetr:::num_as_chr(-1e9 - 0.1);
 
   vetr:::num_as_chr(1e9 + 0.1, as.int=TRUE);
   vetr:::num_as_chr(-(1e9 + 0.1), as.int=TRUE);
