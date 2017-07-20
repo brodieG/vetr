@@ -149,7 +149,9 @@ SEXP VALC_all_bw(
     // natural resolution of NAs and NaNs without having to explicitly check for
     // them; the flipside is that we've got one extra operation (negation) on
     // every element; actually, not sure this actually make sense; if we flip
-    // the comparison should still get the same result with NAs
+    // the comparison should still get the same result with NAs (NOTE: looks
+    // like compiler is smart enough to figure this out since getting rid of
+    // negation doesn't change computation time)
 
     if(x_type == REALSXP) {
       // - Numeric -------------------------------------------------------------
