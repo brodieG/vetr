@@ -1,7 +1,7 @@
 #include "all-bw.h"
 
 static int num_like(SEXP x) {
-  return TYPEOF(x) == REALSXP || TYPEOF(x) == INTSXP;
+  return TYPEOF(x) == REALSXP || TYPEOF(x) == INTSXP || TYPEOF(x) == LGLSXP;
 }
 /*
  * For the types we can discern NA_ness, check it for the first element.  Tends
