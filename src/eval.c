@@ -161,7 +161,8 @@ SEXP VALC_evaluate_recurse(
     }
     if(mode == 10) {
       eval_res_c = VALC_all(eval_tmp);
-      eval_res = PROTECT(ScalarLogical(eval_res_c > 0));
+      eval_res = TYPEOF(eval_tmp) == STRSXP ?
+        PROTECT(eval_tmp) : PROTECT(ScalarLogical(eval_res_c > 0));
     } else {
       eval_res = PROTECT(ALIKEC_alike_int2(eval_tmp, arg_value, arg_lang, set));
     }
@@ -226,6 +227,22 @@ SEXP VALC_evaluate_recurse(
           char * err_str;
           char * err_tok;
           switch(eval_res_c) {
+            case -6: {
+                R_xlen_t eval_res_len = xlength(eval_res);
+                err_tok = CSR_smprintf4(
+                  set.nchar_max,
+                  "chr %s: %s%s%s",
+                  eval_res_len > 1 ?
+                    CSR_smprintf2(
+                      set.nchar_max, "[1:%s]%s", CSR_len_as_chr(eval_res_len),
+                      ""
+                    ) : "",
+                  CHAR(STRING_ELT(eval_res, 0)),
+                  eval_res_len > 1 ? " ..." : "",
+                  ""
+                );
+              }
+              break;
             case -2: {
               const char * err_tok_tmp = type2char(TYPEOF(eval_tmp));
               const char * err_tok_base = "is \"%s\" instead of a \"logical\"";
