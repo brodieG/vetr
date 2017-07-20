@@ -274,7 +274,7 @@ SEXP VALC_all_bw(
 
       if(!success) {
         char * msg = CSR_smprintf6(
-          10000, "value `%s` at index %s not in `%s%s,%s%s`",
+          10000, "`%s` at index %s not in `%s%s,%s%s`",
           CSR_num_as_chr((double) data[i], 0),
           CSR_len_as_chr(i + 1),
           inc_lo_str,
