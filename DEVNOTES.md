@@ -413,6 +413,10 @@ any time soon as there are additional complexities therein).
 
 ### Random output
 
+`all_bw(zzz, 0, 1)` is not TRUE (is "character" instead of a "logical")
+
+`all_bw(zzz, 0, 1)` is not TRUE (string: "contains values outside of  only values in range `[0,1]` (2.783366 at index 3)")
+
     Error in fun2a(x = letters[1:3]) :
       For argument `x` at least one of these should pass:
       - `names(letters[1:3])` should be type "character" (is "NULL")
