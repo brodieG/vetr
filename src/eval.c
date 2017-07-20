@@ -173,11 +173,12 @@ SEXP VALC_evaluate_recurse(
     int is_val_string = TYPEOF(eval_res) == STRSXP &&
       (XLENGTH(eval_res) == 5 || XLENGTH(eval_res) == 1);
 
-    if(!(is_tf || is_val_string)) {
+    if(mode != 10 && !(is_tf || is_val_string)) {
+      // `alike` return has stricter structure requirements
       // nocov start
       error("%s %s (is type: %s), %s",
         "Internal Error: token eval must be TRUE, FALSE, character(1L), ",
-        " or character(5L)", type2char(TYPEOF(eval_res)), "contact maintainer."
+        "or character(5L)", type2char(TYPEOF(eval_res)), "contact maintainer."
       );
       // nocov end
     }
