@@ -232,10 +232,10 @@ SEXP VALC_evaluate_recurse(
                 R_xlen_t eval_res_len = xlength(eval_res);
                 err_tok = CSR_smprintf4(
                   set.nchar_max,
-                  "chr %s: %s%s%s",
+                  "chr%s \"%s\"%s%s",
                   eval_res_len > 1 ?
                     CSR_smprintf2(
-                      set.nchar_max, "[1:%s]%s", CSR_len_as_chr(eval_res_len),
+                      set.nchar_max, " [1:%s]%s", CSR_len_as_chr(eval_res_len),
                       ""
                     ) : "",
                   CHAR(STRING_ELT(eval_res, 0)),
