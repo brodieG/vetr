@@ -122,7 +122,7 @@ char * CSR_num_as_chr(double num, int as_int) {
         "%s%s", "Internal Error: truncation converting num to string, ",
         "contact maintainer."
       );
-      // nocov start
+      // nocov end
   }
   return res;
 }
