@@ -4,7 +4,7 @@
 \alias{all_bw}
 \title{Verify Values in Vector are Between Two Others}
 \usage{
-all_bw(x, lo = -Inf, hi = Inf, na.rm = FALSE, include.bounds = "[]")
+all_bw(x, lo = -Inf, hi = Inf, na.rm = FALSE, bounds = "[]")
 }
 \arguments{
 \item{x}{vector logical (treated as integer), integer, numeric, or character.}
@@ -19,9 +19,9 @@ use \code{Inf} to indicate unbounded (default), must be greater than or equal to
 \item{na.rm}{TRUE or FALSE (default), whether NAs are considered to be in
 bounds, NAs are treated as being out of bounds unless you set this
 parameter to TRUE, or in the degenerate case where \code{lo} is \code{-Inf}, \code{hi} is
-\code{Inf}, and \code{include.bounds} is \dQuote{[]}.}
+\code{Inf}, and \code{bounds} is \dQuote{[]}.}
 
-\item{include.bounds}{\code{character(1L)} for values between \code{lo} and \code{hi}:
+\item{bounds}{\code{character(1L)} for values between \code{lo} and \code{hi}:
 \itemize{
 \item \dQuote{[]} include \code{lo} and \code{hi}
 \item \dQuote{()} exclude \code{lo} and \code{hi}
@@ -42,7 +42,7 @@ describing the first position that fails otherwise
 Equivalent to \code{all(x >= lo & x <= hi)}, but substantially faster for larger
 vectors because it does not create \code{length(x)} intermediate logical vectors
 and it stops at the first failure.  You can modify the comparison to be
-strictly greater/less than via the \code{include.bounds} parameter.
+strictly greater/less than via the \code{bounds} parameter.
 }
 \details{
 If \code{x} and \code{lo}/\code{hi} are different types, \code{lo}/\code{hi} will be coerced to the
@@ -60,6 +60,6 @@ all_bw(NA, 0, 1, na.rm=TRUE)
 vec <- c(runif(100, 0, 1e12), Inf, 0)
 all_bw(vec, 0)      # All +ve numbers
 all_bw(vec, hi=0)   # All -ve numbers
-all_bw(vec, 0, include.bounds="(]") # All strictly +ve nums
-all_bw(vec, 0, include.bounds="[)") # All finite +ve nums
+all_bw(vec, 0, bounds="(]") # All strictly +ve nums
+all_bw(vec, 0, bounds="[)") # All finite +ve nums
 }

@@ -27,7 +27,7 @@ static void include_end_err() {
     "\"[]\", \"[)\", \"(]\", \"()\"";
   error(
    "%s%s",
-   "Argument `include.bounds` must be character(1L) in ", valid_ends
+   "Argument `bounds` must be character(1L) in ", valid_ends
   );
 }
 /*
@@ -68,7 +68,7 @@ SEXP VALC_all_bw(
     );
   if(xlength(include_bounds) != 1)
     error(
-      "Argument `include.bounds` must be length 1 (is %s).",
+      "Argument `bounds` must be length 1 (is %s).",
       CSR_len_as_chr(xlength(include_bounds))
     );
 
@@ -99,11 +99,11 @@ SEXP VALC_all_bw(
 
   if(TYPEOF(include_bounds) != STRSXP || xlength(include_bounds) != 1)
     error(
-      "Argument `include.bounds` must be character (is %s).",
+      "Argument `bounds` must be character (is %s).",
       type2char(TYPEOF(include_bounds))
     );
   if(STRING_ELT(include_bounds, 0) == NA_STRING)
-    error("Argument `include.bounds` may not be NA.");
+    error("Argument `bounds` may not be NA.");
 
   const char * inc_end_chr = CHAR(STRING_ELT(include_bounds, 0));
   int inc_lo = 0, inc_hi = 0;  // track whether to include bounds
