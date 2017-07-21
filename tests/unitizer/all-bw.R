@@ -67,4 +67,13 @@ unitizer_sect('errors', {
   all_bw(x, -1, 1, include.bounds=letters)
   all_bw(x, -1, 1, include.bounds="[[")
   all_bw(x, -1, 1, include.bounds="))")
+
+  all_bw(x, 1:3, 4)
+  all_bw(x, 1, 4:5)
+
+  all_bw(list(), 1, 2)
+  all_bw(x, list(), 2)
+  all_bw(x, 1, list())
+  all_bw(x, list(1), 2)
+  all_bw(x, 1, list(1))
 })

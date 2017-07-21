@@ -5,7 +5,7 @@ static int num_like(SEXP x) {
 }
 /*
  * For the types we can discern NA_ness, check it for the first element.  Tends
- * to default to 0 even when there are NAs, so it's not intended as a final
+ * to default to 1 even when there are NAs, so it's not intended as a final
  * check.
  */
 static int scalar_na(SEXP x) {
@@ -70,6 +70,28 @@ SEXP VALC_all_bw(
     error(
       "Argument `include.bounds` must be length 1 (is %s).",
       CSR_len_as_chr(xlength(include_bounds))
+    );
+
+  if(
+    !(
+      lo_type == LGLSXP || lo_type == STRSXP || lo_type == REALSXP ||
+      lo_type == INTSXP
+    )
+  )
+    error(
+      "Argument `lo` must be logical, integer, numeric, or character (is %s).",
+      type2char(lo_type)
+    );
+
+  if(
+    !(
+      hi_type == LGLSXP || hi_type == STRSXP || hi_type == REALSXP ||
+      hi_type == INTSXP
+    )
+  )
+    error(
+      "Argument `hi` must be logical, integer, numeric, or character (is %s).",
+      type2char(hi_type)
     );
 
   if(scalar_na(hi)) error("Argument `hi` must not be NA.");
