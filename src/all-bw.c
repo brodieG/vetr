@@ -29,7 +29,7 @@ static void include_end_err() {
    "%s%s",
    "Argument `bounds` must be character(1L) in ", valid_ends
   );
-}
+} // nocov can't hit this line due to error
 /*
  * See R interface fun for docs
  */
@@ -174,6 +174,13 @@ SEXP VALC_all_bw(
     // the comparison should still get the same result with NAs (NOTE: looks
     // like compiler is smart enough to figure this out since getting rid of
     // negation doesn't change computation time)
+
+    // BIG QUESTION: right now we're explictly putting all the if statements
+    // outside of loops.  Code would be WAAAAY simpler if we could trust the
+    // compiler (and every compiler out there) to do it for us:
+    //
+    // https://stackoverflow.com/questions/1462710/can-c-compilers-optimize-if-statements-inside-for-loops
+    // https://en.wikipedia.org/wiki/Loop_unswitching
 
     if(x_type == REALSXP) {
       // - Numeric -------------------------------------------------------------
