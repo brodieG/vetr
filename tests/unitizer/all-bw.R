@@ -23,6 +23,11 @@ unitizer_sect('all_bw', {
 
   all_bw(z, 0, 1)              # fail
   all_bw(z, 0, 1, na.rm=TRUE)  # pass
+
+  w <- runif(1e3, -1e3, 1e3)
+  all_bw(w, -1e3, 1e3)
+  all_bw(w, -1.5e3, 0.5e3)
+  all_bw(w, -0.5e3, 1.5e3)
 })
 unitizer_sect('corner cases', {
   all_bw(x, 0, 0)                        # fail
