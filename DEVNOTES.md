@@ -126,6 +126,10 @@ microbenchmark(
   vet(numeric() && all_bw(., 0, Inf), xx),
   vet(numeric() && all(. > 0), xx)
 )
+microbenchmark(
+  all_bw(xx, 0, 1),
+  all(xx >= 0 & xx <= 1)
+)
 ## Unit: microseconds
 ##                                                          expr    min       lq
 ##  assertNumeric(xx, any.missing = FALSE, lower = 0, upper = 1) 26.627  29.9290
@@ -140,6 +144,39 @@ microbenchmark(
 ##   23.69168  18.597  30.5225  54.603   100
 ##  149.69694 133.635 169.2880 301.521   100
 ```
+
+### Loop unswitching
+
+Trusting that gcc does comparable stuff?
+
+```
+microbenchmark(
+  all_bw(xx, 0, 1),
+  all_bw2(xx, 0, 1),
+  all(xx >= 0 & xx <= 1)
+)
+## Unit: microseconds
+##                    expr    min      lq      mean   median       uq      max
+##        all_bw(xx, 0, 1) 23.117 23.3210  24.65532  23.6515  24.1765   98.217
+##       all_bw2(xx, 0, 1) 13.665 13.8910  14.62394  14.2865  14.5635   37.207
+##  all(xx >= 0 & xx <= 1) 82.325 92.8285 139.04823 141.6830 149.6355 1164.560
+```
+Switching to 03
+```
+> microbenchmark(
++   all_bw(xx, 0, 1),
++   all_bw2(xx, 0, 1),
++   all(xx >= 0 & xx <= 1)
++ )
+Unit: microseconds
+                   expr    min     lq      mean  median       uq      max neval
+       all_bw(xx, 0, 1) 13.659 14.002  15.74092  14.434  14.9120   47.561   100
+      all_bw2(xx, 0, 1) 18.759 19.114  21.21446  19.823  20.5100   55.189   100
+ all(xx >= 0 & xx <= 1) 82.436 91.505 145.77960 116.293 146.3375 2128.326   100
+```
+Tried seeing if there were some ways to force more loop unswitching as compiler
+really should be able to do it, but didn't find obvious setting which suggests
+higher probability that different compilers may work differently as well.
 
 ### New Notes (7/14/17)
 
