@@ -175,9 +175,10 @@ SEXP VALC_all_bw(
     // like compiler is smart enough to figure this out since getting rid of
     // negation doesn't change computation time)
 
-    // BIG QUESTION: right now we're explictly putting all the if statements
-    // outside of loops.  Code would be WAAAAY simpler if we could trust the
-    // compiler (and every compiler out there) to do it for us:
+    // Note we're explicitly unswitching loops.  Compiler doesn't seem to do as
+    // good a job at as if we do it manually.  PITA.  There might be a compiler
+    // setting that achieves the desired outcome, but then we start having
+    // portability issues.  See DEVNOTES.
     //
     // https://stackoverflow.com/questions/1462710/can-c-compilers-optimize-if-statements-inside-for-loops
     // https://en.wikipedia.org/wiki/Loop_unswitching
@@ -250,7 +251,13 @@ SEXP VALC_all_bw(
           } } }
         } else error(log_err, "q34");
       } else if (lo_unbound && hi_unbound) {
-        success = 1;
+        if(na_rm_int) success = 1;
+        else {
+          for(i = 0; i < x_len; ++i) {
+            if(ISNAN(data[i])) {
+              success = 0;
+              break;
+        } } }
       } else if (lo_unbound) {
         if(!inc_hi) {
           if(na_rm_int) {

@@ -1,9 +1,10 @@
 #' Verify Values in Vector are Between Two Others
 #'
-#' Equivalent to `all(x >= lo & x <= hi)`, but substantially faster for larger
-#' vectors because it does not create `length(x)` intermediate logical vectors
-#' and it stops at the first failure.  You can modify the comparison to be
-#' strictly greater/less than via the `bounds` parameter.
+#' Equivalent to `!anyNA(x) && all(x >= lo & x <= hi, na.rm=TRUE)` with default
+#' settings, except that it is substantially faster and returns a string
+#' describing why not all values are in range instead of FALSE.
+#' You can modify the comparison to be strictly greater/less than via the
+#' `bounds` parameter, and the treatment of NAs with `na.rm`.
 #'
 #' If `x` and `lo`/`hi` are different types, `lo`/`hi` will be coerced to the
 #' type of `x`.  When `lo`/`hi` are numeric and `x` is integer, if `lo`/`hi`
@@ -18,10 +19,11 @@
 #' @param hi scalar vector of type coercible to the type of `x`, cannot be NA,
 #'   use `Inf` to indicate unbounded (default), must be greater than or equal to
 #'   `lo`.
-#' @param na.rm TRUE or FALSE (default), whether NAs are considered to be in
-#'   bounds, NAs are treated as being out of bounds unless you set this
-#'   parameter to TRUE, or in the degenerate case where `lo` is `-Inf`, `hi` is
-#'   `Inf`, and `bounds` is \dQuote{[]}.
+#' @param na.rm TRUE, or FALSE (default), whether NAs are considered to be
+#'   in bounds.  Unlike with [all()], for `all_bw` `na.rm=FALSE` returns FALSE
+#'   if there are NAs instead of NA.  Arguably NA, but not NaN, should be
+#'   considered to be in `[-Inf,Inf]`, but since `NA < Inf` is NA we treat them
+#'   as always being out of the range.
 #' @param bounds `character(1L)` for values between `lo` and `hi`:
 #'   * \dQuote{[]} include `lo` and `hi`
 #'   * \dQuote{()} exclude `lo` and `hi`
@@ -32,7 +34,7 @@
 #' @examples
 #' all_bw(runif(100), 0, 1)
 #' all_bw(runif(100) * 2, 0, 1)
-#' all_bw(NA, 0, 1)
+#' all_bw(NA, 0, 1)              # This is does not return NA
 #' all_bw(NA, 0, 1, na.rm=TRUE)
 #'
 #' vec <- c(runif(100, 0, 1e12), Inf, 0)

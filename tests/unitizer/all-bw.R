@@ -32,6 +32,9 @@ unitizer_sect('all_bw', {
   all_bw(z, 0, 1)              # fail
   all_bw(z, 0, 1, na.rm=TRUE)  # pass
 
+  all_bw(z) # fail, NaN never inside
+  all_bw(z, na.rm=TRUE) # pass
+
   w <- runif(1e3, -1e3, 1e3)
   all_bw(w, -1e3, 1e3)
   all_bw(w, -1.5e3, 0.5e3)
