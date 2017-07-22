@@ -4,6 +4,5 @@
 #define _ALLBW_H
 
   SEXP VALC_all_bw(SEXP x, SEXP hi, SEXP lo, SEXP na_rm, SEXP include_bounds);
-  SEXP VALC_all_bw2(SEXP x, SEXP hi, SEXP lo, SEXP na_rm, SEXP include_bounds);
 
 #endif

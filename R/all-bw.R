@@ -44,8 +44,4 @@
 all_bw <- function(x, lo=-Inf, hi=Inf, na.rm=FALSE, bounds="[]")
   .Call(VALC_all_bw, x, lo, hi, na.rm, bounds)
 
-#' @export
-
-all_bw2 <- function(x, lo=-Inf, hi=Inf, na.rm=FALSE, bounds="[]")
-  .Call(VALC_all_bw2, x, lo, hi, na.rm, bounds)
 
