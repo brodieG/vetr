@@ -150,6 +150,7 @@ microbenchmark(
 Trusting that gcc does comparable stuff?
 
 ```
+xx <- runif(1e4)
 microbenchmark(
   all_bw(xx, 0, 1),
   all_bw2(xx, 0, 1),
@@ -177,6 +178,24 @@ Unit: microseconds
 Tried seeing if there were some ways to force more loop unswitching as compiler
 really should be able to do it, but didn't find obvious setting which suggests
 higher probability that different compilers may work differently as well.
+
+Compare to integer:
+```
+xx <- runif(1e4)
+yy <- sample(seq.int(1e4))
+microbenchmark(
+  all_bw(xx, 0, 1),
+  all_bw(yy, 0, 1e4),
+  all_bw(yy, 0, 9e3),  # fail
+  all(xx >= 0 & xx <= 1)
+)
+## Unit: microseconds
+##                    expr    min      lq      mean   median       uq     max
+##        all_bw(xx, 0, 1) 12.609 13.2120  13.54127  13.3295  13.6290  23.172
+##    all_bw(yy, 0, 10000)  8.209  8.6555   8.94603   8.7505   9.1845  11.299
+##     all_bw(yy, 0, 9000)  4.067  4.3385   5.44750   4.6980   5.2350  55.264
+##  all(xx >= 0 & xx <= 1) 82.532 89.7550 127.70684 126.4315 148.0600 905.974
+```
 
 ### New Notes (7/14/17)
 

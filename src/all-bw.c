@@ -308,19 +308,7 @@ SEXP VALC_all_bw(
         }  else error(log_err, "2945asdf");
       } else error(log_err, "hfg89");
 
-      if(!success) {
-        char * msg = CSR_smprintf6(
-          10000, "`%s` at index %s not in `%s%s,%s%s`",
-          CSR_num_as_chr((double) data[i], 0),
-          CSR_len_as_chr(i + 1),
-          inc_lo_str,
-          CSR_num_as_chr(lo_num, 0),
-          CSR_num_as_chr(hi_num, 0),
-          inc_hi_str
-        );
-        return mkString(msg);
-      }
-    } else if(x_type == INTSXP) {
+    } else if(x_type == INTSXP || x_type == LGLSXP) {
       // - Integer -------------------------------------------------------------
       int lo_int, hi_int;
 
@@ -350,7 +338,152 @@ SEXP VALC_all_bw(
       if(hi_num > (double)hi_int) {
         inc_hi = 1;
       }
-      error("Integers not implemented yet");
+      // Re-use same symbols from double so we can use the exact same code
+      int * data = INTEGER(x);
+      int lo_num = lo_int;
+      int hi_num = hi_int;
+
+      if(!lo_unbound && !hi_unbound) {
+        if(!inc_lo && !inc_hi) {
+          if(na_rm_int) {
+            for(i = 0; i < x_len; ++i) {
+              if(
+                !((data[i] == NA_INTEGER) || (data[i] > lo_num && data[i] < hi_num))
+              ) {
+                success = 0;
+                break;
+            } }
+          } else {
+            for(i = 0; i < x_len; ++i) {
+              if(!(data[i] > lo_num && data[i] < hi_num)) {
+                success = 0;
+                break;
+          } } }
+        } else if (inc_lo && inc_hi) {
+          if(na_rm_int) {
+            for(i = 0; i < x_len; ++i) {
+              if(
+                !(
+                  (data[i] == NA_INTEGER) ||
+                  (data[i] >= lo_num && data[i] <= hi_num)
+                )
+              ) {
+                success = 0;
+                break;
+            } }
+          } else {
+            for(i = 0; i < x_len; ++i) {
+              if(!(data[i] >= lo_num && data[i] <= hi_num)) {
+                success = 0;
+                break;
+          } } }
+        } else if (inc_lo) {
+          if(na_rm_int) {
+            for(i = 0; i < x_len; ++i) {
+              if(
+                !(
+                  (data[i] == NA_INTEGER) ||
+                  (data[i] >= lo_num && data[i] < hi_num))
+              ) {
+                success = 0;
+                break;
+            } }
+          } else {
+            for(i = 0; i < x_len; ++i) {
+              if(!(data[i] >= lo_num && data[i] < hi_num)) {
+                success = 0;
+                break;
+          } } }
+        } else if (inc_hi) {
+          if(na_rm_int) {
+            for(i = 0; i < x_len; ++i) {
+              if(
+                !(
+                  (data[i] == NA_INTEGER) ||
+                  (data[i] > lo_num && data[i] <= hi_num)
+                )
+              ) {
+                success = 0;
+                break;
+            } }
+          } else {
+            for(i = 0; i < x_len; ++i) {
+              if(!(data[i] > lo_num && data[i] <= hi_num)) {
+                success = 0;
+                break;
+          } } }
+        } else error(log_err, "intq34");
+      } else if (lo_unbound && hi_unbound) {
+        if(na_rm_int) success = 1;
+        else {
+          for(i = 0; i < x_len; ++i) {
+            if(data[i] == NA_INTEGER) {
+              success = 0;
+              break;
+        } } }
+      } else if (lo_unbound) {
+        if(!inc_hi) {
+          if(na_rm_int) {
+            for(i = 0; i < x_len; ++i) {
+              if(!((data[i] == NA_INTEGER) || data[i] < hi_num)) {
+                success = 0; break;
+            } }
+          } else {
+            for(i = 0; i < x_len; ++i) {
+              if(!(data[i] < hi_num)) {
+                success = 0; break;
+          } } }
+        } else if (inc_hi) {
+          if(na_rm_int) {
+            for(i = 0; i < x_len; ++i) {
+              if(!((data[i] == NA_INTEGER) || data[i] <= hi_num)) {
+                success = 0; break;
+            } }
+          } else {
+            for(i = 0; i < x_len; ++i) {
+              if(!(data[i] <= hi_num)) {
+                success = 0; break;
+          } } }
+        }  else error(log_err, "intq243oij");
+      } else if (hi_unbound) {
+        if(!inc_lo) {
+          if(na_rm_int) {
+            for(i = 0; i < x_len; ++i) {
+              if(!((data[i] == NA_INTEGER) || (data[i] > lo_num))) {
+                success = 0; break;
+            } }
+          } else {
+            for(i = 0; i < x_len; ++i) {
+              if(!(data[i] > lo_num)) {
+                success = 0; break;
+          } } }
+        } else if (inc_lo) {
+          if(na_rm_int) {
+            for(i = 0; i < x_len; ++i) {
+              if(!((data[i] == NA_INTEGER) || data[i] >= lo_num)) {
+                success = 0; break;
+            } }
+          } else {
+            for(i = 0; i < x_len; ++i) {
+              if(!(data[i] >= lo_num)) {
+                success = 0; break;
+          } } }
+        }  else error(log_err, "int2945asdf");
+      } else error(log_err, "inthfg89");
+    }
+    if(!success) {
+      char * msg = CSR_smprintf6(
+        10000, "`%s` at index %s not in `%s%s,%s%s`",
+        CSR_num_as_chr(
+          (double)(x_type == REALSXP ? REAL(x)[i] : INTEGER(x)[i]), 0
+        ),
+        CSR_len_as_chr(i + 1),
+        inc_lo_str,
+        CSR_num_as_chr(lo_num, 0),
+        CSR_num_as_chr(hi_num, 0),
+        inc_hi_str
+      );
+      return mkString(msg);
     }
   } else if(x_type == STRSXP) {
     // - Strings ---------------------------------------------------------------
