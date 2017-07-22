@@ -47,6 +47,9 @@ unitizer_sect('corner cases', {
 
   all_bw(NA_real_)                       # pass
   all_bw(NA_real_, bounds="()")  # fail
+
+  all_bw(numeric(), 0, 1)  # pass
+  all_bw(numeric(), 0, 0, bounds="()")  # pass?
 })
 unitizer_sect('Infinity', {
   z <- runif(100, -1e100, 1e100)

@@ -17,10 +17,10 @@ use \code{Inf} to indicate unbounded (default), must be greater than or equal to
 \code{lo}.}
 
 \item{na.rm}{TRUE, or FALSE (default), whether NAs are considered to be
-in bounds.  Unlike with \code{\link[=all]{all()}}, for \code{all_bw} \code{na.rm=FALSE} returns FALSE
-if there are NAs instead of NA.  Arguably NA, but not NaN, should be
-considered to be in \code{[-Inf,Inf]}, but since \code{NA < Inf} is NA we treat them
-as always being out of the range.}
+in bounds.  Unlike with \code{\link[=all]{all()}}, for \code{all_bw} \code{na.rm=FALSE} returns an
+error string if there are NAs instead of NA.  Arguably NA, but not NaN,
+should be considered to be in \code{[-Inf,Inf]}, but since \code{NA < Inf} is NA we
+treat them as always being out of the range.}
 
 \item{bounds}{\code{character(1L)} for values between \code{lo} and \code{hi}:
 \itemize{
@@ -42,9 +42,11 @@ describing the first position that fails otherwise
 \description{
 Equivalent to \code{!anyNA(x) && all(x >= lo & x <= hi, na.rm=TRUE)} with default
 settings, except that it is substantially faster and returns a string
-describing why not all values are in range instead of FALSE.
+describing why not all values are in range instead of FALSE on failure.
 You can modify the comparison to be strictly greater/less than via the
-\code{bounds} parameter, and the treatment of NAs with \code{na.rm}.
+\code{bounds} parameter, and the treatment of NAs with \code{na.rm}.  Strictly
+speaking, this function succeeds (returns TRUE) so long as no elements in \code{x}
+fail the conditions (i.e. zero length \code{x} will always succeed).
 }
 \details{
 If \code{x} and \code{lo}/\code{hi} are different types, \code{lo}/\code{hi} will be coerced to the
