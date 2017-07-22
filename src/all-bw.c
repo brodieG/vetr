@@ -14,8 +14,8 @@ static int scalar_na(SEXP x) {
 
   if(xlength(x) == 1) {
     if(x_type == STRSXP) res = (STRING_ELT(x, 0) == NA_STRING);
-    else if(x_type == INTSXP) res = INTEGER(x)[0] == NA_INTEGER;
-    else if(x_type == REALSXP) res = REAL(x)[0] == NA_REAL;
+    else if(x_type == INTSXP) res = (INTEGER(x)[0] == NA_INTEGER);
+    else if(x_type == REALSXP) res = ISNAN(REAL(x)[0]);
   }
   return res;
 }
