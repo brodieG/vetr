@@ -348,7 +348,9 @@ SEXP VALC_all_bw(
           if(na_rm_int) {
             for(i = 0; i < x_len; ++i) {
               if(
-                !((data[i] == NA_INTEGER) || (data[i] > lo_num && data[i] < hi_num))
+                !(
+                  (data[i] == NA_INTEGER) ||
+                  (data[i] > lo_num && data[i] < hi_num))
               ) {
                 success = 0;
                 break;
