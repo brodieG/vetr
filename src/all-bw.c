@@ -38,6 +38,18 @@ SEXP VALC_all_bw(
 ) {
   SEXPTYPE x_type = TYPEOF(x), lo_type = TYPEOF(lo), hi_type = TYPEOF(hi);
 
+  if(INT_MIN != NA_INTEGER) {
+    // nocov start
+    error(
+      "%s%s",
+      "Internal Error: INT_MIN != NA_INTEGER but the code in this function ",
+      "assumes that they are equal; please contact maintainer."
+    );
+    // nocov end
+  }
+  int int_min = INT_MIN + 1;
+  int int_max = INT_MAX;
+
   // - Validation --------------------------------------------------------------
 
   // Note we use char version of number to avoid portability issues with zd and
@@ -312,14 +324,14 @@ SEXP VALC_all_bw(
       // - Integer -------------------------------------------------------------
       int lo_int, hi_int;
 
-      if(lo_num < INT_MIN) {
-        lo_int = INT_MIN;
+      if(lo_num < int_min) {
+        lo_int = int_min;
         lo_unbound = 1;
       } else {
         lo_int = asInteger(lo);
       }
-      if(hi_num > INT_MAX) {
-        hi_int = INT_MAX;
+      if(hi_num > int_max) {
+        hi_int = int_max;
         hi_unbound = 1;
       } else {
         hi_int = asInteger(hi);
@@ -339,6 +351,16 @@ SEXP VALC_all_bw(
         inc_hi = 1;
       }
       // Re-use same symbols from double so we can use the exact same code
+      // One annoying difference with INT is that NA_INTEGER is actually
+      // INT_MIN, so we have to explicitly check the difference.  Since we're
+      // re-using same logic as nums this is now a little more convoluted than
+      // expected.  Additionally, some questions now whether we would be better
+      // off just doing a coercion to double and using double logic (probably
+      // not b/c still have to deal with the NA_INTEGER business).
+      //
+      // Re: above, looks like we only need to worry about it in the lo_unbound
+      // case.
+
       int * data = INTEGER(x);
       int lo_num = lo_int;
       int hi_num = hi_int;
@@ -432,7 +454,7 @@ SEXP VALC_all_bw(
             } }
           } else {
             for(i = 0; i < x_len; ++i) {
-              if(!(data[i] < hi_num)) {
+              if(!(data[i] < hi_num && data[i] != NA_INTEGER)) {
                 success = 0; break;
           } } }
         } else if (inc_hi) {
@@ -443,7 +465,7 @@ SEXP VALC_all_bw(
             } }
           } else {
             for(i = 0; i < x_len; ++i) {
-              if(!(data[i] <= hi_num)) {
+              if(!(data[i] <= hi_num && data[i] != NA_INTEGER)) {
                 success = 0; break;
           } } }
         }  else error(log_err, "intq243oij");

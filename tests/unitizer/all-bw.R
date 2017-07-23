@@ -4,7 +4,7 @@ x <- runif(100)
 x[1] <- 1
 x[2] <- 0
 
-unitizer_sect('all_bw', {
+unitizer_sect('all_bw - real', {
   all_bw(x, 0, 1)
   all_bw(x, 0, 1, bounds="[)") # fail
   all_bw(x, 0, 1, bounds="(]") # fail
@@ -40,18 +40,18 @@ unitizer_sect('all_bw', {
   all_bw(w, -1.5e3, 0.5e3)
   all_bw(w, -0.5e3, 1.5e3)
 })
-unitizer_sect('corner cases', {
+unitizer_sect('corner cases - real', {
   all_bw(x, 0, 0)                        # fail
   all_bw(0, 0, 0)                        # pass
   all_bw(0, 0, 0, bounds="()")   # fail
 
-  all_bw(NA_real_)                       # pass
+  all_bw(NA_real_)               # fail
   all_bw(NA_real_, bounds="()")  # fail
 
   all_bw(numeric(), 0, 1)  # pass
   all_bw(numeric(), 0, 0, bounds="()")  # pass?
 })
-unitizer_sect('Infinity', {
+unitizer_sect('Infinity - real', {
   z <- runif(100, -1e100, 1e100)
   z[1] <- -1e100
   z[2] <- 1e100
@@ -138,7 +138,95 @@ unitizer_sect('Infinity', {
   all_bw(w, -Inf, Inf, bounds="[)")  # fail
   all_bw(w, -Inf, Inf, bounds="(]")  # fail
 })
-unitizer_sect('errors', {
+
+x.int <- sample(-50:50)
+
+unitizer_sect('all_bw - int', {
+  all_bw(x.int, -50, 50)
+  all_bw(x.int, -50L, 50L)
+  all_bw(x.int, -50, 50, bounds="[)") # fail
+  all_bw(x.int, -50, 50, bounds="(]") # fail
+  all_bw(x.int, -50, 50, bounds="()") # fail
+
+  all_bw(x.int, -50, 50 + 1e-6, bounds="[)") # pass
+  all_bw(x.int, -50 - 1e-6, 50, bounds="(]") # pass
+  all_bw(x.int, -50 - 1e-6, 50 + 1e-6, bounds="()") # pass
+
+  y.int <- z.int <- x.int
+  y.int[50] <- NA
+
+  all_bw(y.int, -50, 50)                           # fail
+  all_bw(y.int, -50, 50, na.rm=TRUE)               # pass
+  all_bw(y.int, -49.5, 49.5, na.rm=TRUE)           # fail
+
+  all_bw(y.int, -51, 51, na.rm=TRUE, bounds="()") # pass
+  all_bw(y.int, -50.5, 50.5, na.rm=TRUE, bounds="()") # pass
+  all_bw(y.int, -50, 50, na.rm=TRUE, bounds="()")  # fail
+  all_bw(y.int, -50 - 1e-6, 50, na.rm=TRUE, bounds="(]")  # pass
+  all_bw(y.int, -50, 50, na.rm=TRUE, bounds="(]")  # fail
+  all_bw(y.int, -50, 50 + 1e-6, na.rm=TRUE, bounds="[)")  # pass
+  all_bw(y.int, -50, 50, na.rm=TRUE, bounds="[)")  # fail
+})
+unitizer_sect('corner cases - int', {
+  all_bw(x.int, 0, 0)                        # fail
+  all_bw(0L, 0, 0)                        # pass
+  all_bw(0L, 0, 0, bounds="()")   # fail
+
+  all_bw(NA_integer_)            # fail
+  all_bw(NA)                     # fail
+})
+unitizer_sect('Infinity - int', {
+  int.max <- (Reduce(`*`, rep(2L, 30L)) - 1L) * 2L + 1L
+  int.min <- -int.max
+
+  z.int <- x.int
+  z.int[1] <- int.max
+  z.int[2] <- int.min
+
+  r.int <- w.int <- v.int <- u.int <- x.int <- z.int
+
+  # Infinitiy in bounds
+
+  all_bw(z.int, -Inf, int.max) # pass
+  all_bw(z.int, -Inf, int.max, bounds="[)") # fail
+  all_bw(z.int, -Inf, int.max, bounds="()") # fail
+  all_bw(z.int, -Inf, int.max, bounds="(]") # pass
+  all_bw(z.int, -Inf, int.max - 1L, bounds="(]") # fail
+
+  all_bw(z.int, int.min - 1, int.max + 1) # pass
+  all_bw(z.int, int.min - 1, int.max + 1, bounds="()") # pass?
+
+  all_bw(z.int, int.min, Inf) # pass
+  all_bw(z.int, int.min, Inf, bounds="(]") # fail
+  all_bw(z.int, int.min, Inf, bounds="()") # fail
+  all_bw(z.int, int.min, Inf, bounds="[)") # pass
+  all_bw(z.int, int.min + 1L, Inf, bounds="[)") # fail
+
+  # Infinity + NA
+
+  r.int[50] <- NA_integer_
+
+  all_bw(r.int, -Inf, int.max)
+  all_bw(r.int, -Inf, int.max, bounds="[)")
+  all_bw(r.int, -Inf, int.max, bounds="()")
+  all_bw(r.int, -Inf, int.max, bounds="(]")
+
+  all_bw(r.int, int.min, Inf)
+  all_bw(r.int, int.min, Inf, bounds="(]")
+  all_bw(r.int, int.min, Inf, bounds="()")
+  all_bw(r.int, int.min, Inf, bounds="[)")
+
+  all_bw(r.int, -Inf, int.max, na.rm=TRUE)
+  all_bw(r.int, -Inf, int.max, bounds="[)", na.rm=TRUE)
+  all_bw(r.int, -Inf, int.max, bounds="()", na.rm=TRUE)
+  all_bw(r.int, -Inf, int.max, bounds="(]", na.rm=TRUE)
+
+  all_bw(r.int, int.min, Inf, na.rm=TRUE)
+  all_bw(r.int, int.min, Inf, bounds="(]", na.rm=TRUE)
+  all_bw(r.int, int.min, Inf, bounds="()", na.rm=TRUE)
+  all_bw(r.int, int.min, Inf, bounds="[)", na.rm=TRUE)
+})
+unitizer_sect('error', {
   all_bw(x, 0, -1)
   all_bw(x, -1, 1, na.rm=1)
   all_bw(x, -1, 1, na.rm=c(TRUE, FALSE))
