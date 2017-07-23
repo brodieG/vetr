@@ -477,7 +477,11 @@ SEXP VALC_all_bw(
       char * msg = CSR_smprintf6(
         10000, "`%s` at index %s not in `%s%s,%s%s`",
         CSR_num_as_chr(
-          (double)(x_type == REALSXP ? REAL(x)[i] : INTEGER(x)[i]), 0
+          (double)(x_type == REALSXP ?
+            REAL(x)[i] :
+            // NA_INT doesn't print as NA after coercion to dbl, NA_REAL does
+            (INTEGER(x)[i] == NA_INTEGER ? NA_REAL : INTEGER(x)[i] )
+          ), 0
         ),
         CSR_len_as_chr(i + 1),
         inc_lo_str,
