@@ -332,8 +332,8 @@ SEXP VALC_all_bw(
       // When specifying double bounds for integer `x`, can affect whether to
       // use greater than or equal vs greater than (and same for less than)
 
-      if(lo_num > (double)lo_int) {
-        inc_lo = 0;
+      if(lo_num < (double)lo_int) {
+        inc_lo = 1;
       }
       if(hi_num > (double)hi_int) {
         inc_hi = 1;
