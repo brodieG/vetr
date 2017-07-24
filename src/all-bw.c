@@ -514,9 +514,208 @@ SEXP VALC_all_bw(
       return mkString(msg);
     }
   } else if(x_type == STRSXP) {
-    // - Strings ---------------------------------------------------------------
+  // - Strings ---------------------------------------------------------------
 
-    error("Strings not implemented yet");
+    // note that if unbound then the char representation of "Inf"/"-Inf" is
+    // never used
+
+    int lo_unbound = (lo_type = REALSXP && REAL(lo)[0] == R_NegInf);
+    int hi_unbound = (hi_type = REALSXP && REAL(hi)[0] == R_PosInf);
+
+    const char * lo_chr, hi_chr;
+
+    lo_chr = CHAR(STRING_ELT(asChar(lo), 0));
+    hi_chr = CHAR(STRING_ELT(asChar(hi), 0));
+
+    if(strcmp(lo_chr, hi_chr) > 0) {
+      error(
+        "Argument `hi` (%s) must be greater than or equal to `lo` (%s).",
+        lo_chr, hi_chr
+      );
+    }
+
+    if(!lo_unbound && !hi_unbound) {
+      if(!inc_lo && !inc_hi) {
+        if(na_rm_int) {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                (STRING_ELT(x, i) == NA_STRING) ||
+                (
+                  strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0 &&
+                  strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0
+              ) )
+            ) {
+              success = 0;
+              break;
+          } }
+        } else {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0 &&
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0
+              )
+            ) {
+              success = 0;
+              break;
+        } } }
+      } else if (inc_lo && inc_hi) {
+        if(na_rm_int) {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                (STRING_ELT(x, i) == NA_STRING) ||
+                (
+                  strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0 &&
+                  strcmp(CHAR(STRING_ELT(x, i)), hi_chr) <= 0
+              ) )
+            ) {
+              success = 0;
+              break;
+          } }
+        } else {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0 &&
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) <= 0
+              )
+            ) {
+              success = 0;
+              break;
+        } } }
+      } else if (inc_lo) {
+        if(na_rm_int) {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                (STRING_ELT(x, i) == NA_STRING) ||
+                (
+                   strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0 &&
+                   strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0
+              ) )
+            ) {
+              success = 0;
+              break;
+          } }
+        } else {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0 &&
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0
+              )
+            ) {
+              success = 0;
+              break;
+        } } }
+      } else if (inc_hi) {
+        if(na_rm_int) {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                (STRING_ELT(x, i) == NA_STRING) ||
+                (
+                  strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0 &&
+                  strcmp(CHAR(STRING_ELT(x, i)), hi_chr) <= 0
+              ) )
+            ) {
+              success = 0;
+              break;
+          } }
+        } else {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0 &&
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) <= 0)
+            ) {
+              success = 0;
+              break;
+        } } }
+      } else error(log_err, "stringq34");
+    } else if (lo_unbound && hi_unbound) {
+      if(na_rm_int) success = 1;
+      else {
+        for(i = 0; i < x_len; ++i) {
+          if(STRING_ELT(x, i) == NA_STRING) {
+            success = 0;
+            break;
+      } } }
+    } else if (lo_unbound) {
+      if(!inc_hi) {
+        if(na_rm_int) {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                (STRING_ELT(x, i) == NA_STRING) ||
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0)
+            ) {
+              success = 0; break;
+          } }
+        } else {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0 &&
+                STRING_ELT(x, i) != NA_STRING)) {
+              success = 0; break;
+        } } }
+      } else if (inc_hi) {
+        if(na_rm_int) {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                (STRING_ELT(x, i) == NA_STRING) ||
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) <= 0)
+            ) {
+              success = 0; break;
+          } }
+        } else {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) <= 0 &&
+                STRING_ELT(x, i) != NA_STRING)
+            ) {
+              success = 0; break;
+        } } }
+      }  else error(log_err, "stringq243oij");
+    } else if (hi_unbound) {
+      if(!inc_lo) {
+        if(na_rm_int) {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                (STRING_ELT(x, i) == NA_STRING) ||
+                (strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0)
+              )
+            ) {
+              success = 0; break;
+          } }
+        } else {
+          for(i = 0; i < x_len; ++i) {
+            if(!(strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0)) {
+              success = 0; break;
+        } } }
+      } else if (inc_lo) {
+        if(na_rm_int) {
+          for(i = 0; i < x_len; ++i) {
+            if(
+              !(
+                (STRING_ELT(x, i) == NA_STRING) ||
+                strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0)
+            ) {
+              success = 0; break;
+          } }
+        } else {
+          for(i = 0; i < x_len; ++i) {
+            if(!(strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0)) {
+              success = 0; break;
+        } } }
+      }  else error(log_err, "string2945asdf");
+    } else error(log_err, "stringhfg89");
   } else {
     error(
       "Argument `x` must be numeric-like or character (is %s).",
