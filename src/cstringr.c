@@ -171,17 +171,17 @@ If str has more than size characters, returns a copy of str truncated to size
 characters with a null character appended such that strmlen() str == size,
 otherwise returns a copy of str.
 
+This operates on bytes, so will potentially break UTF-8 and other multi-byte
+encoded strings.
+
 Note, final string size could be up to maxlen + 1 including the NULL terminator.
 A NULL terminator is always added at the end of the string.
 */
 char * CSR_strmcpy(const char * str, size_t maxlen) {
   if(!maxlen) return("");
-  if(!(maxlen + 1)) {
-    error("%s%s",
-      "Argument `maxlen` must be at least one smaller than max possible ",
-      "size_t value."
-    );
-  }
+  if(maxlen == SIZE_T_MAX)
+    error("Argument `maxlen` must be at least one smaller than SIZE_T_MAX.");
+
   size_t len = CSR_strmlen_x(str, maxlen);
   if(len == maxlen && str[len])
     warning("CSR_strmcpy: truncated string longer than %d", maxlen);
