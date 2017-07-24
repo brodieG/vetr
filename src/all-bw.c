@@ -554,7 +554,8 @@ SEXP VALC_all_bw(
             if(
               !(
                 strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0 &&
-                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0 &&
+                CHAR(STRING_ELT(x, i)) != NA_STRING
               )
             ) {
               success = 0;
@@ -579,7 +580,8 @@ SEXP VALC_all_bw(
             if(
               !(
                 strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0 &&
-                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) <= 0
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) <= 0 &&
+                CHAR(STRING_ELT(x, i)) != NA_STRING
               )
             ) {
               success = 0;
@@ -604,7 +606,8 @@ SEXP VALC_all_bw(
             if(
               !(
                 strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0 &&
-                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0 &&
+                CHAR(STRING_ELT(x, i)) != NA_STRING
               )
             ) {
               success = 0;
@@ -629,7 +632,8 @@ SEXP VALC_all_bw(
             if(
               !(
                 strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0 &&
-                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) <= 0)
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) <= 0) &&
+                CHAR(STRING_ELT(x, i)) != NA_STRING
             ) {
               success = 0;
               break;
@@ -650,7 +654,8 @@ SEXP VALC_all_bw(
             if(
               !(
                 (STRING_ELT(x, i) == NA_STRING) ||
-                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0)
+                strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0
+              )
             ) {
               success = 0; break;
           } }
@@ -659,7 +664,8 @@ SEXP VALC_all_bw(
             if(
               !(
                 strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0 &&
-                STRING_ELT(x, i) != NA_STRING)) {
+                STRING_ELT(x, i) != NA_STRING)
+            ) {
               success = 0; break;
         } } }
       } else if (inc_hi) {
@@ -696,7 +702,12 @@ SEXP VALC_all_bw(
           } }
         } else {
           for(i = 0; i < x_len; ++i) {
-            if(!(strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0)) {
+            if(
+              !(
+                strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0 &&
+                CHAR(STRING_ELT(x, i)) != NA_STRING
+              )
+            ) {
               success = 0; break;
         } } }
       } else if (inc_lo) {
@@ -705,13 +716,19 @@ SEXP VALC_all_bw(
             if(
               !(
                 (STRING_ELT(x, i) == NA_STRING) ||
-                strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0)
+                strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0
+              )
             ) {
               success = 0; break;
           } }
         } else {
           for(i = 0; i < x_len; ++i) {
-            if(!(strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0)) {
+            if(
+              !(
+                strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0 &&
+                CHAR(STRING_ELT(x, i)) != NA_STRING
+              )
+            ) {
               success = 0; break;
         } } }
       }  else error(log_err, "string2945asdf");
