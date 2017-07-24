@@ -494,24 +494,6 @@ SEXP VALC_all_bw(
         }  else error(log_err, "int2945asdf");
       } else error(log_err, "inthfg89");
     }
-    if(!success) {
-      char * msg = CSR_smprintf6(
-        10000, "`%s` at index %s not in `%s%s,%s%s`",
-        CSR_num_as_chr(
-          (double)(x_type == REALSXP ?
-            REAL(x)[i] :
-            // NA_INT doesn't print as NA after coercion to dbl, NA_REAL does
-            (INTEGER(x)[i] == NA_INTEGER ? NA_REAL : INTEGER(x)[i] )
-          ), 0
-        ),
-        CSR_len_as_chr(i + 1),
-        inc_lo_str,
-        CSR_num_as_chr(lo_num, 0),
-        CSR_num_as_chr(hi_num, 0),
-        inc_hi_str
-      );
-      return mkString(msg);
-    }
   } else if(x_type == STRSXP) {
   // - Strings ---------------------------------------------------------------
 
@@ -737,6 +719,26 @@ SEXP VALC_all_bw(
       "Argument `x` must be numeric-like or character (is %s).",
       type2char(x_type)
     );
+  }
+  if(!success) {
+    char * msg = CSR_smprintf6(
+      10000, "`%s` at index %s not in `%s%s,%s%s`",
+      x_type == STRSXP ?
+        CSR_smprintf2(10000, "\"%s\"%s", CHAR(STRING_ELT(x, i)), "") :
+        CSR_num_as_chr(
+          (double)(x_type == REALSXP ?
+            REAL(x)[i] :
+            // NA_INT doesn't print as NA after coercion to dbl, NA_REAL does
+            (INTEGER(x)[i] == NA_INTEGER ? NA_REAL : INTEGER(x)[i] )
+          ), 0
+        ),
+      CSR_len_as_chr(i + 1),
+      inc_lo_str,
+      CSR_num_as_chr(lo_num, 0),
+      CSR_num_as_chr(hi_num, 0),
+      inc_hi_str
+    );
+    return mkString(msg);
   }
   return ScalarLogical(1);
 }
