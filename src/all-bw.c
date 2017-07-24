@@ -19,7 +19,6 @@ static int scalar_na(SEXP x) {
   }
   return res;
 }
-static char * str_sub  t
 /*
  * helper fun to throw error
  */
