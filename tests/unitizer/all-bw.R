@@ -196,6 +196,8 @@ unitizer_sect('Infinity - int', {
   all_bw(z.int, int.min - 1, int.max + 1) # pass
   all_bw(z.int, int.min - 1, int.max + 1, bounds="()") # pass?
 
+  all_bw(int.max - 1L, -Inf, int.max, bounds="()") # pass
+
   all_bw(z.int, int.min, Inf) # pass
   all_bw(z.int, int.min, Inf, bounds="(]") # fail
   all_bw(z.int, int.min, Inf, bounds="()") # fail
@@ -210,6 +212,10 @@ unitizer_sect('Infinity - int', {
   all_bw(r.int, -Inf, int.max, bounds="[)")
   all_bw(r.int, -Inf, int.max, bounds="()")
   all_bw(r.int, -Inf, int.max, bounds="(]")
+  all_bw(r.int, -Inf, int.max - 10, bounds="(]")  # fail
+
+  all_bw(z.int, -Inf, int.max - 1L, bounds="(]", na.rm=TRUE) # fail
+  all_bw(c(int.max - 1L, NA), -Inf, int.max, bounds="()", na.rm=TRUE) # pass
 
   all_bw(r.int, int.min, Inf)
   all_bw(r.int, int.min, Inf, bounds="(]")
@@ -220,6 +226,8 @@ unitizer_sect('Infinity - int', {
   all_bw(r.int, -Inf, int.max, bounds="[)", na.rm=TRUE)
   all_bw(r.int, -Inf, int.max, bounds="()", na.rm=TRUE)
   all_bw(r.int, -Inf, int.max, bounds="(]", na.rm=TRUE)
+
+  all_bw(r.int, int.min + 10, Inf, bounds="[)", na.rm=TRUE)  # fail
 
   all_bw(r.int, int.min, Inf, na.rm=TRUE)
   all_bw(r.int, int.min, Inf, bounds="(]", na.rm=TRUE)
