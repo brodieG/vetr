@@ -19,6 +19,7 @@ static int scalar_na(SEXP x) {
   }
   return res;
 }
+static char * str_sub  t
 /*
  * helper fun to throw error
  */
@@ -151,6 +152,9 @@ SEXP VALC_all_bw(
   const char * log_err =
     "Internal Error: unexpected logical result %s, contact maintainer.";
 
+  const char * lo_as_chr = "";
+  const char * hi_as_chr = "";
+
   if(num_like(x))  {
     if(!num_like(lo))
       error(
@@ -166,6 +170,9 @@ SEXP VALC_all_bw(
 
     double lo_num = asReal(lo);
     double hi_num = asReal(hi);
+
+    lo_as_chr = CSR_num_as_chr(lo_num, 0);
+    hi_as_chr = CSR_num_as_chr(hi_num, 0);
 
     if(lo_num > hi_num) {
       error(
@@ -500,13 +507,20 @@ SEXP VALC_all_bw(
     // note that if unbound then the char representation of "Inf"/"-Inf" is
     // never used
 
-    int lo_unbound = (lo_type = REALSXP && REAL(lo)[0] == R_NegInf);
-    int hi_unbound = (hi_type = REALSXP && REAL(hi)[0] == R_PosInf);
+    int lo_unbound = (lo_type == REALSXP && REAL(lo)[0] == R_NegInf);
+    int hi_unbound = (hi_type == REALSXP && REAL(hi)[0] == R_PosInf);
 
     const char * lo_chr, * hi_chr;
 
-    lo_chr = CHAR(STRING_ELT(asChar(lo), 0));
-    hi_chr = CHAR(STRING_ELT(asChar(hi), 0));
+    lo_chr = CHAR(asChar(lo));
+    hi_chr = CHAR(asChar(hi));
+
+    lo_as_chr = lo_unbound ?
+      CSR_num_as_chr(asReal(lo), 0) :
+      CSR_smprintf2(10000L, "\"%s\"", lo_chr, "");
+    hi_as_chr = hi_unbound ?
+      CSR_num_as_chr(asReal(hi), 0) :
+      CSR_smprintf2(10000L, "\"%s\"", hi_chr, "");
 
     if(strcmp(lo_chr, hi_chr) > 0) {
       error(
@@ -721,24 +735,24 @@ SEXP VALC_all_bw(
     );
   }
   if(!success) {
+    char * msg_val;
+    if(x_type == STRSXP) {
+      msg_val = CSR_smprintf2(10000, "\"%s\"", CHAR(STRING_ELT(x, i)), "");
+    } else {
+      msg_val = CSR_num_as_chr(
+        (double)(x_type == REALSXP ?
+          REAL(x)[i] :
+          // NA_INT doesn't print as NA after coercion to dbl, NA_REAL does
+          (INTEGER(x)[i] == NA_INTEGER ? NA_REAL : INTEGER(x)[i] )
+        ), 0
+      );
+    }
     char * msg = CSR_smprintf6(
       10000, "`%s` at index %s not in `%s%s,%s%s`",
-      x_type == STRSXP ?
-        CSR_smprintf2(10000, "\"%s\"%s", CHAR(STRING_ELT(x, i)), "") :
-        CSR_num_as_chr(
-          (double)(x_type == REALSXP ?
-            REAL(x)[i] :
-            // NA_INT doesn't print as NA after coercion to dbl, NA_REAL does
-            (INTEGER(x)[i] == NA_INTEGER ? NA_REAL : INTEGER(x)[i] )
-          ), 0
-        ),
+      msg_val,
       CSR_len_as_chr(i + 1),
-      inc_lo_str,
-      CSR_num_as_chr(lo_num, 0),
-      CSR_num_as_chr(hi_num, 0),
-      inc_hi_str
+      inc_lo_str, lo_as_chr, hi_as_chr, inc_hi_str
     );
     return mkString(msg);
-  }
-  return ScalarLogical(1);
+  } else return ScalarLogical(1);
 }
