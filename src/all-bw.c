@@ -148,6 +148,8 @@ SEXP VALC_all_bw(
   R_xlen_t i;
   R_xlen_t x_len = xlength(x);
   int success = 1;
+  const char * log_err =
+    "Internal Error: unexpected logical result %s, contact maintainer.";
 
   if(num_like(x))  {
     if(!num_like(lo))
@@ -175,9 +177,6 @@ SEXP VALC_all_bw(
 
     int lo_unbound = (lo_num == R_NegInf && inc_lo);
     int hi_unbound = (hi_num == R_PosInf && inc_hi);
-
-    const char * log_err =
-      "Internal Error: unexpected logical result %s, contact maintainer.";
 
     // We're using the negated comparisons (e.g. `!(x > i)` since that allows a
     // natural resolution of NAs and NaNs without having to explicitly check for
@@ -522,7 +521,7 @@ SEXP VALC_all_bw(
     int lo_unbound = (lo_type = REALSXP && REAL(lo)[0] == R_NegInf);
     int hi_unbound = (hi_type = REALSXP && REAL(hi)[0] == R_PosInf);
 
-    const char * lo_chr, hi_chr;
+    const char * lo_chr, * hi_chr;
 
     lo_chr = CHAR(STRING_ELT(asChar(lo), 0));
     hi_chr = CHAR(STRING_ELT(asChar(hi), 0));
@@ -555,7 +554,7 @@ SEXP VALC_all_bw(
               !(
                 strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0 &&
                 strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0 &&
-                CHAR(STRING_ELT(x, i)) != NA_STRING
+                STRING_ELT(x, i) != NA_STRING
               )
             ) {
               success = 0;
@@ -581,7 +580,7 @@ SEXP VALC_all_bw(
               !(
                 strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0 &&
                 strcmp(CHAR(STRING_ELT(x, i)), hi_chr) <= 0 &&
-                CHAR(STRING_ELT(x, i)) != NA_STRING
+                STRING_ELT(x, i) != NA_STRING
               )
             ) {
               success = 0;
@@ -607,7 +606,7 @@ SEXP VALC_all_bw(
               !(
                 strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0 &&
                 strcmp(CHAR(STRING_ELT(x, i)), hi_chr) < 0 &&
-                CHAR(STRING_ELT(x, i)) != NA_STRING
+                STRING_ELT(x, i) != NA_STRING
               )
             ) {
               success = 0;
@@ -633,7 +632,7 @@ SEXP VALC_all_bw(
               !(
                 strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0 &&
                 strcmp(CHAR(STRING_ELT(x, i)), hi_chr) <= 0) &&
-                CHAR(STRING_ELT(x, i)) != NA_STRING
+                STRING_ELT(x, i) != NA_STRING
             ) {
               success = 0;
               break;
@@ -705,7 +704,7 @@ SEXP VALC_all_bw(
             if(
               !(
                 strcmp(CHAR(STRING_ELT(x, i)), lo_chr) > 0 &&
-                CHAR(STRING_ELT(x, i)) != NA_STRING
+                STRING_ELT(x, i) != NA_STRING
               )
             ) {
               success = 0; break;
@@ -726,7 +725,7 @@ SEXP VALC_all_bw(
             if(
               !(
                 strcmp(CHAR(STRING_ELT(x, i)), lo_chr) >= 0 &&
-                CHAR(STRING_ELT(x, i)) != NA_STRING
+                STRING_ELT(x, i) != NA_STRING
               )
             ) {
               success = 0; break;
