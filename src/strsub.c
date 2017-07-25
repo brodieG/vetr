@@ -163,13 +163,17 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
         // string again, but probably not worth the work to do it in one step.
         // Also probably don't need the CSR fun.
 
-        char_res = R_alloc(byte_count, sizeof(char));
-        int snp_try = snprintf(char_res, byte_count, "%s%s", char_trunc, pad);
+        char_res = R_alloc(byte_count + 1, sizeof(char));
+        int snp_try = snprintf(
+          char_res, byte_count + 1, "%s%s", char_trunc, pad
+        );
         if(snp_try < 0)
+          // nocov start
           error(
             "Internal Error: failed generating truncated string at index %.0f",
             (double) i
           );
+          // nocov end
       } else char_res = char_trunc;
 
       char_sxp = PROTECT(
