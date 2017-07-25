@@ -128,6 +128,9 @@ strbullet <- function(str, bullet="- ", ctd="  ", maxlen=10000L)
 collapse <- function(str, sep="", maxlen=10000L)
   .Call(VALC_collapse_ext, str, sep, maxlen)
 
+strsub <- function(string, chars=15L, mark=TRUE)
+  .Call(VALC_strsub, string, chars, mark)
+
 ## Purely internal funs for testing
 
 test_strmcpy <- function() .Call(VALC_test_strmcpy)

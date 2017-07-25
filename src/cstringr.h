@@ -42,6 +42,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP CSR_bullet_ext(SEXP str, SEXP bullet, SEXP ctd, SEXP maxlen);
   SEXP CSR_collapse_ext(SEXP str, SEXP sep, SEXP maxlen);
 
+  SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc);
+
   SEXP CSR_test_strmcpy();
   SEXP CSR_test_strappend();
   SEXP CSR_test_strappend2();
