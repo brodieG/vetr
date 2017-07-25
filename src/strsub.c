@@ -38,14 +38,14 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     error("Internal Error: can only work with 8 bit characters");
 
   if(TYPEOF(string) != STRSXP)
-    stop("Argument `string` must be a string.");
+    error("Argument `string` must be a string.");
   if(TYPEOF(mark_trunc) != LGLSXP && xlength(mark_trunc) != 1)
-    stop("Argument `mark_trunc` must be a TRUE or FALSE.");
+    error("Argument `mark_trunc` must be a TRUE or FALSE.");
 
   if(
     TYPEOF(chars) != INTSXP || xlength(chars) != 1 || INTEGER(chars)[0] < 1
   )
-    stop(
+    error(
       "Argument `chars` must be scalar integer, strictly positive, and not NA."
     );
 
@@ -53,15 +53,18 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
   int mark = asInteger(mark_trunc) > 0;
   int chars_int = asInteger(chars);
 
+  // If you change this, you must adapt position tracking below to make sure you
+  // keep track of the right byte position for offset -pad_len
+
   const char * pad = ".."; // padding for truncated strings
   const int pad_len = 2;   // make sure this aligns with `pad`
 
   if(chars_int - mark * pad_len < 1)
-    stop(
+    error(
       "Argument `chars` must be greater than 2 when `mark_trunc` is TRUE."
     );
 
-  res_string = PROTECT(allocVector(STRSXP, len));
+  SEXP res_string = PROTECT(allocVector(STRSXP, len));
 
   for(i = 0; i < len; ++i) {
     SEXP str_elt = STRING_ELT(string, i);
@@ -71,10 +74,10 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     switch(chr_enc) {
       case CE_NATIVE:
       case CE_UTF8:
-        char_val = CHAR(STRING_ELT(string, i));
+        char_point = CHAR(STRING_ELT(string, i));
         break;
       case CE_LATIN1:
-        char_val = translateCharUTF8(STRING_ELT(string, i));
+        char_point = translateCharUTF8(STRING_ELT(string, i));
         break;
       default:
         // nocov start
@@ -88,25 +91,24 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     R_xlen_t char_count = 0;
     int char_val;
 
+    size_t byte_pad = pad_len;
+
     // Limiting to 8 less than SIZE_T_MAX to make room for a last 4 byte UTF8
     // character, '..', and the NULL terminator
 
     size_t byte_count = 0, byte_count_prev, byte_count_prev_prev,
       size_t_lim = SIZE_T_MAX - 4 - byte_pad - 1;
 
-    // if you change this, you must adapt position tracking below
-
-    size_t byte_pad = pad_len;
     int is_utf8 = 0, invalid_utf8 = 0;
 
     // Loop while no NULL character
 
     while(
-      char_val = *(char_point + byte_count) &&
+      (char_val = *(char_point + byte_count)) &&
       char_count < chars_int
     ) {
       if(byte_count >= size_t_lim)
-        error("Internal Error: size_t overflow.") // nocov, should never happen
+        error("Internal Error: size_t overflow."); // nocov, should never happen
 
       // Keep track of the byte position two characters ago
 
@@ -115,14 +117,15 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
 
       ++char_count;
       ++byte_count;  // increment once for ASCII
-      if(char_head > 127) {
+
+      if(char_val > 127) {
+
         // Should be UTF8, so check 4 most significant bits of first  byte for
         // number of chars, valid values are 1111, 1110, 1100, and 1000,
         // non-UTF8 byte are counted as one character by the ++byte_count above
 
         is_utf8 = 1;
         int char_head = char_val >> 4;
-        int bytes;
 
         switch(char_head) {
           case 15: // 1111
@@ -161,7 +164,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
         // Also probably don't need the CSR fun.
 
         char_res = R_alloc(byte_count, sizeof(char));
-        int snp_try = snprintf(char_res, byte_count, "%s..", char_trunc);
+        int snp_try = snprintf(char_res, byte_count, "%s%s", char_trunc, pad);
         if(snp_try < 0)
           error(
             "Internal Error: failed generating truncated string at index %.0f",
@@ -171,14 +174,14 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
 
       char_sxp = PROTECT(
         is_utf8 ?  mkCharCE(char_res, CE_UTF8) : mkChar(char_res)
-      )
+      );
     } else {
       char_sxp = PROTECT(STRING_ELT(string, i));
     }
     // Deal with incorrectly encoded strings? At this point we just let them
     // through since presumably `translateToUTF8` should have dealt with them
 
-    SET_STRING_ELT(res_string, char_sxp);
+    SET_STRING_ELT(res_string, i, char_sxp);
   }
   UNPROTECT(2);
   return res_string;
