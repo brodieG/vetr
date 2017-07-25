@@ -38,14 +38,14 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     error("Internal Error: can only work with 8 bit characters");
 
   if(TYPEOF(string) != STRSXP)
-    stop("Argument `string` must be a string.");
+    error("Argument `string` must be a string.");
   if(TYPEOF(mark_trunc) != LGLSXP && xlength(mark_trunc) != 1)
-    stop("Argument `mark_trunc` must be a TRUE or FALSE.");
+    error("Argument `mark_trunc` must be a TRUE or FALSE.");
 
   if(
     TYPEOF(chars) != INTSXP || xlength(chars) != 1 || INTEGER(chars)[0] < 1
   )
-    stop(
+    error(
       "Argument `chars` must be scalar integer, strictly positive, and not NA."
     );
 
@@ -57,11 +57,11 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
   const int pad_len = 2;   // make sure this aligns with `pad`
 
   if(chars_int - mark * pad_len < 1)
-    stop(
+    error(
       "Argument `chars` must be greater than 2 when `mark_trunc` is TRUE."
     );
 
-  res_string = PROTECT(allocVector(STRSXP, len));
+  SEXP res_string = PROTECT(allocVector(STRSXP, len));
 
   for(i = 0; i < len; ++i) {
     SEXP str_elt = STRING_ELT(string, i);
@@ -71,10 +71,10 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     switch(chr_enc) {
       case CE_NATIVE:
       case CE_UTF8:
-        char_val = CHAR(STRING_ELT(string, i));
+        char_point = CHAR(STRING_ELT(string, i));
         break;
       case CE_LATIN1:
-        char_val = translateCharUTF8(STRING_ELT(string, i));
+        char_point = translateCharUTF8(STRING_ELT(string, i));
         break;
       default:
         // nocov start
@@ -102,11 +102,11 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     // Loop while no NULL character
 
     while(
-      char_val = *(char_point + byte_count) &&
+      (char_val = *(char_point + byte_count)) &&
       char_count < chars_int
     ) {
       if(byte_count >= size_t_lim)
-        error("Internal Error: size_t overflow.") // nocov, should never happen
+        error("Internal Error: size_t overflow."); // nocov, should never happen
 
       // Keep track of the byte position two characters ago
 
