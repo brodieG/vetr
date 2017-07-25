@@ -177,13 +177,13 @@ encoded strings.
 Note, final string size could be up to maxlen + 1 including the NULL terminator.
 A NULL terminator is always added at the end of the string.
 */
-char * CSR_strmcpy(const char * str, size_t maxlen) {
+char * CSR_strmcpy_int(const char * str, size_t maxlen, int warn) {
   if(!maxlen) return("");
   if(maxlen == SIZE_T_MAX)
     error("Argument `maxlen` must be at least one smaller than SIZE_T_MAX.");
 
   size_t len = CSR_strmlen_x(str, maxlen);
-  if(len == maxlen && str[len])
+  if(warn && len == maxlen && str[len])
     warning("CSR_strmcpy: truncated string longer than %d", maxlen);
 
   char * str_new = R_alloc(len + 1, sizeof(char));
@@ -204,6 +204,9 @@ char * CSR_strmcpy(const char * str, size_t maxlen) {
   } else str_new[len] = '\0';
 
   return str_new;
+}
+char * CSR_strmcpy(const char * str, size_t maxlen) {
+  return CSR_strmcpy_int(str, maxlen, 1);
 }
 /*
  * Like CSR_strmcpy, but copies to a presupplied pointer (`target`).  In this

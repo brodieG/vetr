@@ -155,8 +155,8 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
 
     if(char_count >= chars_int && char_val) {
       char * char_res;
-      char * char_trunc = CSR_strmcpy(
-        char_point, mark ? byte_count_prev_prev : byte_count
+      char * char_trunc = CSR_strmcpy_int(
+        char_point, mark ? byte_count_prev_prev : byte_count, 0
       );
       if(mark) {
         // add an ellipsis at the end.  This is inefficient since we copy the

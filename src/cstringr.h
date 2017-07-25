@@ -59,6 +59,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   size_t CSR_strmlen_x(const char * str, size_t maxlen);
   size_t CSR_strmlen(const char * str, size_t maxlen);
   char * CSR_strmcpy(const char * str, size_t maxlen);
+  char * CSR_strmcpy_int(const char * str, size_t maxlen, int warn);
   char * CSR_smprintf6(
     size_t maxlen, const char * format, const char * a, const char * b,
     const char * c, const char * d, const char * e, const char * f
