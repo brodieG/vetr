@@ -182,7 +182,8 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     // through since presumably `translateToUTF8` should have dealt with them
 
     SET_STRING_ELT(res_string, i, char_sxp);
+    UNPROTECT(1);
   }
-  UNPROTECT(2);
+  UNPROTECT(1);
   return res_string;
 }
