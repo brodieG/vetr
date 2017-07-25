@@ -1,7 +1,9 @@
 library(vetr)
 
+lorem <- "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+lorem.phrases <- unlist(strsplit(lorem, "[.,]\\K ", perl=TRUE))
+
 unitizer_sect("Basic Tests", {
-  lorem <- "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 
   vetr:::len_chr_len(1000L)
   vetr:::len_chr_len(1L)
@@ -104,4 +106,9 @@ unitizer_sect("Corner Cases", {
   vetr:::test_smprintfx()
 
   vetr:::test_strappend2()   # warning
+})
+
+unitizer_sect("substr", {
+  vetr:::strsub(lorem.phrases, 25L, TRUE)
+  vetr:::strsub(lorem.phrases, 25L, FALSE)
 })
