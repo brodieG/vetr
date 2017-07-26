@@ -1,9 +1,11 @@
 ## 0.1.0.9000
 
+* [#56](https://github.com/brodieG/validate/issues/56): Over-aggressive
+  detection of infinite recursion in symbol substitution
 * Implement `all_bw`
 * Custom tokens that return character vectors see the first element of that
   vector incorporated in the error message
-* Assorted typos (@franknarf1, @dason)
+* Assorted typos (@franknarf1, @DasonK)
 
 ## 0.1.0
 
