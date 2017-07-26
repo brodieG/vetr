@@ -82,8 +82,8 @@ fun(1, 2)
 
 ## Tweet #3
 
-Create complex vetting expressions with programmable non-standard-evaluation
-(3/4)
+Create complex vetting expressions with intuitively programmable
+non-standard-evaluation (3/4)
 
 ### Programmable NSE
 
