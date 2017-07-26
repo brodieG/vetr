@@ -66,6 +66,7 @@ unitizer_sect("Custom expressions", {
   vet(.(c(TRUE, NA, TRUE)), 1:5)
   vet(.(1:5), 1:5)
   vet(.(1:5, 1:5), 1:5) # error
+
 })
 unitizer_sect("Compound Expressions", {
   vet(INT.1 || NULL, 1)    # Pass
@@ -182,6 +183,11 @@ unitizer_sect("Language", {
 
   expE <- quote(expA)
   vet(expA, TRUE)
+
+  # collision detection working correctly (#56)
+
+  date.tpl <- rep(Sys.Date(), 2)
+  vet(date.tpl || date.tpl[1], date.tpl)
 
   # Check that `..` is expanded properly
 

@@ -197,7 +197,9 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, struct VALC_settings set) {
 
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
   lang_cpy = VALC_name_sub(lang_cpy, var_name);
-  if(mode != 2) lang_cpy = VALC_sub_symbol(lang_cpy, set, track_hash);
+  if(mode != 2) {
+    lang_cpy = VALC_sub_symbol(lang_cpy, set, track_hash);
+  }
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
@@ -300,7 +302,17 @@ void VALC_parse_recurse(
 
     int is_one_dot = (lang_car == VALC_SYM_one_dot);
     lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
-    if(!is_one_dot) lang_car = VALC_sub_symbol(lang_car, set, track_hash);
+
+    // each time we switch parse tree elements we should reset the hash so that
+    // we don't mistakenly tag symbol collisions that occur on different
+    // branches of the parse tree, so start by recording the sub level so we can
+    // reset later
+
+    size_t substitute_level = track_hash->idx;
+
+    if(!is_one_dot) {
+      lang_car = VALC_sub_symbol(lang_car, set, track_hash);
+    }
     UNPROTECT(1);
     SETCAR(lang, lang_car);
     UNPROTECT(1);
@@ -309,16 +321,10 @@ void VALC_parse_recurse(
       SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
 
-      // each time we exit from a recursion, we should reset the hash so that we
-      // don't mistakenly tag symbol collisions that occur on different branches
-      // of the parse tree
-
-      size_t substitute_level = track_hash->idx;
       VALC_parse_recurse(
         lang_car, CAR(lang_track), var_name, eval_as_is_internal,
         first_fun, set, track_hash
       );
-      VALC_reset_track_hash(track_hash, substitute_level);
     } else {
       int new_call_type = call_type;
       if(is_one_dot || eval_as_is_internal) {
@@ -328,6 +334,9 @@ void VALC_parse_recurse(
       }
       SETCAR(lang_track, ScalarInteger(new_call_type));
     }
+    // Now reset the track hash to avoid spurious collision warnings
+
+    VALC_reset_track_hash(track_hash, substitute_level);
     lang = CDR(lang);
     lang_track = CDR(lang_track);
   }
