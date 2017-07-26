@@ -50,7 +50,7 @@ alike(data.frame(), list())  # but a list does not have the data.frame attribute
 ```
 
 As an extension to the wildcard concept, we interpret partially specified [core
-R attributes](#Special-Attributes).  Here we allow any three column integer
+R attributes](#special-attributes).  Here we allow any three column integer
 matrix to match:
 
 ```{r}
