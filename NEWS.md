@@ -1,5 +1,9 @@
 ## 0.1.0.9000
 
+* Implement `all_bw`
+* Custom tokens that return character vectors see the first element of that
+  vector incorporated in the error message
+* Assorted typos (@franknarf1, @dason)
 
 ## 0.1.0
 
