@@ -128,7 +128,6 @@ Really seems like these two functions should be merged into one so that we don't
 SEXP VALC_sub_symbol(
   SEXP lang, struct VALC_settings set, struct track_hash * track_hash
 ) {
-  PrintValue(lang);
   size_t protect_i = 0;
   SEXP rho = set.env;
   while(TYPEOF(lang) == SYMSXP && lang != R_MissingArg) {
@@ -199,7 +198,6 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, struct VALC_settings set) {
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
   lang_cpy = VALC_name_sub(lang_cpy, var_name);
   if(mode != 2) {
-    Rprintf(">> parse\n");
     lang_cpy = VALC_sub_symbol(lang_cpy, set, track_hash);
   }
 
@@ -229,7 +227,6 @@ void VALC_parse_recurse(
   SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is,
   SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash
 ) {
-  Rprintf("** enter recurse\n");
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
@@ -305,8 +302,15 @@ void VALC_parse_recurse(
 
     int is_one_dot = (lang_car == VALC_SYM_one_dot);
     lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
+
+    // each time we switch parse tree elements we should reset the hash so that
+    // we don't mistakenly tag symbol collisions that occur on different
+    // branches of the parse tree, so start by recording the sub level so we can
+    // reset later
+
+    size_t substitute_level = track_hash->idx;
+
     if(!is_one_dot) {
-      Rprintf(">> recurse\n");
       lang_car = VALC_sub_symbol(lang_car, set, track_hash);
     }
     UNPROTECT(1);
@@ -317,16 +321,10 @@ void VALC_parse_recurse(
       SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
 
-      // each time we exit from a recursion, we should reset the hash so that we
-      // don't mistakenly tag symbol collisions that occur on different branches
-      // of the parse tree
-
-      size_t substitute_level = track_hash->idx;
       VALC_parse_recurse(
         lang_car, CAR(lang_track), var_name, eval_as_is_internal,
         first_fun, set, track_hash
       );
-      VALC_reset_track_hash(track_hash, substitute_level);
     } else {
       int new_call_type = call_type;
       if(is_one_dot || eval_as_is_internal) {
@@ -336,6 +334,9 @@ void VALC_parse_recurse(
       }
       SETCAR(lang_track, ScalarInteger(new_call_type));
     }
+    // Now reset the track hash to avoid spurious collision warnings
+
+    VALC_reset_track_hash(track_hash, substitute_level);
     lang = CDR(lang);
     lang_track = CDR(lang_track);
   }
@@ -350,5 +351,4 @@ void VALC_parse_recurse(
   counter--;
 
   // Don't return anything as all is done by modifying `lang` and `lang_track`
-  Rprintf("** exit recurse");
 }
