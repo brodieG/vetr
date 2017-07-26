@@ -128,6 +128,7 @@ Really seems like these two functions should be merged into one so that we don't
 SEXP VALC_sub_symbol(
   SEXP lang, struct VALC_settings set, struct track_hash * track_hash
 ) {
+  PrintValue(lang);
   size_t protect_i = 0;
   SEXP rho = set.env;
   while(TYPEOF(lang) == SYMSXP && lang != R_MissingArg) {
@@ -197,7 +198,10 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, struct VALC_settings set) {
 
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
   lang_cpy = VALC_name_sub(lang_cpy, var_name);
-  if(mode != 2) lang_cpy = VALC_sub_symbol(lang_cpy, set, track_hash);
+  if(mode != 2) {
+    Rprintf(">> parse\n");
+    lang_cpy = VALC_sub_symbol(lang_cpy, set, track_hash);
+  }
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
@@ -225,6 +229,7 @@ void VALC_parse_recurse(
   SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is,
   SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash
 ) {
+  Rprintf("** enter recurse\n");
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
@@ -300,7 +305,10 @@ void VALC_parse_recurse(
 
     int is_one_dot = (lang_car == VALC_SYM_one_dot);
     lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
-    if(!is_one_dot) lang_car = VALC_sub_symbol(lang_car, set, track_hash);
+    if(!is_one_dot) {
+      Rprintf(">> recurse\n");
+      lang_car = VALC_sub_symbol(lang_car, set, track_hash);
+    }
     UNPROTECT(1);
     SETCAR(lang, lang_car);
     UNPROTECT(1);
@@ -342,4 +350,5 @@ void VALC_parse_recurse(
   counter--;
 
   // Don't return anything as all is done by modifying `lang` and `lang_track`
+  Rprintf("** exit recurse");
 }
