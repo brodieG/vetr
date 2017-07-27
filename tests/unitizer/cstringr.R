@@ -112,10 +112,12 @@ unitizer_sect("substr", {
   vetr:::strsub(lorem.tr.phrases, 25L, TRUE)
   vetr:::strsub(lorem.tr.phrases, 25L, FALSE)
 
-  vetr:::strsub(lorem.ru.phrases, 25L, FALSE)
+  vetr:::strsub(lorem.ru.phrases, 25L, TRUE)
   vetr:::strsub(lorem.ru.phrases, 25L, FALSE)
 
-  vetr:::strsub(lorem.cn.phrases, 25L, FALSE)
+  vetr:::strsub(lorem.cn.phrases, 25L, TRUE)
   vetr:::strsub(lorem.cn.phrases, 25L, FALSE)
 
+  vetr:::strsub(lorem.emo.phrases, 25L, TRUE)
+  vetr:::strsub(lorem.emo.phrases, 25L, FALSE)
 })
