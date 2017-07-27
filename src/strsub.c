@@ -110,6 +110,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
       if(byte_count >= size_t_lim)
         error("Internal Error: size_t overflow."); // nocov, should never happen
 
+      /* // visualize bytes debug code
       for(int jj = 8; jj > 0; --jj)
         Rprintf(
           "%d%s",
@@ -120,6 +121,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
         " %4u %c cc: %zd bc: %zu\n", char_val, (char) char_val, char_count,
         byte_count
       );
+      */
 
       // Keep track of the byte position two characters ago
 
@@ -136,8 +138,6 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
 
         is_utf8 = 1;
         int char_head = char_val >> 3;
-
-        Rprintf("  char_head: %d\n", char_head);
 
         if(char_head == 30) { // 11110
           byte_count +=3;
