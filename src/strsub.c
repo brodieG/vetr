@@ -89,7 +89,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
         // nocov end
     }
     R_xlen_t char_count = 0;
-    int char_val;
+    unsigned char char_val; // need for > 127
 
     size_t byte_pad = pad_len;
 
@@ -110,6 +110,17 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
       if(byte_count >= size_t_lim)
         error("Internal Error: size_t overflow."); // nocov, should never happen
 
+      for(int jj = 8; jj > 0; --jj)
+        Rprintf(
+          "%d%s",
+          (char_val & ((int)(pow((double) 2, (double) jj - 1)))) > 0,
+          !((jj - 1) % 4) ? " " : ""
+        );
+      Rprintf(
+        " %4u %c cc: %zd bc: %zu\n", char_val, (char) char_val, char_count,
+        byte_count
+      );
+
       // Keep track of the byte position two characters ago
 
       if(char_count > 1) byte_count_prev_prev = byte_count_prev;
@@ -118,27 +129,25 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
       ++char_count;
       ++byte_count;  // increment once for ASCII
 
-      if(char_val > 127) {
-
+      if(char_val & 128) {
         // Should be UTF8, so check 4 most significant bits of first  byte for
         // number of chars, valid values are 1111, 1110, 1100, and 1000,
         // non-UTF8 byte are counted as one character by the ++byte_count above
 
         is_utf8 = 1;
-        int char_head = char_val >> 4;
+        int char_head = char_val >> 3;
 
-        switch(char_head) {
-          case 15: // 1111
-            byte_count +=3;
-            break;
-          case 14: // 1110
-            byte_count +=2;
-            break;
-          case 12: // 1100
-            byte_count +=1;
-            break;
-          default:  // probably shouldn't be allowed to happen
-            invalid_utf8 = 1;  // don't do anything with this for now
+        Rprintf("  char_head: %d\n", char_head);
+
+        if(char_head == 30) { // 11110
+          byte_count +=3;
+        } else if(char_head == 28 || char_head == 29) { // 1110_
+          byte_count +=2;
+        } else if(char_head >= 24 && char_head <= 27) {  // 110_ _
+          byte_count +=1;
+        } else {
+          // probably shouldn't be allowed to happen
+          invalid_utf8 = 1;  // don't do anything with this for now
     } } }
     if(byte_count >= INT_MAX - byte_pad)
       // nocov start
