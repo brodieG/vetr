@@ -92,4 +92,9 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
   size_t CSR_add_szt(size_t a, size_t b);
 
+  // macros, offset is expected to be a pointer to a character
+
+  #define UTF8_IS_CONT(offset) UTF8_BW(offset, 0x80, 0xBF)
+  #define UTF8_BW(offset, a, b) ((*(offset) >= (a)) && (*(offset) <= (b)))
+
 #endif

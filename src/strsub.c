@@ -99,12 +99,16 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     size_t byte_count = 0, byte_count_prev, byte_count_prev_prev,
       size_t_lim = SIZE_T_MAX - 4 - byte_pad - 1;
 
-    int is_utf8 = 0, invalid_utf8 = 0;
+    int is_utf8 = 0;
+    unsigned const char * char_ptr;
 
     // Loop while no NULL character
 
     while(
-      (char_val = *(char_point + byte_count)) &&
+      (
+        char_val = *(
+          char_ptr = (unsigned const char *)(char_point + byte_count))
+      ) &&
       char_count < chars_int
     ) {
       if(byte_count >= size_t_lim)
@@ -131,24 +135,74 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
       ++char_count;
       ++byte_count;  // increment once for ASCII
 
+      // If possible UTF8 outside ASCII, check up to the next 4 bytes and for
+      // and offset bytes by length of maximal subpart of valid sequence, or
+      // length of valid sequence.  Note that we've already advanced one byte
+      // above so all failing cases don't need to advance further as they would
+      // advance by one.
+      //
+      // This is based on:
+      // <http://www.unicode.org/versions/Unicode10.0.0/ch03.pdf#G7404>,
+      // table 3-7, at page.
+
       if(char_val & 128) {
         // Should be UTF8, so check 4 most significant bits of first  byte for
         // number of chars, valid values are 1111, 1110, 1100, and 1000,
         // non-UTF8 byte are counted as one character by the ++byte_count above
+        //
 
         is_utf8 = 1;
-        int char_head = char_val >> 3;
 
-        if(char_head == 30) { // 11110
-          byte_count +=3;
-        } else if(char_head == 28 || char_head == 29) { // 1110_
-          byte_count +=2;
-        } else if(char_head >= 24 && char_head <= 27) {  // 110_ _
-          byte_count +=1;
-        } else {
-          // probably shouldn't be allowed to happen
-          invalid_utf8 = 1;  // don't do anything with this for now
-    } } }
+        if(UTF8_BW(char_ptr, 0xC2, 0xDF)) {
+          // two byte sequence
+          if(UTF8_IS_CONT(char_ptr + 1)) byte_count +=1;
+        } else if(char_val == 0xE0) {
+          // three byte sequence, exception 1
+          if(UTF8_BW(char_ptr + 1, 0xA0, 0xBF)) {
+            if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
+            else byte_count +=1;
+          }
+        } else if(char_val == 0xED) {
+          // three byte sequence, exception 2
+          if(UTF8_BW(char_ptr + 1, 0x80, 0x9F)) {
+            if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
+            else byte_count +=1;
+          }
+        } else if (UTF8_BW(char_ptr, 0xE0, 0xEF)) {
+          // three byte sequence normal, note by construction excluding E0, ED
+          if(UTF8_IS_CONT(char_ptr + 1)) {
+            if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
+            else byte_count +=1;
+          }
+        } else if (char_val == 0xF0) {
+          // four byte sequence, v1
+          if(UTF8_BW(char_ptr + 1, 0x90, 0xBF)) {
+            if(UTF8_IS_CONT(char_ptr + 2)) {
+              if(UTF8_IS_CONT(char_ptr + 3)) {
+                byte_count += 3;
+              } else byte_count += 2;
+            } else byte_count +=1;
+          }
+        } else if (UTF8_BW(char_ptr, 0xF1, 0xF3)) {
+          // four byte sequence, v2
+          if(UTF8_IS_CONT(char_ptr + 1)) {
+            if(UTF8_IS_CONT(char_ptr + 2)) {
+              if(UTF8_IS_CONT(char_ptr + 3)) {
+                byte_count += 3;
+              } else byte_count += 2;
+            } else byte_count +=1;
+          }
+        } else if (char_val == 0xF4) {
+          // four byte sequence, v2
+          if(UTF8_BW(char_ptr + 1, 0x80, 0x8F)) {
+            if(UTF8_IS_CONT(char_ptr + 2)) {
+              if(UTF8_IS_CONT(char_ptr + 3)) {
+                byte_count += 3;
+              } else byte_count += 2;
+            } else byte_count +=1;
+        } }
+      }
+    }
     if(byte_count >= INT_MAX - byte_pad)
       // nocov start
       error(
