@@ -76,6 +76,7 @@ R_CallMethodDef callMethods[] = {
   {"collapse_ext", (DL_FUNC) &CSR_collapse_ext, 3},
   {"bullet_ext", (DL_FUNC) &CSR_bullet_ext, 4},
   {"strsub", (DL_FUNC) &CSR_strsub, 3},
+  {"nchar_u", (DL_FUNC) &CSR_nchar_u, 1},
   {"smprintf2_ext", (DL_FUNC) &CSR_smprintf2_ext, 4},
   {"smprintf6_ext", (DL_FUNC) &CSR_smprintf6_ext, 8},
   {"ucfirst_ext", (DL_FUNC) &CSR_ucfirst_ext, 2},

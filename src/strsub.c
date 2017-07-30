@@ -263,3 +263,44 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
   UNPROTECT(1);
   return res_string;
 }
+/*
+ * Like `nchar`, but has a homegrown implementation of UTF8 character counting.
+ */
+
+SEXP CSR_nchar_u(SEXP string) {
+  if(TYPEOF(string) != STRSXP)
+    error("Argument `string` must be a character vector.");
+
+  R_xlen_t i, len = xlength(string);
+  SEXP res = PROTECT(allocVector(INTSXP, len));
+
+  for(i = 0; i < len; ++i) {
+    // It would be nice to be able to skip the STRING_ELT stuff and access the
+    // data directly as we do.
+
+    unsigned const char * char_start =
+      (unsigned const char * ) CHAR(STRING_ELT(string, i));
+
+    unsigned const char * char_ptr;
+
+    int byte_count = 0, char_count = 0;
+    int too_long = 0; // track if any strings longer than INT_MAX
+
+    while(*(char_ptr = (char_start + byte_count))) {
+      int byte_off = utf8_offset(char_ptr);
+      if((byte_count > INT_MAX - byte_off) && !too_long) {
+        // note this also catches the char_count overflow since utf8_offset will
+        // always return 1 or more
+
+        too_long = 1;
+        warning("Some elements longer than INT_MAX, return NA for those.");
+        break;
+      }
+      byte_count += byte_off;
+      char_count++;
+    }
+    INTEGER(res)[i] = too_long ? NA_INTEGER : char_count;
+  }
+  UNPROTECT(1);
+  return(res);
+}

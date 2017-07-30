@@ -60,3 +60,4 @@ lorem.emo <- paste(
 )
 lorem.emo.phrases <- unlist(strsplit(lorem.emo, "[,.]\\K", perl=TRUE))
 
+# trick sequences

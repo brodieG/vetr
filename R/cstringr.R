@@ -131,6 +131,8 @@ collapse <- function(str, sep="", maxlen=10000L)
 strsub <- function(string, chars=15L, mark=TRUE)
   .Call(VALC_strsub, string, chars, mark)
 
+nchar_u <- function(string) .Call(VALC_nchar_u, string)
+
 ## Purely internal funs for testing
 
 test_strmcpy <- function() .Call(VALC_test_strmcpy)
