@@ -31,8 +31,19 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  *
  * This is based on:
  * <http://www.unicode.org/versions/Unicode10.0.0/ch03.pdf#G7404>,
- * table 3-7, at page.
+ * table 3-7, transcribed below
  *
+ * Well-Formed UTF-8 Byte Sequences
+ * Code Points        | Byte 1 | Byte 2 | Byte 3 | Byte 4
+ * U+0000..U+007F     | 00..7F |
+ * U+0080..U+07FF     | C2..DF | 80..BF
+ * U+0800..U+0FFF     | E0     | A0..BF | 80..BF
+ * U+1000..U+CFFF     | E1..EC | 80..BF | 80..BF
+ * U+D000..U+D7FF     | ED     | 80..9F | 80..BF
+ * U+E000..U+FFFF     | EE..EF | 80..BF | 80..BF
+ * U+10000..U+3FFFF   | F0     | 90..BF | 80..BF | 80..BF
+ * U+40000..U+FFFFF   | F1..F3 | 80..BF | 80..BF | 80..BF
+ * U+100000..U+10FFFF | F4     | 80..8F | 80..BF | 80..BF
  */
 static inline int utf8_offset(unsigned const char * char_ptr) {
   unsigned const char char_val = *(char_ptr);
