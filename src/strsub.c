@@ -92,6 +92,16 @@ static inline int utf8_offset(unsigned const char * char_ptr) {
   return byte_count;
 }
 /*
+ * Rather than try to handle all native encodings, we just convert directly
+ * to UTF8 and don't worry about it.  This will be sub-optimal in LATIN1 or
+ * windows 1252 locales where each character can be represented by a byte
+ * and could potentially lead to copying of entire vectors. We'll have to
+ * consider a mode where we let known 255 element encodings through...
+ */
+static inline unsigned const char * as_utf8_char(SEXP string, R_xlen_t i) {
+  return (unsigned const char *) translateCharUTF8(STRING_ELT(string, i));
+}
+/*
  * Truncates strings to specified length.
  *
  * Will re-encode any encoded strings into UTF-8.
@@ -141,31 +151,11 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
   SEXP res_string = PROTECT(allocVector(STRSXP, len));
 
   for(i = 0; i < len; ++i) {
-    SEXP str_elt = STRING_ELT(string, i);
-    cetype_t chr_enc = getCharCE(str_elt);
-    const char * char_point;
-
-    // Not clear that we need to translate to UTF8 for LATIN1, since it is a one
-    // character per byte and also seems like no double width characters...
-    switch(chr_enc) {
-      case CE_NATIVE:
-      case CE_UTF8:
-        char_point = CHAR(str_elt);
-        break;
-      case CE_LATIN1:
-        char_point = translateCharUTF8(STRING_ELT(string, i));
-        break;
-      default:
-        // nocov start
-        error(
-          "%s%s",
-          "Internal Error: unexpected character encoding; ",
-          "contact maintainer."
-        );
-        // nocov end
-    }
-    R_xlen_t char_count = 0;
+    unsigned const char * char_start, * char_ptr;
     unsigned char char_val; // need for > 127
+
+    char_start = as_utf8_char(string, i);
+    R_xlen_t char_count = 0;
 
     size_t byte_pad = pad_len;
 
@@ -176,15 +166,11 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
       size_t_lim = SIZE_T_MAX - 4 - byte_pad - 1;
 
     int is_utf8 = 0;
-    unsigned const char * char_ptr;
 
     // Loop while no NULL character
 
     while(
-      (
-        char_val = *(
-          char_ptr = (unsigned const char *)(char_point + byte_count))
-      ) &&
+      (char_val = *(char_ptr = (char_start + byte_count))) &&
       char_count < chars_int
     ) {
       if(byte_count >= size_t_lim)
@@ -210,7 +196,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
 
       ++char_count;
       byte_count += utf8_offset(char_ptr);
-      if(*char_ptr > 127) is_utf8 = 1;
+      if(char_val > 127) is_utf8 = 1;
     }
     if(byte_count >= INT_MAX - byte_pad)
       // nocov start
@@ -228,7 +214,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     if(char_count >= chars_int && char_val) {
       char * char_res;
       char * char_trunc = CSR_strmcpy_int(
-        char_point, mark ? byte_count_prev_prev : byte_count, 0
+        (const char *) char_start, mark ? byte_count_prev_prev : byte_count, 0
       );
       if(mark) {
         // add an ellipsis at the end.  This is inefficient since we copy the
@@ -278,15 +264,15 @@ SEXP CSR_nchar_u(SEXP string) {
     // It would be nice to be able to skip the STRING_ELT stuff and access the
     // data directly as we do.
 
-    unsigned const char * char_start =
-      (unsigned const char * ) CHAR(STRING_ELT(string, i));
+    unsigned const char * char_start, * char_ptr;
+    unsigned char char_val;
 
-    unsigned const char * char_ptr;
+    char_start = as_utf8_char(string, i);
 
     int byte_count = 0, char_count = 0;
     int too_long = 0; // track if any strings longer than INT_MAX
 
-    while(*(char_ptr = (char_start + byte_count))) {
+    while((char_val = *(char_ptr = (char_start + byte_count)))) {
       int byte_off = utf8_offset(char_ptr);
       if((byte_count > INT_MAX - byte_off) && !too_long) {
         // note this also catches the char_count overflow since utf8_offset will
