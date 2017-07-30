@@ -16,7 +16,81 @@ GNU General Public License for more details.
 Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 #include "cstringr.h"
+/*
+ * Most of the functionality in this file already exists built in to R, so we
+ * suggest you check out `nchar`, `substr`, etc.  This is mostly a learning
+ * exercise for me.
+ */
+/*
+ * Computes how many bytes a UTF8 point takes.
+ *
+ * If possible UTF8 outside ASCII, check up to the next 4 bytes and for and
+ * offset bytes by length of maximal subpart of valid sequence, or length of
+ * valid sequence.  Note that we've already advanced one byte above so all
+ * failing cases don't need to advance further as they would advance by one.
+ *
+ * This is based on:
+ * <http://www.unicode.org/versions/Unicode10.0.0/ch03.pdf#G7404>,
+ * table 3-7, at page.
+ *
+ */
+static inline int utf8_offset(unsigned const char * char_ptr) {
+  unsigned const char char_val = *(char_ptr);
 
+  int byte_count = 1;  // Always at least one val
+
+  if(char_val & 128) {
+    if(UTF8_BW(char_ptr, 0xC2, 0xDF)) {
+      // two byte sequence
+      if(UTF8_IS_CONT(char_ptr + 1)) byte_count +=1;
+    } else if(char_val == 0xE0) {
+      // three byte sequence, exception 1
+      if(UTF8_BW(char_ptr + 1, 0xA0, 0xBF)) {
+        if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
+        else byte_count +=1;
+      }
+    } else if(char_val == 0xED) {
+      // three byte sequence, exception 2
+      if(UTF8_BW(char_ptr + 1, 0x80, 0x9F)) {
+        if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
+        else byte_count +=1;
+      }
+    } else if (UTF8_BW(char_ptr, 0xE0, 0xEF)) {
+      // three byte sequence normal, note by construction excluding E0, ED
+      if(UTF8_IS_CONT(char_ptr + 1)) {
+        if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
+        else byte_count +=1;
+      }
+    } else if (char_val == 0xF0) {
+      // four byte sequence, v1
+      if(UTF8_BW(char_ptr + 1, 0x90, 0xBF)) {
+        if(UTF8_IS_CONT(char_ptr + 2)) {
+          if(UTF8_IS_CONT(char_ptr + 3)) {
+            byte_count += 3;
+          } else byte_count += 2;
+        } else byte_count +=1;
+      }
+    } else if (UTF8_BW(char_ptr, 0xF1, 0xF3)) {
+      // four byte sequence, v2
+      if(UTF8_IS_CONT(char_ptr + 1)) {
+        if(UTF8_IS_CONT(char_ptr + 2)) {
+          if(UTF8_IS_CONT(char_ptr + 3)) {
+            byte_count += 3;
+          } else byte_count += 2;
+        } else byte_count +=1;
+      }
+    } else if (char_val == 0xF4) {
+      // four byte sequence, v2
+      if(UTF8_BW(char_ptr + 1, 0x80, 0x8F)) {
+        if(UTF8_IS_CONT(char_ptr + 2)) {
+          if(UTF8_IS_CONT(char_ptr + 3)) {
+            byte_count += 3;
+          } else byte_count += 2;
+        } else byte_count +=1;
+    } }
+  }
+  return byte_count;
+}
 /*
  * Truncates strings to specified length.
  *
@@ -71,10 +145,12 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     cetype_t chr_enc = getCharCE(str_elt);
     const char * char_point;
 
+    // Not clear that we need to translate to UTF8 for LATIN1, since it is a one
+    // character per byte and also seems like no double width characters...
     switch(chr_enc) {
       case CE_NATIVE:
       case CE_UTF8:
-        char_point = CHAR(STRING_ELT(string, i));
+        char_point = CHAR(str_elt);
         break;
       case CE_LATIN1:
         char_point = translateCharUTF8(STRING_ELT(string, i));
@@ -133,75 +209,8 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
       if(char_count) byte_count_prev = byte_count;
 
       ++char_count;
-      ++byte_count;  // increment once for ASCII
-
-      // If possible UTF8 outside ASCII, check up to the next 4 bytes and for
-      // and offset bytes by length of maximal subpart of valid sequence, or
-      // length of valid sequence.  Note that we've already advanced one byte
-      // above so all failing cases don't need to advance further as they would
-      // advance by one.
-      //
-      // This is based on:
-      // <http://www.unicode.org/versions/Unicode10.0.0/ch03.pdf#G7404>,
-      // table 3-7, at page.
-
-      if(char_val & 128) {
-        // Should be UTF8, so check 4 most significant bits of first  byte for
-        // number of chars, valid values are 1111, 1110, 1100, and 1000,
-        // non-UTF8 byte are counted as one character by the ++byte_count above
-        //
-
-        is_utf8 = 1;
-
-        if(UTF8_BW(char_ptr, 0xC2, 0xDF)) {
-          // two byte sequence
-          if(UTF8_IS_CONT(char_ptr + 1)) byte_count +=1;
-        } else if(char_val == 0xE0) {
-          // three byte sequence, exception 1
-          if(UTF8_BW(char_ptr + 1, 0xA0, 0xBF)) {
-            if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
-            else byte_count +=1;
-          }
-        } else if(char_val == 0xED) {
-          // three byte sequence, exception 2
-          if(UTF8_BW(char_ptr + 1, 0x80, 0x9F)) {
-            if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
-            else byte_count +=1;
-          }
-        } else if (UTF8_BW(char_ptr, 0xE0, 0xEF)) {
-          // three byte sequence normal, note by construction excluding E0, ED
-          if(UTF8_IS_CONT(char_ptr + 1)) {
-            if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
-            else byte_count +=1;
-          }
-        } else if (char_val == 0xF0) {
-          // four byte sequence, v1
-          if(UTF8_BW(char_ptr + 1, 0x90, 0xBF)) {
-            if(UTF8_IS_CONT(char_ptr + 2)) {
-              if(UTF8_IS_CONT(char_ptr + 3)) {
-                byte_count += 3;
-              } else byte_count += 2;
-            } else byte_count +=1;
-          }
-        } else if (UTF8_BW(char_ptr, 0xF1, 0xF3)) {
-          // four byte sequence, v2
-          if(UTF8_IS_CONT(char_ptr + 1)) {
-            if(UTF8_IS_CONT(char_ptr + 2)) {
-              if(UTF8_IS_CONT(char_ptr + 3)) {
-                byte_count += 3;
-              } else byte_count += 2;
-            } else byte_count +=1;
-          }
-        } else if (char_val == 0xF4) {
-          // four byte sequence, v2
-          if(UTF8_BW(char_ptr + 1, 0x80, 0x8F)) {
-            if(UTF8_IS_CONT(char_ptr + 2)) {
-              if(UTF8_IS_CONT(char_ptr + 3)) {
-                byte_count += 3;
-              } else byte_count += 2;
-            } else byte_count +=1;
-        } }
-      }
+      byte_count += utf8_offset(char_ptr);
+      if(*char_ptr > 127) is_utf8 = 1;
     }
     if(byte_count >= INT_MAX - byte_pad)
       // nocov start
