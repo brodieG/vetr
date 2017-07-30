@@ -17,6 +17,11 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 #include "cstringr.h"
 /*
+ * This appears to update with `Sys.setlocale`
+ */
+extern Rboolean utf8locale;
+
+/*
  * Most of the functionality in this file already exists built in to R, so we
  * suggest you check out `nchar`, `substr`, etc.  This is mostly a learning
  * exercise for me.
@@ -110,7 +115,16 @@ static inline int utf8_offset(unsigned const char * char_ptr) {
  * consider a mode where we let known 255 element encodings through...
  */
 static inline unsigned const char * as_utf8_char(SEXP string, R_xlen_t i) {
-  return (unsigned const char *) translateCharUTF8(STRING_ELT(string, i));
+  SEXP str_elt = STRING_ELT(string, i);
+  const char * char_val;
+
+  cetype_t chr_enc = getCharCE(str_elt);
+  if(chr_enc == CE_UTF8 || (chr_enc == CE_NATIVE && utf8locale)) {
+    char_val = CHAR(STRING_ELT(string, i));
+  } else {
+    char_val = translateCharUTF8(STRING_ELT(string, i));
+  }
+  return (unsigned const char *) char_val;
 }
 /*
  * Truncates strings to specified length.
@@ -285,7 +299,6 @@ SEXP CSR_nchar_u(SEXP string) {
     int too_long = 0; // track if any strings longer than INT_MAX
 
     while((char_val = *(char_ptr = (char_start + byte_count)))) {
-      Rprintf("%d ", byte_count);
       int byte_off = utf8_offset(char_ptr);
       if((byte_count > INT_MAX - byte_off) && !too_long) {
         // note this also catches the char_count overflow since utf8_offset will
