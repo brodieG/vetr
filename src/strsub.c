@@ -273,7 +273,8 @@ SEXP CSR_nchar_u(SEXP string) {
 
   for(i = 0; i < len; ++i) {
     // It would be nice to be able to skip the STRING_ELT stuff and access the
-    // data directly as we do.
+    // data directly as we do, but don't know how to get the size of
+    // SEXPREC_ALIGN directly.
 
     unsigned const char * char_start, * char_ptr;
     unsigned char char_val;
@@ -284,6 +285,7 @@ SEXP CSR_nchar_u(SEXP string) {
     int too_long = 0; // track if any strings longer than INT_MAX
 
     while((char_val = *(char_ptr = (char_start + byte_count)))) {
+      Rprintf("%d ", byte_count);
       int byte_off = utf8_offset(char_ptr);
       if((byte_count > INT_MAX - byte_off) && !too_long) {
         // note this also catches the char_count overflow since utf8_offset will
