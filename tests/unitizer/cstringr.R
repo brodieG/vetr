@@ -121,3 +121,28 @@ unitizer_sect("substr", {
   vetr:::strsub(lorem.emo.phrases, 25L, TRUE)
   vetr:::strsub(lorem.emo.phrases, 25L, FALSE)
 })
+
+unitizer_sect("UTF8", {
+  utf8.kuhn <- readLines('unitizer/helper/UTF-8-test.txt', encoding='UTF-8');
+  test.start <- grep("^Here come the tests:", utf8.kuhn)
+  test.start
+
+  utf8.test <- tail(utf8.kuhn, -test.start)
+  utf8.test
+
+  nchar.base <- nchar(utf8.test, allowNA=TRUE)
+  untranslatable <- is.na(nchar.base)
+  nchar.vetr <- vetr:::nchar_u(utf8.test)
+
+  # Only lines with more than 79 characters are those that `nchar` is unable to
+  # count because of malformed UTF8 sequences
+
+  !any(nchar.vetr > 79 & !untranslatable)
+  all((nchar.vetr == nchar.base)[!untranslatable])
+
+  cbind(utf8.test, nchar.vetr)[untranslatable,][1:8,]
+
+
+
+
+})
