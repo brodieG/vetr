@@ -134,15 +134,62 @@ unitizer_sect("UTF8", {
   untranslatable <- is.na(nchar.base)
   nchar.vetr <- vetr:::nchar_u(utf8.test)
 
-  # Only lines with more than 79 characters are those that `nchar` is unable to
-  # count because of malformed UTF8 sequences
+  # Not all lines match between nchar and vetr, differences seem to be that the
+  # invalid encoding starting \xf4\x90 is resolved to 1 character by base (test
+  # 2.3.5), and that base resolves things in the U+D800 - U+DFFF range as 1
+  # character (5.1-5.2); perhaps base implements the more forgiving versions of
+  # UTF8?
 
-  !any(nchar.vetr > 79 & !untranslatable)
-  all((nchar.vetr == nchar.base)[!untranslatable])
+  base.vetr.diff <- !is.na(nchar.base) & nchar.vetr != nchar.base
+  sprintf(
+    "%d %d %s",
+    nchar.base[base.vetr.diff],
+    nchar.vetr[base.vetr.diff],
+    utf8.test[base.vetr.diff]
+  )
+  # For visual verification, according to docs all test lines should render at
+  # 79 characters, but this appears to be in contravention to the UTF8
+  # documentation.  This is the body of the e-mail I sent Dr. Kuhn inquiring
+  # about the seeming discrepancy (which could possibly be explained by unicode
+  # version differences):
+  #
+  # In section 3.3.3, 4-byte sequence with last byte missing, the sequence in
+  # question appears to be f0 80 80 22 where 22 is the double quote ending the
+  # sequence.  Furthermore, you state that I should expect to "... see only a
+  # single replacement character".
+  #
+  # What I'm a little confused by is that the sequence "f0 80 80" becomes
+  # illegal after the first byte as per table 3.7 from the Unicode Standard
+  # v10.0 since the second byte is less than 90.  Then, by the definition of
+  # "Maximal subpart of an ill-formed subsequence", it seems that the maximal
+  # subpart starting at "f0" is actually "f0" since "f0 80" is not legal and
+  # thus not a subpart.  There is a close example in the documentation (p129 of
+  # the document in question):
+  #
+  #    Another example illustrates the application of the concept of maximal
+  #    subpart for UTF-8 continuation bytes outside the allowable ranges defined
+  #    in Table 3-7.  The UTF-8 sequence <41 E0 9F 80 41> is ill-formed, because
+  #    <9F> is not an allowed second byte of a UTF-8 sequence commencing with
+  #    <E0>. In this case, there is an unconvertible offset at <E0> and the
+  #    maximal subpart at that offset is also <E0>. The subsequence <E0 9F>
+  #    cannot be a maximal subpart, because it is not an initial subsequence of
+  #    any well-formed UTF-8 code unit sequence.
+  #
+  # This is basically the same issue with "e0" substituted for "f0" in our case
+  # (I think). This would suggest we should see three characters, one for the
+  # maximal subpart "f0", and then also one each for the two "80" since they
+  # themselves are illegal.  I think that aligns with the "recommended" policy.
+  # I'm pretty new at this so I suspect I'm just misunderstanding something.  If
+  # you see an obvious mistake in my reasoning I would appreciate you pointing
+  # me to it.
 
-  cbind(utf8.test, nchar.vetr)[untranslatable,][1:8,]
+  paste(
+    ifelse(nchar.vetr > 79, sprintf("<%d>", nchar.vetr), "  "), utf8.test
+  )
+  # Other examples from the Unicode 10.0 docs
 
-
-
-
+  vetr:::nchar_u("\xC2\x41\x41")
+  vetr:::nchar_u("\x61\xF1\x80\x80")
+  vetr:::nchar_u("\x61\xF1\x80\x80\xE1\x80")
+  vetr:::nchar_u("\x61\xF1\x80\x80\xE1\x80\xC2\x62\x80\x63\x80\xBF\x64")
 })
