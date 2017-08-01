@@ -265,9 +265,13 @@ string and all the others a substrings with `sprintf`
 note:
 - will over-allocate by the amount of formatting characters
 - maxlen limits the length of individual components and the formatting string,
-not the output
-- If you submit more %s tokens than there are args, bad stuff starts to happen
-and we don't actually check the formatting tokens
+  not the output; because you can only specify one maxlen and there are multiple
+  inputs in addition to the formatting string maxlen can't be used to prevent
+  reading past buffer size if any of them are smaller than maxlen.  Basically,
+  the underlying assumption with all of these is that all inputs are NULL
+  terminated
+- If you submit more %s tokens than there are args, bad stuff starts to
+  happen and we don't actually check the formatting tokens
 */
 
 char * CSR_smprintf6(

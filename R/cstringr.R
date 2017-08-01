@@ -44,10 +44,20 @@ num_as_chr <- function(a, as.int=FALSE) .Call(VALC_num_as_chr, a, as.int)
 ## respects:
 ##
 ## \itemize{
+##   \item all these functions have a limit to how many characters they will
+##     read so they should not read past an unterminated string if you know the
+##     buffer size
 ##   \item Input strings are never modified; if changes are required to comply
 ##     with length limits a copy that is \code{R_alloc}ed is returned
 ##   \item Only C99 code is used
 ## }
+## Mostly these functions are not actually necessary since the strings
+## encountered will have be read in by R and as such should have been handled
+## properly.  Additionally, for functions such as smprintf* the `maxlen`
+## parameter doesn't really help if the strings to substitute themselves are not
+## null terminated since we can only specify one maxlen and there may be many
+## strings to deal with.  They were written as a learning exercise for myself.
+##
 ## Function specific details follow.  Pay attention, the interfaces are not
 ## exactly the same as the \code{C} functions they intend to replace.  For
 ## example \code{smprintf} does not have a \code{str} parameter like
@@ -74,7 +84,6 @@ num_as_chr <- function(a, as.int=FALSE) .Call(VALC_num_as_chr, a, as.int)
 ##   \item \code{collapse} is essentially the same as \code{paste0(x,
 ##     collapse=sep}
 ## }
-## @export
 ## @aliases strmcpy smprintf2 ucfirst lcfirst strbullet collapse
 ## @param str character string to measure or manipulate, should be scalar for
 ##   \code{strmlen} and \code{strmcpy}
