@@ -38,22 +38,13 @@ SEXP VALC_all_bw(
 ) {
   SEXPTYPE x_type = TYPEOF(x), lo_type = TYPEOF(lo), hi_type = TYPEOF(hi);
 
-  if(INT_MIN != NA_INTEGER) {
-    // nocov start
-    error(
-      "%s%s",
-      "Internal Error: INT_MIN != NA_INTEGER but the code in this function ",
-      "assumes that they are equal; please contact maintainer."
-    );
-    // nocov end
-  }
   int int_min = INT_MIN + 1;
   int int_max = INT_MAX;
 
   // - Validation --------------------------------------------------------------
 
   // Note we use char version of number to avoid portability issues with zd and
-  // similar on MinGW
+ // similar on MinGW
 
   if(xlength(na_rm) != 1)
     error(

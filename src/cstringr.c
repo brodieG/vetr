@@ -21,7 +21,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 /* Estimate how many characters a R_xlen_t number can be represented with
  *
  * Implicitly we're assuming R_XLEN_T_MAX < DOUBLE_MAX, which seems like a
- * pretty safe assumption.
+ * pretty safe assumption (see assumptions.c).
  */
 
 size_t CSR_len_chr_len(R_xlen_t a) {
