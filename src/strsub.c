@@ -344,16 +344,16 @@ SEXP CSR_nchar_u(SEXP string) {
 SEXP CSR_char_offsets(SEXP string) {
   if(TYPEOF(string) != STRSXP)
     error("Argument `string` must be a character vector.");
-  R_xlen_t i, len = xlength(string);
+  R_xlen_t len = xlength(string);
   if(len != 1) error("Argument `string` must be scalar.");
 
-  R_len_t string_len = LENGTH(STRING_ELT(x, 0));
-  int * char_offs = R_alloc(string_len, sizeof(int));
+  R_len_t string_len = LENGTH(STRING_ELT(string, 0));
+  int * char_offs = (int *) R_alloc(string_len, sizeof(int));
 
   unsigned const char * char_start, * char_ptr;
   unsigned char char_val;
 
-  char_start = as_utf8_char(string, i);
+  char_start = as_utf8_char(string, 0);
 
   int byte_count = 0, char_count = 0;
   int too_long = 0; // track if any strings longer than INT_MAX
@@ -368,7 +368,6 @@ SEXP CSR_char_offsets(SEXP string) {
       error("String has more than INT_MAX chars");
       break;
     }
-    INTEGER(res)[char_count]
     byte_count += byte_off;
     char_count++;
   }
