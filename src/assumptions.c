@@ -23,14 +23,15 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  *
  * Intended to be run onload to make sure there isn't some weird system where
  * our baseline assumptions are not met
+ *
+ * returns TRUE on success, errors on failure
  */
-void VALC_check_assumptions() {
+SEXP VALC_check_assumptions() {
+  const char * err_base = "Failed system assumption: %s%s";
   if(sizeof(R_len_t) < sizeof(int))
-    error("Failed system assumption: R_len_t is not gte to int");
-  if(sizeof(char) != 8)
-    error("Failed system assumption: sizeof(char) is not 8");
-  if(sizeof(int) < 32)
-    error("Failed system assumption: sizeof(int) is less than 32");
+    error(err_base, "R_len_t is not gte to int", "");
+  if(sizeof(char) != 8) error(err_base, "sizeof(char) is not 8", "");
+  if(sizeof(int) < 32) error(err_base, "sizeof(int) is less than 32", "");
 
   if(INT_MIN != NA_INTEGER) {
     error(

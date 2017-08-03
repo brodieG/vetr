@@ -42,6 +42,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP VALC_test2(SEXP a, SEXP b);
   SEXP VALC_test3(SEXP a, SEXP b, SEXP c);
 
+  SEXP VALC_check_assumptions();
+
   SEXP VALC_validate(
     SEXP target, SEXP current, SEXP cur_sub, SEXP par_call, SEXP rho,
     SEXP ret_mode_sxp, SEXP stop, SEXP settings
