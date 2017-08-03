@@ -220,7 +220,7 @@ char * CSR_strmcpy(const char * str, size_t maxlen) {
  */
 void CSR_strappend(char * target, const char * str, size_t maxlen) {
   if(maxlen) {
-    if(!(maxlen + 1)) {
+    if(maxlen > SIZE_T_MAX - 1) {
       error("%s%s",
         "Argument `maxlen` must be at least one smaller than max possible ",
         "size_t value."
