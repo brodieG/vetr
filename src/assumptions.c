@@ -43,4 +43,5 @@ SEXP VALC_check_assumptions() {
   if(R_XLEN_T_MAX >= DOUBLE_MAX) {
     error("Failed system assumption: R_XLEN_T_MAX is not less than DOUBLE_MAX");
   }
+  return ScalarLogical(1);
 }
