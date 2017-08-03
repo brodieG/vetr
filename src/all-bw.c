@@ -44,7 +44,7 @@ SEXP VALC_all_bw(
   // - Validation --------------------------------------------------------------
 
   // Note we use char version of number to avoid portability issues with zd and
- // similar on MinGW
+  // similar on MinGW
 
   if(xlength(na_rm) != 1)
     error(
