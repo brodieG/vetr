@@ -315,10 +315,10 @@ SEXP CSR_nchar_u(SEXP string) {
     int too_long = 0; // track if any strings longer than INT_MAX
 
     while((char_val = *(char_ptr = (char_start + byte_count)))) {
-      int byte_off = utf8_offset(char_ptr);
+      int byte_off = abs(utf8_offset(char_ptr));
       if((byte_count > INT_MAX - byte_off) && !too_long) {
-        // note this also catches the char_count overflow since utf8_offset will
-        // always return 1 or more
+        // note this also catches the char_count overflow since |utf8_offset|
+        // will always be 1 or more
 
         too_long = 1;
         warning("Some elements longer than INT_MAX, return NA for those.");
