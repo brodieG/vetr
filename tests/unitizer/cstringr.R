@@ -109,6 +109,8 @@ unitizer_sect("substr", {
   vetr:::strsub(lorem.phrases, 25L, TRUE)
   vetr:::strsub(lorem.phrases, 25L, FALSE)
 
+  # UTF8
+
   vetr:::strsub(lorem.tr.phrases, 25L, TRUE)
   vetr:::strsub(lorem.tr.phrases, 25L, FALSE)
 
@@ -122,7 +124,7 @@ unitizer_sect("substr", {
   vetr:::strsub(lorem.emo.phrases, 25L, FALSE)
 })
 
-unitizer_sect("UTF8", {
+unitizer_sect("UTF8 corner cases", {
   utf8.kuhn <- readLines('unitizer/helper/UTF-8-test.txt', encoding='UTF-8');
   test.start <- grep("^Here come the tests:", utf8.kuhn)
   test.start

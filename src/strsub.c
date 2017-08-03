@@ -34,6 +34,9 @@ extern Rboolean utf8locale;
  * valid sequence.  Note that we've already advanced one byte above so all
  * failing cases don't need to advance further as they would advance by one.
  *
+ * Note R implements `utf8clen` in R3.4.0/src/main/util.c@1193 in a far more
+ * efficient but less precise manenr.
+ *
  * This is based on:
  * <http://www.unicode.org/versions/Unicode10.0.0/ch03.pdf#G7404>,
  * table 3-7, transcribed below
@@ -49,36 +52,45 @@ extern Rboolean utf8locale;
  * U+10000..U+3FFFF   | F0     | 90..BF | 80..BF | 80..BF
  * U+40000..U+FFFFF   | F1..F3 | 80..BF | 80..BF | 80..BF
  * U+100000..U+10FFFF | F4     | 80..8F | 80..BF | 80..BF
+ *
+ * @return integer length of UT8 sequence starting at char_ptr, as a negative
+ *   value if the sequence is invalid (so values could be -3, -2, 1, 1, 2, 3, 4)
  */
 static inline int utf8_offset(unsigned const char * char_ptr) {
   unsigned const char char_val = *(char_ptr);
 
   int byte_count = 1;  // Always at least one val
+  int seq_len = 1;     // how many  bytes should have if correct
 
   if(char_val & 128) {
     if(UTF8_BW(char_ptr, 0xC2, 0xDF)) {
       // two byte sequence
+      seq_len = 2;
       if(UTF8_IS_CONT(char_ptr + 1)) byte_count +=1;
     } else if(char_val == 0xE0) {
       // three byte sequence, exception 1
+      seq_len = 3;
       if(UTF8_BW(char_ptr + 1, 0xA0, 0xBF)) {
         if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
         else byte_count +=1;
       }
     } else if(char_val == 0xED) {
       // three byte sequence, exception 2
+      seq_len = 3;
       if(UTF8_BW(char_ptr + 1, 0x80, 0x9F)) {
         if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
         else byte_count +=1;
       }
     } else if (UTF8_BW(char_ptr, 0xE0, 0xEF)) {
       // three byte sequence normal, note by construction excluding E0, ED
+      seq_len = 3;
       if(UTF8_IS_CONT(char_ptr + 1)) {
         if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
         else byte_count +=1;
       }
     } else if (char_val == 0xF0) {
       // four byte sequence, v1
+      seq_len = 4;
       if(UTF8_BW(char_ptr + 1, 0x90, 0xBF)) {
         if(UTF8_IS_CONT(char_ptr + 2)) {
           if(UTF8_IS_CONT(char_ptr + 3)) {
@@ -88,6 +100,7 @@ static inline int utf8_offset(unsigned const char * char_ptr) {
       }
     } else if (UTF8_BW(char_ptr, 0xF1, 0xF3)) {
       // four byte sequence, v2
+      seq_len = 4;
       if(UTF8_IS_CONT(char_ptr + 1)) {
         if(UTF8_IS_CONT(char_ptr + 2)) {
           if(UTF8_IS_CONT(char_ptr + 3)) {
@@ -97,6 +110,7 @@ static inline int utf8_offset(unsigned const char * char_ptr) {
       }
     } else if (char_val == 0xF4) {
       // four byte sequence, v2
+      seq_len = 4;
       if(UTF8_BW(char_ptr + 1, 0x80, 0x8F)) {
         if(UTF8_IS_CONT(char_ptr + 2)) {
           if(UTF8_IS_CONT(char_ptr + 3)) {
@@ -105,7 +119,7 @@ static inline int utf8_offset(unsigned const char * char_ptr) {
         } else byte_count +=1;
     } }
   }
-  return byte_count;
+  return seq_len == byte_count ? byte_count : -byte_count;
 }
 /*
  * Rather than try to handle all native encodings, we just convert directly
@@ -276,8 +290,10 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
 }
 /*
  * Like `nchar`, but has a homegrown implementation of UTF8 character counting.
+ *
+ * Likely to be relatively slow for non UTF8 strings since for those we could
+ * just use LENGHT(<CHARSXP>) but we're not bothering with that for now.
  */
-
 SEXP CSR_nchar_u(SEXP string) {
   if(TYPEOF(string) != STRSXP)
     error("Argument `string` must be a character vector.");
@@ -313,6 +329,51 @@ SEXP CSR_nchar_u(SEXP string) {
     }
     INTEGER(res)[i] = too_long ? NA_INTEGER : char_count;
   }
+  UNPROTECT(1);
+  return(res);
+}
+/*
+ * Compute byte lenght of each UTF8 character
+ *
+ * For testing purposes only.
+ *
+ * @param string scalar character
+ * @return integer vector containing byte length of each character, with
+ *   negative values for invalid UTF8 sequences
+ */
+SEXP CSR_char_offsets(SEXP string) {
+  if(TYPEOF(string) != STRSXP)
+    error("Argument `string` must be a character vector.");
+  R_xlen_t i, len = xlength(string);
+  if(len != 1) error("Argument `string` must be scalar.");
+
+  R_len_t string_len = LENGTH(STRING_ELT(x, 0));
+  int * char_offs = R_alloc(string_len, sizeof(int));
+
+  unsigned const char * char_start, * char_ptr;
+  unsigned char char_val;
+
+  char_start = as_utf8_char(string, i);
+
+  int byte_count = 0, char_count = 0;
+  int too_long = 0; // track if any strings longer than INT_MAX
+
+  while((char_val = *(char_ptr = (char_start + byte_count)))) {
+    int byte_off = utf8_offset(char_ptr);
+    if((byte_count > INT_MAX - byte_off) || byte_count > string_len) {
+      // note this also catches the char_count overflow since utf8_offset will
+      // always return 1 or more
+
+      too_long = 1;
+      error("Character value too long");
+      break;
+    }
+    INTEGER(res)[char_count]
+    byte_count += byte_off;
+    char_count++;
+  }
+  SEXP res = PROTECT(allocVector(INTSXP, char_count));
+  for(int i = 0; i < char_count; ++i) INTEGER(res)[i] = char_offs[i];
   UNPROTECT(1);
   return(res);
 }
