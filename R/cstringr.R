@@ -142,6 +142,8 @@ strsub <- function(string, chars=15L, mark=TRUE)
 
 nchar_u <- function(string) .Call(VALC_nchar_u, string)
 
+char_offsets <- function(string) .Call(VALC_char_offsets, string)
+
 ## Purely internal funs for testing
 
 test_strmcpy <- function() .Call(VALC_test_strmcpy)
