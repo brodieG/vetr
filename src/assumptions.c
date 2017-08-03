@@ -16,6 +16,7 @@ GNU General Public License for more details.
 Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 
+#include <float.h>
 #include <Rinternals.h>
 
 /*
@@ -30,8 +31,8 @@ SEXP VALC_check_assumptions() {
   const char * err_base = "Failed system assumption: %s%s";
   if(sizeof(R_len_t) < sizeof(int))
     error(err_base, "R_len_t is not gte to int", "");
-  if(sizeof(char) != 8) error(err_base, "sizeof(char) is not 8", "");
-  if(sizeof(int) < 32) error(err_base, "sizeof(int) is less than 32", "");
+  if(CHAR_BIT != 8) error(err_base, "CHAR_BIT is not 8", "");
+  if(sizeof(int) < 4) error(err_base, "ints are not at least 32 bits", "");
 
   if(INT_MIN != NA_INTEGER) {
     error(
@@ -40,8 +41,8 @@ SEXP VALC_check_assumptions() {
       "package assumes that they are equal; please contact maintainer."
     );
   }
-  if(R_XLEN_T_MAX >= DOUBLE_MAX) {
-    error("Failed system assumption: R_XLEN_T_MAX is not less than DOUBLE_MAX");
+  if(R_XLEN_T_MAX >= DBL_MAX) {
+    error("Failed system assumption: R_XLEN_T_MAX is not less than DBL_MAX");
   }
   return ScalarLogical(1);
 }

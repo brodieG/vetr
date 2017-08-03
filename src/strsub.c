@@ -158,7 +158,7 @@ static inline unsigned const char * as_utf8_char(SEXP string, R_xlen_t i) {
 
 SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
   if(CHAR_BIT != 8)
-    error("Internal Error: can only work with 8 bit characters");
+    error("Internal Error: can only work with 8 bit characters %d", CHAR_BIT);
 
   if(TYPEOF(string) != STRSXP)
     error("Argument `string` must be a string.");

@@ -33,7 +33,7 @@ R_CallMethodDef callMethods[] = {
   {"track_hash", (DL_FUNC) &VALC_track_hash_test, 2},
   {"default_hash_fun", (DL_FUNC) &VALC_default_hash_fun, 1},
   {"all_bw", (DL_FUNC) &VALC_all_bw, 5},
-  {"check_assumptions", (DL_FUNC) &VALC_check_assumptions, 1},
+  {"check_assumptions", (DL_FUNC) &VALC_check_assumptions, 0},
 
   {"test1", (DL_FUNC) &VALC_test1, 1},
   {"test2", (DL_FUNC) &VALC_test2, 2},
