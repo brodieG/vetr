@@ -60,66 +60,90 @@ static inline int utf8_offset(unsigned const char * char_ptr) {
   unsigned const char char_val = *(char_ptr);
 
   int byte_count = 1;  // Always at least one val
-  int seq_len = 1;     // how many  bytes should have if correct
+  // failures should be rare, so start with success to save the operation on
+  // success; code is more complicated as a result though...
+  int success = 1;
 
   if(char_val & 128) {
     if(UTF8_BW(char_ptr, 0xC2, 0xDF)) {
       // two byte sequence
-      seq_len = 2;
-      if(UTF8_IS_CONT(char_ptr + 1)) byte_count +=1;
+      if(UTF8_IS_CONT(char_ptr + 1)) {
+        byte_count +=1;
+      } else success = 0;
     } else if(char_val == 0xE0) {
       // three byte sequence, exception 1
-      seq_len = 3;
       if(UTF8_BW(char_ptr + 1, 0xA0, 0xBF)) {
         if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
-        else byte_count +=1;
-      }
+        else {
+          byte_count +=1;
+          success = 0;
+        }
+      } else success = 0;
     } else if(char_val == 0xED) {
       // three byte sequence, exception 2
-      seq_len = 3;
       if(UTF8_BW(char_ptr + 1, 0x80, 0x9F)) {
         if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
-        else byte_count +=1;
-      }
+        else {
+          byte_count +=1;
+          success = 0;
+        }
+      } else success = 0;
     } else if (UTF8_BW(char_ptr, 0xE0, 0xEF)) {
       // three byte sequence normal, note by construction excluding E0, ED
-      seq_len = 3;
       if(UTF8_IS_CONT(char_ptr + 1)) {
         if(UTF8_IS_CONT(char_ptr + 2)) byte_count +=2;
-        else byte_count +=1;
-      }
+        else {
+          byte_count +=1;
+          success = 0;
+        }
+      } success = 0;
     } else if (char_val == 0xF0) {
       // four byte sequence, v1
-      seq_len = 4;
       if(UTF8_BW(char_ptr + 1, 0x90, 0xBF)) {
         if(UTF8_IS_CONT(char_ptr + 2)) {
           if(UTF8_IS_CONT(char_ptr + 3)) {
             byte_count += 3;
-          } else byte_count += 2;
-        } else byte_count +=1;
-      }
+          } else {
+            byte_count += 2;
+            success = 0;
+          }
+        } else {
+          byte_count +=1;
+          success = 0;
+        }
+      } else success = 0;
     } else if (UTF8_BW(char_ptr, 0xF1, 0xF3)) {
       // four byte sequence, v2
-      seq_len = 4;
       if(UTF8_IS_CONT(char_ptr + 1)) {
         if(UTF8_IS_CONT(char_ptr + 2)) {
           if(UTF8_IS_CONT(char_ptr + 3)) {
-            byte_count += 3;
-          } else byte_count += 2;
-        } else byte_count +=1;
-      }
+          } else {
+            byte_count += 2;
+            success = 0;
+          }
+        } else {
+          byte_count +=1;
+          success = 0;
+        }
+      } else success = 0;
     } else if (char_val == 0xF4) {
-      // four byte sequence, v2
-      seq_len = 4;
+      // four byte sequence, v3
       if(UTF8_BW(char_ptr + 1, 0x80, 0x8F)) {
         if(UTF8_IS_CONT(char_ptr + 2)) {
           if(UTF8_IS_CONT(char_ptr + 3)) {
             byte_count += 3;
-          } else byte_count += 2;
-        } else byte_count +=1;
-    } }
+          } else {
+            byte_count += 2;
+            success = 0;
+          }
+        } else {
+          byte_count +=1;
+          success = 0;
+        }
+      } else success = 0;
+    } else success = 0;
   }
-  return seq_len == byte_count ? byte_count : -byte_count;
+  return success ? byte_count : -byte_count;
 }
 /*
  * Rather than try to handle all native encodings, we just convert directly
@@ -157,8 +181,6 @@ static inline unsigned const char * as_utf8_char(SEXP string, R_xlen_t i) {
  */
 
 SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
-  if(CHAR_BIT != 8)
-    error("Internal Error: can only work with 8 bit characters %d", CHAR_BIT);
 
   if(TYPEOF(string) != STRSXP)
     error("Argument `string` must be a string.");
@@ -360,7 +382,7 @@ SEXP CSR_char_offsets(SEXP string) {
 
   while((char_val = *(char_ptr = (char_start + byte_count)))) {
     int byte_off = utf8_offset(char_ptr);
-    if((byte_count > INT_MAX - byte_off) || byte_count > string_len) {
+    if((byte_count > INT_MAX - abs(byte_off)) || byte_count > string_len) {
       // note this also catches the char_count overflow since utf8_offset will
       // always return 1 or more
 
@@ -368,7 +390,8 @@ SEXP CSR_char_offsets(SEXP string) {
       error("String has more than INT_MAX chars");
       break;
     }
-    byte_count += byte_off;
+    byte_count += abs(byte_off);
+    char_offs[char_count] = byte_off;
     char_count++;
   }
   SEXP res = PROTECT(allocVector(INTSXP, char_count));
