@@ -365,7 +365,7 @@ SEXP CSR_char_offsets(SEXP string) {
       // always return 1 or more
 
       too_long = 1;
-      error("Character value too long");
+      error("String has more than INT_MAX chars");
       break;
     }
     INTEGER(res)[char_count]
