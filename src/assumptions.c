@@ -31,8 +31,17 @@ SEXP VALC_check_assumptions() {
   const char * err_base = "Failed system assumption: %s%s";
   if(sizeof(R_len_t) < sizeof(int))
     error(err_base, "R_len_t is not gte to int", "");
+
+  // Otherwise bit twiddling assumptions may not work as expected?
+
   if(CHAR_BIT != 8) error(err_base, "CHAR_BIT is not 8", "");
+
+  // This is supposedly enforced by R
+
   if(sizeof(int) < 4) error(err_base, "ints are not at least 32 bits", "");
+
+  // Important for some our boundary condition assumptions, in particular that
+  // NA_INTEGER < int x.
 
   if(INT_MIN != NA_INTEGER) {
     error(
@@ -40,9 +49,18 @@ SEXP VALC_check_assumptions() {
       "package assumes that they are equal; please contact maintainer."
     );
   }
+  // Mostly because we try to represent R_xlen_t values with %.0f
+
   if(R_XLEN_T_MAX >= DBL_MAX)
     error(err_base, "R_XLEN_T_MAX is not less than DBL_MAX");
+
   if(sizeof(R_len_t) != sizeof(int))
     error(err_base, "R_len_t not same size as int", "");
+
+  // Because we check that strings are no longer than this, but then allocate
+  // memory as INT_MAX + 1 with a size_t, so need to make sure that fits
+
+  if(SIZE_T_MAX - 1 < INT_MAX)
+    error(err_base, "SIZE_T_MAX not sufficiently larger than INT_MAX", "");
   return ScalarLogical(1);
 }
