@@ -96,7 +96,7 @@ static inline int utf8_offset(unsigned const char * char_ptr) {
           byte_count +=1;
           success = 0;
         }
-      } success = 0;
+      } else success = 0;
     } else if (char_val == 0xF0) {
       // four byte sequence, v1
       if(UTF8_BW(char_ptr + 1, 0x90, 0xBF)) {
@@ -256,7 +256,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
       if(char_count) byte_count_prev = byte_count;
 
       ++char_count;
-      byte_count += utf8_offset(char_ptr);
+      byte_count += abs(utf8_offset(char_ptr));
       if(char_val > 127) is_utf8 = 1;
     }
     if(byte_count >= INT_MAX - byte_pad)
