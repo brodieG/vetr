@@ -36,13 +36,13 @@ SEXP VALC_check_assumptions() {
 
   if(INT_MIN != NA_INTEGER) {
     error(
-      "%s%s",
-      "Failed system assumption: INT_MIN != NA_INTEGER but the code in this ",
+      err_base,"INT_MIN != NA_INTEGER but the code in this ",
       "package assumes that they are equal; please contact maintainer."
     );
   }
-  if(R_XLEN_T_MAX >= DBL_MAX) {
-    error("Failed system assumption: R_XLEN_T_MAX is not less than DBL_MAX");
-  }
+  if(R_XLEN_T_MAX >= DBL_MAX)
+    error(err_base, "R_XLEN_T_MAX is not less than DBL_MAX");
+  if(sizeof(R_len_t) != sizeof(int))
+    error(err_base, "R_len_t not same size as int", "");
   return ScalarLogical(1);
 }
