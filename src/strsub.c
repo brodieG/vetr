@@ -27,7 +27,9 @@ extern Rboolean utf8locale;
  * exercise for me.
  */
 /*
- * Computes how many bytes a UTF8 point takes.
+ * Computes how many bytes a character take.
+ *
+ * For UTF-8, computes the length, for all others just returns 1.
  *
  * If possible UTF8 outside ASCII, check up to the next 4 bytes and for and
  * offset bytes by length of maximal subpart of valid sequence, or length of
@@ -35,7 +37,8 @@ extern Rboolean utf8locale;
  * failing cases don't need to advance further as they would advance by one.
  *
  * Note R implements `utf8clen` in R3.4.0/src/main/util.c@1193 in a far more
- * efficient but less precise manenr.
+ * efficient but less precise manner in as much as it doesn't implement table
+ * 3-7 exactly..
  *
  * This is based on:
  * <http://www.unicode.org/versions/Unicode10.0.0/ch03.pdf#G7404>,
@@ -56,7 +59,7 @@ extern Rboolean utf8locale;
  * @return integer length of UT8 sequence starting at char_ptr, as a negative
  *   value if the sequence is invalid (so values could be -3, -2, 1, 1, 2, 3, 4)
  */
-static inline int utf8_offset(unsigned const char * char_ptr) {
+static inline int char_offset(unsigned const char * char_ptr, cetype_t type) {
   unsigned const char char_val = *(char_ptr);
 
   int byte_count = 1;  // Always at least one val
@@ -64,7 +67,7 @@ static inline int utf8_offset(unsigned const char * char_ptr) {
   // success; code is more complicated as a result though...
   int success = 1;
 
-  if(char_val & 128) {
+  if(type == CE_UTF8 && char_val & 128) {
     if(UTF8_BW(char_ptr, 0xC2, 0xDF)) {
       // two byte sequence
       if(UTF8_IS_CONT(char_ptr + 1)) {
@@ -157,8 +160,11 @@ static inline unsigned const char * as_utf8_char(SEXP string, R_xlen_t i) {
   SEXP str_elt = STRING_ELT(string, i);
   const char * char_val;
 
-  cetype_t chr_enc = getCharCE(str_elt);
-  if(chr_enc == CE_UTF8 || (chr_enc == CE_NATIVE && utf8locale)) {
+  cetype_t char_enc = getCharCE(str_elt);
+  if(
+    char_enc == CE_UTF8 || (char_enc == CE_NATIVE && utf8locale) ||
+    char_enc == CE_BYTES
+  ) {
     char_val = CHAR(STRING_ELT(string, i));
   } else {
     char_val = translateCharUTF8(STRING_ELT(string, i));
@@ -182,7 +188,6 @@ static inline unsigned const char * as_utf8_char(SEXP string, R_xlen_t i) {
  */
 
 SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
-
   if(TYPEOF(string) != STRSXP)
     error("Argument `string` must be a string.");
   if(TYPEOF(mark_trunc) != LGLSXP && xlength(mark_trunc) != 1)
@@ -216,7 +221,9 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     unsigned const char * char_start, * char_ptr;
     unsigned char char_val; // need for > 127
 
-    char_start = as_utf8_char(string, i);
+    SEXP char_cont = STRING_ELT(string, i);
+    cetype_t char_enc = getCharCE(char_cont);
+    char_start = as_utf8_char(char_cont, char_enc);
 
     R_xlen_t char_count = 0;
 
@@ -225,10 +232,9 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     // Limiting to 8 less than SIZE_T_MAX to make room for a last 4 byte UTF8
     // character, '..', and the NULL terminator
 
-    size_t byte_count = 0, byte_count_prev, byte_count_prev_prev,
-      size_t_lim = SIZE_T_MAX - 4 - byte_pad - 1;
-
+    size_t byte_count = 0, byte_count_prev, byte_count_prev_prev;
     int is_utf8 = 0;
+    int byte_off = 0;
 
     // Loop while no NULL character
 
@@ -236,27 +242,22 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
       (char_val = *(char_ptr = (char_start + byte_count))) &&
       char_count < chars_int
     ) {
-      if(byte_count >= size_t_lim)
-        error("Internal Error: size_t overflow."); // nocov, should never happen
-
       // Keep track of the byte position two characters ago
 
       if(char_count > 1) byte_count_prev_prev = byte_count_prev;
       if(char_count) byte_count_prev = byte_count;
 
       ++char_count;
-      byte_count += abs(utf8_offset(char_ptr));
-      if(char_val > 127) is_utf8 = 1;
+      byte_off = abs(char_offset(char_ptr, char_enc));
+      if(byte_count > INT_MAX - byte_off)
+        // nocov start
+        error(
+          "Internal Error: string longer than INT_MAX bytes encountered."
+        );
+        // nocov end
+      byte_count += byte_off;
+      if(char_val > 127 && char_enc != CE_BYTES) is_utf8 = 1;
     }
-    if(byte_count >= INT_MAX - byte_pad)
-      // nocov start
-      error(
-        "%s - %s %s at index %.0f",
-        "Internal Error: Encountered string longer than INT_MAX",
-        CSR_num_as_chr((double) byte_pad, 1), (double) i
-      );
-      // nocov end
-
     // Check whether we got to end of string, and if we did truncate
 
     SEXP char_sxp;
@@ -284,9 +285,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
           // nocov end
       } else char_res = char_trunc;
 
-      char_sxp = PROTECT(
-        is_utf8 ?  mkCharCE(char_res, CE_UTF8) : mkChar(char_res)
-      );
+      char_sxp = PROTECT(mkCharCE(char_res, is_utf8 ?  CE_UTF8 : char_enc));
     } else {
       char_sxp = PROTECT(STRING_ELT(string, i));
     }
@@ -303,7 +302,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
  * Like `nchar`, but has a homegrown implementation of UTF8 character counting.
  *
  * Likely to be relatively slow for non UTF8 strings since for those we could
- * just use LENGHT(<CHARSXP>) but we're not bothering with that for now.
+ * just use LENGTH(<CHARSXP>) but we're not bothering with that for now.
  */
 SEXP CSR_nchar_u(SEXP string) {
   if(TYPEOF(string) != STRSXP)
@@ -320,17 +319,16 @@ SEXP CSR_nchar_u(SEXP string) {
     unsigned const char * char_start, * char_ptr;
     unsigned char char_val;
 
-    char_start = as_utf8_char(string, i);
+    SEXP char_cont = STRING_ELT(string, 0);
+    cetype_t char_enc = getCharCE(char_cont);
+    char_start = as_utf8_char(char_cont, char_enc);
 
     int byte_count = 0, char_count = 0;
     int too_long = 0; // track if any strings longer than INT_MAX
 
     while((char_val = *(char_ptr = (char_start + byte_count)))) {
-      int byte_off = abs(utf8_offset(char_ptr));
+      int byte_off = abs(char_offset(char_ptr, char_enc));
       if((byte_count > INT_MAX - byte_off) && !too_long) {
-        // note this also catches the char_count overflow since |utf8_offset|
-        // will always be 1 or more
-
         too_long = 1;
         warning("Some elements longer than INT_MAX, return NA for those.");
         break;
@@ -364,25 +362,19 @@ SEXP CSR_char_offsets(SEXP string) {
   unsigned const char * char_start, * char_ptr;
   unsigned char char_val;
 
-  char_start = as_utf8_char(string, 0);
+  SEXP chr_cont = STRING_ELT(string, 0);
+  cetype_t char_enc = getCharCE(chr_cont);
+  char_start = as_utf8_char(chr_cont, char_enc);
 
   int byte_count = 0, char_count = 0;
   int too_long = 0; // track if any strings longer than INT_MAX
 
   while((char_val = *(char_ptr = (char_start + byte_count)))) {
-    int byte_off = utf8_offset(char_ptr);
+    int byte_off = char_offset(char_ptr, char_enc);
     if((byte_count > INT_MAX - abs(byte_off))) {
-      // note this also catches the char_count overflow since utf8_offset will
-      // always return 1 or more; however, since we don't know the length of
-      // *char_start because translateCharUTF8 may have lengthened it, we are
-      // stuck trusting that our string is NULL terminated.
-
       // nocov start
       too_long = 1;
-      error(
-        "String has more than INT_MAX chars or is longer than estimated ",
-        "original byte allocation"
-      );
+      error("Internal Error: string has more than INT_MAX bytes.");
       break;
       // nocov end
     }
