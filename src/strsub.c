@@ -117,6 +117,7 @@ static inline int utf8_offset(unsigned const char * char_ptr) {
       if(UTF8_IS_CONT(char_ptr + 1)) {
         if(UTF8_IS_CONT(char_ptr + 2)) {
           if(UTF8_IS_CONT(char_ptr + 3)) {
+            byte_count += 3;
           } else {
             byte_count += 2;
             success = 0;
