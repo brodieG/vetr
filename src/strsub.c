@@ -217,6 +217,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     unsigned char char_val; // need for > 127
 
     char_start = as_utf8_char(string, i);
+
     R_xlen_t char_count = 0;
 
     size_t byte_pad = pad_len;
@@ -237,19 +238,6 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     ) {
       if(byte_count >= size_t_lim)
         error("Internal Error: size_t overflow."); // nocov, should never happen
-
-      /* // visualize bytes debug code
-      for(int jj = 8; jj > 0; --jj)
-        Rprintf(
-          "%d%s",
-          (char_val & ((int)(pow((double) 2, (double) jj - 1)))) > 0,
-          !((jj - 1) % 4) ? " " : ""
-        );
-      Rprintf(
-        " %4u %c cc: %zd bc: %zu\n", char_val, (char) char_val, char_count,
-        byte_count
-      );
-      */
 
       // Keep track of the byte position two characters ago
 
