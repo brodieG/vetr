@@ -371,13 +371,20 @@ SEXP CSR_char_offsets(SEXP string) {
 
   while((char_val = *(char_ptr = (char_start + byte_count)))) {
     int byte_off = utf8_offset(char_ptr);
-    if((byte_count > INT_MAX - abs(byte_off)) || byte_count > string_len) {
+    if((byte_count > INT_MAX - abs(byte_off))) {
       // note this also catches the char_count overflow since utf8_offset will
-      // always return 1 or more
+      // always return 1 or more; however, since we don't know the length of
+      // *char_start because translateCharUTF8 may have lengthened it, we are
+      // stuck trusting that our string is NULL terminated.
 
+      // nocov start
       too_long = 1;
-      error("String has more than INT_MAX chars");
+      error(
+        "String has more than INT_MAX chars or is longer than estimated ",
+        "original byte allocation"
+      );
       break;
+      // nocov end
     }
     byte_count += abs(byte_off);
     char_offs[char_count] = byte_off;
