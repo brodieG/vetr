@@ -188,10 +188,11 @@ char * CSR_strmcpy_int(const char * str, size_t maxlen, int warn) {
 
   char * str_new = R_alloc(len + 1, sizeof(char));
 
+  // should we use memcpy?
   if(!strncpy(str_new, str, len)) {
     // nocov start
     error("%s%s",
-      "Internal Error (CSR_strmcopy): failed making copy of string for  ",
+      "Internal Error (CSR_strncopy): failed making copy of string for  ",
       "truncation; contact maintainer."
     );
     // nocov end
