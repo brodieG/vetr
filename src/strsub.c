@@ -26,6 +26,9 @@ extern Rboolean utf8locale;
  * suggest you check out `nchar`, `substr`, etc.  This is mostly a learning
  * exercise for me.
  */
+static inline int is_utf8_enc(cetype_t type) {
+  return type == CE_UTF8 || (type == CE_NATIVE && utf8locale);
+}
 /*
  * Computes how many bytes a character take.
  *
@@ -59,7 +62,7 @@ extern Rboolean utf8locale;
  * @return integer length of UT8 sequence starting at char_ptr, as a negative
  *   value if the sequence is invalid (so values could be -3, -2, 1, 1, 2, 3, 4)
  */
-static inline int char_offset(unsigned const char * char_ptr, cetype_t type) {
+static inline int char_offset(unsigned const char * char_ptr, int is_bytes) {
   unsigned const char char_val = *(char_ptr);
 
   int byte_count = 1;  // Always at least one val
@@ -67,7 +70,10 @@ static inline int char_offset(unsigned const char * char_ptr, cetype_t type) {
   // success; code is more complicated as a result though...
   int success = 1;
 
-  if(type == CE_UTF8 && char_val & 128) {
+  // Everything other than CE_BYTES should have been converted to UTF8 or be
+  // UTF8/ASCII
+
+  if(!is_bytes && char_val & 128) {
     if(UTF8_BW(char_ptr, 0xC2, 0xDF)) {
       // two byte sequence
       if(UTF8_IS_CONT(char_ptr + 1)) {
@@ -156,18 +162,14 @@ static inline int char_offset(unsigned const char * char_ptr, cetype_t type) {
  * and could potentially lead to copying of entire vectors. We'll have to
  * consider a mode where we let known 255 element encodings through...
  */
-static inline unsigned const char * as_utf8_char(SEXP string, R_xlen_t i) {
-  SEXP str_elt = STRING_ELT(string, i);
+static inline unsigned const char * as_utf8_char(SEXP string) {
   const char * char_val;
 
-  cetype_t char_enc = getCharCE(str_elt);
-  if(
-    char_enc == CE_UTF8 || (char_enc == CE_NATIVE && utf8locale) ||
-    char_enc == CE_BYTES
-  ) {
-    char_val = CHAR(STRING_ELT(string, i));
+  cetype_t char_enc = getCharCE(string);
+  if(is_utf8_enc(char_enc)) {
+    char_val = CHAR(string);
   } else {
-    char_val = translateCharUTF8(STRING_ELT(string, i));
+    char_val = translateCharUTF8(string);
   }
   return (unsigned const char *) char_val;
 }
@@ -223,11 +225,9 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
 
     SEXP char_cont = STRING_ELT(string, i);
     cetype_t char_enc = getCharCE(char_cont);
-    char_start = as_utf8_char(char_cont, char_enc);
+    char_start = as_utf8_char(char_cont);
 
     R_xlen_t char_count = 0;
-
-    size_t byte_pad = pad_len;
 
     // Limiting to 8 less than SIZE_T_MAX to make room for a last 4 byte UTF8
     // character, '..', and the NULL terminator
@@ -248,7 +248,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
       if(char_count) byte_count_prev = byte_count;
 
       ++char_count;
-      byte_off = abs(char_offset(char_ptr, char_enc));
+      byte_off = abs(char_offset(char_ptr, char_enc == CE_BYTES));
       if(byte_count > INT_MAX - byte_off)
         // nocov start
         error(
@@ -321,13 +321,13 @@ SEXP CSR_nchar_u(SEXP string) {
 
     SEXP char_cont = STRING_ELT(string, 0);
     cetype_t char_enc = getCharCE(char_cont);
-    char_start = as_utf8_char(char_cont, char_enc);
+    char_start = as_utf8_char(char_cont);
 
     int byte_count = 0, char_count = 0;
     int too_long = 0; // track if any strings longer than INT_MAX
 
     while((char_val = *(char_ptr = (char_start + byte_count)))) {
-      int byte_off = abs(char_offset(char_ptr, char_enc));
+      int byte_off = abs(char_offset(char_ptr, char_enc == CE_BYTES));
       if((byte_count > INT_MAX - byte_off) && !too_long) {
         too_long = 1;
         warning("Some elements longer than INT_MAX, return NA for those.");
@@ -364,13 +364,13 @@ SEXP CSR_char_offsets(SEXP string) {
 
   SEXP chr_cont = STRING_ELT(string, 0);
   cetype_t char_enc = getCharCE(chr_cont);
-  char_start = as_utf8_char(chr_cont, char_enc);
+  char_start = as_utf8_char(chr_cont);
 
   int byte_count = 0, char_count = 0;
   int too_long = 0; // track if any strings longer than INT_MAX
 
   while((char_val = *(char_ptr = (char_start + byte_count)))) {
-    int byte_off = char_offset(char_ptr, char_enc);
+    int byte_off = char_offset(char_ptr, char_enc == CE_BYTES);
     if((byte_count > INT_MAX - abs(byte_off))) {
       // nocov start
       too_long = 1;
