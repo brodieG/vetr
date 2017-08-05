@@ -259,3 +259,12 @@ unitizer_sect('error', {
   all_bw(x, "a", 1)
   all_bw(x, 1, "a")
 })
+
+unitizer_sect('all_bw - strings', {
+  all_bw(letters, "a", "z")
+  all_bw(letters, "a", "z", bounds="[)")
+  all_bw(letters, "a", "z", bounds="(]")
+  all_bw(paste0(letters, letters), "a", "zz")
+  all_bw(paste0(letters, letters), "a", "zz", bounds="()")
+  all_bw("A", "a", "z", bounds="(]")
+})
