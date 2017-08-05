@@ -502,23 +502,35 @@ SEXP VALC_all_bw(
 
     const char * lo_chr, * hi_chr;
 
-    lo_chr = CHAR(asChar(lo));
-    hi_chr = CHAR(asChar(hi));
+    // Not ideal to assemble all these SEXPs, but we haven't bothered with an
+    // internal interface to strsub given that ends up being relatively
+    // complicated.  Also, we really only need this in failure but we're always
+    // building it...
+
+    SEXP lo_chr_sxp = asChar(lo);
+    SEXP hi_chr_sxp = asChar(hi);
+
+    SEXP lim = PROTECT(ScalarInteger(12));
+    SEXP mark = PROTECT(ScalarLogical(1));
+
+    SEXP hilo_string = PROTECT(allocVector(STRSXP, 2));
+    SET_STRING_ELT(hilo_string, 0, lo_chr_sxp);
+    SET_STRING_ELT(hilo_string, 1, hi_chr_sxp);
+    SEXP hilo_string_sub = PROTECT(CSR_strsub(hilo_string, lim, mark));
 
     lo_as_chr = lo_unbound ?
       CSR_num_as_chr(asReal(lo), 0) :
-      CSR_smprintf2(10000L, "\"%s\"", lo_chr, "");
+      CSR_smprintf2(10000L, "\"%s\"", CHAR(STRING_ELT(hilo_string_sub, 0)), "");
     hi_as_chr = hi_unbound ?
       CSR_num_as_chr(asReal(hi), 0) :
-      CSR_smprintf2(10000L, "\"%s\"", hi_chr, "");
+      CSR_smprintf2(10000L, "\"%s\"", CHAR(STRING_ELT(hilo_string_sub, 1)), "");
 
-    if(strcmp(lo_chr, hi_chr) > 0) {
+    if(!lo_unbound && !hi_unbound && strcmp(lo_chr, hi_chr) > 0) {
       error(
         "Argument `hi` (%s) must be greater than or equal to `lo` (%s).",
         lo_chr, hi_chr
       );
     }
-
     if(!lo_unbound && !hi_unbound) {
       if(!inc_lo && !inc_hi) {
         if(na_rm_int) {
