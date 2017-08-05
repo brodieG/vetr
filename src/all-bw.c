@@ -743,7 +743,16 @@ SEXP VALC_all_bw(
   if(!success) {
     char * msg_val;
     if(x_type == STRSXP) {
-      msg_val = CSR_smprintf2(10000, "\"%s\"", CHAR(STRING_ELT(x, i)), "");
+      SEXP string_sub = PROTECT(allocVector(STRSXP, 1));
+      SET_STRING_ELT(string_sub, 0, STRING_ELT(x, i));
+      const char * msg_val_sub = CHAR(
+        asChar(
+          CSR_strsub(
+            string_sub, PROTECT(ScalarInteger(20)),
+            PROTECT(ScalarLogical(1))
+      ) ) );
+      UNPROTECT(3);
+      msg_val = CSR_smprintf2(10000, "\"%s\"", msg_val_sub, "");
     } else {
       msg_val = CSR_num_as_chr(
         (double)(x_type == REALSXP ?
