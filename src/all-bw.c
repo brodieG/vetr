@@ -509,6 +509,8 @@ SEXP VALC_all_bw(
 
     SEXP lo_chr_sxp = asChar(lo);
     SEXP hi_chr_sxp = asChar(hi);
+    lo_chr = CHAR(lo_chr_sxp);
+    hi_chr = CHAR(hi_chr_sxp);
 
     SEXP lim = PROTECT(ScalarInteger(12));
     SEXP mark = PROTECT(ScalarLogical(1));
@@ -524,6 +526,8 @@ SEXP VALC_all_bw(
     hi_as_chr = hi_unbound ?
       CSR_num_as_chr(asReal(hi), 0) :
       CSR_smprintf2(10000L, "\"%s\"", CHAR(STRING_ELT(hilo_string_sub, 1)), "");
+
+    UNPROTECT(4);
 
     if(!lo_unbound && !hi_unbound && strcmp(lo_chr, hi_chr) > 0) {
       error(
