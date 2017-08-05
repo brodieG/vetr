@@ -290,19 +290,24 @@ unitizer_sect("UTF8 corner cases, in UTF-8", {
   Map(vetr:::char_offsets, crit.2)
   Map(vetr:::char_offsets, crit.3)
   Map(vetr:::char_offsets, crit.4)
+  invisible(Sys.setlocale('LC_CTYPE', old.locale))
+})
 
+unitizer_sect("UTF-8 corner cases - other encodings", {
   # Some latin-1 codes
 
-  lat.1.1 <- c(
+  lat.1.1 <- lat.1.2 <- c(
     "ni\xF1a",
     "hello",
     "\xB5 \xB6 \xBF \xC9 \xF4"
   )
   Encoding(lat.1.1) <- "latin1"
+  Encoding(lat.1.2) <- "bytes"
 
-  Map(vetr:::char_offsets, lat.1.1)
+  lapply(lat.1.1, vetr:::char_offsets)
+  lapply(lat.1.2, vetr:::char_offsets)
 
-  # What about bytes encoding
-  invisible(Sys.setlocale('LC_CTYPE', old.locale))
+  vetr:::strsub(lat.1.1, 3L, mark=FALSE)
+  vetr:::strsub(lat.1.2, 3L, mark=FALSE)
 })
 

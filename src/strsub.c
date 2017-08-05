@@ -161,12 +161,18 @@ static inline int char_offset(unsigned const char * char_ptr, int is_bytes) {
  * windows 1252 locales where each character can be represented by a byte
  * and could potentially lead to copying of entire vectors. We'll have to
  * consider a mode where we let known 255 element encodings through...
+ *
+ * Note that CE_BYTES encoding is left as is.  Unfortunately this means that all
+ * output from this function needs to check whether the original type was bytes
+ * or not.
+ *
+ * @param string a CHARSXP
  */
 static inline unsigned const char * as_utf8_char(SEXP string) {
   const char * char_val;
 
   cetype_t char_enc = getCharCE(string);
-  if(is_utf8_enc(char_enc)) {
+  if(is_utf8_enc(char_enc) || char_enc == CE_BYTES) {
     char_val = CHAR(string);
   } else {
     char_val = translateCharUTF8(string);
