@@ -267,4 +267,15 @@ unitizer_sect('all_bw - strings', {
   all_bw(paste0(letters, letters), "a", "zz")
   all_bw(paste0(letters, letters), "a", "zz", bounds="()")
   all_bw("A", "a", "z", bounds="(]")
+
+  utf8 <- list(
+    fs="\xF0\x90\x80\x80",  # four byte start
+    fe="\xF4\x80\x80\x80",  # four byte end
+    ts="\xC2\x80",          # two byte start
+    te="\xDF\xBF"           # two byte end
+  )
+  for(i in seq_along(utf8)) Encoding(utf8[[i]]) <- "UTF-8"
+
+  all_bw(lorem.ru.phrases, "a", utf8$te)
+  all_bw(lorem.ru.phrases, "a", utf8$ts)
 })
