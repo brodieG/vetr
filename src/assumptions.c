@@ -27,6 +27,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  *
  * returns TRUE on success, errors on failure
  */
+// nocov start by definition none of the errors should be thrown, so no sense in
+// covering this
 SEXP VALC_check_assumptions() {
   const char * err_base = "Failed system assumption: %s%s";
   if(sizeof(R_len_t) < sizeof(int))
@@ -64,3 +66,4 @@ SEXP VALC_check_assumptions() {
     error(err_base, "SIZE_T_MAX not sufficiently larger than INT_MAX", "");
   return ScalarLogical(1);
 }
+// nocov end
