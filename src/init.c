@@ -34,11 +34,11 @@ R_CallMethodDef callMethods[] = {
   {"default_hash_fun", (DL_FUNC) &VALC_default_hash_fun, 1},
   {"all_bw", (DL_FUNC) &VALC_all_bw, 5},
   {"check_assumptions", (DL_FUNC) &VALC_check_assumptions, 0},
-
+/*
   {"test1", (DL_FUNC) &VALC_test1, 1},
   {"test2", (DL_FUNC) &VALC_test2, 2},
   {"test3", (DL_FUNC) &VALC_test3, 3},
-
+*/
   {"alike_ext", (DL_FUNC) &ALIKEC_alike_ext, 5},
   {"typeof", (DL_FUNC) &ALIKEC_typeof, 1},
   {"mode", (DL_FUNC) &ALIKEC_mode, 1},

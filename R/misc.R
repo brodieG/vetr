@@ -104,11 +104,11 @@ hash_fun <- function(x) .Call(VALC_default_hash_fun, x)
 
 check_assumptions <- function() .Call(VALC_check_assumptions)
 
-# Testing C stuff; should be deleted eventually
-
-#' @export
-test1 <- function(a) .Call(VALC_test1, a)
-#' @export
-test2 <- function(a, b) .Call(VALC_test2, a, b)
-#' @export
-test3 <- function(a, b, c) .Call(VALC_test3, a, b, c)
+### Testing C stuff; should be deleted eventually
+##
+###' @export
+##test1 <- function(a) .Call(VALC_test1, a)
+###' @export
+##test2 <- function(a, b) .Call(VALC_test2, a, b)
+###' @export
+##test3 <- function(a, b, c) .Call(VALC_test3, a, b, c)
