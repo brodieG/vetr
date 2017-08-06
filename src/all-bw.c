@@ -170,7 +170,7 @@ SEXP VALC_all_bw(
         CSR_num_as_chr(hi_num, 0), CSR_num_as_chr(lo_num, 0)
       );
     }
-    // Handle the between vs. outside ranges by inverting lo and high
+    // See if either side is unbounded
 
     int lo_unbound = (lo_num == R_NegInf && inc_lo);
     int hi_unbound = (hi_num == R_PosInf && inc_hi);
