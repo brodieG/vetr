@@ -261,21 +261,68 @@ unitizer_sect('error', {
 })
 
 unitizer_sect('all_bw - strings', {
+
+  two.let <- two.let.na <- two.let.inf <- c(
+    letters,
+    do.call(paste0, expand.grid(letters, letters))
+  )
   all_bw(letters, "a", "z")
   all_bw(letters, "a", "z", bounds="[)")
   all_bw(letters, "a", "z", bounds="(]")
-  all_bw(paste0(letters, letters), "a", "zz")
-  all_bw(paste0(letters, letters), "a", "zz", bounds="()")
+
+  all_bw(two.let, "aa", "zz") # no, "a" is less
+
+  all_bw(two.let, "a", "zz")
+  all_bw(two.let, "a", "zz", bounds="()")
   all_bw("A", "a", "z", bounds="(]")
 
+  all_bw(two.let, -Inf, Inf, bounds="()")
+  all_bw(two.let, -Inf, Inf, bounds="[)")
+  all_bw(two.let, -Inf, Inf, bounds="(]")
+  all_bw(two.let, -Inf, Inf, bounds="[]")
+
+  two.let.inf[1] <- Inf
+  two.let.inf[2] <- -Inf
+
+  # All true b/c Inf values coerced to character
+
+  all_bw(two.let.inf, -Inf, Inf, bounds="()")
+  all_bw(two.let.inf, -Inf, Inf, bounds="[)")
+  all_bw(two.let.inf, -Inf, Inf, bounds="(]")
+  all_bw(two.let.inf, -Inf, Inf, bounds="[]")
+
+  # All fail
+
+  two.let.na[50] <- NA_character_
+
+  all_bw(two.let.na, "a", "zz", bounds="()")
+  all_bw(two.let.na, "a", "zz", bounds="[)")
+  all_bw(two.let.na, "a", "zz", bounds="(]")
+  all_bw(two.let.na, "a", "zz", bounds="[]")
+
+  # Some pass
+
+  all_bw(two.let.na, "a", "zz", bounds="()", na.rm=TRUE)
+  all_bw(two.let.na, "a", "zz", bounds="[)", na.rm=TRUE)
+  all_bw(two.let.na, "a", "zz", bounds="(]", na.rm=TRUE)
+  all_bw(two.let.na, "a", "zz", bounds="[]", na.rm=TRUE)
+
   utf8 <- list(
-    fs="\xF0\x90\x80\x80",  # four byte start
-    fe="\xF4\x80\x80\x80",  # four byte end
-    ts="\xC2\x80",          # two byte start
-    te="\xDF\xBF"           # two byte end
+    s4="\xF0\x90\x80\x80",  # four byte start
+    e4="\xF4\xBF\xBF\xBF",  # four byte end
+    s3="\xE0\xA0\x80",      # three byte start
+    e3="\xEF\xBF\xBF",      # three byte end
+    s2="\xC2\x80",          # two byte start
+    e2="\xDF\xBF"           # two byte end
   )
   for(i in seq_along(utf8)) Encoding(utf8[[i]]) <- "UTF-8"
 
-  all_bw(lorem.ru.phrases, "a", utf8$te)
-  all_bw(lorem.ru.phrases, "a", utf8$ts)
+  # simple tests with utf8 bookends
+
+  all_bw(lorem.ru.phrases, "\t", utf8$e2)
+  all_bw(lorem.ru.phrases, "\t", utf8$s2)
+  all_bw(lorem.cn.phrases, "\t", utf8$e2)
+  all_bw(lorem.cn.phrases, "\t", utf8$e3)
+  all_bw(lorem.emo.phrases, "\t", utf8$s4)
+  all_bw(lorem.emo.phrases, "\t", utf8$e4)
 })
