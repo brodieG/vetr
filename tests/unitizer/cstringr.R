@@ -122,8 +122,24 @@ unitizer_sect("substr", {
 
   vetr:::strsub(lorem.emo.phrases, 25L, TRUE)
   vetr:::strsub(lorem.emo.phrases, 25L, FALSE)
-})
 
+  # Errors
+
+  vetr:::strsub(lorem.phrases, 1:2, TRUE)
+  vetr:::strsub(lorem.phrases, 25L, 1:2)
+  vetr:::strsub(1:2, 25L, TRUE)
+
+  vetr:::strsub(lorem.phrases, 2L, TRUE)
+  vetr:::strsub(lorem.phrases, 3L, TRUE)  # works
+})
+unitizer_sect("nchar_u", {
+  vetr:::nchar_u(1:10)
+  vetr:::nchar_u(c("a", "ab", "abc"))
+})
+unitizer_sect("char_offsets", {
+  vetr:::char_offsets(1:10)
+  vetr:::char_offsets(c("a", "ab", "abc"))
+})
 unitizer_sect("UTF8 corner cases, in UTF-8", {
   old.locale <- Sys.setlocale('LC_CTYPE', 'en_US.UTF-8')
   utf8.kuhn <- readLines('unitizer/helper/UTF-8-test.txt', encoding='UTF-8');
@@ -292,7 +308,6 @@ unitizer_sect("UTF8 corner cases, in UTF-8", {
   Map(vetr:::char_offsets, crit.4)
   invisible(Sys.setlocale('LC_CTYPE', old.locale))
 })
-
 unitizer_sect("UTF-8 corner cases - other encodings", {
   # Some latin-1 codes
 

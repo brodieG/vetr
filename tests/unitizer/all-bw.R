@@ -267,6 +267,7 @@ unitizer_sect('all_bw - strings', {
     do.call(paste0, expand.grid(letters, letters))
   )
   all_bw(letters, "a", "z")
+  all_bw(letters, "z", "a") # error
   all_bw(letters, "a", "z", bounds="[)")
   all_bw(letters, "a", "z", bounds="(]")
 
@@ -276,10 +277,35 @@ unitizer_sect('all_bw - strings', {
   all_bw(two.let, "a", "zz", bounds="()")
   all_bw("A", "a", "z", bounds="(]")
 
+  # exclude ends, but still pass
+
+  two.let.2 <- tail(head(two.let, -1), -1)
+  all_bw(two.let.2, "a", "zz", bounds="()")
+  all_bw(two.let.2, "a", "zz", bounds="[)")
+  all_bw(two.let.2, "a", "zz", bounds="(]")
+
+  two.let.2[50] <- NA_character_
+  all_bw(two.let.2, "a", "zz", bounds="()", na.rm=TRUE)
+  all_bw(two.let.2, "a", "zz", bounds="[)", na.rm=TRUE)
+  all_bw(two.let.2, "a", "zz", bounds="(]", na.rm=TRUE)
+
+  # inf bounds
+
   all_bw(two.let, -Inf, Inf, bounds="()")
   all_bw(two.let, -Inf, Inf, bounds="[)")
   all_bw(two.let, -Inf, Inf, bounds="(]")
   all_bw(two.let, -Inf, Inf, bounds="[]")
+
+  all_bw(two.let, "a", Inf, bounds="()")
+  all_bw(two.let, "a", Inf, bounds="[)")
+  all_bw(two.let, "a", Inf, bounds="(]")
+  all_bw(two.let, "a", Inf, bounds="[]")
+  all_bw(two.let, "\t", Inf, bounds="(]")
+
+  all_bw(two.let, -Inf, "zz", bounds="()")
+  all_bw(two.let, -Inf, "zz", bounds="[)")
+  all_bw(two.let, -Inf, "zz", bounds="(]")
+  all_bw(two.let, -Inf, "zz", bounds="[]")
 
   two.let.inf[1] <- Inf
   two.let.inf[2] <- -Inf
@@ -299,13 +325,34 @@ unitizer_sect('all_bw - strings', {
   all_bw(two.let.na, "a", "zz", bounds="[)")
   all_bw(two.let.na, "a", "zz", bounds="(]")
   all_bw(two.let.na, "a", "zz", bounds="[]")
+  all_bw(two.let.na, -Inf, Inf, bounds="[]")
 
   # Some pass
 
   all_bw(two.let.na, "a", "zz", bounds="()", na.rm=TRUE)
   all_bw(two.let.na, "a", "zz", bounds="[)", na.rm=TRUE)
   all_bw(two.let.na, "a", "zz", bounds="(]", na.rm=TRUE)
-  all_bw(two.let.na, "a", "zz", bounds="[]", na.rm=TRUE)
+  all_bw(two.let.na, "a", "zz", na.rm=TRUE)
+
+  all_bw(two.let.na, "b", "zy", na.rm=TRUE)   # fail
+
+  all_bw(two.let.na, -Inf, "zz", na.rm=TRUE)  # pass
+  all_bw(two.let.na, -Inf, "zy", na.rm=TRUE)  # fail
+  all_bw(two.let.na, -Inf, "zy") # fail
+
+  all_bw(two.let.na, -Inf, "zzz", bounds="[)", na.rm=TRUE) # pass
+  all_bw(two.let.na, -Inf, "zz", bounds="[)", na.rm=TRUE)  # fail
+
+  all_bw(two.let.na, -Inf, "zz")  # fail
+
+  all_bw(two.let.na, "a", Inf, na.rm=TRUE)  # pass
+  all_bw(two.let.na, "a", Inf)              # fail
+  all_bw(two.let.na, "b", Inf, na.rm=TRUE)  # fail
+
+  all_bw(two.let.na, "\t",Inf,  bounds="(]", na.rm=TRUE) # pass
+  all_bw(two.let.na, "a", Inf, bounds="(]", na.rm=TRUE)  # fail
+
+  all_bw(two.let.na, "a", Inf)  # fail
 
   utf8 <- list(
     s4="\xF0\x90\x80\x80",  # four byte start
