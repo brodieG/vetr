@@ -325,7 +325,7 @@ SEXP CSR_nchar_u(SEXP string) {
     unsigned const char * char_start, * char_ptr;
     unsigned char char_val;
 
-    SEXP char_cont = STRING_ELT(string, 0);
+    SEXP char_cont = STRING_ELT(string, i);
     cetype_t char_enc = getCharCE(char_cont);
     char_start = as_utf8_char(char_cont);
 
@@ -335,9 +335,11 @@ SEXP CSR_nchar_u(SEXP string) {
     while((char_val = *(char_ptr = (char_start + byte_count)))) {
       int byte_off = abs(char_offset(char_ptr, char_enc == CE_BYTES));
       if((byte_count > INT_MAX - byte_off) && !too_long) {
+        // nocov start
         too_long = 1;
         warning("Some elements longer than INT_MAX, return NA for those.");
         break;
+        // nocov end
       }
       byte_count += byte_off;
       char_count++;
