@@ -3,10 +3,12 @@
 #' Equivalent to `!anyNA(x) && all(x >= lo & x <= hi, na.rm=TRUE)` with default
 #' settings, except that it is substantially faster and returns a string
 #' describing why not all values are in range instead of FALSE on failure.
+#'
 #' You can modify the comparison to be strictly greater/less than via the
-#' `bounds` parameter, and the treatment of NAs with `na.rm`.  Strictly
-#' speaking, this function succeeds (returns TRUE) so long as no elements in `x`
-#' fail the conditions (i.e. zero length `x` will always succeed).
+#' `bounds` parameter, and the treatment of NAs with `na.rm`.  Note that NAs are
+#' considered to be considered to be out of bounds by default.  While
+#' possibly incorrect, this is both conservative and convenient.  Zero length
+#' `x` will always succeed.
 #'
 #' If `x` and `lo`/`hi` are different types, `lo`/`hi` will be coerced to the
 #' type of `x`.  When `lo`/`hi` are numeric and `x` is integer, if `lo`/`hi`
@@ -16,6 +18,7 @@
 #'
 #' @export
 #' @param x vector logical (treated as integer), integer, numeric, or character.
+#'   Factors are treated as their underlying integer vectors.
 #' @param lo scalar vector of type coercible to the type of `x`, cannot be NA,
 #'   use `-Inf` to indicate unbounded (default).
 #' @param hi scalar vector of type coercible to the type of `x`, cannot be NA,
@@ -25,7 +28,7 @@
 #'   in bounds.  Unlike with [all()], for `all_bw` `na.rm=FALSE` returns an
 #'   error string if there are NAs instead of NA.  Arguably NA, but not NaN,
 #'   should be considered to be in `[-Inf,Inf]`, but since `NA < Inf` is NA we
-#'   treat them as always being out of the range.
+#'   treat them as always being out of bounds.
 #' @param bounds `character(1L)` for values between `lo` and `hi`:
 #'   * \dQuote{[]} include `lo` and `hi`
 #'   * \dQuote{()} exclude `lo` and `hi`

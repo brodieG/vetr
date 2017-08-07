@@ -143,7 +143,21 @@ microbenchmark(
 ##   27.72199  23.029  36.6965  54.854   100
 ##   23.69168  18.597  30.5225  54.603   100
 ##  149.69694 133.635 169.2880 301.521   100
+
+ss <- do.call(paste0, expand.grid(letters, letters, letters))
+microbenchmark(
+  all_bw(ss, "a", "zzz"),
+  all(xx >= "a" & xx <= "zzz")
+)
+## Unit: microseconds
+##                          expr       min        lq       mean    median
+##        all_bw(ss, "a", "zzz")   336.112   410.057   463.3804   458.985
+##  all(xx >= "a" & xx <= "zzz") 23731.092 24235.388 26356.3079 24951.518
+##          uq       max neval
+##    502.3695   904.064   100
+##  27598.0535 34451.201   100
 ```
+Not entirely sure what's going on here, shouldn't be that much faster.
 
 ### Loop unswitching
 
