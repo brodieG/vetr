@@ -110,7 +110,11 @@ Thank you to:
   ensurer.
 * Hadley Wickham for [devtools](https://cran.r-project.org/package=devtools),
   and for pointing me to Stefan M. Bache's ensurer package.
-* Olaf Mersmann for [microbenchmark](https://cran.r-project.org/package=microbenchmark), because microsecond matter.
+* [Markus Kuhn](http://www.cl.cam.ac.uk/~mgk25/) for [UTF-8 stress test
+  data](http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt)
+* Olaf Mersmann for
+  [microbenchmark](https://cran.r-project.org/package=microbenchmark), because
+  microsecond matter.
 * All open source developers out there that make their work freely available
   for others to use.
 * [Github](https://github.com/), [Travis-CI](https://travis-ci.org/),

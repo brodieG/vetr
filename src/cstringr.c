@@ -21,7 +21,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 /* Estimate how many characters a R_xlen_t number can be represented with
  *
  * Implicitly we're assuming R_XLEN_T_MAX < DOUBLE_MAX, which seems like a
- * pretty safe assumption.
+ * pretty safe assumption (see assumptions.c).
  */
 
 size_t CSR_len_chr_len(R_xlen_t a) {
@@ -40,20 +40,94 @@ allocates with R_alloc so in theory don't need to worry about freeing memory
 */
 
 char * CSR_len_as_chr(R_xlen_t a) {
-  char * res;
-  res = R_alloc(CSR_len_chr_len(a) + 1, sizeof(char));
+  return CSR_num_as_chr((double)a, 1);
+}
+/*
+ * Convert number to character representation
+ *
+ * Using .0f due to portability issues.  used to be %td, but doesn't work on
+ * windows, then %zd apparently doesn't work on the mingw compiler (at least
+ * without tweaks), so we're trying doubles which in theory should represent
+ * anything we could possibly get from R_xlen_t.
+ *
+ * Note this will try to print as integer if a number can be precisely
+ * represented as an integer.  No accounting for precision is made, so there
+ * must be nothing past decimal point for this to happen.
+ */
 
-  if(pow((double) 2, 53) < a) {
-    error("Internal Error: can't handle values greater than 2^53");  // nocov
+char * CSR_num_as_chr(double num, int as_int) {
+  char * res = "<INTERNAL ERROR>"; // should always be modified
+
+  // Handle special cases
+
+  if(ISNA(num)) {
+    res = "NA";
+  } else if (ISNAN(num)) {
+    res = "NaN";
+  } else if (num == R_PosInf) {
+    res = "Inf";
+  } else if (num == R_NegInf) {
+    res = "-Inf";
+  } else {
+    const char * format;
+    double max_num_int = pow((double) 2, 53);
+    if(as_int &&  (max_num_int < num || -max_num_int > num)) {
+      // nocov start
+      error(
+        "%s%s",
+        "Internal Error: can't handle values greater than 2^53 in int mode, ",
+        "contact maintainer."
+      );
+      // nocov end
+    }
+    // Force int display for exact ints
+
+    if(
+      !as_int && max_num_int >= num && -max_num_int <= num && !fmod(num, 1)
+    )
+      as_int = 1;
+
+    // Otherwise use floating or scientific if abs value greater than a billion,
+    // not exactly the same as what R does
+
+    if(as_int) format = "%.0f";
+    else if (fabs(num) >= 1e9) format = "%e";
+    else format = "%f";
+
+    // not clear what snprintf does if mem_req would be greater than INT_MAX,
+    // doesn't appear documented.  Likely impossible to hit that here though
+
+    int mem_req = snprintf(NULL, 0, format, num);
+    if(mem_req < 0)
+      // nocov start
+      error(
+        "%s%s",
+        "Internal Error: could not compute as character width of number, ",
+        "contact maintainer."
+      );
+      // nocov end
+    res = R_alloc(mem_req + 1, sizeof(char));
+    int write_res = snprintf(res, mem_req + 1, format, num);
+
+    if(write_res < 0)
+      // nocov start
+      error(
+        "%s%s", "Internal Error: failed converting num to string, ",
+        "contact maintainer."
+      );
+      // nocov end
+    else if(write_res > mem_req)
+      // nocov start
+      error(
+        "%s%s", "Internal Error: truncation converting num to string, ",
+        "contact maintainer."
+      );
+      // nocov end
   }
-  // used to be %td, but doesn't work on windows, then %zd apparently doesn't
-  // work on the mingw compiler (at least without tweaks), so we're trying
-  // doubles which in theory should represent anything we could possibly get
-  // from R_xlen_t
-
-  if(!sprintf(res, "%.0f", (double) a))
-    error("Logic Error: r_xlen_to_char conversion failed");  // nocov
   return res;
+}
+SEXP CSR_num_as_chr_ext(SEXP a, SEXP as_int) {
+  return mkString(CSR_num_as_chr(asReal(a), asInteger(as_int)));
 }
 /*
 A safe strmlen, errors if exceeds `maxlen`
@@ -97,27 +171,28 @@ If str has more than size characters, returns a copy of str truncated to size
 characters with a null character appended such that strmlen() str == size,
 otherwise returns a copy of str.
 
+This operates on bytes, so will potentially break UTF-8 and other multi-byte
+encoded strings.
+
 Note, final string size could be up to maxlen + 1 including the NULL terminator.
 A NULL terminator is always added at the end of the string.
 */
-char * CSR_strmcpy(const char * str, size_t maxlen) {
+char * CSR_strmcpy_int(const char * str, size_t maxlen, int warn) {
   if(!maxlen) return("");
-  if(!(maxlen + 1)) {
-    error("%s%s",
-      "Argument `maxlen` must be at least one smaller than max possible ",
-      "size_t value."
-    );
-  }
+  if(maxlen == SIZE_T_MAX)
+    error("Argument `maxlen` must be at least one smaller than SIZE_T_MAX.");
+
   size_t len = CSR_strmlen_x(str, maxlen);
-  if(len == maxlen && str[len])
+  if(warn && len == maxlen && str[len])
     warning("CSR_strmcpy: truncated string longer than %d", maxlen);
 
   char * str_new = R_alloc(len + 1, sizeof(char));
 
+  // should we use memcpy?
   if(!strncpy(str_new, str, len)) {
     // nocov start
     error("%s%s",
-      "Internal Error (CSR_strmcopy): failed making copy of string for  ",
+      "Internal Error (CSR_strncopy): failed making copy of string for  ",
       "truncation; contact maintainer."
     );
     // nocov end
@@ -131,6 +206,9 @@ char * CSR_strmcpy(const char * str, size_t maxlen) {
 
   return str_new;
 }
+char * CSR_strmcpy(const char * str, size_t maxlen) {
+  return CSR_strmcpy_int(str, maxlen, 1);
+}
 /*
  * Like CSR_strmcpy, but copies to a presupplied pointer (`target`).  In this
  * way it is much closer to strncpy, except that it truncates everything at
@@ -143,7 +221,7 @@ char * CSR_strmcpy(const char * str, size_t maxlen) {
  */
 void CSR_strappend(char * target, const char * str, size_t maxlen) {
   if(maxlen) {
-    if(!(maxlen + 1)) {
+    if(maxlen > SIZE_T_MAX - 1) {
       error("%s%s",
         "Argument `maxlen` must be at least one smaller than max possible ",
         "size_t value."
@@ -170,19 +248,16 @@ void CSR_strappend(char * target, const char * str, size_t maxlen) {
     } else if(target[len - 1]) target[len] = '\0';
   }
 }
-
 /*
  * Add two size_t if possible, error otherwise
  */
-
 size_t CSR_add_szt(size_t a, size_t b) {
-  size_t full_len = a + b;
-  if(full_len < a || full_len < b)
+  if(SIZE_T_MAX - a < b)
     error("%s%s",
       "size_t overflow: you tried to add two size_t numbers that together ",
       "overflow size_t"
     );
-  return full_len;
+  return a + b;
 }
 /*
 Returns a character pointer containing the results of using `a` as the parent
@@ -191,9 +266,13 @@ string and all the others a substrings with `sprintf`
 note:
 - will over-allocate by the amount of formatting characters
 - maxlen limits the length of individual components and the formatting string,
-not the output
-- If you submit more %s tokens than there are args, bad stuff starts to happen
-and we don't actually check the formatting tokens
+  not the output; because you can only specify one maxlen and there are multiple
+  inputs in addition to the formatting string maxlen can't be used to prevent
+  reading past buffer size if any of them are smaller than maxlen.  Basically,
+  the underlying assumption with all of these is that all inputs are NULL
+  terminated
+- If you submit more %s tokens than there are args, bad stuff starts to
+  happen and we don't actually check the formatting tokens
 */
 
 char * CSR_smprintf6(
@@ -215,6 +294,8 @@ char * CSR_smprintf6(
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(f, maxlen));
 
   char * res;
+
+  // Limit each string and format to `maxlen`
 
   char * a_cpy = CSR_strmcpy(a, maxlen);
   char * b_cpy = CSR_strmcpy(b, maxlen);
@@ -263,7 +344,6 @@ char * CSR_smprintf2(
 char * CSR_smprintf1(size_t maxlen, const char * format, const char * a) {
   return(CSR_smprintf6(maxlen, format, a, "", "", "", "", ""));
 }
-
 // - Capitalization functions --------------------------------------------------
 
 /* Make copy and capitalize first letter */

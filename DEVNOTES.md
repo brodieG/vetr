@@ -113,6 +113,119 @@ It seems like there are no stack imbalance problems when the script finishes wit
 
 ## Optimization
 
+### Vs. `checkmate`
+
+```
+xx <- runif(1e4)
+xx[1] <- 1
+xx[2] <- 0
+microbenchmark(
+  assertNumeric(xx, any.missing = FALSE, lower = 0, upper = 1),
+  vet(numeric() && all_bw(., 0, 1), xx),
+  assertNumeric(xx, any.missing = FALSE, lower = 0),
+  vet(numeric() && all_bw(., 0, Inf), xx),
+  vet(numeric() && all(. > 0), xx)
+)
+microbenchmark(
+  all_bw(xx, 0, 1),
+  all(xx >= 0 & xx <= 1)
+)
+## Unit: microseconds
+##                                                          expr    min       lq
+##  assertNumeric(xx, any.missing = FALSE, lower = 0, upper = 1) 26.627  29.9290
+##                         vet(numeric() && all_bw(., 0, 1), xx) 20.198  22.6825
+##             assertNumeric(xx, any.missing = FALSE, lower = 0) 19.055  20.7130
+##                       vet(numeric() && all_bw(., 0, Inf), xx) 14.885  16.8890
+##                              vet(numeric() && all(. > 0), xx) 73.076 119.4560
+##       mean  median       uq     max neval
+##   42.24239  36.187  55.2480  88.824   100
+##   30.46707  25.055  40.4240  86.059   100
+##   27.72199  23.029  36.6965  54.854   100
+##   23.69168  18.597  30.5225  54.603   100
+##  149.69694 133.635 169.2880 301.521   100
+
+ss <- do.call(paste0, expand.grid(letters, letters, letters))
+microbenchmark(
+  all_bw(ss, "a", "zzz"),
+  all(xx >= "a" & xx <= "zzz")
+)
+## Unit: microseconds
+##                          expr       min        lq       mean    median
+##        all_bw(ss, "a", "zzz")   336.112   410.057   463.3804   458.985
+##  all(xx >= "a" & xx <= "zzz") 23731.092 24235.388 26356.3079 24951.518
+##          uq       max neval
+##    502.3695   904.064   100
+##  27598.0535 34451.201   100
+```
+Not entirely sure what's going on here, shouldn't be that much faster.
+
+### Loop unswitching
+
+Trusting that gcc does comparable stuff?
+
+```
+xx <- runif(1e4)
+microbenchmark(
+  all_bw(xx, 0, 1),
+  all_bw2(xx, 0, 1),
+  all(xx >= 0 & xx <= 1)
+)
+## Unit: microseconds
+##                    expr    min      lq      mean   median       uq      max
+##        all_bw(xx, 0, 1) 23.117 23.3210  24.65532  23.6515  24.1765   98.217
+##       all_bw2(xx, 0, 1) 13.665 13.8910  14.62394  14.2865  14.5635   37.207
+##  all(xx >= 0 & xx <= 1) 82.325 92.8285 139.04823 141.6830 149.6355 1164.560
+```
+Switching to 03
+```
+> microbenchmark(
++   all_bw(xx, 0, 1),
++   all_bw2(xx, 0, 1),
++   all(xx >= 0 & xx <= 1)
++ )
+Unit: microseconds
+                   expr    min     lq      mean  median       uq      max neval
+       all_bw(xx, 0, 1) 13.659 14.002  15.74092  14.434  14.9120   47.561   100
+      all_bw2(xx, 0, 1) 18.759 19.114  21.21446  19.823  20.5100   55.189   100
+ all(xx >= 0 & xx <= 1) 82.436 91.505 145.77960 116.293 146.3375 2128.326   100
+```
+Tried seeing if there were some ways to force more loop unswitching as compiler
+really should be able to do it, but didn't find obvious setting which suggests
+higher probability that different compilers may work differently as well.
+
+Compare to integer:
+```
+xx <- runif(1e4)
+yy <- sample(seq.int(1e4))
+microbenchmark(
+  all_bw(xx, 0, 1),
+  all_bw(yy, 0, 1e4),
+  all_bw(yy, 0, 9e3),  # fail
+  all(xx >= 0 & xx <= 1)
+)
+## Unit: microseconds
+##                    expr    min      lq      mean   median       uq     max
+##        all_bw(xx, 0, 1) 12.609 13.2120  13.54127  13.3295  13.6290  23.172
+##    all_bw(yy, 0, 10000)  8.209  8.6555   8.94603   8.7505   9.1845  11.299
+##     all_bw(yy, 0, 9000)  4.067  4.3385   5.44750   4.6980   5.2350  55.264
+##  all(xx >= 0 & xx <= 1) 82.532 89.7550 127.70684 126.4315 148.0600 905.974
+```
+
+### New Notes (7/14/17)
+
+It seems overall `.Call` has gotten a bit faster, although perhaps this is the
+new machine being faster:
+```
+> microbenchmark(test1(1), test2(1,2), test3(1,2,3))
+Unit: nanoseconds
+           expr min    lq   mean median  uq   max neval
+       test1(1) 488 506.0 953.77  517.5 585 40254   100
+    test2(1, 2) 592 632.0 724.22  664.5 745  3332   100
+ test3(1, 2, 3) 699 748.5 853.18  809.0 881  2741   100
+```
+These all do trivial work, trying to measure overhead from parameters.  Looks
+like 150ns per parameter.  Probably not enough to worry about too much.
+
 ### `.Call` vs. `.External`:
 
 ```
@@ -369,6 +482,10 @@ on via ALIKEC_lang_alike_internal() (actually, that's probably not going away
 any time soon as there are additional complexities therein).
 
 ### Random output
+
+`all_bw(zzz, 0, 1)` is not TRUE (is "character" instead of a "logical")
+
+`all_bw(zzz, 0, 1)` is not TRUE (string: "contains values outside of  only values in range `[0,1]` (2.783366 at index 3)")
 
     Error in fun2a(x = letters[1:3]) :
       For argument `x` at least one of these should pass:
