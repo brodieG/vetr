@@ -1,0 +1,145 @@
+---
+title: "Comparison of Value Validation Functions"
+author: "Brodie Gaslam"
+output:
+    rmarkdown::html_vignette:
+        toc: true
+        css: ../vignettes/styles.css
+
+vignette: >
+  %\VignetteIndexEntry{vetr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r global_options, echo=FALSE}
+knitr::opts_chunk$set(error=TRUE)
+library(vetr)
+library(assertive)
+library(assertthat)
+library(ensurer)
+library(checkmate)
+# library(validate)
+library(valaddin)
+```
+
+## Similar Packages
+
+### Candidates
+
+Verifying that function inputs are as expected is both important and tedious.
+Many helper functions and packages exist to simplify this task.  We will review
+those we are aware of here and compare them based on ease of use and overhead.
+
+* `asserthat` by Hadley Wickham
+* `assertive` by Richie Cotton
+* `assertr` by Tony Fischetti
+* `ensurer` by Stefan M. Bache
+* `checkmate` by Michael Lang
+* `stopifnot` by R Core
+* `valaddin` by Eugene Ha
+* `vetr` by Yours Truly
+
+### Other Related Packages
+
+* `validate`
+* ``
+
+## Tasks
+
+### Overview
+
+* Scalar integer-like
+* Numeric vector between 0-1
+* Data Frame with iris like data
+* S3 Object containing iris like data and additional info
+
+### Methodology
+
+We are interested in how well the various package and functions allow us to
+validate function inputs so we will test all of them in that context.
+
+### Numeric Vector, Flag, and Character
+
+```{r}
+valid.opts <- c("heismann", "fessenden", "tycho")
+
+f1_vetr <- function(num, opt, flag) {
+  vetr(
+    numeric(1L), character(1L) && . %in% valid.opts, logical(1L) && !is.na(.)
+  )
+  TRUE
+}
+```
+
+```{r}
+
+f1_assertive <- function(num, opt, flag) {
+  assert_is_numeric(num) &&
+  assert_is_scalar(opt) && assert_all_are_true(opt %in% valid.opts) &&
+  assert_is_a_bool(flag) && assert_all_are_not_nan(flag)
+  TRUE
+}
+
+f1_assertthat <- function(num, opt, flag) {
+  assert_that(is.numeric(x), opt %in% valid.opts, is.flag(flag) && !is.na(flag))
+  TRUE
+}
+
+f1_checkmate <- function(num, opt, flag) {
+  assertNumeric(x) && assertChoice(opt, valid.opt) && assertFlag(flag)
+  TRUE
+}
+
+f1_ensurer <- function(num, opt, flag) {
+  ensure_that(
+    is.numeric(num), isTRUE(opt %in% valid.opts),
+    length(flag) == 1 && !is.na(flag) && is.logical(flag)
+  )
+  TRUE
+}
+
+f1_stopifnot <- function(num, opt, flag) {
+  stopifnot(
+    is.numeric(num), isTRUE(opt %in% valid.opts),
+    length(flag) == 1 && !is.na(flag) && is.logical(flag)
+  )
+  TRUE
+}
+
+f1_valaddin <- firmly(
+  function(num, opt, flag) TRUE,
+  num ~ is.numeric, opt ~ {length(.) == 1 && . %in% valid.opts},
+  flag ~ {length(.) == 1 && is.logical(.) && !is.na(.)}
+)
+
+```
+```{r}
+  f1_assertive("hello")
+  f1_assertthat("hello")
+  f1_checkmate("hello")
+  f1_ensurer("hello")
+  f1_stopifnot("hello")
+  f1_valaddin("hello")
+  f1_vetr("hello")
+```
+```{r}
+library(microbenchmark)
+microbenchmark(
+  f1_assertive(pi),
+  f1_assertthat(pi),
+  f1_ensurer(pi),
+  f1_checkmate(pi),
+  f1_stopifnot(pi),
+  f1_valaddin(pi),
+  f1_vetr(pi)
+)
+```
+
+### Numeric Between Zero and One
+
+### Iris
+
+### Complex object
+
+## Comparison
