@@ -1,5 +1,5 @@
 ---
-title: "Comparison of Value Validation Functions"
+title: "Comparison of Parameter Validation Functions"
 author: "Brodie Gaslam"
 output:
     rmarkdown::html_vignette:
@@ -19,13 +19,25 @@ library(assertive)
 library(assertthat)
 library(ensurer)
 library(checkmate)
-# library(validate)
 library(valaddin)
 ```
 
-## Similar Packages
+## Preventing Garbage In
 
-### Candidates
+`vetr` is intended to make it easy to vet function parameters.  The guiding
+principle is "Minimal Overhead" for:
+
+* the programmer writing the vetting expressions
+* the processor evaluating them
+* the users decyphering error messages
+
+There are many alternative packages that can be used for function parameter
+validation.  Most have broader scope than just this task, but we will focus on
+comparing them only in this context.
+
+## Alternatives
+
+### Tested Alternatives
 
 Verifying that function inputs are as expected is both important and tedious.
 Many helper functions and packages exist to simplify this task.  We will review
@@ -33,17 +45,289 @@ those we are aware of here and compare them based on ease of use and overhead.
 
 * `asserthat` by Hadley Wickham
 * `assertive` by Richie Cotton
-* `assertr` by Tony Fischetti
 * `ensurer` by Stefan M. Bache
 * `checkmate` by Michael Lang
 * `stopifnot` by R Core
 * `valaddin` by Eugene Ha
 * `vetr` by Yours Truly
 
+We can split these functions / packages into two rough categories:
+
+1. Those that rely on standard R expressions along with wrapper functions to
+   assess outcomes and produce error messages (wrapper based)
+2. Those that implement assertion functions that explicitly check for particular
+   structures / values (function based)
+
+For example, the venerable `stopifnot` belongs to the first category.  So do
+`vetr`, `asserthat`, `ensurer`, and `valaddin`.  `assertive`
+and `checkmate` belong to the second category.  One way the difference between
+these class of package manifests is through the number of functions in the
+package:
+
+```{r list_funs, echo=FALSE}
+list_funs <- function(space) {
+  object.names <- ls(space)
+  objects <- mget(object.names, envir=as.environment(space))
+  names(objects)[sapply(objects, is.function)]
+}
+```
+```{r}
+sapply(
+  c('vetr', 'assertthat', 'ensurer', 'valaddin', 'assertive', 'checkmate'),
+  function(x) length(list_funs(sprintf("package:%s", x)))
+)
+```
+
+Even when accounting for the duplicate/variation functions in `assertive` and
+`checkmate`, the overall function count is substantially higher.  This can be
+convenient when there is a function available for your exact use case, but
+sorting though the lists to find that function can be daunting.
+
 ### Other Related Packages
 
-* `validate`
-* ``
+Primary focus on data in data frame like objects:
+
+* [`validate`](https://github.com/data-cleaning/validate) by Mark van
+  der Loo and Edwin de Jonge
+* [`assertr`](https://github.com/ropensci/assertr) by Tony Fischetti
+
+Type hinting:
+
+* [`types`](https://github.com/jimhester/types) by Jim Hester
+
+Validation embedded in documentation:
+
+* [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi (not
+  published)
+
+## Simple Parameter Checks
+
+### The Function
+
+We want to check the following three parameter function:
+
+```{r, eval=FALSE}
+function(
+  num,     # numeric vector
+  opt,     # scalar character in c("one", "two", "three")
+  flag     # TRUE or FALSE
+)
+```
+```{r}
+valid.opts <- c("one", "two", "three")   # values valid in `opts`
+```
+
+### Wrapper Based
+
+We start with `stopifnot`, since it is the simplest and most well known option:
+
+```{r}
+f1_stopifnot <- function(num, opt, flag) {
+  stopifnot(
+    is.numeric(num),
+    isTRUE(opt %in% valid.opts),
+    length(flag) == 1 && !is.na(flag) && is.logical(flag)
+  )
+  TRUE
+}
+f1_stopifnot(letters, "four", TRUE)
+```
+
+The `vetr` implementation is very similar to `stopifnot`, except we can use
+templates and `.` as shorthand for the matched parameter:
+
+```{r}
+f1_vetr <- function(num, opt, flag) {
+  vetr(
+    numeric(),                 # template
+    isTRUE(. %in% valid.opts), # custom token (contains `.`)
+    logical(1L) && !is.na(.)   # template && custom token
+  )
+  TRUE
+}
+f1_vetr(letters, "four", TRUE)
+```
+
+In fact, we *must* use `.` if we want `vetr` to evaluate a token as an R
+expression instead of treating it as a template.  Notice how the template
+`logical(1L)` is equivalent to `length(flag) == 1 && is.logical(flag)`.
+Parameters must match the structure of their corresponding templates.  For more
+details on templates and validation expressions see the vignette
+`vignette('vetr', package='vetr')`.
+
+Worth noting:
+
+* Parameters are positionally matched to vetting expressions to save typing,
+  although you can use names as well (e.g. `vetr(num=numeric(), ...)`)
+* In addition to being told what the object isn't, you are also told what it is
+* The object is referenced by its name in the calling scope (`letters`) instead
+  of its name in the function environment (`num`)
+* The function call is returned so you know where the error happened
+
+Let's continue on with the other wrapper style packages:
+
+```{r}
+f1_assertthat <- function(num, opt, flag) {
+  assert_that(
+    is.numeric(num),
+    opt %in% valid.opts,
+    is.flag(flag) && !is.na(flag)
+  )
+  TRUE
+}
+f1_assertthat(letters, "four", TRUE)
+
+f1_ensurer <- function(num, opt, flag) {
+  ensure(num, is.numeric(.))
+  ensure(opt, . %in% valid.opts)
+  ensure(flag, length(.) == 1 && !is.na(.) && is.logical(.))
+  TRUE
+}
+f1_ensurer(letters, "four", TRUE)
+
+f1_valaddin <- firmly(
+  function(num, opt, flag) TRUE,
+  list(~num) ~ is.numeric,
+  list(~opt) ~ {. %in% valid.opts},
+  list(~flag) ~ {length(.) == 1 && is.logical(.) && !is.na(.)}
+)
+f1_valaddin(letters, "four", TRUE)
+```
+
+Worth noting:
+
+* `asserthat`, `valaddin`, and `ensurer` only pass if test expressions return
+  single TRUE values, unlike `stopifnot` and `vetr` which also accept all TRUE
+  logical vectors
+* `assertthat` implements the `is.flag` function
+* `valaddin`:
+    * reports all failing conditions, not just the first failing one
+    * reports the failing call, just like `vetr`
+    * modifies an *existing* function
+
+### Function Based
+
+```{r}
+f1_checkmate <- function(num, opt, flag) {
+  assertNumeric(num)
+  assertChoice(opt, valid.opts)
+  assertFlag(flag)
+  TRUE
+}
+f1_checkmate(letters, "four", TRUE)
+
+f1_assertive <- function(num, opt, flag) {
+  assert_is_numeric(num)
+  assert_is_scalar(opt)
+  assert_all_are_true(opt %in% valid.opts)
+  assert_is_a_bool(flag)
+  assert_all_are_not_na(flag)
+  TRUE
+}
+f1_assertive(letters, "four", TRUE)
+```
+
+The "function" based packages have specialized functions for a variety of
+checks.  Sometimes this can lead to particularly concise checks, and also more
+helpful error messages since each specific function has more context about the
+validation expectations.
+
+### Benchmarks
+
+We benchmark the functions with `mb`, a thin wrapper around `microbenchmark`
+(see the [appendix](#appendix) for its definition).  Note that the `mean`
+numbers are likely skewed by outlier timings caused by `rmarkdown`.
+
+```{r mb_define, echo=FALSE}
+mb <- function(...) {
+  mb.call <- match.call()
+  mb.call[[1]] <- quote(microbenchmark::microbenchmark)
+
+  mb.res <- summary(eval(mb.call, envir=parent.frame()))
+  mb.res <- mb.res[order(mb.res$median), ]
+  mb.res[, -1] <- lapply(
+    mb.res[, -1], function(x) format(round(x), big.mark=",")
+  )
+  cat(
+    sprintf("Unit: %s, neval: %s\n\n", attr(mb.res, 'unit'), mb.res$neval[1])
+  )
+  print(mb.res[, c('expr', 'lq', 'median', 'uq', 'mean')], quote=FALSE)
+}
+```
+```{r, echo=FALSE}
+mb(
+  f1_assertive(pi, "three", TRUE),
+  f1_assertthat(pi, "three", TRUE),
+  f1_ensurer(pi, "three", TRUE),
+  f1_checkmate(pi, "three", TRUE),
+  f1_stopifnot(pi, "three", TRUE),
+  f1_valaddin(pi, "three", TRUE),
+  f1_vetr(pi, "three", TRUE)
+)
+```
+
+`stopifnot` leads the way, which is not surprising given the simplicity of the
+checks involved.  `checkmate` is second, although both `vetr` and `asserthat`
+are in the same neighborhood.  Performance drops off substantially after
+`asserthat`.
+
+One could argue that the performance differences here are trivial.  After all,
+even the slowest approach clocks in under 3 milliseconds.  However, given the
+prevalence of split-apply-combine style analysis, where a single function could
+be applied to thousands or even millions of data groups, the performance
+differences shown here can have a substantial impact on overall computation
+time.
+
+## Strictly Positive
+
+We will increase the complexity somewhat by requiring that the numeric vector be
+strictly positive.
+
+```{r}
+f2_vetr <- function(num) {
+  vetr(numeric() && all_bw(., 0, Inf,  bounds="(]"))
+}
+f2_stopifnot <- function(num) {
+  stopifnot(is.numeric(num), !anyNA(num), all(num > 0))
+}
+f2_assertthat <- function(num) {
+  assert_that(is.numeric(num), !anyNA(num), all(num > 0))
+}
+f2_ensurer <- function(num) {
+  ensure(num, is.numeric(.), !anyNA(num), all(num > 0))
+}
+f2_valaddin <- firmly(
+  function(num) NULL,
+  list(~num) ~ list(is.numeric, {!anyNA(.)}, {all(. > 0)})
+)
+f2_checkmate <- function(num) {
+  qassert(num, "n*(0,]")
+}
+f2_assertive <- function(num) {
+  assert_all_are_in_left_open_range(num, lower=0)
+}
+```
+
+
+## A Complex Object
+
+
+
+
+## Comparison Dimensions
+
+* Error message
+  * Reports call like stop
+  * Explains what it is not
+  * Uses language from calling scope
+  * Explains what it is
+* Style (wrapper / function)
+* Median timings
+    * Simple tests
+    * Values
+    * Data frame
+    * S3 Object
+* Compound expressions
 
 ## Tasks
 
@@ -59,82 +343,9 @@ those we are aware of here and compare them based on ease of use and overhead.
 We are interested in how well the various package and functions allow us to
 validate function inputs so we will test all of them in that context.
 
+### Or Checks
+
 ### Numeric Vector, Flag, and Character
-
-```{r}
-valid.opts <- c("heismann", "fessenden", "tycho")
-
-f1_vetr <- function(num, opt, flag) {
-  vetr(
-    numeric(1L), character(1L) && . %in% valid.opts, logical(1L) && !is.na(.)
-  )
-  TRUE
-}
-```
-
-```{r}
-
-f1_assertive <- function(num, opt, flag) {
-  assert_is_numeric(num) &&
-  assert_is_scalar(opt) && assert_all_are_true(opt %in% valid.opts) &&
-  assert_is_a_bool(flag) && assert_all_are_not_nan(flag)
-  TRUE
-}
-
-f1_assertthat <- function(num, opt, flag) {
-  assert_that(is.numeric(x), opt %in% valid.opts, is.flag(flag) && !is.na(flag))
-  TRUE
-}
-
-f1_checkmate <- function(num, opt, flag) {
-  assertNumeric(x) && assertChoice(opt, valid.opt) && assertFlag(flag)
-  TRUE
-}
-
-f1_ensurer <- function(num, opt, flag) {
-  ensure_that(
-    is.numeric(num), isTRUE(opt %in% valid.opts),
-    length(flag) == 1 && !is.na(flag) && is.logical(flag)
-  )
-  TRUE
-}
-
-f1_stopifnot <- function(num, opt, flag) {
-  stopifnot(
-    is.numeric(num), isTRUE(opt %in% valid.opts),
-    length(flag) == 1 && !is.na(flag) && is.logical(flag)
-  )
-  TRUE
-}
-
-f1_valaddin <- firmly(
-  function(num, opt, flag) TRUE,
-  num ~ is.numeric, opt ~ {length(.) == 1 && . %in% valid.opts},
-  flag ~ {length(.) == 1 && is.logical(.) && !is.na(.)}
-)
-
-```
-```{r}
-  f1_assertive("hello")
-  f1_assertthat("hello")
-  f1_checkmate("hello")
-  f1_ensurer("hello")
-  f1_stopifnot("hello")
-  f1_valaddin("hello")
-  f1_vetr("hello")
-```
-```{r}
-library(microbenchmark)
-microbenchmark(
-  f1_assertive(pi),
-  f1_assertthat(pi),
-  f1_ensurer(pi),
-  f1_checkmate(pi),
-  f1_stopifnot(pi),
-  f1_valaddin(pi),
-  f1_vetr(pi)
-)
-```
 
 ### Numeric Between Zero and One
 
@@ -143,3 +354,12 @@ microbenchmark(
 ### Complex object
 
 ## Comparison
+
+## Appendix
+
+```{r list_funs}
+```
+
+```{r mb_define}
+```
+
