@@ -1,5 +1,5 @@
 ---
-title: "Comparison of Parameter Validation Functions"
+title: "Parameter Validation Functions"
 author: "Brodie Gaslam"
 output:
     rmarkdown::html_vignette:
@@ -22,14 +22,164 @@ library(checkmate)
 library(valaddin)
 ```
 
-## Preventing Garbage In
+## Prevent Garbage In
 
-`vetr` is intended to make it easy to vet function parameters.  The guiding
-principle is "Minimal Overhead" for:
+Most functions expect their parameters to be of specific types, structures, or
+values.  If we allow functions to operate on parameters that do not conform to
+the expectations then we could get in the best case difficult to debug errors
+from the bowels of the function, and in the worst silent undefined behavior.
 
-* the programmer writing the vetting expressions
-* the processor evaluating them
-* the users decyphering error messages
+Systematically vetting function parameters is as tedious as it is important, but
+fortunately many packages exist to assist with the process.  We will review
+those packages and assess them across these dimensions:
+
+* Ease of use for the function developer incorporating parameter checks
+* Computing overhead
+* Ease of use for end users
+
+We will review the following packages / functions:
+
+* `stopifnot` by R Core
+* [`asserthat`](https://github.com/hadley/assertthat) by Hadley Wickham
+* [`assertive`](https://www.r-pkg.org/pkg/assertive) by Richie Cotton
+* [`checkmate`](https://github.com/mllg/checkmate) by Michael Lang
+* [`ensurer`](https://github.com/smbache/ensurer) by Stefan M. Bache
+* [`valaddin`](https://github.com/egnha/valaddin) by Eugene Ha (note, we are
+  reviewing v0.1.0, and recently released v0.3.0 implements many changes)
+* [`vetr`](https://github.com/brodieG/vetr) by Yours Truly
+
+Not all of these packages are specifically designed to test function parameters,
+but they can all be used that way.  We will also focus on "out of the box"
+functionality.
+
+The following packages also perform related tasks, although we do not review
+them here:
+
+* [`validate`](https://github.com/data-cleaning/validate) by Mark van
+  der Loo and Edwin de Jonge, with a primary focus on validating data in data
+  frames and similar data structures
+* [`assertr`](https://github.com/ropensci/assertr) by Tony Fischetti, also
+  focused on data validation in data frames and similar structures
+* [`types`](https://github.com/jimhester/types) by Jim Hester, which implements
+  but does not enforce type hinting
+* [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi, which
+  implements parameter validation via roxygen tags (not released to CRAN)
+
+## Result Summary
+
+### Overview
+
+Every package is compared to`stopifnot` across several dimensions.  The only
+objective measurements here are the benchmarks.  Everything else is my opinion
+which you can safely assume is biased in favor of my own package `vetr`.
+Notwithstanding my dog in the fight, I tried to be objective.
+
+Scores are in relation to `stopifnot`, with positive numbers meaning the package
+performs better than `stopifnot`, and negative numbers that it performs worse.
+
+### Ease of Use for Function Developer
+
+<table>
+<tr>
+  <th colspan=13 style='bgcolor: #EEE;'>Ease of Use for Developer
+<tr>
+  <th>&nbsp;
+  <th colspan=2>asserthat <th colspan=2>assertive <th colspan=2>checkmate
+  <th colspan=2>ensurer <th colspan=2>valaddin <th colspan=2>vetr
+
+<tr>
+<th>Learning Curve
+  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
+  <td style='color: red; weight: bold;'>-2<td>hundreds of functions
+  <td style='color: red; weight: bold;'>-2<td>dozens of complex functions
+  <td style='color: orange; weight: bold;'>-1<td>new concepts
+  <td style='color: red; weight: bold;'>-2<td>new complex concepts
+  <td style='color: orange; weight: bold;'>-1<td>new concepts
+
+<tr>
+<th>Expressive Power
+  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
+  <td style='color: green; weight: bold;'>+1<td>Functions for most circumstances
+  <td style='color: #0F0; weight: bold;'>+2<td>Excellent for vectors
+  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
+  <td style='color: green; weight: bold;'>+1<td>Complex relations between args
+  <td style='color: #0F0; weight: bold;'>+2<td>Excellent for complex object
+  structure
+
+<tr>
+<th> Extensibility
+  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
+  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
+  <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
+  <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
+  <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
+  <td style='color: #0F0; weight: bold;'>+2<td>Store vetting expressions as lang
+  objects
+
+<tr>
+<th colspan=13 style='bgcolor: #EEE;'>Performance
+<tr>
+  <th>&nbsp;
+  <th colspan=2>asserthat <th colspan=2>assertive <th colspan=2>checkmate
+  <th colspan=2>ensurer <th colspan=2>valaddin <th colspan=2>vetr
+
+<tr>
+<th>Simple checks
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='color: red; weight: bold;'>-2<td>2 orders of magnitude slower
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='color: orange; weight: bold;'>-1<td>1 order of magnitude slower
+  <td style='color: orange; weight: bold;'>-1<td>1 order of magnitude slower
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+
+<tr>
+<th>Large vectors
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='color: red; weight: bold;'>-2<td>3 orders of magnitude slower
+  <td style='weight: bold;'>+1<td>Comparisons in C
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='weight: bold;'>+1<td>Comparisons in C
+<tr>
+
+<th>Complex Objects
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='color: red; weight: bold;'>-2<td>3 orders of magnitude slower
+  <td style='weight: bold;'>+1<td>Comparisons in C
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='weight: bold;'>+1<td>Comparisons in C
+
+</table>
+
+Definitions:
+
+* Learning curve: basically how long it took me to figure out how to implement
+  the various checks that we test later in this document
+* Expressive power: how succinctly we can express the constraints on the
+  parameters
+* Extensibility: how easy it is to build and re-use checking patterns
+
+
+## Ease of Use for Developers
+
+* Learning curve
+* Extensibility
+
+
+* How many functions does the developer need to learn
+* Degree of difficulty in learning those functions
+    * assertthat
+* Do those functions reduce the amount of work a developer must put in
+    * Somewhat
+
+## Computing Overhead
+
+* Trivial checks
+* Long vectors value checks
+* Complex objects
+
+
 
 There are many alternative packages that can be used for function parameter
 validation.  Most have broader scope than just this task, but we will focus on
@@ -39,18 +189,6 @@ comparing them only in this context.
 
 ### Tested Alternatives
 
-Verifying that function inputs are as expected is both important and tedious.
-Many helper functions and packages exist to simplify this task.  We will review
-those we are aware of here and compare them based on ease of use and overhead.
-
-* `asserthat` by Hadley Wickham
-* `assertive` by Richie Cotton
-* `ensurer` by Stefan M. Bache
-* `checkmate` by Michael Lang
-* `stopifnot` by R Core
-* `valaddin` by Eugene Ha
-* `vetr` by Yours Truly
-
 We can split these functions / packages into two rough categories:
 
 1. Those that rely on standard R expressions along with wrapper functions to
@@ -59,7 +197,7 @@ We can split these functions / packages into two rough categories:
    structures / values (function based)
 
 For example, the venerable `stopifnot` belongs to the first category.  So do
-`vetr`, `asserthat`, `ensurer`, and `valaddin`.  `assertive`
+`vetr`, `asserthat`, `ensurer`, and `valaddin`.  On the other hand `assertive`
 and `checkmate` belong to the second category.  One way the difference between
 these class of package manifests is through the number of functions in the
 package:
@@ -85,20 +223,6 @@ sorting though the lists to find that function can be daunting.
 
 ### Other Related Packages
 
-Primary focus on data in data frame like objects:
-
-* [`validate`](https://github.com/data-cleaning/validate) by Mark van
-  der Loo and Edwin de Jonge
-* [`assertr`](https://github.com/ropensci/assertr) by Tony Fischetti
-
-Type hinting:
-
-* [`types`](https://github.com/jimhester/types) by Jim Hester
-
-Validation embedded in documentation:
-
-* [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi (not
-  published)
 
 ## Simple Parameter Checks
 
@@ -187,9 +311,9 @@ f1_ensurer(letters, "four", TRUE)
 
 f1_valaddin <- firmly(
   function(num, opt, flag) TRUE,
-  list(~num) ~ is.numeric,
+  list(~num) ~ is.numeric, # equivalently `vld_numeric(~num)`
   list(~opt) ~ {. %in% valid.opts},
-  list(~flag) ~ {length(.) == 1 && is.logical(.) && !is.na(.)}
+  list(~flag) ~ {length(.) == 1 && !is.na(.) && is.logical(.)}
 )
 f1_valaddin(letters, "four", TRUE)
 ```
@@ -199,7 +323,9 @@ Worth noting:
 * `asserthat`, `valaddin`, and `ensurer` only pass if test expressions return
   single TRUE values, unlike `stopifnot` and `vetr` which also accept all TRUE
   logical vectors
-* `assertthat` implements the `is.flag` function
+* Wrapper style packages can implement specific checker functions: for example
+  `assertthat` implements `is.flag` function, `valaddin` implements
+  `vld_boolean` (unused here), etc.
 * `valaddin`:
     * reports all failing conditions, not just the first failing one
     * reports the failing call, just like `vetr`
@@ -298,7 +424,7 @@ f2_ensurer <- function(num) {
 }
 f2_valaddin <- firmly(
   function(num) NULL,
-  list(~num) ~ list(is.numeric, {!anyNA(.)}, {all(. > 0)})
+  ~ is.numeric, ~ {!anyNA(.)}, ~ {all(. > 0)}
 )
 f2_checkmate <- function(num) {
   qassert(num, "n*(0,]")
@@ -307,12 +433,94 @@ f2_assertive <- function(num) {
   assert_all_are_in_left_open_range(num, lower=0)
 }
 ```
+```{r}
+str.pos.vec <- runif(5e4) + 1  # test with a 50K long vector
+```
+```{r, echo=FALSE}
+mb(times=10,
+  f2_assertive(str.pos.vec),
+  f2_assertthat(str.pos.vec),
+  f2_ensurer(str.pos.vec),
+  f2_checkmate(str.pos.vec),
+  f2_stopifnot(str.pos.vec),
+  f2_valaddin(str.pos.vec),
+  f2_vetr(str.pos.vec)
+)
+```
 
+`vetr` is now the fastest option, although this is primarily because we use
+`vetr::all_bw` instead of the equivalent `!anyNA(.) && all(. > 0)` expression.
+`all_bw` is implemented in C and avoids the intermediate vectors required to
+evaluate the standard R version.  `checkmate` does the same with `qassert`.
+Notice also that for both `vetr` and `checkmate` the mean and median timings are
+close.  This is likely because these functions do not require the
+occasional expensive garbage collections caused by intermediate vectors.
 
 ## A Complex Object
 
+Here we wish to verify that an input conforms to the structure of the `iris`
+built-in data set.
 
+```{r}
+iris.tpl <- vetr::abstract(iris) # equivalently: iris[0, ]
+iris.fake <- iris
+levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
+```
+We will narrow the field to `vetr`, `stopifnot`, and `checkmate` primarily
+```{r}
+f3_vetr <- function(x) {
+  vetr(iris.tpl)
+}
+f3_vetr(iris.fake)
 
+f3_stopifnot <- function(x) {
+  stopifnot(
+    is.list(x), inherits(x, "data.frame"),
+    length(x) == 5, is.integer(attr(x, 'row.names')),
+    identical(names(x), names(iris.tpl)),
+    typeof(x$Species) == "integer", is.factor(x$Species),
+    identical(levels(x$Species), levels(iris.tpl$Species))
+  )
+}
+f3_stopifnot(iris.fake)
+
+f3_checkmate <- function(x) {
+  assertDataFrame(
+    x, types=c("numeric", "numeric", "numeric", "numeric", "factor")
+  )
+  assertNames(names(x), identical.to=names(iris.tpl))
+  assertFactor(x$Species, levels=levels(iris.tpl$Species))
+}
+f3_checkmate(iris.fake)
+```
+
+This is where the power of the template becomes apparent.  Rather than
+painstakingly generating a list of all the comparisons required to validate the
+object, we point to an existing object to use as a template. `vetr` recursively
+traverses the template and the function parameter in parallel, ensuring that the
+structure of the template elements is matched by those of the parameter
+elements.  Even if an existing object does not exist, it is easier to manually
+construct such a template than to specify all the function calls required to
+confirm conformance to the template structure.
+
+In addition to the compact representation, notice the error message:
+
+> `levels(iris.fake$Species)[3]` should be "virginica" (is "sibirica")
+
+This is by far the most useful of the three as it highlights the exact location
+of the failure in a form you can immediately copy-paste into your prompt for
+further examination.
+
+Additionally, since all the `vetr` comparisons are done internally in C, `vetr`
+is the fastest option:
+
+```{r, echo=FALSE}
+mb(
+  f3_vetr(iris),
+  f3_stopifnot(iris),
+  f3_checkmate(iris)
+)
+```
 
 ## Comparison Dimensions
 
@@ -329,29 +537,7 @@ f2_assertive <- function(num) {
     * S3 Object
 * Compound expressions
 
-## Tasks
-
-### Overview
-
-* Scalar integer-like
-* Numeric vector between 0-1
-* Data Frame with iris like data
-* S3 Object containing iris like data and additional info
-
-### Methodology
-
-We are interested in how well the various package and functions allow us to
-validate function inputs so we will test all of them in that context.
-
 ### Or Checks
-
-### Numeric Vector, Flag, and Character
-
-### Numeric Between Zero and One
-
-### Iris
-
-### Complex object
 
 ## Comparison
 
