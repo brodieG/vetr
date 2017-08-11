@@ -39,22 +39,40 @@ those packages and assess them across these dimensions:
 
 We will review the following packages / functions:
 
-* `stopifnot` by R Core
-* [`asserthat`](https://github.com/hadley/assertthat) by Hadley Wickham
-* [`assertive`](https://www.r-pkg.org/pkg/assertive) by Richie Cotton
-* [`checkmate`](https://github.com/mllg/checkmate) by Michael Lang
-* [`ensurer`](https://github.com/smbache/ensurer) by Stefan M. Bache
-* [`valaddin`](https://github.com/egnha/valaddin) by Eugene Ha (note, we are
-  reviewing v0.1.0, and recently released v0.3.0 implements many changes)
-* [`vetr`](https://github.com/brodieG/vetr) by Yours Truly
+* `stopifnot` by R Core, evaluates test expressions and `stops` if they return
+  anything other than all TRUE vectors.
+* [`vetr`](https://github.com/brodieG/vetr) by Yours Truly, augments test
+  expressions with extensible template based declarative checks for object
+  structure, with an emphasis on informative error messages and speed.
+* [`asserthat`](https://github.com/hadley/assertthat) by Hadley Wickham, a
+  drop-in replacement for `stopifnot` with more helpful error messages for
+  checks based on the base `is.*` functions (e.g. `is.character`) and some
+  additional helper functions for common checks.
+* [`assertive`](https://www.r-pkg.org/pkg/assertive) by Richie Cotton, a
+  large library of checking functions for most common parameter checks with
+  expressive error messages.
+* [`checkmate`](https://github.com/mllg/checkmate) by Michael Lang, a library of
+  flexible checking functions for most common types of objects, with an emphasis
+  on speed and conciseness, particularly for vectors.
+* [`ensurer`](https://github.com/smbache/ensurer) by Stefan M. Bache, a
+  framework for constructing re-usable and extensible check contracts, with a
+  flexible reporting channel, a mechanism for applying check contracts to
+  function _outputs_, and an experimental interface for embedding the checking
+  contracts into functions.
 
 Not all of these packages are specifically designed to test function parameters,
 but they can all be used that way.  We will also focus on "out of the box"
-functionality.
+functionality.  For example, most of these packages support custom user supplied
+error messages, but we evaluate only the error messages produced without
+additional user intervention.
 
 The following packages also perform related tasks, although we do not review
 them here:
 
+* [`valaddin`](https://github.com/egnha/valaddin) by Eugene Ha, a framework for
+  augmenting existing functions with validation contracts.  Currently the
+  package is undergoing a major overhaul so we will add it to the comparison
+  once the new release (v0.3.0) is out.
 * [`validate`](https://github.com/data-cleaning/validate) by Mark van
   der Loo and Edwin de Jonge, with a primary focus on validating data in data
   frames and similar data structures
@@ -65,7 +83,7 @@ them here:
 * [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi, which
   implements parameter validation via roxygen tags (not released to CRAN)
 
-## Result Summary
+## Results
 
 ### Overview
 
@@ -77,11 +95,16 @@ Notwithstanding my dog in the fight, I tried to be objective.
 Scores are in relation to `stopifnot`, with positive numbers meaning the package
 performs better than `stopifnot`, and negative numbers that it performs worse.
 
+In this section we will review the high level summary of our comparisons.  For
+specific details see the [tests](#tests) section.
+
 ### Ease of Use for Function Developer
 
+We assess this category based on how easy it is to learn how to use each
+package, and by how concise and extensible those validation mechanisms they
+implement are.
+
 <table>
-<tr>
-  <th colspan=13 style='bgcolor: #EEE;'>Ease of Use for Developer
 <tr>
   <th>&nbsp;
   <th colspan=2>asserthat <th colspan=2>assertive <th colspan=2>checkmate
@@ -115,9 +138,15 @@ performs better than `stopifnot`, and negative numbers that it performs worse.
   <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
   <td style='color: #0F0; weight: bold;'>+2<td>Store vetting expressions as lang
   objects
+</table>
 
+`assertthat` hews very close to `stopifnot` so it basically doesn't have any
+learning curve.  It does implement a couple of additional helper
+
+### Performance
+
+<table>
 <tr>
-<th colspan=13 style='bgcolor: #EEE;'>Performance
 <tr>
   <th>&nbsp;
   <th colspan=2>asserthat <th colspan=2>assertive <th colspan=2>checkmate
