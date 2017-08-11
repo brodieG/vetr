@@ -108,7 +108,7 @@ implement are.
 <tr>
   <th>&nbsp;
   <th colspan=2>asserthat <th colspan=2>assertive <th colspan=2>checkmate
-  <th colspan=2>ensurer <th colspan=2>valaddin <th colspan=2>vetr
+  <th colspan=2>ensurer <th colspan=2>vetr
 
 <tr>
 <th>Learning Curve
@@ -116,7 +116,6 @@ implement are.
   <td style='color: red; weight: bold;'>-2<td>hundreds of functions
   <td style='color: red; weight: bold;'>-2<td>dozens of complex functions
   <td style='color: orange; weight: bold;'>-1<td>new concepts
-  <td style='color: red; weight: bold;'>-2<td>new complex concepts
   <td style='color: orange; weight: bold;'>-1<td>new concepts
 
 <tr>
@@ -125,7 +124,6 @@ implement are.
   <td style='color: green; weight: bold;'>+1<td>Functions for most circumstances
   <td style='color: #0F0; weight: bold;'>+2<td>Excellent for vectors
   <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
-  <td style='color: green; weight: bold;'>+1<td>Complex relations between args
   <td style='color: #0F0; weight: bold;'>+2<td>Excellent for complex object
   structure
 
@@ -135,13 +133,39 @@ implement are.
   <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
   <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
   <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
-  <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
   <td style='color: #0F0; weight: bold;'>+2<td>Store vetting expressions as lang
   objects
 </table>
 
 `assertthat` hews very close to `stopifnot` so it basically doesn't have any
-learning curve.  It does implement a couple of additional helper
+learning curve.  It does implement a few useful convenience check functions.
+`assertive` and `checkmate` implement many check functions which increases the
+expressive power, but also the learning curve.  Even when accounting for the
+duplicate/variation functions in `assertive` and `checkmate`, the overall
+function count is substantially higher than in the other packages (see
+[appendix](#appendix) for `list_funs`):
+
+```{r}
+sapply(
+  c('vetr', 'assertthat', 'ensurer', 'valaddin', 'assertive', 'checkmate'),
+  function(x) length(list_funs(sprintf("package:%s", x)))
+)
+```
+
+Additionally, in my limited experience the intersection between the checks I
+wanted to carry out and the available `assertive` functions was not great.
+`checkmate` has more complex check functions which increases the learning curve
+further, but allows for some very concise and effective checks.
+
+`ensurer` takes a different angle, focusing mostly on tools that help generate
+custom checking functions (contracts) and mechanisms for attaching them to
+functions.
+
+`vetr` introduces the concept of templates, which introduces a learning curve,
+but also allows us to express very complex structural requirements succinctly.
+The fallback mode evaluates standard R expressions, although there is a special
+type of programmable non-standard evaluation that allows you to
+transparently construct and compound vetting expressions as R language objects.
 
 ### Performance
 
@@ -150,14 +174,13 @@ learning curve.  It does implement a couple of additional helper
 <tr>
   <th>&nbsp;
   <th colspan=2>asserthat <th colspan=2>assertive <th colspan=2>checkmate
-  <th colspan=2>ensurer <th colspan=2>valaddin <th colspan=2>vetr
+  <th colspan=2>ensurer <th colspan=2>vetr
 
 <tr>
 <th>Simple checks
   <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
   <td style='color: red; weight: bold;'>-2<td>2 orders of magnitude slower
   <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='color: orange; weight: bold;'>-1<td>1 order of magnitude slower
   <td style='color: orange; weight: bold;'>-1<td>1 order of magnitude slower
   <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
 
@@ -167,7 +190,6 @@ learning curve.  It does implement a couple of additional helper
   <td style='color: red; weight: bold;'>-2<td>3 orders of magnitude slower
   <td style='weight: bold;'>+1<td>Comparisons in C
   <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
   <td style='weight: bold;'>+1<td>Comparisons in C
 <tr>
 
@@ -176,60 +198,13 @@ learning curve.  It does implement a couple of additional helper
   <td style='color: red; weight: bold;'>-2<td>3 orders of magnitude slower
   <td style='weight: bold;'>+1<td>Comparisons in C
   <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
   <td style='weight: bold;'>+1<td>Comparisons in C
 
 </table>
 
-Definitions:
+### User Friendliness
 
-* Learning curve: basically how long it took me to figure out how to implement
-  the various checks that we test later in this document
-* Expressive power: how succinctly we can express the constraints on the
-  parameters
-* Extensibility: how easy it is to build and re-use checking patterns
-
-
-## Ease of Use for Developers
-
-* Learning curve
-* Extensibility
-
-
-* How many functions does the developer need to learn
-* Degree of difficulty in learning those functions
-    * assertthat
-* Do those functions reduce the amount of work a developer must put in
-    * Somewhat
-
-## Computing Overhead
-
-* Trivial checks
-* Long vectors value checks
-* Complex objects
-
-
-
-There are many alternative packages that can be used for function parameter
-validation.  Most have broader scope than just this task, but we will focus on
-comparing them only in this context.
-
-## Alternatives
-
-### Tested Alternatives
-
-We can split these functions / packages into two rough categories:
-
-1. Those that rely on standard R expressions along with wrapper functions to
-   assess outcomes and produce error messages (wrapper based)
-2. Those that implement assertion functions that explicitly check for particular
-   structures / values (function based)
-
-For example, the venerable `stopifnot` belongs to the first category.  So do
-`vetr`, `asserthat`, `ensurer`, and `valaddin`.  On the other hand `assertive`
-and `checkmate` belong to the second category.  One way the difference between
-these class of package manifests is through the number of functions in the
-package:
+## Old Stuff
 
 ```{r list_funs, echo=FALSE}
 list_funs <- function(space) {
@@ -238,21 +213,6 @@ list_funs <- function(space) {
   names(objects)[sapply(objects, is.function)]
 }
 ```
-```{r}
-sapply(
-  c('vetr', 'assertthat', 'ensurer', 'valaddin', 'assertive', 'checkmate'),
-  function(x) length(list_funs(sprintf("package:%s", x)))
-)
-```
-
-Even when accounting for the duplicate/variation functions in `assertive` and
-`checkmate`, the overall function count is substantially higher.  This can be
-convenient when there is a function available for your exact use case, but
-sorting though the lists to find that function can be daunting.
-
-### Other Related Packages
-
-
 ## Simple Parameter Checks
 
 ### The Function
