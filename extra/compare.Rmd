@@ -42,8 +42,9 @@ We will review the following packages / functions:
 * `stopifnot` by R Core, evaluates test expressions and `stops` if they return
   anything other than all TRUE vectors.
 * [`vetr`](https://github.com/brodieG/vetr) by Yours Truly, augments test
-  expressions with extensible template based declarative checks for object
-  structure, with an emphasis on informative error messages and speed.
+  expressions with templates for object structure verification.  This allows for
+  a succinct and extensible declarative syntax.  The package also emphasizes
+  informative error messages and speed.
 * [`asserthat`](https://github.com/hadley/assertthat) by Hadley Wickham, a
   drop-in replacement for `stopifnot` with more helpful error messages for
   checks based on the base `is.*` functions (e.g. `is.character`) and some
