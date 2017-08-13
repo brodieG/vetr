@@ -88,10 +88,9 @@ them here:
 
 ### Overview
 
-Every package is compared to`stopifnot` across several dimensions.  The only
-objective measurements here are the benchmarks.  Everything else is my opinion
+Every package is compared to `stopifnot` across several dimensions.  The only
+objective measurements here are the timings  Everything else is my opinion
 which you can safely assume is biased in favor of my own package `vetr`.
-Notwithstanding my dog in the fight, I tried to be objective.
 
 Scores are in relation to `stopifnot`, with positive numbers meaning the package
 performs better than `stopifnot`, and negative numbers that it performs worse.
@@ -138,7 +137,7 @@ implement are.
   objects
 </table>
 
-`assertthat` hews very close to `stopifnot` so it basically doesn't have any
+`assertthat` hews very closely to `stopifnot` so it basically doesn't have any
 learning curve.  It does implement a few useful convenience check functions.
 `assertive` and `checkmate` implement many check functions which increases the
 expressive power, but also the learning curve.  Even when accounting for the
@@ -189,21 +188,52 @@ transparently construct and compound vetting expressions as R language objects.
 <th>Large vectors
   <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
   <td style='color: red; weight: bold;'>-2<td>3 orders of magnitude slower
-  <td style='weight: bold;'>+1<td>Comparisons in C
+  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
   <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='weight: bold;'>+1<td>Comparisons in C
+  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
 <tr>
 
 <th>Complex Objects
   <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
   <td style='color: red; weight: bold;'>-2<td>3 orders of magnitude slower
-  <td style='weight: bold;'>+1<td>Comparisons in C
+  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
   <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='weight: bold;'>+1<td>Comparisons in C
-
+  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
 </table>
 
 ### User Friendliness
+
+<table>
+<tr>
+<tr>
+  <th>&nbsp;
+  <th colspan=2>asserthat <th colspan=2>assertive <th colspan=2>checkmate
+  <th colspan=2>ensurer <th colspan=2>vetr
+
+<tr>
+<th>Simple checks
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='color: red; weight: bold;'>-2<td>2 orders of magnitude slower
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='color: orange; weight: bold;'>-1<td>1 order of magnitude slower
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+
+<tr>
+<th>Large vectors
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='color: red; weight: bold;'>-2<td>3 orders of magnitude slower
+  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
+<tr>
+
+<th>Complex Objects
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='color: red; weight: bold;'>-2<td>3 orders of magnitude slower
+  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
+  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
+</table>
 
 ## Old Stuff
 
