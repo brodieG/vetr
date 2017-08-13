@@ -65,7 +65,8 @@ Not all of these packages are specifically designed to test function parameters,
 but they can all be used that way.  We will also focus on "out of the box"
 functionality.  For example, most of these packages support custom user supplied
 error messages, but we evaluate only the error messages produced without
-additional user intervention.
+additional user intervention.  We also ignore functionality that is not
+specifically used for function parameter checking.
 
 The following packages also perform related tasks, although we do not review
 them here:
@@ -133,8 +134,7 @@ implement are.
   <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
   <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
   <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
-  <td style='color: #0F0; weight: bold;'>+2<td>Store vetting expressions as lang
-  objects
+  <td style='color: #0F0; weight: bold;'>+2<td>Extensible vetting expressions
 </table>
 
 `assertthat` hews very closely to `stopifnot` so it basically doesn't have any
@@ -143,34 +143,46 @@ learning curve.  It does implement a few useful convenience check functions.
 expressive power, but also the learning curve.  Even when accounting for the
 duplicate/variation functions in `assertive` and `checkmate`, the overall
 function count is substantially higher than in the other packages (see
-[appendix](#appendix) for `list_funs`):
+[appendix](#appendix) for `count_funs`):
 
+```{r list_funs, echo=FALSE}
+list_funs <- function(pkg) {
+  space <- sprintf("package:%s", pkg)
+  object.names <- ls(space)
+  objects <- mget(object.names, envir=as.environment(space))
+  names(objects)[sapply(objects, is.function)]
+}
+count_funs <- function(pkgs) {
+  fun.list <- lapply(pkgs, list_funs)
+  lens <- lengths(fun.list)
+  names(lens) <- sprintf(
+    "`%s (v%s)`", pkgs, as.character(lapply(pkgs, packageVersion))
+  )
+  lens
+}
+```
 ```{r}
-sapply(
-  c('vetr', 'assertthat', 'ensurer', 'valaddin', 'assertive', 'checkmate'),
-  function(x) length(list_funs(sprintf("package:%s", x)))
-)
+count_funs(c('vetr', 'assertthat', 'ensurer', 'assertive', 'checkmate'))
 ```
 
-Additionally, in my limited experience the intersection between the checks I
-wanted to carry out and the available `assertive` functions was not great.
-`checkmate` has more complex check functions which increases the learning curve
-further, but allows for some very concise and effective checks.
+Additionally, in the limited experience of putting together these comparisons
+the intersection between the checks we wanted and the available functions was
+surprisingly limited.  `checkmate` has more complex check functions which
+increases the learning curve further, but allows for some very concise and
+effective checks.
 
 `ensurer` takes a different angle, focusing mostly on tools that help generate
 custom checking functions (contracts) and mechanisms for attaching them to
 functions.
 
-`vetr` introduces the concept of templates, which introduces a learning curve,
-but also allows us to express very complex structural requirements succinctly.
-The fallback mode evaluates standard R expressions, although there is a special
-type of programmable non-standard evaluation that allows you to
-transparently construct and compound vetting expressions as R language objects.
+`vetr` introduces the concept of templates, with an accompanying learning
+curve.  The reward is the ability to express complex structural requirements
+intuitively **and** succinctly.  `vetr` relies on standard R expressions like
+`stopifnot` for non-structural checks.
 
 ### Performance
 
 <table>
-<tr>
 <tr>
   <th>&nbsp;
   <th colspan=2>asserthat <th colspan=2>assertive <th colspan=2>checkmate
@@ -205,45 +217,54 @@ transparently construct and compound vetting expressions as R language objects.
 
 <table>
 <tr>
-<tr>
   <th>&nbsp;
   <th colspan=2>asserthat <th colspan=2>assertive <th colspan=2>checkmate
   <th colspan=2>ensurer <th colspan=2>vetr
 
 <tr>
-<th>Simple checks
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='color: red; weight: bold;'>-2<td>2 orders of magnitude slower
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='color: orange; weight: bold;'>-1<td>1 order of magnitude slower
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
+<th>Explains failure
+  <td style='weight: bold; color: green;'>+1<td>Improved messages for
+  base `is.*` functions
+  <td style='color: #0F0; weight: bold;'>+3<td>Improved messages for all
+  defined check functions, including specific details on failure.
+  <td style='color: #0F0; weight: bold;'>+2<td>Improved messages for all
+  defined check functions, some provide details on failure.
+  <td style='color: #0F0; weight: bold;'>+2<td>Improved messages for all
+  defined check functions.
+  <td style='color: #0F0; weight: bold;'>+2<td>Improved messages for template
+  based checks, including specific details on failure (also for value checks
+  with `all_bw`).
+<tr>
+<th>Parameter as it appears in calling frame
+  <td style='weight: bold;'>&nbsp;0<td>No
+  <td style='weight: bold;'>&nbsp;0<td>No
+  <td style='weight: bold;'>&nbsp;0<td>No
+  <td style='weight: bold;'>&nbsp;0<td>No
+  <td style='color: #0F0; weight: bold;'>+2<td>Yes
 
 <tr>
-<th>Large vectors
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='color: red; weight: bold;'>-2<td>3 orders of magnitude slower
-  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
-<tr>
-
-<th>Complex Objects
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='color: red; weight: bold;'>-2<td>3 orders of magnitude slower
-  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
+<th>Reports `sys.call`
+  <td style='weight: bold;'>&nbsp;0<td>No
+  <td style='weight: bold;'>&nbsp;0<td>No
+  <td style='weight: bold;'>&nbsp;0<td>No, returns topmost call
+  <td style='weight: bold;'>&nbsp;0<td>No, returns topmost call
+  <td style='color: #0F0; weight: bold;'>+2<td>Yes
 </table>
+
+Ideally check functions would tell you as much as possible about the nature of a
+failure.  For example, in addition to telling you what a parameter is not, it is
+useful to know what it is, or if a value is invalid, where in that object that
+value is.  This is one area where `assertive` shines.  `checkmate` and `vetr`
+will also report additional information.
+
+Context is also helpful.  `vetr` returns both the failing function call so you
+can see what function caused the problem, as well as the parameter as input into
+the calling frame.  The latter is helpful because it means you can copy paste
+the expression from the error message into the calling environment to examine
+the value that causes the parameter to fail.
 
 ## Old Stuff
 
-```{r list_funs, echo=FALSE}
-list_funs <- function(space) {
-  object.names <- ls(space)
-  objects <- mget(object.names, envir=as.environment(space))
-  names(objects)[sapply(objects, is.function)]
-}
-```
 ## Simple Parameter Checks
 
 ### The Function
