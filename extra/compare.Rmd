@@ -85,9 +85,7 @@ them here:
 * [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi, which
   implements parameter validation via roxygen tags (not released to CRAN)
 
-## Results
-
-### Overview
+## Summary
 
 Every package is compared to `stopifnot` across several dimensions.  The only
 objective measurements here are the timings  Everything else is my opinion
@@ -99,6 +97,104 @@ performs better than `stopifnot`, and negative numbers that it performs worse.
 In this section we will review the high level summary of our comparisons.  For
 specific details see the [tests](#tests) section.
 
+<table>
+<col width='50px'><col width='300px'><col width='300px'>
+<tr>
+  <th>&nbsp;
+  <th>Pros
+  <th>Cons
+
+<tr>
+<th>stopifnot
+<td>
+  <ul>
+  <li>No learning curve
+  <li>Fast
+  <li>Part of base
+  </ul>
+<td>
+  <ul>
+  <li>Comprehensive parameter checking is tedious
+  <li>Error messages can seem cryptic
+  </ul>
+<tr>
+<th>asserthat
+<td>
+  <ul>
+  <li>No learning curve
+  <li>Better error messages for basic `is.*` checks
+  <li>A few helpful additional `is.*` functions for common checks
+  </ul>
+<td>
+  <ul>
+  <li>Comprehensive parameter checking is tedious
+  </ul>
+<tr>
+<th>assertive
+<td>
+  <ul>
+  <li>Custom check functions for most situations
+  <li>Excellent error reporting
+  <ul>
+  <li>Reports what the object is in addition to what it is not
+  <li>Will point out exact elements that fail and why
+  </ul>
+  </ul>
+<td>
+  <ul>
+  <li>Slowest of the group, by far
+  <li>Developer must wade through hundreds of functions to find the right ones,
+  and in our simple suite of tests we could not find functions well suited to
+  our requirements so we ended up with fairly verbose checks.
+  </ul>
+<tr>
+<th>checkmate
+<td>
+  <ul>
+  <li>Custom check functions for most situations
+  <li>Fast, particularly for vectors
+  <li>Improved error reporting
+  </ul>
+<td>
+  <ul>
+  <li>Dozens of reasonably complex functions
+  </ul>
+<tr>
+<th>ensurer
+<td>
+  <ul>
+  <li>Easily extensible checking framework
+  <li>Easily customizable failure conditions
+  <li>Can check function return values
+  </ul>
+<td>
+  <ul>
+  <li>Fairly slow
+  <li>Introduces several new concepts with a corresponding learning curve
+  </ul>
+<tr>
+<th>vetr
+<td>
+  <ul>
+  <li>Intuitive and concise declarative syntax for checking objects structure
+  via templates
+  <li>Fast, particularly for complex objects and large vectors
+  <li>Very extensible: vetting expressions are trivially re-usable language
+  objects
+  <li>Emphasis on useful error reporting, particularly for templates:
+  <ul>
+  <li>Reports what the object is in addition to what it is not (for templates)
+  <li>Will point out exact elements that fail and why (for templates)
+  <li>Displays the failing parameter as it appears in the calling context
+  <li>Displays the failing call
+  </ul>
+<td>
+  <ul>
+  <li>Introduces new concepts (templates, like those in `vapply`)
+  <li>Still in development, although interface should be mostly stable.
+  </ul>
+</table>
+
 ### Ease of Use for Function Developer
 
 We assess this category based on how easy it is to learn how to use each
@@ -108,32 +204,35 @@ implement are.
 <table>
 <tr>
   <th>&nbsp;
-  <th colspan=2>asserthat <th colspan=2>assertive <th colspan=2>checkmate
-  <th colspan=2>ensurer <th colspan=2>vetr
+  <th colspan=2>Learning Curve
+  <th colspan=2>Expressive Power
+  <th colspan=2>Extensibility
 
 <tr>
-<th>Learning Curve
+  <th>asserthat
   <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
+  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
+  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
+<tr>
+  <th>assertive
   <td style='color: red; weight: bold;'>-2<td>hundreds of functions
-  <td style='color: red; weight: bold;'>-2<td>dozens of complex functions
-  <td style='color: orange; weight: bold;'>-1<td>new concepts
-  <td style='color: orange; weight: bold;'>-1<td>new concepts
-
-<tr>
-<th>Expressive Power
-  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
   <td style='color: green; weight: bold;'>+1<td>Functions for most circumstances
-  <td style='color: #0F0; weight: bold;'>+2<td>Excellent for vectors
   <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
+<tr>
+  <th>checkmate
+  <td style='color: red; weight: bold;'>-2<td>dozens of complex functions
+  <td style='color: #0F0; weight: bold;'>+2<td>Excellent for vectors
+  <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
+<tr>
+  <th>ensurer
+  <td style='color: orange; weight: bold;'>-1<td>new concepts
+  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
+  <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
+<tr>
+  <th>vetr
+  <td style='color: orange; weight: bold;'>-1<td>new concepts
   <td style='color: #0F0; weight: bold;'>+2<td>Excellent for complex object
   structure
-
-<tr>
-<th> Extensibility
-  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
-  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
-  <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
-  <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
   <td style='color: #0F0; weight: bold;'>+2<td>Extensible vetting expressions
 </table>
 
