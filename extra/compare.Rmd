@@ -91,12 +91,6 @@ Every package is compared to `stopifnot` across several dimensions.  The only
 objective measurements here are the timings  Everything else is my opinion
 which you can safely assume is biased in favor of my own package `vetr`.
 
-Scores are in relation to `stopifnot`, with positive numbers meaning the package
-performs better than `stopifnot`, and negative numbers that it performs worse.
-
-In this section we will review the high level summary of our comparisons.  For
-specific details see the [tests](#tests) section.
-
 <table>
 <col width='50px'><col width='300px'><col width='300px'>
 <tr>
@@ -128,6 +122,7 @@ specific details see the [tests](#tests) section.
 <td>
   <ul>
   <li>Comprehensive parameter checking is tedious
+  <li>Fast, but slower than `stopifnot`
   </ul>
 <tr>
 <th>assertive
@@ -135,18 +130,11 @@ specific details see the [tests](#tests) section.
   <ul>
   <li>Custom check functions for most situations
   <li>Excellent error reporting
-  <ul>
-  <li>Reports what the object is in addition to what it is not
-  <li>Will point out exact elements that fail and why
-  </ul>
   </ul>
 <td>
   <ul>
   <li>Slowest of the group, by far
-  <li>Developer must wade through hundreds of functions to find the right ones,
-  and in our simple suite of tests we could not find functions well suited to
-  our requirements so we ended up with fairly verbose checks.
-  </ul>
+  <li>Hundreds of functions
 <tr>
 <th>checkmate
 <td>
@@ -165,84 +153,39 @@ specific details see the [tests](#tests) section.
   <ul>
   <li>Easily extensible checking framework
   <li>Easily customizable failure conditions
-  <li>Can check function return values
   </ul>
 <td>
   <ul>
   <li>Fairly slow
-  <li>Introduces several new concepts with a corresponding learning curve
+  <li>New concepts
   </ul>
 <tr>
 <th>vetr
 <td>
   <ul>
-  <li>Intuitive and concise declarative syntax for checking objects structure
-  via templates
+  <li>Intuitive and concise declarative object structure checks
   <li>Fast, particularly for complex objects and large vectors
-  <li>Very extensible: vetting expressions are trivially re-usable language
-  objects
-  <li>Emphasis on useful error reporting, particularly for templates:
-  <ul>
-  <li>Reports what the object is in addition to what it is not (for templates)
-  <li>Will point out exact elements that fail and why (for templates)
-  <li>Displays the failing parameter as it appears in the calling context
-  <li>Displays the failing call
+  <li>Trivially extensible vetting expressions
+  <li>Emphasis on useful error reporting
   </ul>
 <td>
   <ul>
-  <li>Introduces new concepts (templates, like those in `vapply`)
+  <li>New concepts
   <li>Still in development, although interface should be mostly stable.
   </ul>
 </table>
 
-### Ease of Use for Function Developer
+`asserthat` is the package that makes fewest trade-offs relative to `stopifnot`.
+However the improvements it makes are modest.
 
-We assess this category based on how easy it is to learn how to use each
-package, and by how concise and extensible those validation mechanisms they
-implement are.
+`assertive` and `checkmate` improve on `stopifnot` by packaging a
+broad range of common checks into a function library (a very large library for
+`assertive`, or a modest one with complex functions for `checkmate`).  This adds
+a learning curve, and in the case of `assertive` a lot of computation overhead.
 
-<table>
-<tr>
-  <th>&nbsp;
-  <th colspan=2>Learning Curve
-  <th colspan=2>Expressive Power
-  <th colspan=2>Extensibility
-
-<tr>
-  <th>asserthat
-  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
-  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
-  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
-<tr>
-  <th>assertive
-  <td style='color: red; weight: bold;'>-2<td>hundreds of functions
-  <td style='color: green; weight: bold;'>+1<td>Functions for most circumstances
-  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
-<tr>
-  <th>checkmate
-  <td style='color: red; weight: bold;'>-2<td>dozens of complex functions
-  <td style='color: #0F0; weight: bold;'>+2<td>Excellent for vectors
-  <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
-<tr>
-  <th>ensurer
-  <td style='color: orange; weight: bold;'>-1<td>new concepts
-  <td style='weight: bold;'>&nbsp;0<td>like `stopifnot`
-  <td style='color: green; weight: bold;'>+1<td>Tools to build custom assertions
-<tr>
-  <th>vetr
-  <td style='color: orange; weight: bold;'>-1<td>new concepts
-  <td style='color: #0F0; weight: bold;'>+2<td>Excellent for complex object
-  structure
-  <td style='color: #0F0; weight: bold;'>+2<td>Extensible vetting expressions
-</table>
-
-`assertthat` hews very closely to `stopifnot` so it basically doesn't have any
-learning curve.  It does implement a few useful convenience check functions.
-`assertive` and `checkmate` implement many check functions which increases the
-expressive power, but also the learning curve.  Even when accounting for the
-duplicate/variation functions in `assertive` and `checkmate`, the overall
-function count is substantially higher than in the other packages (see
-[appendix](#appendix) for `count_funs`):
+`ensurer` and `vetr` improve on `stopifnot` by introducing new validation
+concepts.  This also adds to the learning curve, and in the case of `ensurer`
+adds a bit of computation overhead.
 
 ```{r list_funs, echo=FALSE}
 list_funs <- function(pkg) {
@@ -264,111 +207,17 @@ count_funs <- function(pkgs) {
 count_funs(c('vetr', 'assertthat', 'ensurer', 'assertive', 'checkmate'))
 ```
 
-Additionally, in the limited experience of putting together these comparisons
-the intersection between the checks we wanted and the available functions was
-surprisingly limited.  `checkmate` has more complex check functions which
-increases the learning curve further, but allows for some very concise and
-effective checks.
+## Developer Experience
 
-`ensurer` takes a different angle, focusing mostly on tools that help generate
-custom checking functions (contracts) and mechanisms for attaching them to
-functions.
+### A Function With Simple Parameters
 
-`vetr` introduces the concept of templates, with an accompanying learning
-curve.  The reward is the ability to express complex structural requirements
-intuitively **and** succinctly.  `vetr` relies on standard R expressions like
-`stopifnot` for non-structural checks.
+**DEVNOTE: do we really need this section?  Maybe simplify it to one or two
+params?  Originally we wanted 3 to get a more realistic view of the overhead
+since single parameter functions are pretty rare and that view is particularly
+unfavorable to `vetr` due to the `match.call` overhead.**
 
-### Performance
-
-<table>
-<tr>
-  <th>&nbsp;
-  <th colspan=2>asserthat <th colspan=2>assertive <th colspan=2>checkmate
-  <th colspan=2>ensurer <th colspan=2>vetr
-
-<tr>
-<th>Simple checks
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='color: red; weight: bold;'>-2<td>2 orders of magnitude slower
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='color: orange; weight: bold;'>-1<td>1 order of magnitude slower
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-
-<tr>
-<th>Large vectors
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='color: red; weight: bold;'>-2<td>3 orders of magnitude slower
-  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
-<tr>
-
-<th>Complex Objects
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='color: red; weight: bold;'>-2<td>3 orders of magnitude slower
-  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
-  <td style='weight: bold;'>&nbsp;0<td>comparable to `stopifnot`
-  <td style='weight: bold; color: green;'>+1<td>Comparisons in C
-</table>
-
-### User Friendliness
-
-<table>
-<tr>
-  <th>&nbsp;
-  <th colspan=2>asserthat <th colspan=2>assertive <th colspan=2>checkmate
-  <th colspan=2>ensurer <th colspan=2>vetr
-
-<tr>
-<th>Explains failure
-  <td style='weight: bold; color: green;'>+1<td>Improved messages for
-  base `is.*` functions
-  <td style='color: #0F0; weight: bold;'>+3<td>Improved messages for all
-  defined check functions, including specific details on failure.
-  <td style='color: #0F0; weight: bold;'>+2<td>Improved messages for all
-  defined check functions, some provide details on failure.
-  <td style='color: #0F0; weight: bold;'>+2<td>Improved messages for all
-  defined check functions.
-  <td style='color: #0F0; weight: bold;'>+2<td>Improved messages for template
-  based checks, including specific details on failure (also for value checks
-  with `all_bw`).
-<tr>
-<th>Parameter as it appears in calling frame
-  <td style='weight: bold;'>&nbsp;0<td>No
-  <td style='weight: bold;'>&nbsp;0<td>No
-  <td style='weight: bold;'>&nbsp;0<td>No
-  <td style='weight: bold;'>&nbsp;0<td>No
-  <td style='color: #0F0; weight: bold;'>+2<td>Yes
-
-<tr>
-<th>Reports `sys.call`
-  <td style='weight: bold;'>&nbsp;0<td>No
-  <td style='weight: bold;'>&nbsp;0<td>No
-  <td style='weight: bold;'>&nbsp;0<td>No, returns topmost call
-  <td style='weight: bold;'>&nbsp;0<td>No, returns topmost call
-  <td style='color: #0F0; weight: bold;'>+2<td>Yes
-</table>
-
-Ideally check functions would tell you as much as possible about the nature of a
-failure.  For example, in addition to telling you what a parameter is not, it is
-useful to know what it is, or if a value is invalid, where in that object that
-value is.  This is one area where `assertive` shines.  `checkmate` and `vetr`
-will also report additional information.
-
-Context is also helpful.  `vetr` returns both the failing function call so you
-can see what function caused the problem, as well as the parameter as input into
-the calling frame.  The latter is helpful because it means you can copy paste
-the expression from the error message into the calling environment to examine
-the value that causes the parameter to fail.
-
-## Old Stuff
-
-## Simple Parameter Checks
-
-### The Function
-
-We want to check the following three parameter function:
+We want to write a function that accepts a numeric vector as the first
+argument, and TRUE or FALSE as the second.check the following three parameter function:
 
 ```{r, eval=FALSE}
 function(
@@ -381,8 +230,6 @@ function(
 valid.opts <- c("one", "two", "three")   # values valid in `opts`
 ```
 
-### Wrapper Based
-
 We start with `stopifnot`, since it is the simplest and most well known option:
 
 ```{r}
@@ -392,12 +239,22 @@ f1_stopifnot <- function(num, opt, flag) {
     isTRUE(opt %in% valid.opts),
     length(flag) == 1 && !is.na(flag) && is.logical(flag)
   )
-  TRUE
 }
-f1_stopifnot(letters, "four", TRUE)
 ```
 
-The `vetr` implementation is very similar to `stopifnot`, except we can use
+`asserthat` is most similar to `stopifnot`:
+
+```{r}
+f1_assertthat <- function(num, opt, flag) {
+  assert_that(
+    is.numeric(num),
+    opt %in% valid.opts,          # `isTRUE` not necessary
+    is.flag(flag) && !is.na(flag) # adds the `is.flag` function
+  )
+}
+```
+
+The `vetr` implementation is also similar to `stopifnot`, except we can use
 templates and `.` as shorthand for the matched parameter:
 
 ```{r}
@@ -407,96 +264,169 @@ f1_vetr <- function(num, opt, flag) {
     isTRUE(. %in% valid.opts), # custom token (contains `.`)
     logical(1L) && !is.na(.)   # template && custom token
   )
-  TRUE
 }
-f1_vetr(letters, "four", TRUE)
 ```
 
-In fact, we *must* use `.` if we want `vetr` to evaluate a token as an R
-expression instead of treating it as a template.  Notice how the template
-`logical(1L)` is equivalent to `length(flag) == 1 && is.logical(flag)`.
-Parameters must match the structure of their corresponding templates.  For more
-details on templates and validation expressions see the vignette
-`vignette('vetr', package='vetr')`.
+`vetr` matches the arguments of the enclosing function and checks them against
+vetting tokens.  Vetting tokens can be combined with `&&`/`||`.  For example,
+`logical(1L) && !is.na(.)` are two vetting tokens.  Vetting tokens that contain
+`.` substitute the `.` for the parameter and are tested for truth as `stopifnot`
+does.  The other tokens are treated as templates that the matching parameter
+must conform to.
 
-Worth noting:
-
-* Parameters are positionally matched to vetting expressions to save typing,
-  although you can use names as well (e.g. `vetr(num=numeric(), ...)`)
-* In addition to being told what the object isn't, you are also told what it is
-* The object is referenced by its name in the calling scope (`letters`) instead
-  of its name in the function environment (`num`)
-* The function call is returned so you know where the error happened
-
-Let's continue on with the other wrapper style packages:
+`ensurer` takes a similar approach, although requires a separate call to
+`ensure` for each argument:
 
 ```{r}
-f1_assertthat <- function(num, opt, flag) {
-  assert_that(
-    is.numeric(num),
-    opt %in% valid.opts,
-    is.flag(flag) && !is.na(flag)
-  )
-  TRUE
-}
-f1_assertthat(letters, "four", TRUE)
-
 f1_ensurer <- function(num, opt, flag) {
   ensure(num, is.numeric(.))
   ensure(opt, . %in% valid.opts)
   ensure(flag, length(.) == 1 && !is.na(.) && is.logical(.))
-  TRUE
 }
-f1_ensurer(letters, "four", TRUE)
-
-f1_valaddin <- firmly(
-  function(num, opt, flag) TRUE,
-  list(~num) ~ is.numeric, # equivalently `vld_numeric(~num)`
-  list(~opt) ~ {. %in% valid.opts},
-  list(~flag) ~ {length(.) == 1 && !is.na(.) && is.logical(.)}
-)
-f1_valaddin(letters, "four", TRUE)
 ```
 
-Worth noting:
-
-* `asserthat`, `valaddin`, and `ensurer` only pass if test expressions return
-  single TRUE values, unlike `stopifnot` and `vetr` which also accept all TRUE
-  logical vectors
-* Wrapper style packages can implement specific checker functions: for example
-  `assertthat` implements `is.flag` function, `valaddin` implements
-  `vld_boolean` (unused here), etc.
-* `valaddin`:
-    * reports all failing conditions, not just the first failing one
-    * reports the failing call, just like `vetr`
-    * modifies an *existing* function
-
-### Function Based
+`checkmate` implements many custom assertion functions which results in
+concise checks:
 
 ```{r}
 f1_checkmate <- function(num, opt, flag) {
   assertNumeric(num)
   assertChoice(opt, valid.opts)
   assertFlag(flag)
-  TRUE
 }
-f1_checkmate(letters, "four", TRUE)
-
-f1_assertive <- function(num, opt, flag) {
-  assert_is_numeric(num)
-  assert_is_scalar(opt)
-  assert_all_are_true(opt %in% valid.opts)
-  assert_is_a_bool(flag)
-  assert_all_are_not_na(flag)
-  TRUE
-}
-f1_assertive(letters, "four", TRUE)
 ```
 
-The "function" based packages have specialized functions for a variety of
-checks.  Sometimes this can lead to particularly concise checks, and also more
-helpful error messages since each specific function has more context about the
-validation expectations.
+`assertive` also implements many custom functions, although the intersection
+between what we needed and what we could find was not as good as with
+`checkmate`:
+
+```{r}
+f1_assertive <- function(num, opt, flag) {
+  assert_is_numeric(num)
+  assert_is_identical_to_true(opt %in% valid.opts)
+  assert_is_a_bool(flag)
+  assert_all_are_not_na(flag)
+}
+```
+
+For this type of check it is not obvious that any of the packages do a much
+better job than `stopifnot` from the perspective of the developer.  There are
+however some noticeable differences when we actually run the functions with
+illegal parameters:
+
+```{r}
+f1_stopifnot(letters, "two", TRUE)
+f1_vetr(letters, "two", TRUE)
+f1_assertthat(letters, "two", TRUE)
+f1_assertive(letters, "two", TRUE)
+f1_ensurer(letters, "two", TRUE)
+f1_checkmate(letters, "two", TRUE)
+```
+
+`assertive`, `checkmate`, and `vetr` all tell you what the object is in addition
+to what it should be.  Only `vetr` returns the actual failing call which matches
+the semantics of calling `stop` within a function.  The other packages either do
+not include the call, or include the top level call which is less useful.
+Finally, only `vetr` uses the parameter expression as it appears in the calling
+frame (i.e. `letters` instead of `num`).  This makes it easier to debug the
+failure from the calling context.
+
+### Building Compound Checks
+
+If you wish to build re-usable complex checks with `stopifnot`  or `asserthat`
+you would do so by writing functions:
+
+```{r}
+is.num_mx <- function(x) is.numeric(x) && is.matrix(x)
+is.sqr <- function(x) ncol(x) == nrow(x)
+is.sqr_num_mx <- function(x) is.num_mx(x) && is.sqr(x)
+
+rect.mx <- matrix(1:12, 3)
+
+f2_stopifnot <- function(x) {
+  stopifnot(is.sqr_num_mx(x))
+}
+f2_stopifnot(rect.mx)
+```
+
+The main drawback from this approach is the somewhat uninformative error
+message.
+
+`vetr` is similar, except that you can combine templates and custom tokens as
+language objects and retain the more granular error reporting:
+
+```{r}
+vetr.num.mx <- matrix(numeric(), 0)   # this is a template
+vetr.sqr <- quote(ncol(.) == nrow(.)) # custom tokens must be quoted
+vetr.sqr.mx <- quote(vetr.num.mx && vetr.sqr)
+
+f2_vetr <- function(x) {
+  vetr(vetr.sqr.mx)
+}
+f2_vetr(rect.mx)
+```
+
+`ensurer` generates and combines contracts with `ensures`, which also preserves the more granular error reporting:
+
+```{r}
+ensurer_num_mx <- ensures(is.numeric(.) && is.matrix(.))
+ensurer_sqr <- ensures(ncol(.) == nrow(.))
+ensurer_sqr_mx <- ensures(+ensurer_num_mx, +ensurer_sqr)
+
+f2_ensurer <- function(x) {
+  ensurer_sqr_mx(x)
+}
+f2_ensurer(rect.mx)
+```
+
+The `checkmate` and `assertive` can create assertions from arbitrary check
+functions, but in both cases you end up losing details about the nature of the
+failure:
+
+```{r}
+assertSquareNumMx <- makeAssertionFunction(is.sqr_num_mx)
+
+f2_checkmate <- function(x) {
+  assertSquareNumMx(x)
+}
+f2_checkmate(rect.mx)
+
+f2_assertive <- function(x) {
+  assert_engine(is.sqr_num_mx, x=x)
+}
+f2_assertive(rect.mx)
+```
+
+Note that for the last two the existing functions `checkMatrix` and
+`assert_square_matrix` are available, but we omit using them to illustrate the
+extension mechanism for those functions.
+
+Outside of `stopifnot` every package has a mechanism for manually specifying
+more informative error messages, but we do not explore those here.
+
+
+```{r}
+f3_stopifnot <- function(num) {
+  stopifnot(is.numeric(num), !anyNA(num), all(num > 0))
+}
+f3_vetr <- function(num) {
+  vetr(numeric() && all_bw(., 0, Inf,  bounds="(]"))
+}
+f3_assertthat <- function(num) {
+  assert_that(is.numeric(num), !anyNA(num), all(num > 0))
+}
+f3_ensurer <- function(num) {
+  ensure(num, is.numeric(.), !anyNA(num), all(num > 0))
+}
+f3_checkmate <- function(num) {
+  qassert(num, "n*(0,]")
+}
+f3_assertive <- function(num) {
+  assert_all_are_in_left_open_range(num, lower=0)
+}
+```
+
+In this case
 
 ### Benchmarks
 
@@ -546,45 +476,18 @@ time.
 
 ## Strictly Positive
 
-We will increase the complexity somewhat by requiring that the numeric vector be
-strictly positive.
-
-```{r}
-f2_vetr <- function(num) {
-  vetr(numeric() && all_bw(., 0, Inf,  bounds="(]"))
-}
-f2_stopifnot <- function(num) {
-  stopifnot(is.numeric(num), !anyNA(num), all(num > 0))
-}
-f2_assertthat <- function(num) {
-  assert_that(is.numeric(num), !anyNA(num), all(num > 0))
-}
-f2_ensurer <- function(num) {
-  ensure(num, is.numeric(.), !anyNA(num), all(num > 0))
-}
-f2_valaddin <- firmly(
-  function(num) NULL,
-  ~ is.numeric, ~ {!anyNA(.)}, ~ {all(. > 0)}
-)
-f2_checkmate <- function(num) {
-  qassert(num, "n*(0,]")
-}
-f2_assertive <- function(num) {
-  assert_all_are_in_left_open_range(num, lower=0)
-}
-```
 ```{r}
 str.pos.vec <- runif(5e4) + 1  # test with a 50K long vector
 ```
 ```{r, echo=FALSE}
 mb(times=10,
-  f2_assertive(str.pos.vec),
-  f2_assertthat(str.pos.vec),
-  f2_ensurer(str.pos.vec),
-  f2_checkmate(str.pos.vec),
-  f2_stopifnot(str.pos.vec),
-  f2_valaddin(str.pos.vec),
-  f2_vetr(str.pos.vec)
+  f3_assertive(str.pos.vec),
+  f3_assertthat(str.pos.vec),
+  f3_ensurer(str.pos.vec),
+  f3_checkmate(str.pos.vec),
+  f3_stopifnot(str.pos.vec),
+  f3_valaddin(str.pos.vec),
+  f3_vetr(str.pos.vec)
 )
 ```
 
@@ -608,12 +511,12 @@ levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
 ```
 We will narrow the field to `vetr`, `stopifnot`, and `checkmate` primarily
 ```{r}
-f3_vetr <- function(x) {
+f4_vetr <- function(x) {
   vetr(iris.tpl)
 }
-f3_vetr(iris.fake)
+f4_vetr(iris.fake)
 
-f3_stopifnot <- function(x) {
+f4_stopifnot <- function(x) {
   stopifnot(
     is.list(x), inherits(x, "data.frame"),
     length(x) == 5, is.integer(attr(x, 'row.names')),
@@ -622,16 +525,16 @@ f3_stopifnot <- function(x) {
     identical(levels(x$Species), levels(iris.tpl$Species))
   )
 }
-f3_stopifnot(iris.fake)
+f4_stopifnot(iris.fake)
 
-f3_checkmate <- function(x) {
+f4_checkmate <- function(x) {
   assertDataFrame(
     x, types=c("numeric", "numeric", "numeric", "numeric", "factor")
   )
   assertNames(names(x), identical.to=names(iris.tpl))
   assertFactor(x$Species, levels=levels(iris.tpl$Species))
 }
-f3_checkmate(iris.fake)
+f4_checkmate(iris.fake)
 ```
 
 This is where the power of the template becomes apparent.  Rather than
@@ -656,9 +559,9 @@ is the fastest option:
 
 ```{r, echo=FALSE}
 mb(
-  f3_vetr(iris),
-  f3_stopifnot(iris),
-  f3_checkmate(iris)
+  f4_vetr(iris),
+  f4_stopifnot(iris),
+  f4_checkmate(iris)
 )
 ```
 
