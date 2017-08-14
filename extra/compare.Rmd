@@ -207,105 +207,96 @@ count_funs <- function(pkgs) {
 count_funs(c('vetr', 'assertthat', 'ensurer', 'assertive', 'checkmate'))
 ```
 
-## Developer Experience
+## Comparisons
 
-### A Function With Simple Parameters
-
-**DEVNOTE: do we really need this section?  Maybe simplify it to one or two
-params?  Originally we wanted 3 to get a more realistic view of the overhead
-since single parameter functions are pretty rare and that view is particularly
-unfavorable to `vetr` due to the `match.call` overhead.**
+### Simple Parameters
 
 We want to write a function that accepts a numeric vector as the first
-argument, and TRUE or FALSE as the second.check the following three parameter function:
-
-```{r, eval=FALSE}
-function(
-  num,     # numeric vector
-  opt,     # scalar character in c("one", "two", "three")
-  flag     # TRUE or FALSE
-)
-```
-```{r}
-valid.opts <- c("one", "two", "three")   # values valid in `opts`
-```
-
-We start with `stopifnot`, since it is the simplest and most well known option:
+argument, and TRUE or FALSE as the second.  We start with `stopifnot`, since it
+is the simplest and most well known option:
 
 ```{r}
-f1_stopifnot <- function(num, opt, flag) {
+f1_stopifnot <- function(num, flag) {
   stopifnot(
     is.numeric(num),
-    isTRUE(opt %in% valid.opts),
-    length(flag) == 1 && !is.na(flag) && is.logical(flag)
+    is.logical(flag), length(flag) == 1, !is.na(flag)
   )
 }
 ```
 
-`asserthat` is most similar to `stopifnot`:
+`vetr` looks similar on the surface, but it matches each of its parameters
+to those of the enclosing function we:
+
+* use `.` instead of the parameter name
+* combine tokens with `&&` (or `||`) instead of commas
 
 ```{r}
-f1_assertthat <- function(num, opt, flag) {
-  assert_that(
-    is.numeric(num),
-    opt %in% valid.opts,          # `isTRUE` not necessary
-    is.flag(flag) && !is.na(flag) # adds the `is.flag` function
+f1_vetr_a <- function(num, flag) {
+  vetr(
+    is.numeric(.),                                # matched to `num`
+    is.logical(.) && length(.) == 1 && !is.na(.)  # matched to `flag`
   )
 }
 ```
 
-The `vetr` implementation is also similar to `stopifnot`, except we can use
-templates and `.` as shorthand for the matched parameter:
+Additionally, `vetr` introduces the concept of templates which allow you to
+specify object structure declaratively as in `vapply`, so we can rewrite
+`f1_vetr_a` as:
 
 ```{r}
-f1_vetr <- function(num, opt, flag) {
+f1_vetr_b <- function(num, flag) {
   vetr(
     numeric(),                 # template
-    isTRUE(. %in% valid.opts), # custom token (contains `.`)
-    logical(1L) && !is.na(.)   # template && custom token
+    logical(1L) && !is.na(.)   # template && standard token
   )
 }
 ```
 
-`vetr` matches the arguments of the enclosing function and checks them against
-vetting tokens.  Vetting tokens can be combined with `&&`/`||`.  For example,
-`logical(1L) && !is.na(.)` are two vetting tokens.  Vetting tokens that contain
-`.` substitute the `.` for the parameter and are tested for truth as `stopifnot`
-does.  The other tokens are treated as templates that the matching parameter
-must conform to.
+`flag` must be type `logical` and length 1 to match `logical(1L)`.  Similarly
+`num` must be numeric to match `numeric()` (we allow length zero templates to
+match any length parameter).  `vetr` distinguishes between template tokens and
+standard tokens by the absence of presence of the `.` symbol.
 
-`ensurer` takes a similar approach, although requires a separate call to
+`asserthat` is almost identical to `stopifnot`, with the addition of the
+`is.flag` function:
+
+```{r}
+f1_assertthat <- function(num, flag) {
+  assert_that(
+    is.numeric(num),
+    is.flag(flag), !is.na(flag)
+  )
+}
+```
+
+`ensurer` is also similar approach, although requires a separate call to
 `ensure` for each argument:
 
 ```{r}
-f1_ensurer <- function(num, opt, flag) {
+f1_ensurer <- function(num, flag) {
   ensure(num, is.numeric(.))
-  ensure(opt, . %in% valid.opts)
   ensure(flag, length(.) == 1 && !is.na(.) && is.logical(.))
 }
 ```
 
-`checkmate` implements many custom assertion functions which results in
-concise checks:
+`assertive` implements 200+ custom check functions instead of relying on
+standard R expressions:
 
 ```{r}
-f1_checkmate <- function(num, opt, flag) {
-  assertNumeric(num)
-  assertChoice(opt, valid.opts)
-  assertFlag(flag)
+f1_assertive <- function(num, flag) {
+  assert_is_numeric(num)
+  assert_is_a_bool(flag)
+  assert_all_are_not_na(flag)
 }
 ```
 
-`assertive` also implements many custom functions, although the intersection
-between what we needed and what we could find was not as good as with
-`checkmate`:
+`checkmate` implements 40+ custom assertion functions, but they are more
+configurable (and complex) than those in `assertive`:
 
 ```{r}
-f1_assertive <- function(num, opt, flag) {
-  assert_is_numeric(num)
-  assert_is_identical_to_true(opt %in% valid.opts)
-  assert_is_a_bool(flag)
-  assert_all_are_not_na(flag)
+f1_checkmate <- function(num, flag) {
+  assertNumeric(num)
+  assertFlag(flag)
 }
 ```
 
@@ -315,36 +306,45 @@ however some noticeable differences when we actually run the functions with
 illegal parameters:
 
 ```{r}
-f1_stopifnot(letters, "two", TRUE)
-f1_vetr(letters, "two", TRUE)
-f1_assertthat(letters, "two", TRUE)
-f1_assertive(letters, "two", TRUE)
-f1_ensurer(letters, "two", TRUE)
-f1_checkmate(letters, "two", TRUE)
+f1_stopifnot(letters, TRUE)
+f1_vetr_b(letters, TRUE)
 ```
 
-`assertive`, `checkmate`, and `vetr` all tell you what the object is in addition
-to what it should be.  Only `vetr` returns the actual failing call which matches
-the semantics of calling `stop` within a function.  The other packages either do
-not include the call, or include the top level call which is less useful.
-Finally, only `vetr` uses the parameter expression as it appears in the calling
-frame (i.e. `letters` instead of `num`).  This makes it easier to debug the
-failure from the calling context.
+In addition to what our parameter is not, `vetr` tells you what it is, gives you
+the original call of the function, and gives you the expression that corresponds
+to the parameter (`letters`) instead of just the parameter name.  This
+additional contextual information makes debugging easier.
+
+The other packages include some of this additional information:
+
+```{r}
+f1_assertthat(letters, TRUE)
+f1_assertive(letters, TRUE)
+f1_ensurer(letters, TRUE)
+f1_checkmate(letters, TRUE)
+```
+
+`assertive`, and `checkmate` tell you what the object is.  `ensurer` and
+`checkmate` return the top level call, although that does not match the
+semantics of a `stop` call in a function, and is in our opinion less useful.
 
 ### Building Compound Checks
 
 If you wish to build re-usable complex checks with `stopifnot`  or `asserthat`
-you would do so by writing functions:
+you would do so by writing functions.  We illustrate by creating a custom check
+for either a square numeric matrix or a scalar numeric:
 
 ```{r}
 is.num_mx <- function(x) is.numeric(x) && is.matrix(x)
 is.sqr <- function(x) ncol(x) == nrow(x)
+is.sclr_num <- function(x) is.numeric(x) && length(x) == 1
 is.sqr_num_mx <- function(x) is.num_mx(x) && is.sqr(x)
+is.sqr_num_mx_or_sclr_num <- function(x) is.sqr_num_mx(x) || is.sclr_num(x)
 
 rect.mx <- matrix(1:12, 3)
 
 f2_stopifnot <- function(x) {
-  stopifnot(is.sqr_num_mx(x))
+  stopifnot(is.sqr_num_mx_or_sclr_num(x))
 }
 f2_stopifnot(rect.mx)
 ```
@@ -352,16 +352,17 @@ f2_stopifnot(rect.mx)
 The main drawback from this approach is the somewhat uninformative error
 message.
 
-`vetr` is similar, except that you can combine templates and custom tokens as
+`vetr` is similar, except that you can combine template and standard tokens as
 language objects and retain the more granular error reporting:
 
 ```{r}
-vetr.num.mx <- matrix(numeric(), 0)   # this is a template
-vetr.sqr <- quote(ncol(.) == nrow(.)) # custom tokens must be quoted
-vetr.sqr.mx <- quote(vetr.num.mx && vetr.sqr)
+vetr.num.mx <- matrix(numeric(), 0)
+vetr.sqr <- quote(ncol(.) == nrow(.))
+vetr.sqr.num.mx <- quote(vetr.num.mx && vetr.sqr)
+vetr.sqr.num.mx.or.sclr.num <- quote(vetr.sqr.num.mx || numeric(1L))
 
 f2_vetr <- function(x) {
-  vetr(vetr.sqr.mx)
+  vetr(vetr.sqr.num.mx.or.sclr.num)
 }
 f2_vetr(rect.mx)
 ```
@@ -591,4 +592,9 @@ mb(
 
 ```{r mb_define}
 ```
+
+----
+<sup>1</sup>: Both `ensurer` and `checkmate` use the square matrix test in their
+respective vignettes.
+
 
