@@ -37,35 +37,17 @@ those packages and assess them across these dimensions:
 * Computing overhead
 * Ease of use for end users
 
-We will review the following packages / functions:
+We will review:
 
-* `stopifnot` by R Core, evaluates test expressions and `stops` if they return
-  anything other than all TRUE vectors.
-* [`vetr`](https://github.com/brodieG/vetr) by Yours Truly, augments test
-  expressions with templates for object structure verification.  This allows for
-  a succinct and extensible declarative syntax.  The package also emphasizes
-  informative error messages and speed.
-* [`asserthat`](https://github.com/hadley/assertthat) by Hadley Wickham, a
-  drop-in replacement for `stopifnot` with more helpful error messages for
-  checks based on the base `is.*` functions (e.g. `is.character`) and some
-  additional helper functions for common checks.
-* [`assertive`](https://www.r-pkg.org/pkg/assertive) by Richie Cotton, a
-  large library of checking functions for most common parameter checks with
-  expressive error messages.
-* [`checkmate`](https://github.com/mllg/checkmate) by Michael Lang, a library of
-  flexible checking functions for most common types of objects, with an emphasis
-  on speed and conciseness, particularly for vectors.
-* [`ensurer`](https://github.com/smbache/ensurer) by Stefan M. Bache, a
-  framework for constructing re-usable and extensible check contracts, with a
-  flexible reporting channel, a mechanism for applying check contracts to
-  function _outputs_, and an experimental interface for embedding the checking
-  contracts into functions.
+* `stopifnot` by R Core
+* [`vetr`](https://github.com/brodieG/vetr) by Yours Truly
+* [`asserthat`](https://github.com/hadley/assertthat) by Hadley Wickham
+* [`assertive`](https://www.r-pkg.org/pkg/assertive) by Richie Cotton
+* [`checkmate`](https://github.com/mllg/checkmate) by Michael Lang
+* [`ensurer`](https://github.com/smbache/ensurer) by Stefan M. Bache
 
 Not all of these packages are specifically designed to test function parameters,
-but they can all be used that way.  We will also focus on "out of the box"
-functionality.  For example, most of these packages support custom user supplied
-error messages, but we evaluate only the error messages produced without
-additional user intervention.  We also ignore functionality that is not
+but they can all be used that way.  We ignore functionality that is not
 specifically used for function parameter checking.
 
 The following packages also perform related tasks, although we do not review
