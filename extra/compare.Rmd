@@ -174,140 +174,6 @@ those available "out of the box".
 * `ensurer` is slower
 * `assertthat` is substantially slower
 
-<table>
-<col width='2*'><col width='*'><col width='*'><col width='*'><col width='*'>
-<thead>
-<tr>
-  <th><th>Simple<th>Expressive<th>Informative<th>Fast
-<tbody>
-<tr>
-  <td>`assertthat` <td style='color: green;'>*✔️*<td><td><td>
-<tr>
-  <td>`assertive`  <td><td><td><td>
-<tr>
-  <td>`checkmate`  <td><td><td><td>
-<tr>
-  <td>`ensurer`    <td><td><td><td>
-<tr>
-  <td>`vetr`       <td><td><td><td>
-</table>
-
-
-<table>
-<tr>
-  <th>&nbsp;
-  <th>Pros
-  <th>Cons
-
-<tr>
-<th>stopifnot
-<td>
-  <ul>
-  <li>No learning curve
-  <li>Fast
-  <li>Part of base
-  </ul>
-<td>
-  <ul>
-  <li>Comprehensive parameter checking is tedious
-  <li>Error messages can seem cryptic
-  </ul>
-<tr>
-<th>asserthat
-<td>
-  <ul>
-  <li>No learning curve
-  <li>Better error messages for basic `is.*` checks
-  <li>A few helpful additional `is.*` functions for common checks
-  </ul>
-<td>
-  <ul>
-  <li>Comprehensive parameter checking is tedious
-  <li>Fast, but slower than `stopifnot`
-  </ul>
-<tr>
-<th>assertive
-<td>
-  <ul>
-  <li>Custom check functions for most situations
-  <li>Excellent error reporting
-  </ul>
-<td>
-  <ul>
-  <li>Slowest of the group, by far
-  <li>Hundreds of functions
-<tr>
-<th>checkmate
-<td>
-  <ul>
-  <li>Custom check functions for most situations
-  <li>Fast, particularly for vectors
-  <li>Improved error reporting
-  </ul>
-<td>
-  <ul>
-  <li>Dozens of reasonably complex functions
-  </ul>
-<tr>
-<th>ensurer
-<td>
-  <ul>
-  <li>Easily extensible checking framework
-  <li>Easily customizable failure conditions
-  </ul>
-<td>
-  <ul>
-  <li>Fairly slow
-  <li>New concepts
-  </ul>
-<tr>
-<th>vetr
-<td>
-  <ul>
-  <li>Intuitive and concise declarative object structure checks
-  <li>Fast, particularly for complex objects and large vectors
-  <li>Trivially extensible vetting expressions
-  <li>Emphasis on useful error reporting
-  </ul>
-<td>
-  <ul>
-  <li>New concepts
-  <li>Still in development, although interface should be mostly stable.
-  </ul>
-</table>
-
-`asserthat` is the package that makes fewest trade-offs relative to `stopifnot`.
-However the improvements it makes are modest.
-
-`assertive` and `checkmate` improve on `stopifnot` by packaging a
-broad range of common checks into a function library (a very large library for
-`assertive`, or a modest one with complex functions for `checkmate`).  This adds
-a learning curve, and in the case of `assertive` a lot of computation overhead.
-
-`ensurer` and `vetr` improve on `stopifnot` by introducing new validation
-concepts.  This also adds to the learning curve, and in the case of `ensurer`
-adds a bit of computation overhead.
-
-```{r list_funs, echo=FALSE}
-list_funs <- function(pkg) {
-  space <- sprintf("package:%s", pkg)
-  object.names <- ls(space)
-  objects <- mget(object.names, envir=as.environment(space))
-  names(objects)[sapply(objects, is.function)]
-}
-count_funs <- function(pkgs) {
-  fun.list <- lapply(pkgs, list_funs)
-  lens <- lengths(fun.list)
-  names(lens) <- sprintf(
-    "`%s (v%s)`", pkgs, as.character(lapply(pkgs, packageVersion))
-  )
-  lens
-}
-```
-```{r}
-count_funs(c('vetr', 'assertthat', 'ensurer', 'assertive', 'checkmate'))
-```
-
 ## Comparisons
 
 ### Simple Parameters
@@ -880,11 +746,13 @@ Complex objects for other packages:
 ```{r iris.other}
 ```
 
-----
-<sup>1</sup>:The only noteworthy difference between the two is that `assertthat`
-requires Check Expressions to evaluate to TRUE or FALSE, whereas `stopifnot`
-accepts anything, with all TRUE vectors considered a success and all else
-failure.
+### End Notes
+
+<sup>1</sup>:<a name='sup-1'></a>
+  The only noteworthy difference between the two is that `assertthat`
+  requires Check Expressions to evaluate to TRUE or FALSE, whereas `stopifnot`
+  accepts anything, with all TRUE vectors considered a success and all else
+  failure.
 <sup>1</sup>: Both `ensurer` and `checkmate` use the square matrix test in their
 respective vignettes.
 
