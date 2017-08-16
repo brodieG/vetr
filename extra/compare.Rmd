@@ -87,12 +87,78 @@ them here:
 
 ## Summary
 
-Every package is compared to `stopifnot` across several dimensions.  The only
-objective measurements here are the timings  Everything else is my opinion
-which you can safely assume is biased in favor of my own package `vetr`.
+Summary of philosophical objectives of each package:
+
+### Simplicity
+
+`assertthat` hews very closely to `stopifnot` semantics so it is trivial to
+learn<sup><a href='#fn-1'>1</a></sup>.
+
+Every other package adds either function libraries, or new concepts that need to
+be mastered:
+
+* `assertive`, `checkmate`: extensive libraries of Predicate Functions (e.g.
+  `is.something(...)`).  `assertive` focuses on many simple single argument
+  Predicate Functions, whereas `checkmate` has a smaller library of more
+  flexible and complex multi-argument Predicate Functions.
+* `vetr`: declarative template based checks for object structure.
+* `ensurer`: convert Predicate Expressions into contracts.
+
+### Expressive Power
+
+The trade-off to increased complexity is expressive power, which allows the user
+to express complex requirements succinctly:
+
+* `checkmate`: provides highly configurable functions, as well as a domain
+  specific language for vector checks.
+* `vetr`: verifies structural requirements by comparison to template objects.
+
+`assertive` is focused on single parameter Predicate Functions, which by nature
+are limited in their expressive power.  `ensurer` and `assertthat` rely on
+standard R expressions so are equivalent to `stopifnot` in this respect.
+
+### Informative Failure Messages
+
+* `assertthat`: clearer error messages for the base `is.*`, `any`, `all`, and
+  the handful of bundled Predicate Functions, although no additional information
+  is provided except for `any` and `all` (position of failure).
+* `assertive`, and `checkmate`: clearer error messages for their Predicate
+  Functions, including additional information, particularly for `assertive`.
+* `vetr`: clearer error messages with additional informations for object
+  structure (type, length, attributes), and for values with `all_bw`.
+
+All packages allow users to attach custom error messages, but here we focus on
+those available "out of the box".
+
+### Speed
+
+* `stopifnot` is as fast as the R expressions you use for it.
+* `assertthat` is comparable but adds some overhead.
+* `checkmate` and `vetr` are slower for trivial checks, but faster for large
+  vectors, and for `vetr`, complex objects.
+* `ensurer` is slower
+* `assertthat` is substantially slower
 
 <table>
-<col width='50px'><col width='300px'><col width='300px'>
+<col width='2*'><col width='*'><col width='*'><col width='*'><col width='*'>
+<thead>
+<tr>
+  <th><th>Simple<th>Expressive<th>Informative<th>Fast
+<tbody>
+<tr>
+  <td>`assertthat` <td style='color: green;'>*✔️*<td><td><td>
+<tr>
+  <td>`assertive`  <td><td><td><td>
+<tr>
+  <td>`checkmate`  <td><td><td><td>
+<tr>
+  <td>`ensurer`    <td><td><td><td>
+<tr>
+  <td>`vetr`       <td><td><td><td>
+</table>
+
+
+<table>
 <tr>
   <th>&nbsp;
   <th>Pros
@@ -253,9 +319,10 @@ f1_vetr_b <- function(num, flag) {
 ```
 
 `flag` must be type `logical` and length 1 to match `logical(1L)`.  Similarly
-`num` must be numeric to match `numeric()` (we allow length zero templates to
-match any length parameter).  `vetr` distinguishes between template tokens and
-standard tokens by the absence or presence of the `.` symbol.
+`num` must be numeric to match `numeric()` (we allow length zero
+dimensions in templates to match any length dimension in the parameter).  `vetr`
+distinguishes between template tokens and standard tokens by the absence or
+presence of the `.` symbol.
 
 `asserthat` is almost identical to `stopifnot`, with the stricter
 requirement that its arguments must evaluate to TRUE or FALSE exactly, and
@@ -779,6 +846,10 @@ Complex objects for other packages:
 ```
 
 ----
+<sup>1</sup>:The only noteworthy difference between the two is that `assertthat`
+requires Check Expressions to evaluate to TRUE or FALSE, whereas `stopifnot`
+accepts anything, with all TRUE vectors considered a success and all else
+failure.
 <sup>1</sup>: Both `ensurer` and `checkmate` use the square matrix test in their
 respective vignettes.
 
