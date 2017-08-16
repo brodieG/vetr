@@ -69,6 +69,8 @@ them here:
 
 ## Overview
 
+### Summary
+
 A summary of each of the packages, as compared to `stopifnot`:
 
 <table>
@@ -130,7 +132,7 @@ More details on the categories in the summary table:
 learn<sup><a href='#fn-1'>1</a></sup>.  `ensurer` is also reasonably simple for
 the purposes of checking function parameters.
 
-Every other package adds either many function, or new concepts that need to
+Every other package adds either many functions, or new concepts that need to
 be mastered:
 
 * `assertive`, `checkmate`: extensive libraries of Predicate Functions (e.g.
@@ -141,11 +143,11 @@ be mastered:
 
 ### Concise
 
-The trade-off to increased complexity is expressive power, which allows the user
-to express complex requirements succinctly:
+The benefit to increased complexity is the ability to express complex
+requirements succinctly:
 
-* `checkmate`: provides highly configurable functions, as well as a domain
-  specific language for vector checks.
+* `checkmate`: highly configurable functions, and domain specific language for
+  vector checks.
 * `vetr`: verifies structural requirements by comparison to template objects.
 
 `assertive` is focused on single parameter Predicate Functions, which by nature
@@ -157,13 +159,13 @@ standard R expressions so are equivalent to `stopifnot` in this respect.
 * `assertthat`: clearer error messages for the base `is.*`, `any`, `all`, and
   the handful of bundled Predicate Functions, although no additional information
   is provided except for `any` and `all` (position of failure).
-* `assertive`, and `checkmate`: clearer error messages for their Predicate
-  Functions, including additional information, particularly for `assertive`.
+* `assertive`, and `checkmate`: clearer error messages with additional
+  information for the included Predicate Functions, particularly for `assertive`.
 * `vetr`: clearer error messages with additional informations for object
   structure (type, length, attributes), and for values with `all_bw`.
 
-All packages allow users to attach custom error messages, but here we focus on
-those available "out of the box".
+All packages allow users to attach custom error messages to Check Expressions or
+Predicate Functions, but here we focus on those available "out of the box".
 
 ### Fast
 
@@ -176,6 +178,12 @@ those available "out of the box".
 
 ## Comparisons
 
+### Methodology
+
+We compare the `stopifnot` and the checking packages in the context of function
+parameter checks.  We do this by writing a trivial function that does nothing
+other than check its parameters.
+
 ### Simple Parameters
 
 We want to write a function that accepts a numeric vector as the first
@@ -183,40 +191,37 @@ argument, and TRUE or FALSE as the second.  We start with `stopifnot`, since it
 is the simplest and most well known option:
 
 ```{r}
-f1_stopifnot <- function(num, flag) {
+simple_stopifnot <- function(num, flag) {
   stopifnot(
     is.numeric(num),
     is.logical(flag), length(flag) == 1, !is.na(flag)
-  )
-}
+) }
 ```
 
-`vetr` looks similar on the surface, but it matches each of its parameters
-to those of the enclosing function we:
+`vetr` looks similar on the surface, but:
 
-* use `.` instead of the parameter name
-* combine tokens with `&&` (or `||`) instead of commas
+* it matches each of its parameters to those of the enclosing function
+* we use `.` instead of the parameter name
+* we combine tokens with `&&` (or `||`) instead of commas
 
 ```{r}
-f1_vetr_a <- function(num, flag) {
+simple_vetr_a <- function(num, flag) {
   vetr(
     is.numeric(.),                                # matched to `num`
     is.logical(.) && length(.) == 1 && !is.na(.)  # matched to `flag`
-  )
-}
+) }
 ```
 
 Additionally, `vetr` introduces the concept of templates which allow you to
 specify object structure declaratively as in `vapply`, so we can rewrite
-`f1_vetr_a` as:
+`simple_vetr_a` as:
 
 ```{r}
-f1_vetr_b <- function(num, flag) {
+simple_vetr <- function(num, flag) {
   vetr(
     numeric(),                 # template
     logical(1L) && !is.na(.)   # template && standard token
-  )
-}
+) }
 ```
 
 `flag` must be type `logical` and length 1 to match `logical(1L)`.  Similarly
@@ -230,19 +235,18 @@ requirement that its arguments must evaluate to TRUE or FALSE exactly, and
 the addition of helper Predicate Functions like `is.flag`:
 
 ```{r}
-f1_assertthat <- function(num, flag) {
+simple_assertthat <- function(num, flag) {
   assert_that(
     is.numeric(num),
     is.flag(flag), !is.na(flag)
-  )
-}
+) }
 ```
 
 `ensurer` is also similar approach, although requires a separate call to
 `ensure` for each argument:
 
 ```{r}
-f1_ensurer <- function(num, flag) {
+simple_ensurer <- function(num, flag) {
   ensure(num, is.numeric(.))
   ensure(flag, length(.) == 1 && !is.na(.) && is.logical(.))
 }
@@ -252,7 +256,7 @@ f1_ensurer <- function(num, flag) {
 instead of relying on standard R expressions:
 
 ```{r}
-f1_assertive <- function(num, flag) {
+simple_assertive <- function(num, flag) {
   assert_is_numeric(num)
   assert_is_a_bool(flag)
   assert_all_are_not_na(flag)
@@ -263,20 +267,19 @@ f1_assertive <- function(num, flag) {
 they are more configurable (and complex) than those in `assertive`:
 
 ```{r}
-f1_checkmate <- function(num, flag) {
+simple_checkmate <- function(num, flag) {
   assertNumeric(num)
   assertFlag(flag)
 }
 ```
 
-For this type of check it is not obvious that any of the packages do a much
-better job than `stopifnot` from the perspective of the developer.  There are
-however some noticeable differences when we actually run the functions with
+For this type of check none of these packages improve substantially from the
+`stopifnot` syntax.  There are differences when we run the functions with
 illegal parameters:
 
 ```{r}
-f1_stopifnot(letters, TRUE)
-f1_vetr_b(letters, TRUE)
+simple_stopifnot(letters, TRUE)
+simple_vetr(letters, TRUE)
 ```
 
 In addition to what our parameter is not, `vetr` tells you what it is, gives you
@@ -287,142 +290,15 @@ additional contextual information makes debugging easier.
 The other packages include some of this additional information:
 
 ```{r}
-f1_assertthat(letters, TRUE)
-f1_assertive(letters, TRUE)
-f1_ensurer(letters, TRUE)
-f1_checkmate(letters, TRUE)
+simple_assertthat(letters, TRUE)
+simple_assertive(letters, TRUE)
+simple_ensurer(letters, TRUE)
+simple_checkmate(letters, TRUE)
 ```
 
 `assertive`, and `checkmate` tell you what the object is.  `ensurer` and
 `checkmate` return the top level call, although that does not match the
 semantics of a `stop` call in a function, and is in our opinion less useful.
-
-### Building Compound Checks
-
-If you wish to build re-usable complex checks with `stopifnot`  or `asserthat`
-you would do so by writing functions.  We illustrate by creating a custom check
-for either a square numeric matrix or a scalar numeric:
-
-```{r}
-is.sqr_mx <- function(x) is.matrix(x) && ncol(x) == nrow(x)
-is.sqr_num_mx_or_sclr_num <- function(x)
-  is.numeric(x) && (is.sqr_mx(x) || length(x) == 1)
-
-f2_stopifnot <- function(x) {
-  stopifnot(is.sqr_num_mx_or_sclr_num(x))
-}
-
-rect.mx <- matrix(1:12, 3)
-f2_stopifnot(rect.mx)
-```
-
-The main drawback from this approach is the somewhat uninformative error
-message.
-
-`vetr` is similar, except that you can combine template and standard tokens as
-language objects and retain the more granular error reporting:
-
-```{r}
-vetr.sqr.num.mx <- quote(matrix(numeric(), 0) && ncol(.) == nrow(.))
-vetr.sqr.num.mx.or.sclr.num <- quote(vetr.sqr.num.mx || numeric(1L))
-
-f2_vetr <- function(x) {
-  vetr(vetr.sqr.num.mx.or.sclr.num)
-}
-f2_vetr(rect.mx)
-```
-
-You can use `assert` with `check*` functions in, but we lose some of the
-expressiveness of the error messages:
-
-```{r}
-checkSquareNumMatrix <- function(x)
-  isTRUE(checkMatrix(x, mode='numeric')) && nrow(x) == ncol(x)
-
-f2_checkmate <- function(x) {
-  assert(checkSquareNumMatrix(x), checkNumber(x, na.ok=TRUE), combine="or")
-}
-f2_checkmate(rect.mx)
-```
-
-Neither `assertive` nor `ensurer` appear to provide an out of the box mechanism
-for combining checks with "or" logic.  `ensurer` does provide a mechanism for
-"and" combinations [via `ensures`](#appendix).  To get the "or" logic we need to
-rely on the same function we defined for `stopifnot`:
-
-```{r}
-f2_ensurer <- function(x) {
-  ensure(is.sqr_num_mx_or_sclr_num(x))
-}
-f2_ensurer(rect.mx)
-
-f2_assertive <- function(x) {
-  assert_engine(is.sqr_num_mx_or_sclr_num, x=x)
-}
-f2_assertive(rect.mx)
-```
-
-Outside of `stopifnot` every package has a mechanism for manually specifying
-more informative error messages, but we do not explore those here.
-
-### Vector Values
-
-Suppose we wish to ensure our input is a strictly positive numeric vector with
-no missing values.  With `stopifnot` we would
-use:
-
-```{r}
-vec <- -1:1
-
-f3_stopifnot <- function(num) {
-  stopifnot(is.numeric(num), !anyNA(num), all(num > 0))
-}
-f3_stopifnot(vec)
-```
-
-`vetr` includes the `all_bw` function primarily for speed, but it also generates
-more useful error messages:
-
-```{r}
-f3_vetr <- function(num) {
-  vetr(numeric() && all_bw(., 0, Inf,  bounds="(]"))
-}
-f3_vetr(vec)
-```
-
-`asserthat` and `ensurer` end up very similar to `stopifnot`, though
-`assertthat` improves the error message:
-
-```{r}
-f3_assertthat <- function(num) {
-  assert_that(is.numeric(num), !anyNA(num), all(num > 0))
-}
-f3_assertthat(vec)
-
-f3_ensurer <- function(num) {
-  ensure(num, is.numeric(.), !anyNA(num), all(num > 0))
-}
-f3_ensurer(vec)
-```
-
-`checkmate` implements a particularly succinct notation:
-
-```{r}
-f3_checkmate <- function(num) {
-  qassert(num, "n*(0,]")
-}
-f3_checkmate(vec)
-```
-
-`assertive` has a custom function for the job, with a particularly helpful
-error message:
-
-```{r}}
-f3_assertive <- function(num) {
-  assert_all_are_in_left_open_range(num, lower=0)
-}
-f3_assertive(vec)
-```
 
 ### Complex Objects
 
@@ -442,7 +318,7 @@ levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
 Then, with `stopifnot`:
 
 ```{r}
-f4_stopifnot <- function(x) {
+complex_stopifnot <- function(x) {
   stopifnot(
     is.data.frame(x),                     # this only checks class
     is.list(x),
@@ -454,16 +330,16 @@ f4_stopifnot <- function(x) {
     identical(levels(x$Species), levels(iris.tpl$Species))
   )
 }
-f4_stopifnot(iris.fake)
+complex_stopifnot(iris.fake)
 ```
 
 In contrast, `vetr` is a one-liner:
 
 ```{r}
-f4_vetr <- function(x) {
+complex_vetr <- function(x) {
   vetr(iris.tpl)
 }
-f4_vetr(iris.fake)
+complex_vetr(iris.fake)
 ```
 
 Rather than painstakingly generating a list of all the comparisons required to
@@ -484,14 +360,14 @@ into the R prompt for examination.  It also tells you exactly what is wrong.
 `checkmate` is reasonably succinct:
 
 ```{r}
-f4_checkmate <- function(x) {
+complex_checkmate <- function(x) {
   assertDataFrame(x, types=unlist(iris.col.classes), ncols=5)
   assertTRUE(is.list(x))
   assertInteger(attr(x, 'row.names'))
   assertNames(names(x), identical.to=names(iris.tpl))
   assertFactor(x$Species, levels=levels(iris.tpl$Species))
 }
-f4_checkmate(iris.fake)
+complex_checkmate(iris.fake)
 ```
 
 `assertive`, `assertthat`, and `ensurer`  end up with the same number of
@@ -499,7 +375,7 @@ explicit checks as `stopifnot`, and with similar error messages.  See the code
 appendix for those implementations.
 
 ```{r iris.other, echo=F, eval=F}
-f4_assertive <- function(x) {
+complex_assertive <- function(x) {
   assert_is_list(x)
   assert_all_are_equal_to(length(iris), 5)
   assert_is_integer(attr(x, 'row.names'))
@@ -512,9 +388,9 @@ f4_assertive <- function(x) {
     identical(levels(x$Species), levels(iris.tpl$Species))
   )
 }
-f4_assertive(iris.fake)
+complex_assertive(iris.fake)
 
-f4_assertthat <- function(x) {
+complex_assertthat <- function(x) {
   assert_that(
     is.data.frame(x),                     # this only checks class
     is.list(x),
@@ -526,9 +402,9 @@ f4_assertthat <- function(x) {
     identical(levels(x$Species), levels(iris.tpl$Species))
   )
 }
-f4_assertthat(iris.fake)
+complex_assertthat(iris.fake)
 
-f4_ensurer <- function(x) {
+complex_ensurer <- function(x) {
   ensure(
     x,
     is.data.frame(.),                     # this only checks class
@@ -541,14 +417,148 @@ f4_ensurer <- function(x) {
     identical(levels(.$Species), levels(iris.tpl$Species))
   )
 }
-f4_ensurer(iris.fake)
+complex_ensurer(iris.fake)
 ```
+
+### Vector Values
+
+Suppose we wish to ensure our input is a strictly positive numeric vector with
+no missing values.  With `stopifnot` we would
+use:
+
+```{r}
+vec <- -1:1
+
+vector_stopifnot <- function(num) {
+  stopifnot(is.numeric(num), !anyNA(num), all(num > 0))
+}
+vector_stopifnot(vec)
+```
+
+`vetr` includes the `all_bw` function primarily for speed, but it also generates
+more useful error messages:
+
+```{r}
+vector_vetr <- function(num) {
+  vetr(numeric() && all_bw(., 0, Inf,  bounds="(]"))
+}
+vector_vetr(vec)
+```
+
+`asserthat` and `ensurer` end up very similar to `stopifnot`, though
+`assertthat` improves the error message:
+
+```{r}
+vector_assertthat <- function(num) {
+  assert_that(is.numeric(num), !anyNA(num), all(num > 0))
+}
+vector_assertthat(vec)
+
+vector_ensurer <- function(num) {
+  ensure(num, is.numeric(.), !anyNA(num), all(num > 0))
+}
+vector_ensurer(vec)
+```
+
+`checkmate` implements a particularly succinct notation:
+
+```{r}
+vector_checkmate <- function(num) {
+  qassert(num, "n*(0,]")
+}
+vector_checkmate(vec)
+```
+
+`assertive` has a custom function for the job, with a particularly helpful
+error message:
+
+```{r}}
+vector_assertive <- function(num) {
+  assert_all_are_in_left_open_range(num, lower=0)
+}
+vector_assertive(vec)
+```
+
+
+### Compound Checks
+
+If you wish to build re-usable complex checks with `stopifnot`  or `asserthat`
+you would do so by writing functions.  We illustrate by creating a custom check
+for either a square numeric matrix or a scalar numeric:
+
+```{r}
+is.sqr_mx <- function(x) is.matrix(x) && ncol(x) == nrow(x)
+is.sqr_num_mx_or_sclr_num <- function(x)
+  is.numeric(x) && (is.sqr_mx(x) || length(x) == 1)
+
+rect.mx <- matrix(1:12, 3)
+
+compound_stopifnot <- function(x) {
+  stopifnot(is.sqr_num_mx_or_sclr_num(x))
+}
+compound_stopifnot(rect.mx)
+
+compound_assertthat <- function(x) {
+  assert_that(is.sqr_num_mx_or_sclr_num(x))
+}
+compound_assertthat(rect.mx)
+```
+
+The main drawback from this approach is the somewhat uninformative error
+message.
+
+`vetr` is similar, except that you can combine template and standard tokens as
+language objects and retain the more granular error reporting:
+
+```{r}
+vetr.sqr.num.mx <- quote(matrix(numeric(), 0) && ncol(.) == nrow(.))
+vetr.sqr.num.mx.or.sclr.num <- quote(vetr.sqr.num.mx || numeric(1L))
+
+compound_vetr <- function(x) {
+  vetr(vetr.sqr.num.mx.or.sclr.num)
+}
+compound_vetr(rect.mx)
+```
+
+You can use `assert` with `check*` functions in, but we lose some of the
+expressiveness of the error messages:
+
+```{r}
+checkSquareNumMatrix <- function(x)
+  isTRUE(checkMatrix(x, mode='numeric')) && nrow(x) == ncol(x)
+
+compound_checkmate <- function(x) {
+  assert(checkSquareNumMatrix(x), checkNumber(x, na.ok=TRUE), combine="or")
+}
+compound_checkmate(rect.mx)
+```
+
+Neither `assertive` nor `ensurer` appear to provide an out of the box mechanism
+for combining checks with "or" logic.  `ensurer` does provide a mechanism for
+"and" combinations [via `ensures`](#appendix).  To get the "or" logic we need to
+rely on the same function we defined for `stopifnot`:
+
+```{r}
+compound_ensurer <- function(x) {
+  ensure(x, is.sqr_num_mx_or_sclr_num(.))
+}
+compound_ensurer(rect.mx)
+
+compound_assertive <- function(x) {
+  assert_engine(is.sqr_num_mx_or_sclr_num, x=x)
+}
+compound_assertive(rect.mx)
+```
+
+Outside of `stopifnot` every package has a mechanism for manually specifying
+more informative error messages, but we do not explore those here.
 
 ## Benchmarks
 
 We benchmark the functions with `mb`, a thin wrapper around `microbenchmark`
 (see the [appendix](#appendix) for its definition).  Note that the `mean`
-numbers are likely skewed by outlier timings caused by `rmarkdown`.
+numbers may be skewed by outlier timings caused by `rmarkdown`.  We also focus
+on timings for checks that succeed.
 
 ```{r mb_define, echo=FALSE}
 mb <- function(...) {
@@ -568,87 +578,76 @@ mb <- function(...) {
 ```
 ```{r, echo=FALSE}
 mb(
-  f1_assertive(pi, "three", TRUE),
-  f1_assertthat(pi, "three", TRUE),
-  f1_ensurer(pi, "three", TRUE),
-  f1_checkmate(pi, "three", TRUE),
-  f1_stopifnot(pi, "three", TRUE),
-  f1_valaddin(pi, "three", TRUE),
-  f1_vetr(pi, "three", TRUE)
+  simple_stopifnot(pi, TRUE),
+  simple_vetr(pi, TRUE),
+  simple_assertive(pi, TRUE),
+  simple_assertthat(pi, TRUE),
+  simple_ensurer(pi, TRUE),
+  simple_checkmate(pi, TRUE)
 )
 ```
 
-`stopifnot` leads the way, which is not surprising given the simplicity of the
-checks involved.  `checkmate` is second, although both `vetr` and `asserthat`
-are in the same neighborhood.  Performance drops off substantially after
-`asserthat`.
+`stopifnot` and `checkmate` lead the way, with `vetr` not too far behind.
 
 One could argue that the performance differences here are trivial.  After all,
-even the slowest approach clocks in under 3 milliseconds.  However, given the
+even the slowest approach clocks in under a millisecond.  However, given the
 prevalence of split-apply-combine style analysis, where a single function could
 be applied to thousands or even millions of data groups, the performance
 differences shown here can have a substantial impact on overall computation
 time.
 
-## Strictly Positive
+For complex objects `vetr` takes the lead:
+
+```{r, echo=FALSE}
+mb(
+  complex_assertive(iris),
+  complex_assertthat(iris),
+  complex_ensurer(iris),
+  complex_checkmate(iris),
+  complex_stopifnot(iris),
+  complex_vetr(iris)
+)
+```
+
+In fact, the overall time is comparable with that of the simple checks; this is
+because most of the overhead for `vetr` comes from the two `match.call` calls it
+must make in R to match arguments.
 
 ```{r}
 str.pos.vec <- runif(5e4) + 1  # test with a 50K long vector
 ```
 ```{r, echo=FALSE}
 mb(times=10,
-  f3_assertive(str.pos.vec),
-  f3_assertthat(str.pos.vec),
-  f3_ensurer(str.pos.vec),
-  f3_checkmate(str.pos.vec),
-  f3_stopifnot(str.pos.vec),
-  f3_valaddin(str.pos.vec),
-  f3_vetr(str.pos.vec)
+  vector_assertive(str.pos.vec),
+  vector_assertthat(str.pos.vec),
+  vector_ensurer(str.pos.vec),
+  vector_checkmate(str.pos.vec),
+  vector_stopifnot(str.pos.vec),
+  vector_vetr(str.pos.vec)
 )
 ```
 
 `vetr` is now the fastest option, although this is primarily because we use
-`vetr::all_bw` instead of the equivalent `!anyNA(.) && all(. > 0)` expression.
-`all_bw` is implemented in C and avoids the intermediate vectors required to
-evaluate the standard R version.  `checkmate` does the same with `qassert`.
-Notice also that for both `vetr` and `checkmate` the mean and median timings are
-close.  This is likely because these functions do not require the
-occasional expensive garbage collections caused by intermediate vectors.
+`vetr::all_bw` instead of the semantically equivalent `!anyNA(.) && all(. > 0)`
+expression.  `all_bw` is implemented in C and avoids the intermediate vectors
+required to evaluate the standard R version.  `checkmate` does the same with
+`qassert`.
 
-## A Complex Object
-
-Additionally, since all the `vetr` comparisons are done internally in C, `vetr`
-is the fastest option:
-
+```{r}
+sqr.mx <- matrix(1:9, 3)
+```
 ```{r, echo=FALSE}
 mb(
-  f4_vetr(iris),
-  f4_stopifnot(iris),
-  f4_checkmate(iris)
+  compound_assertive(sqr.mx),
+  compound_assertthat(sqr.mx),
+  compound_ensurer(sqr.mx),
+  compound_checkmate(sqr.mx),
+  compound_stopifnot(sqr.mx),
+  compound_vetr(sqr.mx)
 )
 ```
 
-## Comparison Dimensions
-
-* Error message
-  * Reports call like stop
-  * Explains what it is not
-  * Uses language from calling scope
-  * Explains what it is
-* Style (wrapper / function)
-* Median timings
-    * Simple tests
-    * Values
-    * Data frame
-    * S3 Object
-* Compound expressions
-
-### Or Checks
-
-## Comparison
-
-## Appendices
-
+## Appendix
 
 ### Definitions
 
@@ -733,10 +732,10 @@ ensurer_num_mx <- ensures(is.numeric(.) && is.matrix(.))
 ensurer_sqr <- ensures(ncol(.) == nrow(.))
 ensurer_sqr_mx <- ensures(+ensurer_num_mx, +ensurer_sqr)  # and combination
 
-f2_ensurer_a <- function(x) {
+compound_ensurer_a <- function(x) {
   ensurer_sqr_mx(x)
 }
-f2_ensurer_a(rect.mx)
+compound_ensurer_a(rect.mx)
 ```
 
 #### Complex Objects Appendix
