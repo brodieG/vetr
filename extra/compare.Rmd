@@ -67,16 +67,70 @@ them here:
 * [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi, which
   implements parameter validation via roxygen tags (not released to CRAN)
 
-## Summary
+## Overview
 
-Summary of philosophical objectives of each package:
+A summary of each of the packages, as compared to `stopifnot`:
 
-### Simplicity
+<table>
+  <col>
+  <col width='100px'>
+  <col width='100px'>
+  <col width='100px'>
+  <col width='100px'>
+<thead>
+<tr>
+  <th><th>Simple<th>Concise<th>Informative<th>Fast
+<tbody style='text-align: center;'>
+<tr>
+  <td style='text-align:left;'>`assertthat`
+  <td style='color: green;'>&#10003;
+  <td>
+  <td style='color: green;'>&#10003;
+  <td>
+<tr>
+  <td style='text-align:left;'>`assertive`
+  <td>
+  <td>
+  <td style='color: green;'>&#10003;
+  <td>
+<tr>
+  <td style='text-align:left;'>`checkmate`
+  <td>
+  <td style='color: green;'>&#10003;
+  <td style='color: green;'>&#10003;
+  <td style='color: green;'>&#10003;
+<tr>
+  <td style='text-align:left;'>`ensurer`
+  <td style='color: green;'>&#10003;
+  <td>
+  <td>
+  <td>
+<tr>
+  <td style='text-align:left;'>`vetr`
+  <td>
+  <td style='color: green;'>&#10003;
+  <td style='color: green;'>&#10003;
+  <td style='color: green;'>&#10003;
+</table>
+
+And in our opinion what each package does best **in the context of function
+parameter checking**:
+
+* `assertthat`: no learning curve, better error messages
+* `assertive`: excellent error messages
+* `checkmate`: fast and powerful syntax for checking vectors
+* `ensurer`: elegant mechanism for generating assertions
+* `vetr`: fast and powerful syntax for checking complex object structure
+
+More details on the categories in the summary table:
+
+### Simple
 
 `assertthat` hews very closely to `stopifnot` semantics so it is trivial to
-learn<sup><a href='#fn-1'>1</a></sup>.
+learn<sup><a href='#fn-1'>1</a></sup>.  `ensurer` is also reasonably simple for
+the purposes of checking function parameters.
 
-Every other package adds either function libraries, or new concepts that need to
+Every other package adds either many function, or new concepts that need to
 be mastered:
 
 * `assertive`, `checkmate`: extensive libraries of Predicate Functions (e.g.
@@ -84,9 +138,8 @@ be mastered:
   Predicate Functions, whereas `checkmate` has a smaller library of more
   flexible and complex multi-argument Predicate Functions.
 * `vetr`: declarative template based checks for object structure.
-* `ensurer`: convert Predicate Expressions into contracts.
 
-### Expressive Power
+### Concise
 
 The trade-off to increased complexity is expressive power, which allows the user
 to express complex requirements succinctly:
@@ -99,7 +152,7 @@ to express complex requirements succinctly:
 are limited in their expressive power.  `ensurer` and `assertthat` rely on
 standard R expressions so are equivalent to `stopifnot` in this respect.
 
-### Informative Failure Messages
+### Informative
 
 * `assertthat`: clearer error messages for the base `is.*`, `any`, `all`, and
   the handful of bundled Predicate Functions, although no additional information
@@ -112,7 +165,7 @@ standard R expressions so are equivalent to `stopifnot` in this respect.
 All packages allow users to attach custom error messages, but here we focus on
 those available "out of the box".
 
-### Speed
+### Fast
 
 * `stopifnot` is as fast as the R expressions you use for it.
 * `assertthat` is comparable but adds some overhead.
