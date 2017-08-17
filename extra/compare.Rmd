@@ -84,39 +84,38 @@ A summary of each of the packages, as compared to `stopifnot`:
   <col width='100px'>
   <col width='100px'>
   <col width='100px'>
+  <col width='100px'>
 <thead>
 <tr>
-  <th><th>Simple<th>Concise<th>Informative<th>Fast
+  <th><th>assertthat<th>assertive<th>checkmate<th>ensurer<th>vetr
 <tbody style='text-align: center;'>
 <tr>
-  <td style='text-align:left;'>`assertthat`
+  <td style='text-align:left;'>Simple
   <td style='color: green;'>&#10003;
-  <td>
-  <td style='color: green;'>&#10003;
-  <td>
-<tr>
-  <td style='text-align:left;'>`assertive`
   <td>
   <td>
   <td style='color: green;'>&#10003;
   <td>
 <tr>
-  <td style='text-align:left;'>`checkmate`
+  <td style='text-align:left;'>Concise
+  <td>
   <td>
   <td style='color: green;'>&#10003;
-  <td style='color: green;'>&#10003;
+  <td>
   <td style='color: green;'>&#10003;
 <tr>
-  <td style='text-align:left;'>`ensurer`
+  <td style='text-align:left;'>Informative
+  <td style='color: green;'>&#10003;
+  <td style='color: green;'>&#10003;
   <td style='color: green;'>&#10003;
   <td>
-  <td>
-  <td>
+  <td style='color: green;'>&#10003;
 <tr>
-  <td style='text-align:left;'>`vetr`
+  <td style='text-align:left;'>Fast
+  <td>
   <td>
   <td style='color: green;'>&#10003;
-  <td style='color: green;'>&#10003;
+  <td>
   <td style='color: green;'>&#10003;
 </table>
 
