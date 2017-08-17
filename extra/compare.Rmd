@@ -139,10 +139,9 @@ the purposes of checking function parameters.
 Every other package adds either many functions, or new concepts that need to
 be mastered:
 
-* `assertive`, `checkmate`: extensive libraries of Predicate Functions (e.g.
-  `is.something(...)`).  `assertive` focuses on many simple single argument
-  Predicate Functions, whereas `checkmate` has a smaller library of more
-  flexible and complex multi-argument Predicate Functions.
+* `assertive`, `checkmate`: extensive libraries of Predicate Functions, with
+  assertive focusing on many single argument functions, and `checkmate` fewer
+  but more flexible and complex functions.
 * `vetr`: declarative template based checks for object structure.
 
 ### Concise
