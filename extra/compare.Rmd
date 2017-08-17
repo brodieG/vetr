@@ -69,6 +69,11 @@ them here:
 
 ## Overview
 
+<div style='font-size: .7em;'>
+[Top](#top) | [Summary](#summary) | [Comparisons](#comparisons) |
+[Benchmarks](#benchmarks) | [Appendix](#appendix)
+</div>
+
 ### Summary
 
 A summary of each of the packages, as compared to `stopifnot`:
@@ -623,22 +628,22 @@ so we run it fewer times):
 str.pos.vec <- runif(5e5) + 1  # test with a 500K long vector
 ```
 ```{r, echo=FALSE}
-mb(
+mb(times=10,
   vector_assertthat(str.pos.vec),
   vector_ensurer(str.pos.vec),
   vector_checkmate(str.pos.vec),
   vector_stopifnot(str.pos.vec),
   vector_vetr(str.pos.vec)
 )
-mb(times=5,
+mb(times=1,
   vector_assertive(str.pos.vec)
 )
 ```
 
-`vetr` is now the fastest option, primarily because we use `vetr::all_bw`
-instead of the semantically equivalent `!anyNA(.) && all(. > 0)` expression.
-`all_bw` is implemented in C and avoids the intermediate vectors required to
-evaluate the standard R version.  `checkmate` does the same with `qassert`.
+`vetr` is now the fastest option because we use `vetr::all_bw` instead of the
+semantically equivalent `!anyNA(.) && all(. > 0)` expression.  `all_bw` is
+implemented in C and avoids the intermediate vectors required to evaluate the
+standard R version.  `checkmate` does the same with `qassert`.
 
 `stopifnot` does a little better in the compound tests:
 
@@ -655,6 +660,27 @@ mb(
   compound_vetr(sqr.mx)
 )
 ```
+
+## Conclusions
+
+Take these with a grain of salt, as they are written by the `vetr` author:
+
+In favor of `vetr`:
+
+* `vetr` is the best package for checking complex S3 structure
+* `vetr` is fastest for non-trivial checks
+
+Against `vetr`:
+
+* New package with an extensive test suite, but limited "real-world"
+  testing
+* Template concept is designed to be intuitive, but the actual implementation is
+  complex, which in corner cases may lead to unintuitive outcomes
+
+If you are tired of dealing with checks for non-trivial S3 objects and are
+willing to be on the bleeding edge, `vetr` is for you.  If not, we would
+recommend `checkmate` as it is fast, well established, and more expressive than
+the other options.
 
 ## Appendix
 
