@@ -560,6 +560,8 @@ We benchmark the functions with `mb`, a thin wrapper around `microbenchmark`
 numbers may be skewed by outlier timings caused by `rmarkdown`.  We also focus
 on timings for checks that succeed.
 
+Starting with the simple checks:
+
 ```{r mb_define, echo=FALSE}
 mb <- function(...) {
   mb.call <- match.call()
@@ -613,25 +615,32 @@ In fact, the overall time is comparable with that of the simple checks; this is
 because most of the overhead for `vetr` comes from the two `match.call` calls it
 must make in R to match arguments.
 
+Checking vector values in a long vector (note, `assertive` is **3 orders of
+magnitude slower**, likely because it applies an R function call to each element,
+so we run it fewer times):
+
 ```{r}
-str.pos.vec <- runif(5e4) + 1  # test with a 50K long vector
+str.pos.vec <- runif(5e5) + 1  # test with a 500K long vector
 ```
 ```{r, echo=FALSE}
-mb(times=10,
-  vector_assertive(str.pos.vec),
+mb(
   vector_assertthat(str.pos.vec),
   vector_ensurer(str.pos.vec),
   vector_checkmate(str.pos.vec),
   vector_stopifnot(str.pos.vec),
   vector_vetr(str.pos.vec)
 )
+mb(times=5,
+  vector_assertive(str.pos.vec)
+)
 ```
 
-`vetr` is now the fastest option, although this is primarily because we use
-`vetr::all_bw` instead of the semantically equivalent `!anyNA(.) && all(. > 0)`
-expression.  `all_bw` is implemented in C and avoids the intermediate vectors
-required to evaluate the standard R version.  `checkmate` does the same with
-`qassert`.
+`vetr` is now the fastest option, primarily because we use `vetr::all_bw`
+instead of the semantically equivalent `!anyNA(.) && all(. > 0)` expression.
+`all_bw` is implemented in C and avoids the intermediate vectors required to
+evaluate the standard R version.  `checkmate` does the same with `qassert`.
+
+`stopifnot` does a little better in the compound tests:
 
 ```{r}
 sqr.mx <- matrix(1:9, 3)
