@@ -191,85 +191,63 @@ likely circumstances that will result in different outcomes.
 
 ### Simple Parameters
 
-We want to write a function that accepts a numeric vector as the first
-argument, and TRUE or FALSE as the second.  We start with `stopifnot`, since it
-is the simplest and most well known option:
+We want to write a functions that accept a length two numeric vector with no
+missing values.  We illustrate with function that enforce that requirement and
+do nothing else.  In `stopifnot`:
 
 ```{r}
-simple_stopifnot <- function(num, flag) {
-  stopifnot(
-    is.numeric(num),
-    is.logical(flag), length(flag) == 1, !is.na(flag)
-) }
+simple_stopifnot <- function(x)
+  stopifnot(is.numeric(x), length(x) == 2, !is.na(x))
 ```
 
-`vetr` looks similar on the surface, but:
-
-* it matches each of its parameters to those of the enclosing function
-* we use `.` instead of the parameter name
-* we combine tokens with `&&` (or `||`) instead of commas
+`vetr` can look similar on the surface:
 
 ```{r}
-simple_vetr_a <- function(num, flag) {
-  vetr(
-    is.numeric(.),                                # matched to `num`
-    is.logical(.) && length(.) == 1 && !is.na(.)  # matched to `flag`
-) }
+simple_vetr_a <-
+  function(x) vetr(is.numeric(.) && length(.) == 2 && !is.na(.))
 ```
 
-Additionally, `vetr` introduces the concept of templates which allow you to
-specify object structure declaratively as in `vapply`, so we can rewrite
+The `vetr` arguments are positionally matched to those of the enclosing
+function.  This is why we can reference `x` with `.`, and also why we use `&&`
+instead of `,` to delimit our checks.
+
+Additionally, `vetr` introduces the concept of templates, so we can rewrite
 `simple_vetr_a` as:
 
 ```{r}
-simple_vetr <- function(num, flag) {
-  vetr(
-    numeric(),                 # template
-    logical(1L) && !is.na(.)   # template && standard token
-) }
+simple_vetr <- function(x) vetr(numeric(2L) && !is.na(.))
 ```
 
-`flag` must be type `logical` and length 1 to match `logical(1L)`.  Similarly
-`num` must be numeric to match `numeric()` (we allow length zero
-dimensions in templates to match any length dimension in the parameter).  `vetr`
-distinguishes between template tokens and standard tokens by the absence or
-presence of the `.` symbol.
+`numeric(2L) && !is.na(.)` is a Vetting Expression that contains the Template
+Token `numeric(2L)` and the Standard Token `!is.na(.)`.  Template Tokens
+require that parameters match their structure (i.e. length, type, and
+attributes).  Standard Tokens, distinguished by the presence of the `.` symbol,
+are evaluated as they would be by `stopifnot`.
 
-`asserthat` is almost identical to `stopifnot`, with the stricter
-requirement that its arguments must evaluate to TRUE or FALSE exactly, and
-the addition of helper Predicate Functions like `is.flag`:
+Templates should be familiar to those who have used `vapply`, but there are some
+wrinkles.  For example zero-length templates like `numeric()` match any
+length objects.  See `?vetr::alike` and `vignette('alike', 'vetr')` for details.
+
+`asserthat` is like `stopifnot`:
 
 ```{r}
-simple_assertthat <- function(num, flag) {
-  assert_that(
-    is.numeric(num),
-    is.flag(flag), !is.na(flag)
-) }
+simple_assertthat <- function(x)
+  assert_that(is.numeric(x), length(x) == 2, !is.na(x))
 ```
 
-`ensurer` is also similar, although requires a separate call to `ensure` for
-each argument and also uses the `.` notation:
-
-```{r}
-simple_ensurer <- function(num, flag) {
-  ensure(num, is.numeric(.))
-  ensure(flag, length(.) == 1 && !is.na(.) && is.logical(.))
-}
-```
-
-`assertive` and checkmate rely on the Predicate Functions they implement:
+`assertive` and `checkmate` both rely on the Predicate Functions they implement,
+although the former prefers many simple functions and the latter fewer complex
+function:
 
 ```{r}
 simple_assertive <- function(num, flag) {
-  assert_is_numeric(num)
-  assert_is_a_bool(flag)
-  assert_all_are_not_na(flag)
+  assert_is_numeric(x)
+  assert_is_of_length(x, 2)
+  assert_all_are_not_na(x)
 }
 
-simple_checkmate <- function(num, flag) {
-  assertNumeric(num)
-  assertFlag(flag)
-}
+simple_checkmate <- function(num, flag)
+  assertNumeric(num, any.missing=FALSE, len=2)
 ```
 
 For this type of check none of these packages improve substantially from the
@@ -277,8 +255,8 @@ For this type of check none of these packages improve substantially from the
 illegal parameters:
 
 ```{r}
-simple_stopifnot(letters, TRUE)
-simple_vetr(letters, TRUE)
+simple_stopifnot(pi)
+simple_vetr(pi)
 ```
 
 In addition to what our parameter is not, `vetr` tells you what it is, gives you
@@ -289,10 +267,9 @@ additional contextual information makes debugging easier.
 The other packages include some of this additional information:
 
 ```{r}
-simple_assertthat(letters, TRUE)
-simple_assertive(letters, TRUE)
-simple_ensurer(letters, TRUE)
-simple_checkmate(letters, TRUE)
+simple_assertthat(pi)
+simple_assertive(pi)
+simple_checkmate(pi)
 ```
 
 `assertive`, and `checkmate` tell you what the object is.  `ensurer` and
