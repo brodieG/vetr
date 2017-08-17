@@ -67,12 +67,12 @@ them here:
 * [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi, which
   implements parameter validation via roxygen tags (not released to CRAN)
 
-## Overview
+<a name='overview'></a>
 
-<div style='font-size: .7em;'>
-[Top](#top) | [Summary](#summary) | [Comparisons](#comparisons) |
-[Benchmarks](#benchmarks) | [Appendix](#appendix)
-</div>
+## Comparison Overview
+
+```{r child='./compare-nav.Rmd'}
+```
 
 ### Summary
 
@@ -91,32 +91,32 @@ A summary of each of the packages, as compared to `stopifnot`:
 <tbody style='text-align: center;'>
 <tr>
   <td style='text-align:left;'>Simple
-  <td style='color: green;'>&#10003;
+  <td><span style='color: green;'>&#10003;</span>
   <td>
   <td>
-  <td style='color: green;'>&#10003;
+  <td><span style='color: green;'>&#10003;</span>
   <td>
 <tr>
   <td style='text-align:left;'>Concise
   <td>
   <td>
-  <td style='color: green;'>&#10003;
+  <td><span style='color: green;'>&#10003;</span>
   <td>
-  <td style='color: green;'>&#10003;
+  <td><span style='color: green;'>&#10003;</span>
 <tr>
   <td style='text-align:left;'>Informative
-  <td style='color: green;'>&#10003;
-  <td style='color: green;'>&#10003;
-  <td style='color: green;'>&#10003;
+  <td><span style='color: green;'>&#10003;</span>
+  <td><span style='color: green;'>&#10003;</span>
+  <td><span style='color: green;'>&#10003;</span>
   <td>
-  <td style='color: green;'>&#10003;
+  <td><span style='color: green;'>&#10003;</span>
 <tr>
   <td style='text-align:left;'>Fast
   <td>
   <td>
-  <td style='color: green;'>&#10003;
+  <td><span style='color: green;'>&#10003;</span>
   <td>
-  <td style='color: green;'>&#10003;
+  <td><span style='color: green;'>&#10003;</span>
 </table>
 
 And in our opinion what each package does best **in the context of function
@@ -124,9 +124,9 @@ parameter checking**:
 
 * `assertthat`: no learning curve, better error messages
 * `assertive`: excellent error messages
-* `checkmate`: fast and powerful syntax for checking vectors
+* `checkmate`: powerful semantics for checking vectors, fast
 * `ensurer`: elegant mechanism for generating assertions
-* `vetr`: fast and powerful syntax for checking complex object structure
+* `vetr`: powerful semantics for checking complex object structure, fast
 
 More details on the categories in the summary table:
 
@@ -175,18 +175,20 @@ Predicate Functions, but here we focus on those available "out of the box".
 
 * `stopifnot` is as fast as the R expressions you use for it.
 * `assertthat` is comparable but adds some overhead.
-* `checkmate` and `vetr` are slower for trivial checks, but faster for large
-  vectors, and for `vetr`, complex objects.
+* `checkmate` is fastest for simple checks, and fast for vectors
+* `vetr` is fastest for vectors and complex objects
 * `ensurer` is slower
-* `assertthat` is substantially slower
+* `assertive` is substantially slower
 
-## Comparisons
+Speed conclusions are based solely on the tests we carried out.  There are
+likely circumstances that will result in different outcomes.
 
-### Methodology
+<a name='details'></a>
 
-We compare the `stopifnot` and the checking packages in the context of function
-parameter checks.  We do this by writing a trivial function that does nothing
-other than check its parameters.
+## Comparison Details
+
+```{r child='./compare-nav.Rmd'}
+```
 
 ### Simple Parameters
 
@@ -246,8 +248,8 @@ simple_assertthat <- function(num, flag) {
 ) }
 ```
 
-`ensurer` is also similar approach, although requires a separate call to
-`ensure` for each argument:
+`ensurer` is also similar, although requires a separate call to `ensure` for
+each argument and also uses the `.` notation:
 
 ```{r}
 simple_ensurer <- function(num, flag) {
@@ -256,8 +258,7 @@ simple_ensurer <- function(num, flag) {
 }
 ```
 
-`assertive` implements 200+ Predicate Functions and assertion based on them
-instead of relying on standard R expressions:
+`assertive` and checkmate rely on the Predicate Functions they implement:
 
 ```{r}
 simple_assertive <- function(num, flag) {
@@ -265,12 +266,7 @@ simple_assertive <- function(num, flag) {
   assert_is_a_bool(flag)
   assert_all_are_not_na(flag)
 }
-```
 
-`checkmate` implements 40+ Predicate Functions and assertions based on them, but
-they are more configurable (and complex) than those in `assertive`:
-
-```{r}
 simple_checkmate <- function(num, flag) {
   assertNumeric(num)
   assertFlag(flag)
@@ -464,7 +460,7 @@ vector_ensurer <- function(num) {
 vector_ensurer(vec)
 ```
 
-`checkmate` implements a particularly succinct notation:
+`checkmate` implements a succinct notation:
 
 ```{r}
 vector_checkmate <- function(num) {
@@ -482,7 +478,6 @@ vector_assertive <- function(num) {
 }
 vector_assertive(vec)
 ```
-
 
 ### Compound Checks
 
@@ -558,6 +553,9 @@ Outside of `stopifnot` every package has a mechanism for manually specifying
 more informative error messages, but we do not explore those here.
 
 ## Benchmarks
+
+```{r child='./compare-nav.Rmd'}
+```
 
 We benchmark the functions with `mb`, a thin wrapper around `microbenchmark`
 (see the [appendix](#appendix) for its definition).  Note that the `mean`
@@ -662,6 +660,9 @@ mb(
 
 ## Conclusions
 
+```{r child='./compare-nav.Rmd'}
+```
+
 Take these with a grain of salt, as they are written by the `vetr` author:
 
 In favor of `vetr`:
@@ -682,6 +683,9 @@ recommend `checkmate` as it is fast, well established, and more expressive than
 the other options.
 
 ## Appendix
+
+```{r child='./compare-nav.Rmd'}
+```
 
 ### Definitions
 
