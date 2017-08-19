@@ -113,6 +113,36 @@ It seems like there are no stack imbalance problems when the script finishes wit
 
 ## Optimization
 
+### `all_in`
+
+Rather than try to do a full on optimization right now, try a simple
+implementation that is faster than the simple `all(x %in% y)`:
+
+```
+source('tests/unitizer/_pre/lorem.R')
+lorem.words <- unlist(strsplit(lorem, "\\W"))
+lorem.unique <- unique(lorem.words)
+x <- sample(lorem.unique, 1e4, rep=TRUE)
+
+library(microbenchmark)
+microbenchmark(times=10,
+  all(unique(x) %in% lorem.unique),
+  all(x %in% lorem.unique),
+  !anyNA(match(unique(x), lorem.unique))
+)
+## Unit: microseconds
+##                                    expr     min      lq     mean   median
+##        all(unique(x) %in% lorem.unique) 173.327 175.111 221.3290 216.5445
+##                all(x %in% lorem.unique) 223.698 225.259 228.5640 225.8155
+##  !anyNA(match(unique(x), lorem.unique)) 188.009 189.564 231.6546 221.5680
+##       uq     max neval
+##  264.897 277.004    10
+##  232.412 240.201    10
+##  258.627 329.226    10
+```
+
+Short of it is that it doesn't seem worth it.
+
 ### Vs. `checkmate`
 
 ```
