@@ -14,17 +14,26 @@ vignette: >
 
 ```{r global_options, echo=FALSE}
 knitr::opts_chunk$set(error=TRUE, comment=NA)
-library(vetr)
-library(assertive)
-library(assertthat)
-library(checkmate)
-library(valaddin)
+suppressWarnings({
+  library(vetr)
+  library(assertive)
+  library(assertthat)
+  library(checkmate)
+})
 ```
 
-## Prevent Garbage In
+<a name='overview'></a>
+
+## Overview
+
+```{r child='./compare-nav.Rmd'}
+```
+
+### Introduction
 
 Systematically vetting function parameters is as tedious as it is important.
-Fortunately many functions and packages exist to assist with the process:
+Fortunately many functions and packages exist to assist with the process.  We
+will review:
 
 * `stopifnot` by R Core
 * [`vetr`](https://github.com/brodieG/vetr) v0.2.0 by Yours Truly
@@ -33,7 +42,7 @@ Fortunately many functions and packages exist to assist with the process:
 * [`checkmate`](https://github.com/mllg/checkmate) v1.8.3 by Michael Lang
 
 The following packages also perform related tasks, although we do not review
-them here:
+them:
 
 * [`valaddin`](https://github.com/egnha/valaddin) v0.1.0 by Eugene Ha, a
   framework for augmenting existing functions with validation contracts.
@@ -52,13 +61,6 @@ them here:
   but does not enforce type hinting.
 * [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi, which
   implements parameter validation via roxygen tags (not released to CRAN).
-
-<a name='overview'></a>
-
-## Comparison Overview
-
-```{r child='./compare-nav.Rmd'}
-```
 
 ### Summary
 
@@ -315,8 +317,8 @@ complex_checkmate <- function(x) {
   assertDataFrame(x, types=unlist(iris.col.classes), ncols=5)
   assertTRUE(is.list(x))
   assertInteger(attr(x, 'row.names'))
-  assertNames(names(x), identical.to=names(iris.tpl))
-  assertFactor(x$Species, levels=levels(iris.tpl$Species))
+  assertNames(names(x), identical.to=names(iris))
+  assertFactor(x$Species, levels=levels(iris$Species))
 }
 complex_checkmate(iris.fake)
 ```
@@ -400,9 +402,9 @@ vector_assertive(vec)
 
 If you wish to build re-usable complex checks with `stopifnot`,  `asserthat`,
 `assertive`, and `checkmate` you do so by writing new functions.  `vetr`
-implements a special type of programmable Non Standard Evaluation.  Here we
-write a [Vetting Expression](#vetting-expression) that accepts either a square
-numeric matrix, or a scalar numeric:
+implements a special type of programmable [Non Standard Evaluation](#nse).  Here
+we write a [Vetting Expression](#vetting-expression) that accepts either a
+square numeric matrix, or a scalar numeric:
 
 ```{r}
 sqr.mx <- quote(ncol(.) == nrow(.))
@@ -432,7 +434,7 @@ We benchmark the functions with `mb`, a thin wrapper around `microbenchmark`
 (see the [appendix](#appendix) for its definition).  We focus on timings for
 checks that succeed.
 
-Starting with the simple checks:
+Starting with the simple checks on `nums <- runif(2)`:
 
 ```{r mb_define, echo=FALSE}
 mb <- function(...) {
@@ -442,7 +444,7 @@ mb <- function(...) {
   mb.res <- summary(eval(mb.call, envir=parent.frame()))
   mb.res <- mb.res[order(mb.res$median), ]
   mb.res[, -1] <- lapply(
-    mb.res[, -1], function(x) format(round(x), big.mark=",")
+    mb.res[, -1], function(x) sprintf("  %s", format(round(x, 1), big.mark=","))
   )
   cat(
     sprintf("Unit: %s, neval: %s\n\n", attr(mb.res, 'unit'), mb.res$neval[1])
@@ -473,10 +475,6 @@ mb(
   complex_vetr(iris)
 )
 ```
-
-In fact, the overall time is comparable with that of the simple checks; this is
-because most of the overhead for `vetr` comes from the two `match.call` calls it
-must make in R to match arguments.
 
 Checking vector values in a long vector (note, `assertive` is **3 orders of
 magnitude slower**, likely because it applies an R function call to each element,
@@ -510,24 +508,32 @@ those cases microseconds matter.
 ### Making `vetr` Faster
 
 We made a design choice with `vetr` that the overhead associated with running
-two `match.call` calls was worthwhile for the features it allowed us to
-implement.  In some cases though that extra time is to onerous.  For those you
-can use `vet` which is a general purpose object checker that uses [Vetting
-Expressions](#vetting-expression) just like `vetr`:
+two `match.call` calls was worth the features it allowed us to implement.  In
+some cases even those ~10 microseconds are too much.  For those you can use
+`vet` which is a general purpose object checker that uses [Vetting
+Expressions](#vetting-expression) just like `vetr`, or go even further and call
+`vetr::alike` directly to do template comparisons:
 
 ```{r}
 simple_vet <- function(x) vet(numeric(2L) && !anyNA(.), x, stop=TRUE)
 simple_vet(pi)
+
+simple_alike <- function(x) {
+  if(!isTRUE(msg <- alike(numeric(2L), x))) stop("Argument `x` invalid: ", msg)
+  if(anyNA(x)) stop("Argument `x` contains NAs")
+}
+simple_alike(pi)
 ```
 
-The error message is not quite as helpful, but we lose some of the overhead:
+The error messages / ease of use degrade, but we do improve our timings (again,
+with `nums <- runif(2)`):
 
 ```{r, echo=FALSE}
 mb(
   simple_vet(nums),
   simple_vetr(nums),
   simple_checkmate(nums),
-  alike(numeric(2L), nums)
+  simple_alike(nums)
 )
 ```
 
@@ -565,13 +571,6 @@ Definitions of terms as we use them in this document.  They may have different
 definitions elsewhere.
 
 <dl>
-  <dt><a name='predicate-function'></a>Predicate Function</dt>
-  <dd>
-  Function that typically accepts one non-optional argument and returns TRUE or
-  FALSE according to whether that argument conforms to a requirement.
-  `isTRUE(x)` and `is.numeric(x)` are single argument examples, and
-  `identical(x, y)` is a two argument example.
-  </dd>
   <dt><a name='check-function'></a>Check Function</dt>
   <dd>
   Similar to a [Predicate Function](#predicate-function), may return either TRUE
@@ -585,6 +584,45 @@ definitions elsewhere.
   A collection of calls to [Check](#check-function) and/or [Predicate
   Functions](#predicate-function) combined with logical operators.  For example
   `!anyNA(x) && x > 0`.
+  </dd>
+  <dt><a name='nse'></a>Non Standard Evaluation</dt>
+  <dd>
+  Refers to the evaluation of an R expression different than would normally
+  occur, because the expression is modified prior to evaluation, it is evaluated
+  in a different environment than it would normally be, or both.  A classic
+  example is `subset(x, subset)` where the `subset` argument is evaluated
+  within `x` instead of in the parent frame.  `vetr` implements a special type
+  of Non Standard Evaluation that recursively substitutes all non-function
+  symbols (i.e. symbols not at position 1 in a call) that resolve to symbols
+  until the resulting expression only contains symbols that point to
+  non-symbol R objects.  It also substitutes `.` with the corresponding function
+  parameter.  Finally, it tokenizes the expression by breaking it apart into by
+  `&&` and `||`, and evaluates each token separately.
+  </dd>
+  <dt><a name='predicate-function'></a>Predicate Function</dt>
+  <dd>
+  Function that typically accepts one non-optional argument and returns TRUE or
+  FALSE according to whether that argument conforms to a requirement.
+  `isTRUE(x)` and `is.numeric(x)` are single argument examples, and
+  `identical(x, y)` is a two argument example.
+  </dd>
+  <dt><a name='standard-token'></a>Standard Token</dt>
+  <dd>
+  Part of a [Vetting Expression](#vetting-expression) that should be treated as
+  a standard R expression.  If `isTRUE(all(evaluated_standard_token))` then the
+  token will be considered to pass.  [Standard Tokens](#standard-token) are
+  identified by the presence of a `.` symbol within a token.  You can also wrap
+  expressions in `.()` to mark them as standard tokens.  If you need to use the
+  `.` symbol for other purposes escape
+  it with another `.` (i.e. to use a literal `.`, use `..`).
+  See `vignette('vetr', 'vetr')` for more details.
+  </dd>
+  <dt><a name='template-token'></a>Template Token</dt>
+  <dd>
+  Part of a [Vetting Expression](#vetting-expression) that should be treated as
+  a template by `vetr`.  It should resolve to an R object when it is evaluated
+  in the calling frame of the enclosing function to the `vetr` call.  See
+  `vignette('vetr', 'vetr')` for more details.
   </dd>
   <dt><a name='vetting-expression'></a>Vetting Expression</dt>
   <dd>
@@ -600,24 +638,6 @@ definitions elsewhere.
   would evaluate `x > 0` and use the result as a template since `x > 0` does not
   contain the `.` symbol to mark it as a [Standard Token](#standard-token). See
   `vignette('vetr', 'vetr')` for more details.
-  </dd>
-  <dt><a name='template-token'></a>Template Token</dt>
-  <dd>
-  Part of a [Vetting Expression](#vetting-expression) that should be treated as
-  a template by `vetr`.  It should resolve to an R object when it is evaluated
-  in the calling frame of the enclosing function to the `vetr` call.  See
-  `vignette('vetr', 'vetr')` for more details.
-  </dd>
-  <dt><a name='standard-token'></a>Standard Token</dt>
-  <dd>
-  Part of a [Vetting Expression](#vetting-expression) that should be treated as
-  a standard R expression.  If `isTRUE(all(evaluated_standard_token))` then the
-  token will be considered to pass.  [Standard Tokens](#standard-token) are
-  identified by the presence of a `.` symbol within a token.  You can also wrap
-  expressions in `.()` to mark them as standard tokens.  If you need to use the
-  `.` symbol for other purposes escape
-  it with another `.` (i.e. to use a literal `.`, use `..`).
-  See `vignette('vetr', 'vetr')` for more details.
   </dd>
   <dt><a name='vetting-token'></a>Vetting Token</dt>
   <dd>
@@ -636,8 +656,12 @@ definitions elsewhere.
 
 * Help, vignettes, and READMEs for `assertthat`, `assertive`, `checkmate`,
   `ensurer`, and `valaddin`.
-* R Journal entry for checkmate.
-* Richie Cotton blog entry.
+* [checkmate: Fast Argument Checks for Defensive Programming in
+  R](https://journal.r-project.org/archive/2017/RJ-2017-028/index.html),  Michel
+  Lang, The R Journal (2017) 9:1, pages 437-445.
+* [The State of Assertions in
+  R](https://4dpiecharts.com/2015/07/03/the-state-of-assertions-in-r/),  Richie
+  Cotton, July 2015
 
 ### Ancillary Code
 
@@ -650,7 +674,16 @@ We use a thin wrapper around `microbenchmark`:
 
 #### Complex Objects for Other Packages
 
+These are the implementations we omitted from the iris checks in the [details
+section](#details).
+
 ```{r iris.other}
+```
+
+### Session Info
+
+```{r}
+sessionInfo()
 ```
 
 ### End Notes
