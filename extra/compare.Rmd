@@ -117,61 +117,67 @@ strengths of each package:
 And in our opinion what each package does best **in the context of function
 parameter checking**:
 
-* `assertthat`: no learning curve, better error messages
-* `assertive`: excellent error messages
-* `checkmate`: powerful semantics for checking vectors, fast
-* `vetr`: powerful semantics for checking complex object structure, fast
+* `assertthat`: no learning curve, better error messages.
+* `assertive`: excellent error messages.
+* `checkmate`: powerful semantics for checking vectors, fast.
+* `vetr`: powerful semantics for checking complex object structure, fast.
 
 More details on the categories in the summary table:
 
 ### Simple
 
-`assertthat` hews very closely to `stopifnot` semantics so it is trivial to
-learn.  Every other package adds either many functions, or new concepts that
-need to be mastered:
+Ideally packages should have a minimal learning curve.
 
-* `assertive`, `checkmate`: extensive libraries of Predicate Functions, with
-  assertive focusing on many single argument functions, and `checkmate` fewer
-  but more flexible and complex functions.
-* `vetr`: declarative template based checks for object structure.
+* `asserthat` hews closely to `stopifnot` semantics so it is trivial to learn.
+* `assertive`, `checkmate` requires familiarity with their many [Predicate
+  Functions](#predicate-function).
+* `vetr` requires understanding how to build templates used in structure checks.
 
 ### Concise
 
 The benefit to increased complexity is the ability to express complex
 requirements succinctly:
 
-* `checkmate`: highly configurable functions, and domain specific language for
-  vector checks.
-* `vetr`: verifies structural requirements by comparison to template objects.
-
-`assertive` is focused on single parameter Predicate Functions, which by nature
-are limited in their expressive power.  `assertthat` relies primarily<sup><a
-href='#fn-1'>1</a></sup> on standard R expressions so is equivalent to
-`stopifnot` in this respect.
+* `checkmate` provides highly configurable functions, and domain specific
+  language for vector checks.
+* `vetr` infers all required structural checks from a template object.
+* `assertive` is focused on single parameter [Predicate
+  Functions](#predicate-function), which by nature are limited in their
+  expressive power.
+* `assertthat` relies primarily<sup><a href='#fn-1'>1</a></sup> on standard R
+  expressions so is equivalent to `stopifnot` in this respect.
 
 ### Informative
 
-* `assertthat`: clearer error messages for the base `is.*`, `any`, `all`, and
-  the handful of bundled Predicate Functions, although no additional information
-  is provided except for `any` and `all` (position of failure).
-* `assertive`, and `checkmate`: clearer error messages with additional
-  information for the included Predicate Functions, particularly for `assertive`.
-* `vetr`: clearer error messages with additional informations for object
+One drawback for `stopifnot` is that the error messages it produces are
+sometimes cryptic.  All the reviewed packages seek to improve on this:
+
+* `assertthat` has clearer error messages for the base `is.*`, `any`, `all`, and
+  the handful of bundled [Predicate Functions](#predicate-function), although no
+  additional information is provided except for `any` and `all` (position of
+  failure).
+* `assertive`, and `checkmate` provide clearer error messages with additional
+  information for the included [Predicate Functions](#predicate-function),
+  particularly for `assertive`.
+* `vetr` provide clearer error messages with additional informations for object
   structure (type, length, attributes), and for values with `all_bw`.
 
-All packages allow users to attach custom error messages to Check Expressions or
-Predicate Functions, but here we focus on those available "out of the box".
+All packages allow users to attach custom error messages to [Check
+Expressions](#check-expression) or [Predicate Functions](#predicate-function),
+but here we focus on those available "out of the box".
 
 ### Fast
 
+Parameter checks should add minimal overhead.
+
 * `stopifnot` is as fast as the R expressions you use for it.
 * `assertthat` is comparable but adds some overhead.
-* `checkmate` is fastest for simple checks, and fast for vectors
+* `checkmate` is fastest for simple checks, and faster for vectors
 * `vetr` is fastest for vectors and complex objects
 * `assertive` is substantially slower
 
-Speed conclusions are based solely on the tests we carried out.  There are
-likely circumstances that will result in different outcomes.
+We base our conclusions on the tests we ran.  It is entirely possible different
+tests could lead to different results.  See [benchmarks](#benchmarks).
 
 <a name='details'></a>
 
@@ -184,7 +190,7 @@ likely circumstances that will result in different outcomes.
 
 We want to write a functions that accept a length two numeric vector with no
 missing values.  To illustrate we use functions that enforce that requirement
-and do nothing else, starting with `stopifnot`:
+and do nothing else, starting with one using `stopifnot`:
 
 ```{r}
 simple_stopifnot <- function(x)
@@ -198,21 +204,23 @@ simple_vetr_a <- function(x)
   vetr(is.numeric(.) && length(.) == 2 && !is.na(.))
 ```
 
-The `vetr` arguments are matched to those of the enclosing function.  We
-reference `x` with `.`, but also we must use `&&` instead of `,` to delimit our
-checks.  Additionally, `vetr` introduces templates, so we can rewrite
-`simple_vetr_a` as:
+The `vetr` arguments are matched to those of the enclosing function.  As a
+result we reference `x` with `.`, and we must use `&&` instead of `,` to
+delimit our checks.
+
+Additionally, `vetr` introduces templates, so we can rewrite `simple_vetr_a` as:
 
 ```{r}
 simple_vetr <- function(x)
   vetr(numeric(2L) && !is.na(.))
 ```
 
-`numeric(2L) && !is.na(.)` is a Vetting Expression that contains the Template
-Token `numeric(2L)`, and the Standard Token `!is.na(.)`.  Template Tokens
+`numeric(2L) && !is.na(.)` is a [Vetting Expression](#vetting-expression) that
+contains the [Template Token](#templated-token) `numeric(2L)`, and the [Standard
+Token](#standard-token) `!is.na(.)`.  [Template Tokens](#templated-token)
 require that parameters match their structure (i.e. length, type, and
-attributes).  Standard Tokens, marked by the `.` symbol, are evaluated as they
-would be by `stopifnot`.
+attributes).  [Standard Tokens](#standard-token), marked by the `.` symbol, are
+evaluated as they would be by `stopifnot`.
 
 Templates should be familiar to `vapply` users, but there are some wrinkles.
 For example zero-length templates like `numeric()` match any length objects.
@@ -222,24 +230,25 @@ See `?vetr::alike` and `vignette('alike', 'vetr')` for details.
 
 ```{r}
 simple_assertthat <- function(x)
-  assert_that(is.numeric(x), length(x) == 2, !is.na(x))
+  assert_that(is.numeric(x), length(x) == 2, !anyNA(x))
 ```
 
-`assertive` and `checkmate` rely on the Predicate Functions they implement:
+`assertive` and `checkmate` rely on the [Predicate
+Functions](#predicate-function) they implement:
 
 ```{r}
-# assertive: many simple Predicate Functions
-simple_assertive <- function(num, flag) {
+# assertive: 200+ simple Predicate Functions
+simple_assertive <- function(x) {
   assert_is_numeric(x)
   assert_is_of_length(x, 2)
   assert_all_are_not_na(x)
 }
-# checkmate: fewer more flexible/complex Predicate Functions
-simple_checkmate <- function(num, flag)
-  assertNumeric(num, any.missing=FALSE, len=2)
+# checkmate: 40+ flexible/complex Predicate Functions
+simple_checkmate <- function(x)
+  assertNumeric(x, any.missing=FALSE, len=2)
 ```
 
-For this type of check the improvements from the third party packages are
+For this type of check the improvements from the third party packages seem
 marginal until we look at the result with an illegal parameter:
 
 ```{r}
@@ -271,10 +280,6 @@ Here we wish to verify that an input conforms to the structure of the `iris`
 built-in data set.
 
 ```{r}
-# collect data for tests
-iris.tpl <- vetr::abstract(iris) # equivalently: iris[0, ]
-iris.col.classes <- lapply(iris, class)
-
 # make a bad version of iris
 iris.fake <- iris
 levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
@@ -283,44 +288,37 @@ levels(iris.fake$Species)[3] <- "sibirica"   # tweak levels
 Then, with `stopifnot`:
 
 ```{r}
+iris.col.classes <- lapply(iris, class)
+
 complex_stopifnot <- function(x) {
   stopifnot(
     is.data.frame(x),                     # this only checks class
     is.list(x),
-    length(x) == length(iris.tpl),
+    length(x) == length(iris),
     identical(lapply(x, class), iris.col.classes),
     is.integer(attr(x, 'row.names')),
-    identical(names(x), names(iris.tpl)),
+    identical(names(x), names(iris)),
     identical(typeof(x$Species), "integer"),
-    identical(levels(x$Species), levels(iris.tpl$Species))
-  )
-}
+    identical(levels(x$Species), levels(iris$Species))
+) }
 complex_stopifnot(iris.fake)
 ```
 
-In contrast, `vetr` is a one-liner:
+`vetr` carries out all those checks and more by inferring them from a template:
 
 ```{r}
-complex_vetr <- function(x) {
-  vetr(iris.tpl)
-}
+# zero row DF contains structure info only, and matches any # of rows
+iris.template <- iris[0,]
+
+complex_vetr <- function(x) vetr(iris.template)
 complex_vetr(iris.fake)
 ```
 
-Rather than painstakingly generating a list of all the comparisons required to
-validate the object, we point to an existing object to use as a template. `vetr`
-recursively traverses the template and the function parameter in parallel and
-checks each sub element of the latter against the former.
-
-`vetr` derives contextual information from the template that it uses to generate
-the error messages:
-
-```
-`levels(iris.fake$Species)[3]` should be "virginica" (is "sibirica")
-```
-
-It is designed so you can copy all of or part of `levels(iris.fake$Species)[3]`
-into the R prompt for examination.  It also tells you exactly what is wrong.
+`vetr` recursively traverses the template and the function parameter in parallel
+and checks each sub element of the latter against the former.  The error
+messages are also better.  Notice how you can copy all of or part of
+`levels(iris.fake$Species)[3]` from the message into the R prompt for further
+examination.
 
 `checkmate` is reasonably succinct:
 
@@ -336,21 +334,21 @@ complex_checkmate(iris.fake)
 ```
 
 `assertive`, and `assertthat` end up with the same number of explicit checks as
-`stopifnot`, and with similar error messages.  See the code appendix for those
-implementations.
+`stopifnot`, and with similar error messages so we omit them here.  See the code
+appendix for those implementations.
 
 ```{r iris.other, echo=F, eval=F}
 complex_assertive <- function(x) {
   assert_is_list(x)
-  assert_all_are_equal_to(length(iris), 5)
+  assert_all_are_equal_to(length(x), 5)
   assert_is_integer(attr(x, 'row.names'))
   assert_is_data.frame(x)
   assert_is_identical_to_true(identical(iris.col.classes, lapply(x, class)))
-  assert_is_identical_to_true(identical(names(x), names(iris.tpl)))
+  assert_is_identical_to_true(identical(names(x), names(iris)))
   assert_is_identical_to_true(identical(typeof(x$Species), "integer"))
   assert_is_factor(x$Species)
   assert_is_identical_to_true(
-    identical(levels(x$Species), levels(iris.tpl$Species))
+    identical(levels(x$Species), levels(iris$Species))
   )
 }
 complex_assertive(iris.fake)
@@ -359,32 +357,28 @@ complex_assertthat <- function(x) {
   assert_that(
     is.data.frame(x),                     # this only checks class
     is.list(x),
-    length(x) == length(iris.tpl),
+    length(x) == length(iris),
     identical(lapply(x, class), iris.col.classes),
     is.integer(attr(x, 'row.names')),
-    identical(names(x), names(iris.tpl)),
+    identical(names(x), names(iris)),
     identical(typeof(x$Species), "integer"),
-    identical(levels(x$Species), levels(iris.tpl$Species))
-  )
-}
+    identical(levels(x$Species), levels(iris$Species))
+) }
 complex_assertthat(iris.fake)
 ```
 
 ### Vector Values
 
 Suppose we wish to ensure our input is a strictly positive numeric vector with
-no missing values.  With `stopifnot` we would
-use:
+no missing values.  With `r vec <- -1:1` and `stopifnot` we would use:
 
 ```{r}
-vec <- -1:1
-
 vector_stopifnot <- function(x) stopifnot(is.numeric(x), !anyNA(x), all(x > 0))
 vector_stopifnot(vec)
 ```
 
-`vetr` includes the `all_bw` function primarily for speed, but it also generates
-more useful error messages:
+`vetr` implements the `all_bw` function primarily for speed, but it also
+generates more useful error messages:
 
 ```{r}
 vector_vetr <- function(x) vetr(numeric() && all_bw(., 0, Inf,  bounds="(]"))
@@ -416,68 +410,28 @@ vector_assertive(vec)
 
 ### Compound Checks
 
-If you wish to build re-usable complex checks with `stopifnot`  or `asserthat`
-you would do so by writing functions.  We illustrate by creating a custom check
-for either a square numeric matrix or a scalar numeric:
+If you wish to build re-usable complex checks with `stopifnot`,  `asserthat`,
+`assertive`, and `checkmate` you do so by writing new functions.  `vetr`
+implements a special type of programmable Non Standard Evaluation.  Here we
+write a [Vetting Expression](#vetting-expression) that accepts either a square
+numeric matrix, or a scalar numeric:
 
 ```{r}
-is.sqr_mx <- function(x) is.matrix(x) && ncol(x) == nrow(x)
-is.sqr_num_mx_or_sclr_num <- function(x)
-  is.numeric(x) && (is.sqr_mx(x) || length(x) == 1)
+sqr.mx <- quote(ncol(.) == nrow(.))
+num.mx <- matrix(numeric(), 0, 0)       # 0 x 0 matrix, matches any matrix
+sqr.num.mx <- quote(sqr.mx && num.mx)
+sqr.num.mx.or.sclr.num <- quote(vetr.sqr.num.mx || numeric(1L))
+
+compound_vetr <- function(x) vetr(vetr.sqr.num.mx.or.sclr.num)
 
 rect.mx <- matrix(1:12, 3)
-
-compound_stopifnot <- function(x) {
-  stopifnot(is.sqr_num_mx_or_sclr_num(x))
-}
-compound_stopifnot(rect.mx)
-
-compound_assertthat <- function(x) {
-  assert_that(is.sqr_num_mx_or_sclr_num(x))
-}
-compound_assertthat(rect.mx)
-```
-
-The main drawback from this approach is the somewhat uninformative error
-message.
-
-`vetr` is similar, except that you can combine template and standard tokens as
-language objects and retain the more granular error reporting:
-
-```{r}
-vetr.sqr.num.mx <- quote(matrix(numeric(), 0) && ncol(.) == nrow(.))
-vetr.sqr.num.mx.or.sclr.num <- quote(vetr.sqr.num.mx || numeric(1L))
-
-compound_vetr <- function(x) {
-  vetr(vetr.sqr.num.mx.or.sclr.num)
-}
 compound_vetr(rect.mx)
 ```
 
-You can use `assert` with `check*` functions in, but we lose some of the
-expressiveness of the error messages:
-
-```{r}
-checkSquareNumMatrix <- function(x)
-  isTRUE(checkMatrix(x, mode='numeric')) && nrow(x) == ncol(x)
-
-compound_checkmate <- function(x) {
-  assert(checkSquareNumMatrix(x), checkNumber(x, na.ok=TRUE), combine="or")
-}
-compound_checkmate(rect.mx)
-```
-
-Neither `assertive` nor `ensurer` appear to provide an out of the box mechanism
-for combining checks with "or" logic.  `ensurer` does provide a mechanism for
-"and" combinations [via `ensures`](#appendix).  To get the "or" logic we need to
-rely on the same function we defined for `stopifnot`:
-
-```{r}
-compound_assertive <- function(x) {
-  assert_engine(is.sqr_num_mx_or_sclr_num, x=x)
-}
-compound_assertive(rect.mx)
-```
+`vetr` recursively substitutes symbols in the [Vetting
+Expression](#vetting-expression) which makes it very easy to assemble complex
+expressions from simple ones by using `quote`.  Note that standalone templates
+like `matrix(numeric(), 0, 0)` need not be quoted.
 
 ## Benchmarks
 
@@ -485,9 +439,8 @@ compound_assertive(rect.mx)
 ```
 
 We benchmark the functions with `mb`, a thin wrapper around `microbenchmark`
-(see the [appendix](#appendix) for its definition).  Note that the `mean`
-numbers may be skewed by outlier timings caused by `rmarkdown`.  We also focus
-on timings for checks that succeed.
+(see the [appendix](#appendix) for its definition).  We focus on timings for
+checks that succeed.
 
 Starting with the simple checks:
 
@@ -508,23 +461,16 @@ mb <- function(...) {
 }
 ```
 ```{r, echo=FALSE}
+nums <- runif(2)
 mb(
-  simple_stopifnot(pi, TRUE),
-  simple_vetr(pi, TRUE),
-  simple_assertive(pi, TRUE),
-  simple_assertthat(pi, TRUE),
-  simple_checkmate(pi, TRUE)
+  simple_stopifnot(nums),
+  simple_vetr(nums),
+  simple_assertive(nums),
+  simple_assertthat(nums),
+  simple_checkmate(nums)
 )
 ```
-
 `stopifnot` and `checkmate` lead the way, with `vetr` not too far behind.
-
-One could argue that the performance differences here are trivial.  After all,
-even the slowest approach clocks in under a millisecond.  However, given the
-prevalence of split-apply-combine style analysis, where a single function could
-be applied to thousands or even millions of data groups, the performance
-differences shown here can have a substantial impact on overall computation
-time.
 
 For complex objects `vetr` takes the lead:
 
@@ -566,20 +512,10 @@ semantically equivalent `!anyNA(.) && all(. > 0)` expression.  `all_bw` is
 implemented in C and avoids the intermediate vectors required to evaluate the
 standard R version.  `checkmate` does the same with `qassert`.
 
-`stopifnot` does a little better in the compound tests:
-
-```{r}
-sqr.mx <- matrix(1:9, 3)
-```
-```{r, echo=FALSE}
-mb(
-  compound_assertive(sqr.mx),
-  compound_assertthat(sqr.mx),
-  compound_checkmate(sqr.mx),
-  compound_stopifnot(sqr.mx),
-  compound_vetr(sqr.mx)
-)
-```
+If your functions will never be run thousands of times then you probably do not
+need to worry about the differences shown here.  However, general purpose
+parameter check functions should be compatible with functions that are, and in
+those cases microseconds matter.
 
 ## Conclusions
 
@@ -590,20 +526,19 @@ Take these with a grain of salt, as they are written by the `vetr` author:
 
 In favor of `vetr`:
 
-* `vetr` is the best package for checking complex S3 structure
-* `vetr` is fastest for non-trivial checks
+* Best package for checking complex S3 structure.
+* Fastest package for non-trivial checks.
 
 Against `vetr`:
 
-* New package with an extensive test suite, but limited "real-world"
-  testing
-* Template concept is designed to be intuitive, but the actual implementation is
-  complex, which in corner cases may lead to unintuitive outcomes
+* New package (beta testers welcome!).
+* Template concept is designed to be intuitive, but inevitably in some corner
+  cases it will require deeper understanding of the underlying rules.
 
 If you are tired of dealing with checks for non-trivial S3 objects and are
-willing to be on the bleeding edge, `vetr` is for you.  If not, we would
-recommend `checkmate` as it is fast, well established, and more expressive than
-the other options.
+willing to try out a young package, `vetr` is for you.  If not, we would
+recommend<sup><a href='#fn-2'>2</a></sup> `checkmate` as it is fast, well
+established, and more expressive than the other options.
 
 ## Appendix
 
@@ -618,58 +553,68 @@ definitions elsewhere.
 <dl>
   <dt><a name='predicate-function'></a>Predicate Function</dt>
   <dd>
-  Function that typically accepts one non-optional argument and returns TRUE
-  or FALSE according to whether that argument conforms to a requirement.
-  `isTRUE(x)`, `is.numeric(x)`, etc. are common examples of Predicate Functions.
-  `identical(x, y)` is a two argument Predicate Function.
+  Function that typically accepts one non-optional argument and returns TRUE or
+  FALSE according to whether that argument conforms to a requirement.
+  `isTRUE(x)` and `is.numeric(x)` are single argument examples, and
+  `identical(x, y)` is a two argument example.
   </dd>
   <dt><a name='check-function'></a>Check Function</dt>
   <dd>
-  Similar to a Predicate Function, arguments and may return either TRUE or a
-  vector of only TRUE values on success, and something else on failure.
+  Similar to a [Predicate Function](#predicate-function), may return either TRUE
+  or a vector of only TRUE values on success, and something else on failure.
   `all.equal(x, y)` is a common example.  Check Functions should be used within
   `isTRUE(all(check_fun(...)))` to establish success or failure, unless they are
   used within `stopifnot` or `vetr` where such a check is implicit.
   </dd>
   <dt><a name='check-expression'></a>Check Expression</dt>
   <dd>
-  A collection of calls to Check and/or Predicate Functions combined with
-  logical operators.  For example `!anyNA(x) && x > 0`.
+  A collection of calls to [Check](#check-function) and/or [Predicate
+  Functions](#predicate-function) combined with logical operators.  For example
+  `!anyNA(x) && x > 0`.
   </dd>
   <dt><a name='vetting-expression'></a>Vetting Expression</dt>
   <dd>
-  Like a Check Expression, but augmented for use in `vetr`.  In addition to
-  Check and Predicate Function calls, it can include Templates Tokens.
-  References to the object being checked should be made with `.`.  For example
-  `numeric(1L) && !is.na(.) && x > 0`, is made up of three tokens, where
-  `numeric(1L)` is a Template Token, and `!is.na(.)` and `x > 0` are Standard
-  Tokens.  See `vignette(package='vetr', 'vetr')` for more details..
+  Like a [Check Expression](#check-expression), but augmented for use in `vetr`.
+  In addition to Check and [Predicate Function](#predicate-function) calls, it
+  can include [Template Tokens](#templated-token).  References to the object
+  being checked should be made with the `.` symbol.  For example 
+  `numeric(1L) && !is.na(.) && . > 0`, is made up of three tokens, where
+  `numeric(1L)` is a [Template Token](#templated-token), and `!is.na(.)` and 
+  `. > 0` are [Standard Tokens](#standard-token).  Beware of accidentally
+  referencing a variable in a token intended to be a [Standard
+  Token](#standard-token).  If we had used `x > 0` instead of `. > 0`, `vetr`
+  would evaluate `x > 0` and use the result as a template since `x > 0` does not
+  contain the `.` symbol to mark it as a [Standard Token](#standard-token). See
+  `vignette('vetr', 'vetr')` for more details.
   </dd>
   <dt><a name='template-token'></a>Template Token</dt>
   <dd>
-  Part of a Vetting Expression that should be treated as a template by `vetr`.
-  It should resolve to an R object when it is evaluated in the calling frame of
-  the enclosing function to the `vetr` call.
-  See `vignette(package='vetr', 'vetr')` for more details.
+  Part of a [Vetting Expression](#vetting-expression) that should be treated as
+  a template by `vetr`.  It should resolve to an R object when it is evaluated
+  in the calling frame of the enclosing function to the `vetr` call.  See
+  `vignette('vetr', 'vetr')` for more details.
   </dd>
   <dt><a name='standard-token'></a>Standard Token</dt>
   <dd>
-  Part of a Vetting Expression that should be treated as a standard R
-  expression.  If `isTRUE(all(evaluated_standard_token))` then the token will be
-  considered to pass.  Standard Tokens are identified by the presence of a `.`
-  symbol within a token.  You can also wrap expressions in `.()` to mark them as
-  standard tokens.  If you need to use the `.` symbol for other purposes escape
+  Part of a [Vetting Expression](#vetting-expression) that should be treated as
+  a standard R expression.  If `isTRUE(all(evaluated_standard_token))` then the
+  token will be considered to pass.  [Standard Tokens](#standard-token) are
+  identified by the presence of a `.` symbol within a token.  You can also wrap
+  expressions in `.()` to mark them as standard tokens.  If you need to use the
+  `.` symbol for other purposes escape
   it with another `.` (i.e. to use a literal `.`, use `..`).
-  See `vignette(package='vetr', 'vetr')` for more details.
+  See `vignette('vetr', 'vetr')` for more details.
   </dd>
   <dt><a name='vetting-token'></a>Vetting Token</dt>
   <dd>
-  Component pieces of Vetting Expressions.  May be either Standard Tokens or
-  Template Tokens.  Vetting Tokens are the arguments to "top level" `&&`, `||`,
-  and `(` calls.  For example, in the Vetting Expression
-  `!anyNA(.) && I(. > 0 && interactive())` there are two  Vetting Tokens:
-  `!anyNA(.)` and `I(. > 0 && interactive())`.  The `&&` inside `I(...)` is not
-  considered to be at the "top level" because of the intervening `I` call.
+  Component piece of [Vetting Expressions](#vetting-expression).  May be either
+  [Standard Tokens](#standard-token) or [Template Tokens](#templated-token).
+  [Vetting Tokens](#vetting-token) are the arguments to "top level" `&&`, `||`,
+  and `(` calls.  For example, in the [Vetting Expression](#vetting-expression)
+  `!anyNA(.) && I(. > 0 && interactive())` there are two  [Vetting
+  Tokens](#vetting-token): `!anyNA(.)` and `I(. > 0 && interactive())`.  The
+  `&&` inside `I(...)` is not considered to be at the "top level" because of the
+  intervening `I` call.
   </dd>
 </dl>
 
@@ -679,24 +624,29 @@ definitions elsewhere.
 
 ### Ancillary Code
 
-#### microbenchmark Thin Wrapper
+#### Benchmarking Function
+
+We use a thin wrapper around `microbenchmark`:
 
 ```{r mb_define}
 ```
 
-#### Complex Objects Appendix
-
-Complex objects for other packages:
+#### Complex Objects for Other Packages
 
 ```{r iris.other}
 ```
 
 ### End Notes
 
-<sup>1</sup>:<a name='sup-1'></a>
-  `assertthat` requires Check Expressions to evaluate to TRUE or FALSE, whereas
+<sup>1</sup><a name='fn-1'></a> `assertthat` requires [Check
+  Expressions](#check-expression) to evaluate to TRUE or FALSE, whereas
   `stopifnot` accepts anything, with all TRUE vectors considered a success and
   all else failure.  Additionally, `assertthat` implements a handful of useful
-  Predicate Functions for common checks (e.g. scalars, etc.).
+  [Predicate Functions](#predicate-function) for common checks (e.g.  scalars,
+  etc.).
+<br />
+<sup>2</sup><a name='fn-2'></a> Our recommendation for `checkmate` is made
+  solely on the basis of the tests described in this document.  We have not used
+  it in any of our packages.
 
 
