@@ -23,20 +23,8 @@ library(valaddin)
 
 ## Prevent Garbage In
 
-Most functions expect their parameters to be of specific types, structures, or
-values.  If we allow functions to operate on parameters that do not conform to
-the expectations then we could get in the best case difficult to debug errors
-from the bowels of the function, and in the worst silent undefined behavior.
-
-Systematically vetting function parameters is as tedious as it is important, but
-fortunately many packages exist to assist with the process.  We will review
-those packages and assess them across these dimensions:
-
-* Ease of use for the function developer incorporating parameter checks
-* Computing overhead
-* Ease of use for end users
-
-We will review:
+Systematically vetting function parameters is as tedious as it is important.
+Fortunately many functions and packages exist to assist with the process:
 
 * `stopifnot` by R Core
 * [`vetr`](https://github.com/brodieG/vetr) v0.2.0 by Yours Truly
@@ -131,19 +119,19 @@ Ideally packages should have a minimal learning curve.
 * `asserthat` hews closely to `stopifnot` semantics so it is trivial to learn.
 * `assertive`, `checkmate` requires familiarity with their many [Predicate
   Functions](#predicate-function).
-* `vetr` requires understanding how to build templates used in structure checks.
+* `vetr` requires understanding how to build the templates used in structure
+  checks.
 
 ### Concise
 
 The benefit to increased complexity is the ability to express complex
 requirements succinctly:
 
-* `checkmate` provides highly configurable functions, and domain specific
+* `checkmate` provides highly configurable functions, and a domain specific
   language for vector checks.
 * `vetr` infers all required structural checks from a template object.
 * `assertive` is focused on single parameter [Predicate
-  Functions](#predicate-function), which by nature are limited in their
-  expressive power.
+  Functions](#predicate-function), which leads to more verbose checks.
 * `assertthat` relies primarily<sup><a href='#fn-1'>1</a></sup> on standard R
   expressions so is equivalent to `stopifnot` in this respect.
 
@@ -234,7 +222,7 @@ simple_assertthat <- function(x)
 ```
 
 `assertive` and `checkmate` rely on the [Predicate
-Functions](#predicate-function) they implement:
+Functions](#predicate-function) and the accompanying assertions they implement:
 
 ```{r}
 # assertive: 200+ simple Predicate Functions
