@@ -484,13 +484,13 @@ so we run it fewer times):
 str.pos.vec <- runif(5e5) + 1  # test with a 500K long vector
 ```
 ```{r, echo=FALSE}
-mb(times=10,
+mb(
   vector_assertthat(str.pos.vec),
   vector_checkmate(str.pos.vec),
   vector_stopifnot(str.pos.vec),
   vector_vetr(str.pos.vec)
 )
-mb(times=1,
+mb(times=5,
   vector_assertive(str.pos.vec)
 )
 ```
