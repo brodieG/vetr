@@ -160,9 +160,9 @@ Parameter checks should add minimal overhead.
 
 * `stopifnot` is as fast as the R expressions you use for it.
 * `assertthat` is comparable but adds some overhead.
-* `checkmate` is fastest for simple checks, and faster for vectors
-* `vetr` is fastest for vectors and complex objects
-* `assertive` is substantially slower
+* `assertive` is substantially slower.
+* `checkmate` is fastest for simple checks, and faster for vectors.
+* `vetr` is fastest for vectors and complex objects.
 
 We base our conclusions on the tests we ran.  It is entirely possible different
 tests could lead to different results.  See [benchmarks](#benchmarks).
@@ -426,6 +426,8 @@ like `matrix(numeric(), 0, 0)` need not be quoted.
 ```{r child='./compare-nav.Rmd'}
 ```
 
+### Detail Benchmarks
+
 We benchmark the functions with `mb`, a thin wrapper around `microbenchmark`
 (see the [appendix](#appendix) for its definition).  We focus on timings for
 checks that succeed.
@@ -505,6 +507,30 @@ need to worry about the differences shown here.  However, general purpose
 parameter check functions should be compatible with functions that are, and in
 those cases microseconds matter.
 
+### Making `vetr` Faster
+
+We made a design choice with `vetr` that the overhead associated with running
+two `match.call` calls was worthwhile for the features it allowed us to
+implement.  In some cases though that extra time is to onerous.  For those you
+can use `vet` which is a general purpose object checker that uses [Vetting
+Expressions](#vetting-expression) just like `vetr`:
+
+```{r}
+simple_vet <- function(x) vet(numeric(2L) && !anyNA(.), x, stop=TRUE)
+simple_vet(pi)
+```
+
+The error message is not quite as helpful, but we lose some of the overhead:
+
+```{r, echo=FALSE}
+mb(
+  simple_vet(nums),
+  simple_vetr(nums),
+  simple_checkmate(nums),
+  alike(numeric(2L), nums)
+)
+```
+
 ## Conclusions
 
 ```{r child='./compare-nav.Rmd'}
@@ -565,9 +591,9 @@ definitions elsewhere.
   Like a [Check Expression](#check-expression), but augmented for use in `vetr`.
   In addition to Check and [Predicate Function](#predicate-function) calls, it
   can include [Template Tokens](#templated-token).  References to the object
-  being checked should be made with the `.` symbol.  For example 
+  being checked should be made with the `.` symbol.  For example
   `numeric(1L) && !is.na(.) && . > 0`, is made up of three tokens, where
-  `numeric(1L)` is a [Template Token](#templated-token), and `!is.na(.)` and 
+  `numeric(1L)` is a [Template Token](#templated-token), and `!is.na(.)` and
   `. > 0` are [Standard Tokens](#standard-token).  Beware of accidentally
   referencing a variable in a token intended to be a [Standard
   Token](#standard-token).  If we had used `x > 0` instead of `. > 0`, `vetr`
@@ -608,7 +634,10 @@ definitions elsewhere.
 
 ### References
 
-* Vignettes and other documentation for the reviewed packages
+* Help, vignettes, and READMEs for `assertthat`, `assertive`, `checkmate`,
+  `ensurer`, and `valaddin`.
+* R Journal entry for checkmate.
+* Richie Cotton blog entry.
 
 ### Ancillary Code
 
