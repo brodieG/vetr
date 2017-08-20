@@ -148,7 +148,8 @@ SEXP VALC_evaluate_recurse(
       // nocov end
     }
   } else if(mode == 10 || mode == 999) {
-    SEXP eval_res, eval_tmp;
+    struct VALC_res eval_res;
+    SEXP eval_tmp;
     int err_val = 0;
     int eval_res_c = -1000;  // initialize to illegal value
     int * err_point = &err_val;
@@ -159,28 +160,20 @@ SEXP VALC_evaluate_recurse(
         "Validation expression for argument `%s` produced an error (see previous error)."
       );
     }
+    // eval_res can technically hold up to two SEXPs, but in our use case we
+    // only ever use one or the other, so we only PROTECT once.  The SEXPs are
+    // either the actual evaluation for standard tokens, or the call for the
+    // template tokens
+
     if(mode == 10) {
       eval_res_c = VALC_all(eval_tmp);
-      eval_res = TYPEOF(eval_tmp) == STRSXP ?
+      eval_res.tpl = 0;
+      eval_res.val = TYPEOF(eval_tmp) == STRSXP ?
         PROTECT(eval_tmp) : PROTECT(ScalarLogical(eval_res_c > 0));
     } else {
-      eval_res = PROTECT(ALIKEC_alike_int2(eval_tmp, arg_value, arg_lang, set));
-    }
-    // Sanity checks
-
-    int is_tf = TYPEOF(eval_res) == LGLSXP && XLENGTH(eval_res) == 1L &&
-      asInteger(eval_res) != NA_INTEGER;
-    int is_val_string = TYPEOF(eval_res) == STRSXP &&
-      (XLENGTH(eval_res) == 5 || XLENGTH(eval_res) == 1);
-
-    if(mode != 10 && !(is_tf || is_val_string)) {
-      // `alike` return has stricter structure requirements
-      // nocov start
-      error("%s %s (is type: %s), %s",
-        "Internal Error: token eval must be TRUE, FALSE, character(1L), ",
-        "or character(5L)", type2char(TYPEOF(eval_res)), "contact maintainer."
-      );
-      // nocov end
+      eval_res.tpl = 1;
+      eval_res.alike =
+        PROTECT(ALIKEC_alike_wrap(eval_tmp, arg_value, arg_lang, set));
     }
     // Note we're handling both user exp and template eval here
 
@@ -340,6 +333,9 @@ SEXP VALC_evaluate(
 
   switch(TYPEOF(res)) {
     case LGLSXP:  break;
+    // this is likely the result of an OR evaluation, and should only get
+    // produced if every check failed so we should have an error message for
+    // every last one
     case LISTSXP: {
       SEXP res_cpy, res_next, res_next_next, res_val;
       for(

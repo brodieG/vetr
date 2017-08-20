@@ -30,6 +30,12 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 #ifndef _VETR_H
 #define _VETR_H
 
+  struct VALC_res {
+    int tpl,                      // whether result type is template or not
+    struct ALIKEC_res_fin alike,  // note, contains SEXP
+    SEXP val                      // result of evaluation of standard token
+  };
+
   SEXP VALC_SYM_one_dot;
   SEXP VALC_SYM_deparse;
   SEXP VALC_SYM_paren;
@@ -43,6 +49,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP VALC_test3(SEXP a, SEXP b, SEXP c);
 
   SEXP VALC_check_assumptions();
+
+  SEXP VALC_res_init();
 
   SEXP VALC_validate(
     SEXP target, SEXP current, SEXP cur_sub, SEXP par_call, SEXP rho,

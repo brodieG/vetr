@@ -49,6 +49,10 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
    * Contains data in fairly unprocessed form to avoid overhead.  If we decide
    * error must be thrown, then we can process it with pad_or_quote,
    * string_or_true, etc.
+   *
+   * Note, name is not completely correct, as there are more steps after this.
+   *
+   * YOU NEED TO PROTECT THIS ONE BECAUSE OF THE SEXP IT CONTAINS.
    */
   struct ALIKEC_res_fin {
     int success;
@@ -61,6 +65,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
     // Needed so we don't deparse call until very end when we're sure we'll need
     // it, because that is slow and we don't want to do it in an OR check
+
     SEXP call_sxp;
   };
   // Keep track of environments in recursion to make sure we don't get into a
@@ -84,16 +89,6 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     struct ALIKEC_index * indices;
     struct ALIKEC_env_track * envs;
     int gp;            // general purpose flag
-  };
-
-  // Intermediate structure that will eventually be made part of the `message`
-  // component of ALIKEC_res
-
-  struct ALIKEC_res_strings {
-    const char * tar_pre;
-    const char * target;
-    const char * act_pre;
-    const char * actual;
   };
   // We used a SEXP because it contains the error message, as well as the wrap
   // component that we can use around the call (e.g "names(%s)[[1]]"), and the
@@ -121,7 +116,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   struct ALIKEC_res_lang {
     int success;
     struct ALIKEC_rec_track rec;
-    struct ALIKEC_res_strings msg_strings;
+    struct ALIKEC_res_fin msg_strings;
   };
   // Structure used for functions called by 'alike_obj', main difference with
   // the return value of 'alike_obj' is 'indices', since that is a more complex
@@ -177,13 +172,15 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     int formula, SEXP match_call, SEXP match_env, struct VALC_settings set,
     struct ALIKEC_rec_track rec
   );
-  struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
+  struct ALIKEC_res_fin ALIKEC_fun_alike_internal(
     SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current);
   SEXP ALIKEC_compare_ts_ext(SEXP target, SEXP current);
   SEXP ALIKEC_pad_or_quote_ext(SEXP lang, SEXP width, SEXP syntactic);
-  SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_strings strings);
+  // there used to be an ALIKE_res_strings struct; we got rid of it but keep
+  // this for backwards compatibility
+  SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_fin strings);
 
   // - Utility Funs -----------------------------------------------------------
 

@@ -40,7 +40,7 @@ fun(a, b, e, f, ..., g, c, e)
 
 */
 
-struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
+struct ALIKEC_res_fin ALIKEC_fun_alike_internal(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
   if(!isFunction(target) || !isFunction(current))
@@ -48,7 +48,7 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
 
   SEXP tar_form, cur_form, args;
   SEXPTYPE tar_type = TYPEOF(target), cur_type = TYPEOF(current);
-  struct ALIKEC_res_strings res = {"", "", "", ""};
+  struct ALIKEC_res_fin res = ALIKEC_res_fin_init();
 
   // Translate specials and builtins to formals, if possible
 
@@ -87,11 +87,12 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
     if(!dots_cur && cur_tag == R_DotsSymbol) dots_cur = 1;
     if(tar_tag == cur_tag) {
       if(CAR(tar_form) != R_MissingArg && CAR(cur_form) == R_MissingArg) {
+        res.success = 0;
         res.tar_pre = "have";
-        res.target = CSR_smprintf4(
-          set.nchar_max, "a default value for argument `%s`",
+        res.target = {
+          "a default value for argument `%s`%s%s%s",
           CHAR(PRINTNAME(tar_tag)), "", "", ""
-        );
+        };
         break;
       }
       last_match = tar_tag;
@@ -118,13 +119,15 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
   // We have a mismatch; produce error message
 
   int cur_mismatch = cur_form != R_NilValue && last_match != R_DotsSymbol;
-  if(res.target && (tar_form != R_NilValue || !tag_match || cur_mismatch)) {
+  if(
+    !res.success && (tar_form != R_NilValue || !tag_match || cur_mismatch)
+  ) {
     if(dots && !dots_cur) {
       res.tar_pre = "have";
-      res.target = "a `...` argument";
+      res.target = {"a `...` argument%s%s%s%s", "", "", "", ""};
     } else if (!tar_args && tar_form == R_NilValue) {
       res.tar_pre = "not have";
-      res.target = "any arguments";
+      res.target = {"any arguments%s%s%s%s", "", "", "", ""};
     } else {
       const char * arg_type = "as first argument";
       const char * arg_name;
@@ -148,8 +151,7 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
       }
       res.tar_pre =
         CSR_smprintf4(set.nchar_max, "%shave", arg_mod, "", "", "");
-      res.target =  CSR_smprintf4(
-        set.nchar_max, "argument `%s` %s", arg_name, arg_type, "", ""
+      res.target = {"argument `%s` %s%s%s", arg_name, arg_type, "", ""};
   );} }
   // Success
 
@@ -158,8 +160,8 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
 }
 SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current) {
   struct VALC_settings set = VALC_settings_init();
-  struct ALIKEC_res_strings res =
+  struct ALIKEC_res_fin res =
     ALIKEC_fun_alike_internal(target, current, set);
-  if(res.target[0]) return ALIKEC_res_strings_to_SEXP(res);
+  if(!res.success) return ALIKEC_res_strings_to_SEXP(res);
   return(ScalarLogical(1));
 }

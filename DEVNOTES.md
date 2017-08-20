@@ -1,5 +1,23 @@
 ## Notes for the next day
 
+Currently working through trying to delay the construction of error messages to
+the very last minute.
+
+Seems like the main issue is that that in VALC_evaluate, we need to change from
+a simple LISTSXP to some homegrown object containing all the errors.  The major
+issue we're going to have here is that we need to make sure that the protection
+stack works out since as we've heading right now the VALC_res needs to be
+protected explicitly since it contains non-SEXP crap in it.  Most likely we'll
+need to change that to be a SEXP that contains the vector messages in component
+pieces plus the ancillary stuff.
+
+All this is to delay having to call pad_or_quote or smprintf business.  Have to
+wonder if we truly optimized those, maybe we could just skip worrying about
+these?  Seems like no matter what we'll have to create some CHARSXPS...
+
+We'll need to figure out how to update VALC_process_error to deal with the new
+format.
+
 ## NSE?
 
 Is it possible to allow the functions to accept arbitrary language objects and

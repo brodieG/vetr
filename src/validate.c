@@ -17,6 +17,12 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 
 #include "validate.h"
+
+struct VALC_res VALC_res_init() {
+  return (struct VALC_res) {
+    .tpl = 0, .alike = ALIKEC_res_fin_init(), .val = R_NilValue
+  };
+}
 /*
  * val_res should be a pairlist containing character vectors in each position
  * and each of those character vectors should be length one

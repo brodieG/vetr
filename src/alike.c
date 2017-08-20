@@ -62,13 +62,19 @@ SEXP ALIKEC_res_msg_def(
 }
 /*
  * Create a SEXP out of an ALIKEC_res_strings struct
+ *
+ * See `ALIKEC_string_or_true` for related function.
  */
-SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_strings strings) {
+SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_fin strings) {
+  struct VALC_settings set = VALC_settings_init()
+  struct ALIKEC_tar_cur_strings strings_pasted =
+    ALIKE_res_fin_as_strings(strings, set);
+
   SEXP res = PROTECT(allocVector(STRSXP, 4));
   SET_STRING_ELT(res, 0, mkChar(strings.tar_pre));
-  SET_STRING_ELT(res, 1, mkChar(strings.target));
-  SET_STRING_ELT(res, 2, mkChar(strings.act_pre));
-  SET_STRING_ELT(res, 3, mkChar(strings.actual));
+  SET_STRING_ELT(res, 1, mkChar(strings_pasted.target));
+  SET_STRING_ELT(res, 2, mkChar(strings.cur_pre));
+  SET_STRING_ELT(res, 3, mkChar(strings_pasted.current));
   UNPROTECT(1);
   return res;
 }
@@ -113,8 +119,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
   const char * err_tok1, * err_tok2, * msg_tmp;
   err_tok1 = err_tok2 = msg_tmp = "";
 
-  struct ALIKEC_res_strings err_fun;
-  struct ALIKEC_res_fin err_type;
+  struct ALIKEC_res_fin err_type, err_fun;
   struct ALIKEC_res res = ALIKEC_res_def();
 
   tar_type = TYPEOF(target);
@@ -245,7 +250,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
 
     if(!err && !is_lang) {
       err_type = ALIKEC_type_alike_internal(target, current, R_NilValue, set);
-      if(err_type.target[0]) {
+      if(!err_type.success) {
         err = 1;
         msg_tar_pre = err_type.tar_pre;
         msg_target = err_type.target;
@@ -669,10 +674,13 @@ struct ALIKEC_res_fin ALIKEC_alike_wrap(
     }
     // Deparse and format the call
 
-    res_out.call = ALIKEC_pad_or_quote(
+    res_out.call_sxp = curr_sub;
+    /*
+    ALIKEC_pad_or_quote(
       curr_sub, set.width,
       asLogical(getAttrib(rec_ind, ALIKEC_SYM_syntacticnames)), set
     );
+    */
     UNPROTECT(2);
   }
   UNPROTECT(1);
@@ -696,14 +704,19 @@ SEXP ALIKEC_alike_ext(
     // nocov end
   }
   struct VALC_settings set = VALC_settings_vet(settings, env);
-  return ALIKEC_string_or_true(
-    ALIKEC_alike_wrap(target, current, curr_sub, set), set
-  );
+  struct ALIKEC_res_fin res =
+    PROTECT(ALIKEC_alike_wrap(target, current, curr_sub, set));
+  SEXP res_sxp = PROTECT(ALIKEC_string_or_true(res, set));
+  UNPROTECT(2);
+
+  return res_sxp;
 }
 /*
  * Another secondary, but takes the set struct instead of SEXP list, and returns
  * length 5 character vectors for the errors instead of length 1 so that the
  * return values can be used with ALIKEC_merge_msg.
+ *
+ * Intended primarily for use by vetr
  */
 SEXP ALIKEC_alike_int2(
   SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
