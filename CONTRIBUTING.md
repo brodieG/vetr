@@ -24,6 +24,12 @@ Create an issue that highlights the problem, and describe how you hope to solve
 it.  Do not be offended if your offer for help is refused.  Accepting a PR
 creates a maintenance burden that I might not be willing to take on.
 
+I realize the requirements I lay out here are annoying.  If they prevent you
+from making a contribution I am sorry and sympathize, having been on the
+opposite side of such requirements myself.  Nonetheless The requirements stand
+to ensure your contribution does not end up creating more work than it
+saves.
+
 ### Requirements
 
 * Check the diff prior to submitting the PR and make sure there are no
