@@ -1,0 +1,51 @@
+# Contributing to `vetr`
+
+Thank you for your interest in contributing to `vetr`.  To make sure you do not
+waste your time or mine, please read and follow the guidelines here.
+
+## Reporting Issues
+
+Please create a:
+
+* minimal:        as little code as possible.
+* reproducible:   include the **minimal** input data.
+* example:        include the expected output.
+
+Additionally:
+
+* Include output of `sessionInfo()`
+* Format the example code so that it can be copy-pasted into an R console
+
+## Submitting PRs
+
+### Before you Start
+
+Create an issue that highlights the problem, and describe how you hope to solve
+it.  Do not be offended if your offer for help is refused.  Accepting a PR
+creates a maintenance burden that I might not be willing to take on.
+
+### Requirements
+
+* Check the diff prior to submitting the PR and make sure there are no
+  unnecessary changes (e.g. meaningless white space changes, etc.).
+* All PRs should be made as a new branch off of the "development" branch.
+* Every line of code you contribute should be tested as shown by `covr`.
+* Unit tests should be done in `unitizer`.
+* You should license all contributions you make with a license compatible with
+  that of the package, and you should ensure you are the copyright holder for
+  all the contributions.
+
+### Style Guide
+
+Strict:
+
+* Wrap text at 80 columns
+* Indentations are 2 spaces
+* Strip trailing whitespace
+
+Suggested:
+
+* function_name()
+* object.name
+* FormalClassName
+* formalMethodName()
