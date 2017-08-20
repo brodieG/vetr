@@ -22,6 +22,16 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 // - Helper Functions ----------------------------------------------------------
 
+struct ALIKEC_res_fin ALIKEC_res_fin_init() {
+  return ALIKEC_res_fin res = (struct ALIKEC_res_fin) {
+    .success=1,
+    .tar_pre="",
+    .cur_pre="",
+    .target={"%s%s%s%s", "", "", "", ""},
+    .current={"%s%s%s%s", "", "", "", ""},
+    .call_sxp=R_NilValue
+  };
+}
 /* equivalent to `mode` in R, note this is a bit approximate and just trying to
 hit the obvious corner cases between `typeof` and `mode`*/
 
@@ -482,24 +492,47 @@ SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho) {
   if(res == R_UnboundValue) return R_NilValue;
   return res;
 }
-
+/*
+ * Convert the target and current component strings into one long string
+ *
+ * Only exists because this operation is expensive and we want to defer carrying
+ * out until we're absolutely sure that we need to carry it out.
+ */
+struct ALIKE_tar_cur_strings ALIKEC_res_fin_as_strings(
+  struct ALIKEC_res_fin res, struct VALC_settings set
+) {
+  const char * tar_str = CSR_smprintf4(
+    set.nchar_max, res.target[0], res.target[1], res.target[2],
+    res.target[3], res.target[4]
+  )
+  const char * cur_str = CSR_smprintf4(
+    set.nchar_max, res.current[0], res.current[1], res.current[2],
+    res.current[3], res.current[4]
+  )
+  return (struct ALIKE_tar_cur_strings) {.target=tar_str, .current=cur_str};
+}
 /*
 Convert convention of zero length string == TRUE to SEXP
 */
 
 SEXP ALIKEC_string_or_true(struct ALIKEC_res_fin res, struct VALC_settings set) {
-  if(res.actual[0] && res.target[0]) {
-    const char * res_str = CSR_smprintf6(
-      set.nchar_max,
-      "%sshould %s %s (%s %s)",
-      res.call, res.tar_pre, res.target, res.act_pre, res.actual, ""
-    );
-    return(mkString(res_str));
-  } else if (res.target[0]) {
-    const char * res_str = CSR_smprintf4(
-      set.nchar_max, "%sshould %s %s", res.call, res.tar_pre, res.target,  ""
-    );
-    return(mkString(res_str));
+  if(!res.success) {
+    struct ALIKEC_tar_cur_strings strings = ALIKE_res_fin_as_strings(res, set);
+    const char * call = ALIKEC_pad_or_quote(res.call_sxp, set.width, -1, set);
+
+    if(strings.target[0] && strings.current[0]) {
+      const char * res_str = CSR_smprintf6(
+        set.nchar_max,
+        "%sshould %s %s (%s %s)",
+        call, res.tar_pre, strings.target, res.cur_pre, strings.current, ""
+      );
+      return(mkString(res_str));
+    } else if (res.target[0]) {
+      const char * res_str = CSR_smprintf4(
+        set.nchar_max, "%sshould %s %s", call, res.tar_pre, strings.target,  ""
+      );
+      return(mkString(res_str));
+    }
   }
   return(ScalarLogical(1));
 }

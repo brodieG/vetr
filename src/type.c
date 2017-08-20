@@ -33,9 +33,7 @@ struct ALIKEC_res_fin ALIKEC_type_alike_internal(
   tar_type_raw = TYPEOF(target);
   cur_type_raw = TYPEOF(current);
 
-  struct ALIKEC_res_fin res = (struct ALIKEC_res_fin) {.target="", .actual=""};
-
-  res.call = "";
+  struct ALIKEC_res_fin res = ALIKE_res_fin_init();
 
   if(tar_type_raw == cur_type_raw) return res;
 
@@ -69,10 +67,6 @@ struct ALIKEC_res_fin ALIKEC_type_alike_internal(
   ) {
     return res;
   }
-  // This is slow, so we only compute it if we definitely need it (~100us)
-
-  res.call = ALIKEC_pad_or_quote(call, set.width, -1, set);
-
   const char * what;
 
   if(set.type_mode == 0 && int_like) {
@@ -84,15 +78,14 @@ struct ALIKEC_res_fin ALIKEC_type_alike_internal(
   } else {
     what = type2char(tar_type);
   }
-  struct ALIKEC_res_fin res_fin;
+  struct ALIKEC_res_fin res_fin = res;
+
+  res_fin.success = 0;
   res_fin.tar_pre = "be";
-  res_fin.target=
-    CSR_smprintf4(set.nchar_max, "type \"%s\"", what, "", "", "");
+  res_fin.target= {"type \"%s\"", what, "", "", ""};
   res_fin.act_pre = "is";
-  res_fin.actual = CSR_smprintf4(
-    set.nchar_max, "\"%s\"", type2char(cur_type), "", "", ""
-  );
-  res_fin.call = res.call;
+  res_fin.actual = {"\"%s\"", type2char(cur_type), "", "", ""};
+  res_fin.call_sxp = res.call_sxp;
   return res_fin;
 }
 SEXP ALIKEC_type_alike(
@@ -102,7 +95,7 @@ SEXP ALIKEC_type_alike(
   struct VALC_settings set = VALC_settings_vet(settings, R_BaseEnv);
 
   res = ALIKEC_type_alike_internal(target, current, call, set);
-  if(res.target[0]) {
+  if(!res.success) {
     return(ALIKEC_string_or_true(res, set));
   } else {
     return ScalarLogical(1);

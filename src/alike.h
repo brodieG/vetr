@@ -37,12 +37,31 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     union ALIKEC_index_raw ind;
     int type;               // 0 is numeric, 1 is character
   };
-  struct ALIKEC_res_fin {
-    const char * tar_pre;
+
+  /*
+   * Helper struct for re-assembled target and current strings
+   */
+  struct ALIKE_tar_cur_strings {
     const char * target;
-    const char * act_pre;
-    const char * actual;
-    const char * call;
+    const char * current;
+  }
+  /*
+   * Contains data in fairly unprocessed form to avoid overhead.  If we decide
+   * error must be thrown, then we can process it with pad_or_quote,
+   * string_or_true, etc.
+   */
+  struct ALIKEC_res_fin {
+    int success;
+    const char * tar_pre;    // be, have, etc.
+    const char * act_pre;    // is, has, etc.
+
+    // format string, must have 4 %s, followed by four other strings
+    const char * target[5];
+    const char * actual[5];
+
+    // Needed so we don't deparse call until very end when we're sure we'll need
+    // it, because that is slow and we don't want to do it in an OR check
+    SEXP call_sxp;
   };
   // Keep track of environments in recursion to make sure we don't get into a
   // infinite recursion loop
@@ -205,6 +224,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_match_call(SEXP call, SEXP match_call, SEXP env);
   SEXP ALIKEC_findFun(SEXP symbol, SEXP rho);
   SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho);
+  struct ALIKEC_res_fin ALIKEC_res_fin_init();
   SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res_fin res);
   SEXP ALIKEC_string_or_true(
     struct ALIKEC_res_fin res, struct VALC_settings set
