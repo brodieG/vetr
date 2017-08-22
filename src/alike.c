@@ -81,7 +81,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
   const char * err_tok1, * err_tok2, * msg_tmp;
   err_tok1 = err_tok2 = msg_tmp = "";
 
-  struct ALIKEC_res err_type, err_fun, res = ALIKEC_res_init();
+  struct ALIKEC_res res = ALIKEC_res_init();
   res.df = 0;
   res.lvl = 6;
 
@@ -134,7 +134,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
         };
       }
     }
-    PROTECT(PROTECTR_NilValue))); // stack balance with next `else if`
+    PROTECT(PROTECT(R_NilValue)); // stack balance with next `else if`
   } else if(target != R_NilValue) {  // Nil objects match anything when nested
     // - Attributes ------------------------------------------------------------
     /*
@@ -148,15 +148,17 @@ struct ALIKEC_res ALIKEC_alike_obj(
     );
     PROTECT(res_attr.wrap);
 
+    // All the other attributes we keep overwriting the results of; to simplify
+    // protection logic we create a dummy PROTECT here for stack balance (see
+    // next UNPROTECT for why)
+
+    PROTECT(R_NilValue);
+
     if(!res_attr.success) {
       // If top level error (class), make sure not overriden by others so make
       // it a overall error instead of just and attribute error
 
-      if(res_attr.lvl <= 2) {
-        res = res_attr;
-        res.success = 0;
-        res.message = res_attr.message;
-      }
+      if(res_attr.lvl <= 2)  res = res_attr;
     }
     // - Special Language Objects && Funs --------------------------------------
 
@@ -169,31 +171,26 @@ struct ALIKEC_res ALIKEC_alike_obj(
           (cur_type == LANGSXP || cur_type == SYMSXP)
       ) )
     ) {
-      struct ALIKEC_res res_lang = ALIKEC_lang_alike_internal(
-        target, current, set
-      );
-      PROTECT(res_lang.wrap);
-      if(!res_lang.success) {
-        res.success = 0;
-        res.wrap = res_lang.wrap;
-      }
-    } else PROTECT(R_NilValue);
+      UNPROTECT(1);
+      res = ALIKEC_lang_alike_internal(target, current, set);
+      PROTECT(res.wrap);
+    }
     int is_fun = 0;
 
     if(res.success && (is_fun = isFunction(target) && isFunction(current))) {
+      UNPROTECT(1);
       res = ALIKEC_fun_alike_internal(target, current, set);
-      if(!res.success) {
-        res.success = 0;
-        res.strings = err_fun.strings;
-    } }
+      PROTECT(res.wrap);
+    }
     // - Type ------------------------------------------------------------------
 
     // lang excluded because we can have symbol-lang comparisons that resolve
     //  to symbol symbol
 
     if(res.success && !is_lang) {
-      err_type = ALIKEC_type_alike_internal(target, current, R_NilValue, set);
-      if(!err_type.success) res = err_type;
+      UNPROTECT(1);
+      res = ALIKEC_type_alike_internal(target, current, R_NilValue, set);
+      PROTECT(res.wrap);
     }
     // - Length ----------------------------------------------------------------
     /*
@@ -290,7 +287,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
         );
     }
   }
-  UNPROTECT(3);
+  UNPROTECT(2);
   return res;
 }
 /*
@@ -636,7 +633,8 @@ SEXP ALIKEC_alike_ext(
   }
   struct VALC_settings set = VALC_settings_vet(settings, env);
   struct ALIKEC_res_interim res =
-    PROTECT(ALIKEC_alike_wrap(target, current, curr_sub, set));
+    ALIKEC_alike_wrap(target, current, curr_sub, set);
+  PROTECT(res.wrap)
   SEXP res_sxp = PROTECT(ALIKEC_string_or_true(res, set));
   UNPROTECT(2);
 
