@@ -18,7 +18,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 #include "alike.h"
 /*
- * used to take res_sub as input, but we got rid of that
+ * used to take res_sub as input, but we got rid of that when we rationalized
+ * most of our result structs to be ALIKEC_res
  *
  * We engage in some contortions here to recreate what the original object would
  * have looked like so that our tests still pass
@@ -184,9 +185,8 @@ struct ALIKEC_res ALIKEC_compare_class(
     if(!is_df && !strcmp(tar_class, "data.frame")) is_df = 1;
 
     if(res.success && strcmp(cur_class, tar_class)) { // class mismatch
-      res.success = 0;
 
-      SEXP msg_strings = VECTOR_ELT(res.message, 0);
+      res.success = 0;
 
       if(cur_class_len > 1) {
         SEXP wrap_call = PROTECT(
@@ -210,12 +210,10 @@ struct ALIKEC_res ALIKEC_compare_class(
         res.strings.current = {"\"%s\"%s%s%s", cur_class, "", "", ""}
         PROTECT(PROTECT(R_NilValue));  // stack balance
   } } }
-  if(res.success)
-
   // Check to make sure have enough classes
 
   if(res.success) {
-    PROTECT(PROTECT(R_NilValue));  // stack balance
+    PROTECT(PROTECT(R_NilValue));  // stack balance from the `for` loop
 
     if(tar_class_len > cur_class_len) {
       res.success = 0;
@@ -274,7 +272,7 @@ struct ALIKEC_res_sub ALIKEC_compare_dims(
   R_xlen_t current_len = xlength(current), current_len_cap;
   current_len_cap = current_len > (R_xlen_t) 3 ? (R_xlen_t) 3 : current_len;
 
-  struct ALIKEC_res_sub res = ALIKEC_res_sub_def();
+  struct ALIKEC_res res = ALIKEC_res_init();
   const char * class_err_target = "";
   const char * class_err_actual = "";
 
@@ -306,34 +304,30 @@ struct ALIKEC_res_sub ALIKEC_compare_dims(
   if(class_err_target[0]) {
     res.success = 0;
     res.lvl = 1;
-    res.message = ALIKEC_res_msg_def(
-      "be",
-      CSR_smprintf4(set.nchar_max, "\"%s\"", class_err_target, "", "", ""),
-      "is",
-      CSR_smprintf4(set.nchar_max, "\"%s\"", class_err_actual, "", "", "")
-    );
+    res.strings.tar_pre = "be";
+    res.strings.target = {"\"%s\"%s%s%s", class_err_target, "", "", ""}
+    res.strings.cur_pre = "is";
+    res.strings.current = {"\"%s\"%s%s%s", class_err_actual, "", "", ""}
+
     return res;
   }
   // Normal dim checking
 
   if(current == R_NilValue) {
     res.success = 0;
-    res.message = ALIKEC_res_msg_def("have", "a \"dim\" attribute", "", "");
+    res.strings.tar_pre = "have";
+    res.strings.target = {"%s%s%s%s",  "a \"dim\" attribute", "", "", ""}
     return res;
   }
   if(target_len != current_len) {
     res.success = 0;
-    res.message = ALIKEC_res_msg_def(
-      "have",
-      CSR_smprintf4(
-        set.nchar_max, "%s dimension%s",
-        CSR_len_as_chr(target_len), target_len == (R_xlen_t) 1 ? "" : "s",
-        "", ""
-      ),
-      "has",
-      CSR_smprintf4(
-        set.nchar_max, "%s", CSR_len_as_chr(current_len), "", "", ""
-    ));
+    res.strings.tar_pre = "have";
+    res.strings.target = {
+      "%s dimension%s%s%s", class_err_target, CSR_len_as_chr(target_len),
+      target_len == (R_xlen_t) 1 ? "" : "s", "", ""
+    }
+    res.strings.cur_pre = "has";
+    res.strings.current = {"%s%s%s%s", CSR_len_as_chr(current_len), "", "", ""}
     return res;
   }
   R_xlen_t attr_i;
@@ -345,12 +339,21 @@ struct ALIKEC_res_sub ALIKEC_compare_dims(
     char * err_dim1, * err_dim2;
 
     if(tar_dim_val && tar_dim_val != INTEGER(current)[attr_i]) {
+      res.success = 0;
+      res.strings.tar_pre = "have";
+      res.strings.cur_pre = "has";
+      // see below for res.strings.target
+      res.strings.current =
+        {"%s%s%s%s", CSR_len_as_chr((R_xlen_t)(attr_i + 1)), "", "", ""}
+
       if(target_len == 2) {  // Matrix
         err_dim1 = "";
         const char * err_dimtmp;
         switch(attr_i) {
-          case (R_xlen_t) 0: err_dimtmp = "row%s"; break;
-          case (R_xlen_t) 1: err_dimtmp = "column%s"; break;
+          case (R_xlen_t) 0:
+            err_dim2 = tar_dim_val == 1 ? "row" : "rows"; break;
+          case (R_xlen_t) 1:
+            err_dim2 = tar_dim_val == 1 ? "column" : "columns"; break;
           default:
             // nocov start
             error(
@@ -360,27 +363,12 @@ struct ALIKEC_res_sub ALIKEC_compare_dims(
             );
             // nocov end
         }
-        err_dim2 = (char *) CSR_smprintf4(
-          set.nchar_max, err_dimtmp, tar_dim_val == 1 ? "" : "s", "", "", ""
-        );
+        res.strings.target = {"%s%s%s%s", tar_dim_chr, err_dim2, "", ""}
       } else {
-        err_dim1 = "size ";
-        err_dim2 = (char *) CSR_smprintf4(
-          set.nchar_max, "at dimension %s",
-          CSR_len_as_chr((R_xlen_t)(attr_i + 1)), "", "", ""
-      );}
-      res.success = 0;
-      res.message = ALIKEC_res_msg_def(
-        "have",
-        CSR_smprintf4(
-          set.nchar_max, "%s%s %s",
-          (const char *) err_dim1, tar_dim_chr, (const char *) err_dim2, ""
-        ),
-        "has",
-        CSR_smprintf4(
-          set.nchar_max, "%s",
-          CSR_len_as_chr((R_xlen_t)(INTEGER(current)[attr_i])), "", "", ""
-      ));
+        res.strings.target = {
+          "size %s at dimension %s%s%s", tar_dim_chr, err_dim2, "", "", ""
+        };
+      }
       return res;
   } }
   return ALIKEC_alike_attr(target, current, R_DimSymbol, set);
@@ -390,8 +378,7 @@ SEXP ALIKEC_compare_dim_ext(
 ) {
   return ALIKEC_res_sub_as_sxp(
     ALIKEC_compare_dims(
-      target, current, tar_obj, cur_obj,
-      VALC_settings_init()
+      target, current, tar_obj, cur_obj, VALC_settings_init()
   ) );
 }
 
@@ -435,21 +422,21 @@ names.
 struct ALIKEC_res_sub ALIKEC_compare_special_char_attrs_internal(
   SEXP target, SEXP current, struct VALC_settings set, int strict
 ) {
-  // We're playing with fire a little with PROTECT since we're not actually
-  // PROTECTing the result of ALIKEC_res_msg_def in most cases to avoid
-  // having to keep the stack balance across all branches; in theory the code
-  // returns before there should be any gc happening
-
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
-  PROTECT(res.message);
-  struct ALIKEC_res_sub res_sub = ALIKEC_res_sub_def();
+  PROTECT(res.wrap);
+  struct ALIKEC_res res_sub = ALIKEC_res_init();
+
+  // Dummy PROTECT since we will protect in only one of the branches and we
+  // need this for stack balance (see next UNPROTECT)
+
+  PROTECT(R_NilValue);
 
   // Special character attributes must be alike; not sure the logic here is
   // completely correct, will have to verify
 
   if(!res.success) {
     res_sub.success = 0;
-    res_sub.message = res.message;
+    res_sub.wrap = res.wrap;
   } else {
     // But also have constraints on values
 
@@ -466,9 +453,8 @@ struct ALIKEC_res_sub ALIKEC_compare_special_char_attrs_internal(
     } else if (tar_type == INTSXP) {
       if(!R_compute_identical(target, current, 16)){
         res_sub.success = 0;
-        res_sub.message = ALIKEC_res_msg_def(
-          "be", "identical to target", "", ""
-        );
+        res_sub.strings.tar_pre = "be";
+        res_sub.stinrgs.target = {"%s%s%s%s", "identical to target"}
       }
     } else if (tar_type == STRSXP) {
       // Only determine what name is wrong if we know there is a mismatch since
@@ -483,24 +469,19 @@ struct ALIKEC_res_sub ALIKEC_compare_special_char_attrs_internal(
             (strict || tar_name_val[0]) &&
             strcmp(tar_name_val, cur_name_val) != 0
           ) {
+            UNPROTECT(1);  // undo dummy protect
             res_sub.success=0;
-            res_sub.message = PROTECT(
-              ALIKEC_res_msg_def(
-                "be",
-                CSR_smprintf4(
-                  set.nchar_max, "\"%s\"", tar_name_val, "", "", ""
-                ),
-                "is",
-                CSR_smprintf4(
-                  set.nchar_max, "\"%s\"", cur_name_val, "", "", ""
-            ) ) );
-            SEXP wrap = PROTECT(allocVector(VECSXP, 2));
-            SET_VECTOR_ELT(wrap, 0,
-              lang3(R_BracketSymbol, R_NilValue, ScalarReal(i + 1))
-            );
-            SET_VECTOR_ELT(wrap, 1, CDR(VECTOR_ELT(wrap, 0)));
-            SET_VECTOR_ELT(res_sub.message, 1, wrap);
-            UNPROTECT(2);
+            res.strings.tar_pre = "be";
+            res.strings.target = {"\"%s\"%s%s%s", tar_name_val, "", "", ""}
+            res.strings.cur_pre = "is";
+            res.strings.current = {"\"%s\"%s%s%s", cur_name_val, "", "", ""}
+
+            res_sub.wrap = PROTECT(allocVector(VECSXP, 2));
+            SEXP wrap_ind =
+              PROTECT(lang3(R_BracketSymbol, R_NilValue, ScalarReal(i + 1)));
+            SET_VECTOR_ELT(res_sub.wrap, 0, wrap_ind);
+            UNPROTECT(1);
+            SET_VECTOR_ELT(res_sub.wrap, 1, CDR(VECTOR_ELT(res_sub.wrap, 0)));
             break;
       } } }
     } else {
@@ -509,7 +490,7 @@ struct ALIKEC_res_sub ALIKEC_compare_special_char_attrs_internal(
       // nocov end
     }
   }
-  UNPROTECT(1);
+  UNPROTECT(2);
   return res_sub;
 }
 // External version for unit testing
@@ -518,7 +499,7 @@ SEXP ALIKEC_compare_special_char_attrs(SEXP target, SEXP current) {
   struct ALIKEC_res_sub res = ALIKEC_compare_special_char_attrs_internal(
     target, current, VALC_settings_init(), 0
   );
-  PROTECT(res.message);
+  PROTECT(res.wrap);
   SEXP res_sexp = PROTECT(ALIKEC_res_sub_as_sxp(res));
   UNPROTECT(2);
   return res_sexp;
@@ -549,11 +530,11 @@ Compare dimnames
 struct ALIKEC_res_sub ALIKEC_compare_dimnames(
   SEXP prim, SEXP sec, struct VALC_settings set
 ) {
-  struct ALIKEC_res_sub res = ALIKEC_res_sub_def();
+  struct ALIKEC_res_sub res = ALIKEC_res_init();
   if(sec == R_NilValue) {
     res.success = 0;
-    res.message =
-      ALIKEC_res_msg_def("have", "a \"dimnames\" attribute", "", "");
+    res.strings.tar_pre = "have";
+    res.strings.target = {"%s%s%s%s", "a \"dimnames\" attribute", "", "", ""}
     return res;
   }
   SEXP prim_names = getAttrib(prim, R_NamesSymbol);
@@ -569,12 +550,12 @@ struct ALIKEC_res_sub ALIKEC_compare_dimnames(
     ((prim_len = XLENGTH(prim)) && prim_len != (sec_len = XLENGTH(sec)))
   ) {
     struct ALIKEC_res res_tmp = ALIKEC_alike_internal(prim, sec, set);
-    PROTECT(res_tmp.message);
+    PROTECT(res_tmp.wrap);
     if(!res_tmp.success) {
       // Need to re-wrap the original error message
       res.success = 0;
-      res.message = res_tmp.message;
-      SEXP res_wrap_old = VECTOR_ELT(res.message, 1);
+      res.wrap = res_tmp.wrap;
+      SEXP res_wrap_old = res.wrap;
       SEXP res_call = PROTECT(lang2(R_DimNamesSymbol, R_NilValue));
 
       if(VECTOR_ELT(res_wrap_old, 1) == R_NilValue) {
@@ -618,32 +599,36 @@ struct ALIKEC_res_sub ALIKEC_compare_dimnames(
       sec_attr_cpy = CDR(sec_attr_cpy)
     ) {
       if(prim_tag_symb == TAG(sec_attr_cpy)) {
+        // Note we don't use any of the contents other than .success, so we
+        // don't protect .wrap
+
         struct ALIKEC_res res_tmp = ALIKEC_alike_internal(
           CAR(prim_attr_cpy), CAR(sec_attr_cpy), set
         );
+
         if(!res_tmp.success) {
-          PROTECT(res_tmp.message); // not really necessary since unused
           res.success = 0;
-          res.message = PROTECT(
-            ALIKEC_res_msg_def(
-              "be",  "`alike` the corresponding element in target", "", ""
-          ) );
-          SEXP wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
-          SET_VECTOR_ELT(res.message, 1, wrap);
-          UNPROTECT(3);
+          res.strings.tar_pre = "be";
+          res.strings.target.strings = {
+            "%s%s%s%s",   "`alike` the corresponding element in target",
+            "", "", ""
+          }
+          res.wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
+          UNPROTECT(1);
           return res;
         }
         do_continue = 1;
-        res_tmp.message = R_NilValue;
+        res_tmp.wrap = R_NilValue;  // not sure this does anything useful
         break;
     } }
     if(do_continue) continue;
     // missing attribute
     res.success = 0;
-    res.message = PROTECT(ALIKEC_res_msg_def("not be", "missing", "", ""));
-    SEXP wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
-    SET_VECTOR_ELT(res.message, 1, wrap);
-    UNPROTECT(2);
+
+    res.strings.tar_pre = "not be";
+    res.strings.target.strings = {"%s%s%s%s", "missing", "", "", ""};
+    res.wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
+    UNPROTECT(1);
     return res;
   }
   // Compare actual dimnames attr
@@ -653,12 +638,13 @@ struct ALIKEC_res_sub ALIKEC_compare_dimnames(
   // dimnames names
 
   if(prim_names != R_NilValue) {
-    struct ALIKEC_res_sub dimnames_name_comp =
+    struct ALIKEC_res dimnames_name_comp =
       ALIKEC_compare_special_char_attrs_internal(prim_names, sec_names, set, 0);
+    PROTECT(dimnames_name_comp.wrap);
+
     if(!dimnames_name_comp.success) {
-      PROTECT(dimnames_name_comp.message);
       // re-wrap in names(dimnames())
-      SEXP wrap = VECTOR_ELT(dimnames_name_comp.message, 1);
+      SEXP wrap = dimnames_name_comp.wrap;
       SEXP wrap_call = PROTECT(
         lang2(R_NamesSymbol, lang2(R_DimNamesSymbol, R_NilValue))
       );
@@ -683,7 +669,8 @@ struct ALIKEC_res_sub ALIKEC_compare_dimnames(
       UNPROTECT(2);
       return dimnames_name_comp;
     }
-    dimnames_name_comp.message = R_NilValue;
+    dimnames_name_comp.wrap = R_NilValue;
+    UNPROTECT(1);
   }
   // look at dimnames themselves
 
@@ -694,13 +681,13 @@ struct ALIKEC_res_sub ALIKEC_compare_dimnames(
     if((prim_obj = VECTOR_ELT(prim, attr_i)) != R_NilValue) {
       sec_obj = VECTOR_ELT(sec, attr_i);
 
-      struct ALIKEC_res_sub dimnames_comp =
+      struct ALIKEC_res dimnames_comp =
         ALIKEC_compare_special_char_attrs_internal(
           prim_obj, sec_obj, set, 0
         );
+      PROTECT(dimnames_comp.wrap);
       if(!dimnames_comp.success) {
-        PROTECT(dimnames_comp.message);
-        SEXP wrap = VECTOR_ELT(dimnames_comp.message, 1);
+        SEXP wrap = VECTOR_ELT(dimnames_comp.wrap, 1);
         SEXP wrap_call, wrap_ref;
 
         if(prim_len == 2) { // matrix like
@@ -731,7 +718,9 @@ struct ALIKEC_res_sub ALIKEC_compare_dimnames(
         SET_VECTOR_ELT(wrap, 1, wrap_ref);
         UNPROTECT(2);
         return dimnames_comp;
-  } } }
+      }
+      UNPROTECT(1);
+  } }
   return res;
 }
 SEXP ALIKEC_compare_dimnames_ext(SEXP prim, SEXP sec) {
@@ -747,11 +736,11 @@ SEXP ALIKEC_compare_dimnames_ext(SEXP prim, SEXP sec) {
 Compare time series attribute; some day will have to actually get an error
 display that can handle floats
 */
-struct ALIKEC_res_sub ALIKEC_compare_ts(
+struct ALIKEC_res ALIKEC_compare_ts(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
   SEXPTYPE tar_type = TYPEOF(target), cur_type = TYPEOF(current);
-  struct ALIKEC_res_sub res = ALIKEC_res_sub_def();
+  struct ALIKEC_res res = ALIKEC_res_init();
   if(
     tar_type == REALSXP && cur_type == tar_type &&
     XLENGTH(target) == 3 && XLENGTH(current) == 3
@@ -765,26 +754,18 @@ struct ALIKEC_res_sub ALIKEC_compare_ts(
         char * cur_num = R_alloc(21, sizeof(char));
         snprintf(tar_num, 20, "%g", tar_real[i]);
         snprintf(cur_num, 20, "%g", cur_real[i]);
-        res.message = PROTECT(
-          ALIKEC_res_msg_def(
-            "be",
-            CSR_smprintf4(
-              set.nchar_max, "%s", tar_num, "", "", ""
-            ),
-            "is",
-            CSR_smprintf4(
-              set.nchar_max, "%s", cur_num, "", "", ""
-            )
-        ) );
-        SEXP wrap = PROTECT(allocVector(VECSXP, 2));
-        SET_VECTOR_ELT(
-          wrap, 0, lang3(
-            R_BracketSymbol, lang2(R_TspSymbol, R_NilValue),
-            ScalarReal(i + 1)
-        ) );
-        SET_VECTOR_ELT(wrap, 1, CDR(CADR(VECTOR_ELT(wrap, 0))));
-        SET_VECTOR_ELT(res.message, 1, wrap);
-        UNPROTECT(2);
+
+        res.strings.tar_pre = "be";
+        res.strings.target = {"%s%s%s%s", tar_num, "", "", ""}
+        res.strings.cur_pre = "is";
+        res.strings.current = {"%s%s%s%s", cur_num, "", "", ""}
+        res.wrap = PROTECT(allocVector(VECSXP, 2));
+        SEXP lang_tsp = PROTECT(lang2(R_TspSymbol, R_NilValue));
+        SEXP lang_sub =
+          PROTECT(lang3(R_BracketSymbol, lang_tsp ,ScalarReal(i + 1)));
+        SET_VECTOR_ELT(res.wrap, 0, lang_sub);
+        SET_VECTOR_ELT(res.wrap, 1, CDR(CADR(VECTOR_ELT(res.wrap, 0))));
+        UNPROTECT(3);
         return res;
     } }
   } else {
@@ -805,18 +786,18 @@ SEXP ALIKEC_compare_ts_ext(SEXP target, SEXP current) {
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
 
-struct ALIKEC_res_sub  ALIKEC_compare_levels(
+struct ALIKEC_res ALIKEC_compare_levels(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
   if(TYPEOF(target) == STRSXP && TYPEOF(current) == STRSXP) {
-    struct ALIKEC_res_sub res = ALIKEC_compare_special_char_attrs_internal(
+    struct ALIKEC_res res = ALIKEC_compare_special_char_attrs_internal(
       target, current, set, 0
     );
-    PROTECT(res.message);
+    PROTECT(res.wrap);
     if(!res.success) {
-      ALIKEC_wrap_around(
-        VECTOR_ELT(res.message, 1), lang2(R_LevelsSymbol, R_NilValue)
-      );
+      SEXP lang_lvl = PROTECT(lang2(R_LevelsSymbol, R_NilValue));
+      ALIKEC_wrap_around(res.wrap, lang_lvl);
+      UNPROTECT(1);
     }
     UNPROTECT(1);
     return res;
@@ -1219,7 +1200,10 @@ SEXP ALIKEC_compare_attributes(SEXP target, SEXP current, SEXP attr_mode) {
   struct VALC_settings set = VALC_settings_init();
   set.attr_mode = asInteger(attr_mode);
 
-  struct ALIKEC_res_sub comp_res =
+  struct ALIKEC_res comp_res =
     ALIKEC_compare_attributes_internal(target, current, set);
-  return ALIKEC_res_sub_as_sxp(comp_res);
+  PROTECT(comp_res.wrap);
+  SEXP res = ALIKEC_res_sub_as_sxp(comp_res);
+  UNPROTECT(1);
+  return res;
 }
