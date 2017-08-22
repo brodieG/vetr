@@ -158,7 +158,7 @@ struct ALIKEC_res_min ALIKEC_fun_alike_internal(
 }
 SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current) {
   struct VALC_settings set = VALC_settings_init();
-  struct ALIKEC_res_interim res =
+  struct ALIKEC_res res =
     ALIKEC_fun_alike_internal(target, current, set);
   if(!res.success) return ALIKEC_res_strings_to_SEXP(res);
   return(ScalarLogical(1));

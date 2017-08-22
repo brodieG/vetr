@@ -25,6 +25,8 @@ Also need to track success status, df status, attr level
 * `ALIKEC_res_wrap`: strings + success + wrap + [rec index] + [df] + [attr]
 * `ALIKEC_res`: strings + success + call
 
+One thing left to do: figure out what `ALIKEC_wrap` should be returning.
+
 ## Notes from 8/20
 
 Currently working through trying to delay the construction of error messages to

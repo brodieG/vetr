@@ -141,7 +141,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   // - Internal Funs ----------------------------------------------------------
 
   SEXPTYPE ALIKEC_typeof_internal(SEXP object);
-  struct ALIKEC_res_iterim ALIKEC_type_alike_internal(
+  struct ALIKEC_res ALIKEC_type_alike_internal(
     SEXP target, SEXP current, SEXP call, struct VALC_settings set
   );
   SEXP ALIKEC_compare_attributes(SEXP target, SEXP current, SEXP attr_mode);
@@ -163,7 +163,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     int formula, SEXP match_call, SEXP match_env, struct VALC_settings set,
     struct ALIKEC_rec_track rec
   );
-  struct ALIKEC_res_interim ALIKEC_fun_alike_internal(
+  struct ALIKEC_res_strings ALIKEC_fun_alike(
     SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current);
@@ -171,7 +171,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_pad_or_quote_ext(SEXP lang, SEXP width, SEXP syntactic);
   // there used to be an ALIKE_res_strings struct; we got rid of it but keep
   // this for backwards compatibility
-  SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_interim strings);
+  SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_strings strings);
 
   // - Utility Funs -----------------------------------------------------------
 
@@ -184,7 +184,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   struct ALIKEC_rec_track ALIKEC_rec_ind_num(
     struct ALIKEC_rec_track res, R_xlen_t ind
   );
-  struct ALIKEC_res_sub ALIKEC_res_sub_def();
+  struct ALIKEC_res ALIKEC_res_sub_def();
   SEXP ALIKEC_mode(SEXP obj);
   SEXP ALIKEC_test(SEXP obj);
   SEXP ALIKEC_test2(
@@ -213,10 +213,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_findFun(SEXP symbol, SEXP rho);
   SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho);
   struct ALIKEC_res ALIKEC_res_init();
-  SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res_interim res);
-  SEXP ALIKEC_string_or_true(
-    struct ALIKEC_res_interim res, struct VALC_settings set
-  );
+  SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res res);
+  SEXP ALIKEC_string_or_true(struct ALIKEC_res res, struct VALC_settings set);
   SEXP ALIKEC_class(SEXP obj, SEXP class);
   SEXP ALIKEC_abstract_ts(SEXP x, SEXP what);
   int ALIKEC_env_track(SEXP env, struct ALIKEC_env_track * envs, int env_limit);
