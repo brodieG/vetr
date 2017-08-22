@@ -29,7 +29,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_strings strings) {
   struct VALC_settings set = VALC_settings_init()
   struct ALIKEC_tar_cur_strings strings_pasted =
-    ALIKEC_res_interim_as_strings(strings, set);
+    ALIKEC_res_as_strings(strings, set);
 
   SEXP res = PROTECT(allocVector(STRSXP, 4));
   SET_STRING_ELT(res, 0, mkChar(strings.strings.tar_pre));

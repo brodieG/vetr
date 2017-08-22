@@ -488,8 +488,8 @@ SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho) {
  * Only exists because this operation is expensive and we want to defer carrying
  * out until we're absolutely sure that we need to carry it out.
  */
-struct ALIKE_tar_cur_strings ALIKEC_res_interim_as_strings(
-  struct ALIKEC_res_interim res, struct VALC_settings set
+struct ALIKE_tar_cur_strings ALIKEC_res_as_strings(
+  struct ALIKEC_res res, struct VALC_settings set
 ) {
   const char * tar_str = CSR_smprintf4(
     set.nchar_max, res.strings.target[0], res.strings.target[1],
@@ -510,19 +510,21 @@ SEXP ALIKEC_string_or_true(
 ) {
   if(!res.success) {
     struct ALIKEC_tar_cur_strings strings_pasted =
-      ALIKEC_res_interim_as_strings(res, set);
+      ALIKEC_res_as_strings(res, set);
     const char * call = ALIKEC_pad_or_quote(res.object, set.width, -1, set);
 
     if(strings_pasted.target[0] && strings_pasted.current[0]) {
       const char * res_str = CSR_smprintf6(
         set.nchar_max,
         "%sshould %s %s (%s %s)",
-        call, res.tar_pre, strings.target, res.cur_pre, strings.current, ""
+        call, res.tar_pre, strings_pasted.target,
+        res.cur_pre, strings_pasted.current, ""
       );
       return(mkString(res_str));
     } else if (res.target[0]) {
       const char * res_str = CSR_smprintf4(
-        set.nchar_max, "%sshould %s %s", call, res.tar_pre, strings.target,  ""
+        set.nchar_max, "%sshould %s %s", call, res.tar_pre,
+        strings_pasted.target,  ""
       );
       return(mkString(res_str));
     }
@@ -538,7 +540,7 @@ SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res_interim res) {
   if(!res.success) {
     struct VALC_settings set = VALC_settings_init();
     struct ALIKEC_tar_cur_strings strings_pasted =
-      ALIKEC_res_interim_as_strings(res, set);
+      ALIKEC_res_as_strings(res, set);
     const char * call = ALIKEC_pad_or_quote(res.object, set.width, -1, set);
 
     SEXP res_fin = PROTECT(allocVector(STRSXP, 5));
