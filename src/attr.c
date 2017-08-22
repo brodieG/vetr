@@ -233,7 +233,7 @@ struct ALIKEC_res_sub ALIKEC_compare_class(
 
   if(res.success) {
     UNPROTECT(1);
-    res = 
+    res =
       ALIKEC_alike_attr(ATTRIB(target), ATTRIB(current), R_ClassSymbol, set);
     PROTECT(res.message);
   }
@@ -846,7 +846,7 @@ This is a bit of a cop out, but the situations where these attributes alone
 would cause a mismatch seem pretty rare
 */
 
-struct ALIKEC_res_sub ALIKEC_compare_attributes_internal_simple(
+struct ALIKEC_res ALIKEC_compare_attributes_internal_simple(
   SEXP target, SEXP current, SEXP attr_sym,
   struct VALC_settings set
 ) {
@@ -855,7 +855,7 @@ struct ALIKEC_res_sub ALIKEC_compare_attributes_internal_simple(
   tae_val_len = xlength(target);
   cae_val_len = xlength(current);
 
-  struct ALIKEC_res_sub res = ALIKEC_res_sub_def();
+  struct ALIKEC_res res = ALIKEC_res_init();
 
   // Start with all cases that don't produce errors
 
@@ -871,56 +871,31 @@ struct ALIKEC_res_sub ALIKEC_compare_attributes_internal_simple(
 
   if(tae_type == NILSXP || cae_type == NILSXP) {
     res.success = 0;
-    res.message = PROTECT(
-      ALIKEC_res_msg_def(
-        CSR_smprintf4(
-          set.nchar_max, "%shave",
-          tae_type == NILSXP ? "not " : "", "", "", ""
-        ),
-        CSR_smprintf4(
-          set.nchar_max, "attribute \"%s\"",
-          CHAR(PRINTNAME(attr_sym)), "", "", ""
-        ),
-        "", ""
-    ) );
+    res.strings.tar_pre = tae_type == NILSXP ? "not have" : "have";
+    res.strings.target = {
+      "attribute \"%s\"", CHAR(PRINTNAME(attr_sym)), "", "", ""
+    };
+    PROTECT(R_NilValue);
   } else if(tae_type != cae_type) {
     res.success = 0;
-    res.message = PROTECT(
-      ALIKEC_res_msg_def(
-        "be",
-        CSR_smprintf4(
-          set.nchar_max, "%s", type2char(tae_type), "", "", ""
-        ),
-        "is",
-        CSR_smprintf4(
-          set.nchar_max, "%s", type2char(cae_type), "", "", ""
-        )
-    ) );
-    SEXP wrap = PROTECT(ALIKEC_attr_wrap(attr_sym, R_NilValue));
-    SET_VECTOR_ELT(res.message, 1, wrap);
-    UNPROTECT(1);
+    res.strings.tar_pre = "be";
+    res.strings.target = {"%s", type2char(tae_type), "", "", ""};
+    res.strings.cur_pre = "is";
+    res.strings.current = {"%s", type2char(cae_type), "", "", ""};
+    res.wrap = PROTECT(ALIKEC_attr_wrap(attr_sym, R_NilValue));
   } else if (tae_val_len != cae_val_len) {
     if(set.attr_mode || tae_val_len) {
       res.success = 0;
-      res.message = PROTECT(
-        ALIKEC_res_msg_def(
-          "be",
-          CSR_smprintf4(
-            set.nchar_max, "%s", CSR_len_as_chr(tae_val_len), "", "", ""
-          ),
-          "is",
-          CSR_smprintf4(
-            set.nchar_max, "%s", CSR_len_as_chr(cae_val_len), "", "", ""
-          )
-      ) );
-      SEXP wrap = PROTECT(ALIKEC_attr_wrap(attr_sym, R_NilValue));
+      res.strings.tar_pre = "be";
+      res.strings.target = {"%s", CSR_len_as_chr(tae_val_len), "", "", ""};
+      res.strings.cur_pre = "is";
+      res.strings.current = {"%s", CSR_len_as_chr(cae_val_len), "", "", ""};
+      res.wrap = PROTECT(ALIKEC_attr_wrap(attr_sym, R_NilValue));
       SET_VECTOR_ELT(
-        wrap, 0,
-        lang2(ALIKEC_SYM_length, VECTOR_ELT(wrap, 0))
+        res.wrap, 0,
+        lang2(ALIKEC_SYM_length, VECTOR_ELT(res.wrap, 0))
       );
-      SET_VECTOR_ELT(res.message, 1, wrap);
-      UNPROTECT(1);
-    }
+    } else PROTECT(R_NilValue);
   } else {
     res = ALIKEC_alike_attr(target, current, attr_sym, set);
     PROTECT(res.message);
@@ -951,15 +926,9 @@ struct ALIKEC_res_sub ALIKEC_compare_attributes_internal(
   if(tar_attr == R_NilValue && cur_attr == R_NilValue) return res_attr;
 
   /*
-  Array to store major errors from, in order:
-    0. class,
-    1. tsp
-    2. dim
-    3. names
-    4. rownames
-    5. dimnames
-    6. other
-    7. missing
+  Array to store major errors; to see what each position corresponds to see the
+  docs for ALIKEC_res.lvl
+
   Note there is unfortunately a protection mess here because the intermediate
   functions return a struct containing SEXPs, so we need to PROTECT them
   and there is a variable number of protections since we can't stop on

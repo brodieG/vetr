@@ -30,10 +30,27 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 #ifndef _VETR_H
 #define _VETR_H
 
+  union VALC_c_dat {
+    int all_val;                    // The result of running VALC_all
+    struct ALIKEC_res_strings;
+  };
+  struct VALC_c_dat_node {
+    union VALC_c_dat c_dat;
+    union VALC_c_dat * c_next;
+  }
+  // Our result holds the C and R data in separate structures mostly because it
+  // would be slow to translate the C stuff into R so we defer that until we're
+  // actually positive we have to make the conversion (i.e. all branches of OR
+  // statements fail).
+
   struct VALC_res {
-    int tpl,                      // whether result type is template or not
-    struct ALIKEC_res_fin alike,  // note, contains SEXP
-    SEXP val                      // result of evaluation of standard token
+    int tpl,                             // template or standard token res?
+    struct VALC_c_dat_node * c_dat_node, // c data associated with the result
+
+    // A LISTSXP containing either the `call` for templates, or the result of
+    // the standard token evaluation otherwise.
+
+    SEXP r_dat
   };
 
   SEXP VALC_SYM_one_dot;

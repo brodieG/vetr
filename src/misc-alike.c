@@ -22,16 +22,6 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 // - Helper Functions ----------------------------------------------------------
 
-struct ALIKEC_res_fin ALIKEC_res_fin_init() {
-  return ALIKEC_res_fin res = (struct ALIKEC_res_fin) {
-    .success=1,
-    .tar_pre="",
-    .cur_pre="",
-    .target={"%s%s%s%s", "", "", "", ""},
-    .current={"%s%s%s%s", "", "", "", ""},
-    .call_sxp=R_NilValue
-  };
-}
 /* equivalent to `mode` in R, note this is a bit approximate and just trying to
 hit the obvious corner cases between `typeof` and `mode`*/
 
@@ -498,16 +488,16 @@ SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho) {
  * Only exists because this operation is expensive and we want to defer carrying
  * out until we're absolutely sure that we need to carry it out.
  */
-struct ALIKE_tar_cur_strings ALIKEC_res_fin_as_strings(
-  struct ALIKEC_res_fin res, struct VALC_settings set
+struct ALIKE_tar_cur_strings ALIKEC_res_interim_as_strings(
+  struct ALIKEC_res_interim res, struct VALC_settings set
 ) {
   const char * tar_str = CSR_smprintf4(
-    set.nchar_max, res.target[0], res.target[1], res.target[2],
-    res.target[3], res.target[4]
+    set.nchar_max, res.strings.target[0], res.strings.target[1],
+    res.strings.target[2], res.strings.target[3], res.strings.target[4]
   )
   const char * cur_str = CSR_smprintf4(
-    set.nchar_max, res.current[0], res.current[1], res.current[2],
-    res.current[3], res.current[4]
+    set.nchar_max, res.strings.current[0], res.strings.current[1],
+    res.strings.current[2], res.strings.current[3], res.strings.current[4]
   )
   return (struct ALIKE_tar_cur_strings) {.target=tar_str, .current=cur_str};
 }
@@ -515,12 +505,15 @@ struct ALIKE_tar_cur_strings ALIKEC_res_fin_as_strings(
 Convert convention of zero length string == TRUE to SEXP
 */
 
-SEXP ALIKEC_string_or_true(struct ALIKEC_res_fin res, struct VALC_settings set) {
+SEXP ALIKEC_string_or_true(
+  struct ALIKEC_res_interim res, struct VALC_settings set
+) {
   if(!res.success) {
-    struct ALIKEC_tar_cur_strings strings = ALIKE_res_fin_as_strings(res, set);
-    const char * call = ALIKEC_pad_or_quote(res.call_sxp, set.width, -1, set);
+    struct ALIKEC_tar_cur_strings strings_pasted =
+      ALIKEC_res_interim_as_strings(res, set);
+    const char * call = ALIKEC_pad_or_quote(res.object, set.width, -1, set);
 
-    if(strings.target[0] && strings.current[0]) {
+    if(strings_pasted.target[0] && strings_pasted.current[0]) {
       const char * res_str = CSR_smprintf6(
         set.nchar_max,
         "%sshould %s %s (%s %s)",
@@ -541,14 +534,19 @@ SEXP ALIKEC_string_or_true(struct ALIKEC_res_fin res, struct VALC_settings set) 
  * it with ALIKEC_merge_msg
  */
 
-SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res_fin res) {
-  if(res.target[0]) {
+SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res_interim res) {
+  if(!res.success) {
+    struct VALC_settings set = VALC_settings_init();
+    struct ALIKEC_tar_cur_strings strings_pasted =
+      ALIKEC_res_interim_as_strings(res, set);
+    const char * call = ALIKEC_pad_or_quote(res.object, set.width, -1, set);
+
     SEXP res_fin = PROTECT(allocVector(STRSXP, 5));
-    SET_STRING_ELT(res_fin, 0, mkChar(res.call));
-    SET_STRING_ELT(res_fin, 1, mkChar(res.tar_pre));
-    SET_STRING_ELT(res_fin, 2, mkChar(res.target));
-    SET_STRING_ELT(res_fin, 3, mkChar(res.act_pre));
-    SET_STRING_ELT(res_fin, 4, mkChar(res.actual));
+    SET_STRING_ELT(res_fin, 0, mkChar(call));
+    SET_STRING_ELT(res_fin, 1, mkChar(res.strings.tar_pre));
+    SET_STRING_ELT(res_fin, 2, mkChar(strings_pasted.target));
+    SET_STRING_ELT(res_fin, 3, mkChar(res.strings.cur_pre));
+    SET_STRING_ELT(res_fin, 4, mkChar(strings_pasted.current));
     UNPROTECT(1);
     return(res_fin);
   } else return(ScalarLogical(1));

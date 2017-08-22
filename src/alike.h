@@ -47,38 +47,16 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   }
   /*
    * Contains data in fairly unprocessed form to avoid overhead.  If we decide
-   * error must be thrown, then we can process it with pad_or_quote,
-   * string_or_true, etc.
-   *
-   * Note, name is not completely correct, as there are more steps after this.
-   *
-   * YOU NEED TO PROTECT THIS ONE BECAUSE OF THE SEXP IT CONTAINS.
+   * error must be thrown, then we can process it with * string_or_true, etc.
    */
-  struct ALIKEC_res_fin {
-    int success;
+  struct ALIKEC_res_strings {
     const char * tar_pre;    // be, have, etc.
     const char * act_pre;    // is, has, etc.
 
     // format string, must have 4 %s, followed by four other strings
+
     const char * target[5];
     const char * actual[5];
-
-    // Needed so we don't deparse call until very end when we're sure we'll need
-    // it, because that is slow and we don't want to do it in an OR check
-
-    SEXP call_sxp;
-  };
-  // Keep track of environments in recursion to make sure we don't get into a
-  // infinite recursion loop
-
-  struct ALIKEC_env_track {
-    int stack_size;
-    int stack_ind;
-    int stack_mult;
-    int stack_size_init;
-    int no_rec;       // prevent further recursion into environments
-    SEXP * env_stack;
-    int debug;
   };
   // track indices of error, this will be allocated with as many items as
   // there are recursion levels.
@@ -90,33 +68,59 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     struct ALIKEC_env_track * envs;
     int gp;            // general purpose flag
   };
-  // We used a SEXP because it contains the error message, as well as the wrap
-  // component that we can use around the call (e.g "names(%s)[[1]]"), and the
-  // latter contains symbols
-  //
-  // The SEXP is of type VECSXP (i.e. list), and contains two elements.
-  //
-  // The first element is the message, which itself contains the "target"
-  // string, i.e. what the object should be, and the "actual", what it is.,
-  //
-  // The second is the wrap which is a two element list where the first element
-  // is the wrapping call, and the second (I think) is a pointer to the inside
-  // of the call which is where we will ultimately substitute the original call
-  // (not 100% certain of this; I'm writing these docs way after the fact...)
-
+  /*
+   * For functions that need to track the call and recursion index
+   *
+   * Note contains SEXP so MUST BE PROTECTED.
+   *
+   * This structure contains all the information required to generate a failure
+   * message from a failed comparison, but allows us to defer the actual slow
+   * message construction  up to the very end.
+   *
+   * Rather than have several different very similar structs, we just use this
+   * struct anyplace a return or input value with a subset of the data is
+   * needed.
+   */
   struct ALIKEC_res {
     int success;
-    SEXP message;
+    struct ALIKEC_res_strings strings;
+    struct ALIKEC_rec_track rec;
+
+    // used primarily to help decide which errors to prioritize when dealing
+    // with attributes, etc.  these are really optional parameters.
+
     int df;
-    struct ALIKEC_rec_track rec;
-  };
-  /*
-  Results for language recursion comparisions
-  */
-  struct ALIKEC_res_lang {
-    int success;
-    struct ALIKEC_rec_track rec;
-    struct ALIKEC_res_fin msg_strings;
+    /*
+     * Priority level of error, where lower level is higher priority
+     *   0. class,
+     *   1. tsp
+     *   2. dim
+     *   3. names
+     *   4. rownames
+     *   5. dimnames
+     *   6. other
+     *   7. missing
+    */
+    int lvl;
+
+    // length 2 VECSXP containing call wrapper, and link to where to sub in
+    // call, recursion index, etc.  The call wrapper will look something like
+    // `attr(NULL, "xx")`, and will have link to the NULL so we can replace it
+    // with other things
+
+    SEXP wrap;
+  }
+  // Keep track of environments in recursion to make sure we don't get into a
+  // infinite recursion loop
+
+  struct ALIKEC_env_track {
+    int stack_size;
+    int stack_ind;
+    int stack_mult;
+    int stack_size_init;
+    int no_rec;       // prevent further recursion into environments
+    SEXP * env_stack;
+    int debug;
   };
   // Structure used for functions called by 'alike_obj', main difference with
   // the return value of 'alike_obj' is 'indices', since that is a more complex
@@ -146,16 +150,12 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   // - Internal Funs ----------------------------------------------------------
 
   SEXPTYPE ALIKEC_typeof_internal(SEXP object);
-  struct ALIKEC_res_fin ALIKEC_type_alike_internal(
+  struct ALIKEC_res_iterim ALIKEC_type_alike_internal(
     SEXP target, SEXP current, SEXP call, struct VALC_settings set
   );
   SEXP ALIKEC_compare_attributes(SEXP target, SEXP current, SEXP attr_mode);
   SEXP ALIKEC_compare_special_char_attrs(SEXP target, SEXP current);
-  SEXP ALIKEC_res_msg_def(
-    const char * tar_pre, const char * target,
-    const char * act_pre, const char * actual
-  );
-  struct ALIKEC_res_sub ALIKEC_compare_attributes_internal(
+  struct ALIKEC_res ALIKEC_compare_attributes_internal(
     SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_compare_class_ext(SEXP prim, SEXP sec);
@@ -166,13 +166,13 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   );
   SEXP ALIKEC_lang_alike_ext(SEXP target, SEXP current, SEXP match_env);
   SEXP ALIKEC_lang_alike_chr_ext(SEXP target, SEXP current, SEXP match_env);
-  struct ALIKEC_res_lang ALIKEC_lang_alike_rec(
+  struct ALIKEC_res ALIKEC_lang_alike_rec(
     SEXP target, SEXP cur_par, pfHashTable * tar_hash, pfHashTable * cur_hash,
     pfHashTable * rev_hash, size_t * tar_varnum, size_t * cur_varnum,
     int formula, SEXP match_call, SEXP match_env, struct VALC_settings set,
     struct ALIKEC_rec_track rec
   );
-  struct ALIKEC_res_fin ALIKEC_fun_alike_internal(
+  struct ALIKEC_res_interim ALIKEC_fun_alike_internal(
     SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current);
@@ -180,7 +180,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_pad_or_quote_ext(SEXP lang, SEXP width, SEXP syntactic);
   // there used to be an ALIKE_res_strings struct; we got rid of it but keep
   // this for backwards compatibility
-  SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_fin strings);
+  SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_interim strings);
 
   // - Utility Funs -----------------------------------------------------------
 
@@ -221,10 +221,10 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_match_call(SEXP call, SEXP match_call, SEXP env);
   SEXP ALIKEC_findFun(SEXP symbol, SEXP rho);
   SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho);
-  struct ALIKEC_res_fin ALIKEC_res_fin_init();
-  SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res_fin res);
+  struct ALIKEC_res ALIKEC_res_init();
+  SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res_interim res);
   SEXP ALIKEC_string_or_true(
-    struct ALIKEC_res_fin res, struct VALC_settings set
+    struct ALIKEC_res_interim res, struct VALC_settings set
   );
   SEXP ALIKEC_class(SEXP obj, SEXP class);
   SEXP ALIKEC_abstract_ts(SEXP x, SEXP what);

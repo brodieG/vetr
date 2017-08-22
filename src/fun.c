@@ -40,15 +40,14 @@ fun(a, b, e, f, ..., g, c, e)
 
 */
 
-struct ALIKEC_res_fin ALIKEC_fun_alike_internal(
+struct ALIKEC_res_min ALIKEC_fun_alike_internal(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
-  if(!isFunction(target) || !isFunction(current))
-    error("Arguments must be functions.");
+  if(!isFunction(target) || !isFunction(current)) error("Arguments must be functions.");
 
   SEXP tar_form, cur_form, args;
   SEXPTYPE tar_type = TYPEOF(target), cur_type = TYPEOF(current);
-  struct ALIKEC_res_fin res = ALIKEC_res_fin_init();
+  struct ALIKEC_res_min res = ALIKEC_res_min_init();
 
   // Translate specials and builtins to formals, if possible
 
@@ -88,8 +87,8 @@ struct ALIKEC_res_fin ALIKEC_fun_alike_internal(
     if(tar_tag == cur_tag) {
       if(CAR(tar_form) != R_MissingArg && CAR(cur_form) == R_MissingArg) {
         res.success = 0;
-        res.tar_pre = "have";
-        res.target = {
+        res.strings.tar_pre = "have";
+        res.strings.target = {
           "a default value for argument `%s`%s%s%s",
           CHAR(PRINTNAME(tar_tag)), "", "", ""
         };
@@ -123,15 +122,15 @@ struct ALIKEC_res_fin ALIKEC_fun_alike_internal(
     !res.success && (tar_form != R_NilValue || !tag_match || cur_mismatch)
   ) {
     if(dots && !dots_cur) {
-      res.tar_pre = "have";
-      res.target = {"a `...` argument%s%s%s%s", "", "", "", ""};
+      res.strings.tar_pre = "have";
+      res.strings.target = {"a `...` argument%s%s%s%s", "", "", "", ""};
     } else if (!tar_args && tar_form == R_NilValue) {
-      res.tar_pre = "not have";
-      res.target = {"any arguments%s%s%s%s", "", "", "", ""};
+      res.strings.tar_pre = "not have";
+      res.strings.target = {"any arguments%s%s%s%s", "", "", "", ""};
     } else {
       const char * arg_type = "as first argument";
       const char * arg_name;
-      const char * arg_mod = "";
+      int arg_neg = 0;
       if(last_match != R_NilValue) {
         arg_type = (const char *) CSR_smprintf4(
           set.nchar_max, "after argument `%s`",
@@ -140,7 +139,7 @@ struct ALIKEC_res_fin ALIKEC_fun_alike_internal(
       if(tar_form != R_NilValue || !tag_match){
         arg_name = CHAR(PRINTNAME(TAG(tar_form)));
       } else if(cur_mismatch) {
-        arg_mod = "not ";
+        arg_neg = 1;
         arg_name = CHAR(PRINTNAME(TAG(cur_form)));
       } else {
         // nocov start
@@ -149,9 +148,8 @@ struct ALIKEC_res_fin ALIKEC_fun_alike_internal(
         );
         // nocov end
       }
-      res.tar_pre =
-        CSR_smprintf4(set.nchar_max, "%shave", arg_mod, "", "", "");
-      res.target = {"argument `%s` %s%s%s", arg_name, arg_type, "", ""};
+      res.strings.tar_pre = arg_neg ? "not have" : "have":
+      res.strings.target = {"argument `%s` %s%s%s", arg_name, arg_type, "", ""};
   );} }
   // Success
 
@@ -160,7 +158,7 @@ struct ALIKEC_res_fin ALIKEC_fun_alike_internal(
 }
 SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current) {
   struct VALC_settings set = VALC_settings_init();
-  struct ALIKEC_res_fin res =
+  struct ALIKEC_res_interim res =
     ALIKEC_fun_alike_internal(target, current, set);
   if(!res.success) return ALIKEC_res_strings_to_SEXP(res);
   return(ScalarLogical(1));

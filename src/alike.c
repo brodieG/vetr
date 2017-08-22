@@ -22,78 +22,42 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
 /*
- * Construct the default result
- *
- * `tar_pre` string to prepend before target
- * `target` what the object should be
- * `act_pre` string to prepend before actual
- * `actual` what the object is
- *
- * An example of the four strings:
- *
- * tar_pre: "be", target: "integer", act_pre: "is", actual: character
- *
- * This can then be assembled into "should be integer (is character)" or
- * potentially collapsed with other messages with `ALIKE_merge_msg`.
- */
-SEXP ALIKEC_res_msg_def(
-  const char * tar_pre, const char * target,
-  const char * act_pre, const char * actual
-) {
-  SEXP res = PROTECT(allocVector(VECSXP, 2));
-  SEXP res_msg = PROTECT(allocVector(STRSXP, 4));
-
-  SET_STRING_ELT(res_msg, 0, mkChar(tar_pre));
-  SET_STRING_ELT(res_msg, 1, mkChar(target));
-  SET_STRING_ELT(res_msg, 2, mkChar(act_pre));
-  SET_STRING_ELT(res_msg, 3, mkChar(actual));
-
-  SET_VECTOR_ELT(res, 0, res_msg);                // message
-  SET_VECTOR_ELT(res, 1, allocVector(VECSXP, 2)); // wrap
-
-  SEXP res_names = PROTECT(allocVector(STRSXP, 2));
-  SET_STRING_ELT(res_names, 0, mkChar("message"));
-  SET_STRING_ELT(res_names, 1, mkChar("wrap"));
-
-  setAttrib(res, R_NamesSymbol, res_names);
-  UNPROTECT(3);
-
-  return res;
-}
-/*
  * Create a SEXP out of an ALIKEC_res_strings struct
  *
  * See `ALIKEC_string_or_true` for related function.
  */
-SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_fin strings) {
+SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_strings strings) {
   struct VALC_settings set = VALC_settings_init()
   struct ALIKEC_tar_cur_strings strings_pasted =
-    ALIKE_res_fin_as_strings(strings, set);
+    ALIKEC_res_interim_as_strings(strings, set);
 
   SEXP res = PROTECT(allocVector(STRSXP, 4));
-  SET_STRING_ELT(res, 0, mkChar(strings.tar_pre));
+  SET_STRING_ELT(res, 0, mkChar(strings.strings.tar_pre));
   SET_STRING_ELT(res, 1, mkChar(strings_pasted.target));
-  SET_STRING_ELT(res, 2, mkChar(strings.cur_pre));
+  SET_STRING_ELT(res, 2, mkChar(strings.strings.cur_pre));
   SET_STRING_ELT(res, 3, mkChar(strings_pasted.current));
   UNPROTECT(1);
   return res;
 }
 /*
-Other struct initialization functions
+Other struct initialization functions, see alike.h for descriptions
 */
-struct ALIKEC_res_sub ALIKEC_res_sub_def() {
-  return (struct ALIKEC_res_sub) {
-    .success=1,
-    .message=R_NilValue,
-    .df=0
-  };
+struct ALIKEC_res_strings ALIKEC_res_strings_init() {
+  return (struct ALIKE_res_strings) {
+    .tar_pre="",
+    .cur_pre="",
+    .target={"%s%s%s%s", "", "", "", ""},
+    .current={"%s%s%s%s", "", "", "", ""},
+  }
 }
-struct ALIKEC_res ALIKEC_res_def() {
-  return (struct ALIKEC_res) {
+struct ALIKEC_res ALIKEC_res_init() {
+  return ALIKEC_res res = (struct ALIKEC_res) {
     .success=1,
-    .message=R_NilValue, // so we don't need to protect yet
+    .strings=ALIKEC_res_strings_init(),
+    .rec=ALIKEC_rec_track_init(),
+    .wrap=R_NilValue,
     .df=0,
-    .rec=ALIKEC_rec_def()
+    .lvl=0
   };
 }
 /*-----------------------------------------------------------------------------\
@@ -112,15 +76,14 @@ Check:
 struct ALIKEC_res ALIKEC_alike_obj(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
-  int is_df = 0, err_lvl = 6;
   SEXPTYPE tar_type, cur_type;
 
-  int err = 0, err_attr = 0;
   const char * err_tok1, * err_tok2, * msg_tmp;
   err_tok1 = err_tok2 = msg_tmp = "";
 
-  struct ALIKEC_res_fin err_type, err_fun;
-  struct ALIKEC_res res = ALIKEC_res_def();
+  struct ALIKEC_res err_type, err_fun, res = ALIKEC_res_init();
+  res.df = 0;
+  res.lvl = 6;
 
   tar_type = TYPEOF(target);
   cur_type = TYPEOF(current);
@@ -128,13 +91,12 @@ struct ALIKEC_res ALIKEC_alike_obj(
   s4_tar = ((IS_S4_OBJECT)(target) != 0);
   s4_cur = ((IS_S4_OBJECT)(current) != 0);
 
-  if(!err && (s4_cur || s4_tar)) {  // don't run length or attribute checks on S4
+  // don't run length or attribute checks on S4
+  if(!res.success && (s4_cur || s4_tar)) {
     if(s4_tar + s4_cur == 1) {
-      err = 1;
-      const char * msg_tmp = CSR_smprintf4(
-        set.nchar_max, "%sbe", (s4_tar ? "" : "not "), "", "", ""
-      );
-      res.message = PROTECT(ALIKEC_res_msg_def(msg_tmp, "S4", "", ""));
+      res.success = 0;
+      res.strings.tar_pre = s4_tar ? "be" : "not be";
+      res.strings.target = {"%s%s%s%s", "S4", "", "", ""};
     } else {
       SEXP klass, klass_attrib;
       SEXP s, t;
@@ -149,40 +111,30 @@ struct ALIKEC_res ALIKEC_alike_obj(
         );
         // nocov end
       }
-      klass_attrib = getAttrib(klass, ALIKEC_SYM_package);
-      if(xlength(klass_attrib) != 1 || TYPEOF(klass_attrib) != STRSXP) {
-        // nocov start
-        error(
-          "Internal Error: unexpected S4 class \"class\" %s",
-          "attribute does not have `package` attribute in expected structure"
-        );
-        // nocov end
+      // We used to construct an inherits call here; not entirely clear why we
+      // did this instead of just using Rf_inherits
+
+      if(!inherits(current, klass)) {
+        res.success = 0;
+        res.tar_pre = "inherit from";
+
+        klass_attrib = getAttrib(klass, ALIKEC_SYM_package);
+        if(xlength(klass_attrib) != 1 || TYPEOF(klass_attrib) != STRSXP) {
+          // nocov start
+          error(
+            "Internal Error: unexpected S4 class \"class\" %s",
+            "attribute does not have `package` attribute in expected structure"
+          );
+          // nocov end
+        }
+
+        res.target = {
+          "S4 class \"%s\" (package: %s)", CHAR(asChar(klass)),
+          CHAR(asChar(klass_attrib)), "", ""
+        };
       }
-
-      // Construct call to `inherits`; we evaluate in base env since class
-      // definitions should still be visible and this way unlikely that
-      // inherits gets overwritten
-
-      t = s = PROTECT(allocList(3));
-      SET_TYPEOF(s, LANGSXP);
-      SETCAR(t, ALIKEC_SYM_inherits); t = CDR(t);
-      SETCAR(t, current); t = CDR(t);
-      SETCAR(t, klass);
-      int inherits = asLogical(eval(s, R_BaseEnv));
-      UNPROTECT(1);
-
-      if(!inherits) {
-        err = 1;
-        const char * msg_tmp = CSR_smprintf4(
-          set.nchar_max, "S4 class \"%s\" (package: %s)",
-          CHAR(asChar(klass)), CHAR(asChar(klass_attrib)), "", ""
-        );
-        res.message = PROTECT(
-          ALIKEC_res_msg_def("inherit from", msg_tmp, "", "")
-        );
-      } else PROTECT(R_NilValue);
     }
-    PROTECT(R_NilValue); // stack balance with next `else if`
+    PROTECT(PROTECTR_NilValue))); // stack balance with next `else if`
   } else if(target != R_NilValue) {  // Nil objects match anything when nested
     // - Attributes ------------------------------------------------------------
     /*
@@ -191,115 +143,94 @@ struct ALIKEC_res ALIKEC_alike_obj(
     it is a class error any attribute error will get over-written by subsequent
     errors (except class errors)
     */
-    struct ALIKEC_res_sub res_attr = ALIKEC_compare_attributes_internal(
+    struct ALIKEC_res res_attr = ALIKEC_compare_attributes_internal(
       target, current, set
     );
-    PROTECT(res_attr.message);
-
-    is_df = res_attr.df;
-    err_lvl = res_attr.lvl;
-
-    const char * msg_tar_pre= "";
-    const char * msg_target = "";
-    const char * msg_act_pre = "";
-    const char * msg_actual = "";
+    PROTECT(res_attr.wrap);
 
     if(!res_attr.success) {
-      // If top level error (class), make sure not overriden by others
+      // If top level error (class), make sure not overriden by others so make
+      // it a overall error instead of just and attribute error
+
       if(res_attr.lvl <= 2) {
-        err = 1;
+        res = res_attr;
+        res.success = 0;
         res.message = res_attr.message;
       }
-      else err_attr = 1;
     }
     // - Special Language Objects && Funs --------------------------------------
 
     int is_lang = 0;
     if(
-      !err &&
+      !res.success &&
       (
         is_lang = (
           (tar_type == LANGSXP || tar_type == SYMSXP) &&
           (cur_type == LANGSXP || cur_type == SYMSXP)
       ) )
     ) {
-      struct ALIKEC_res_sub res_lang = ALIKEC_lang_alike_internal(
+      struct ALIKEC_res res_lang = ALIKEC_lang_alike_internal(
         target, current, set
       );
-      PROTECT(res_lang.message);
+      PROTECT(res_lang.wrap);
       if(!res_lang.success) {
-        err = 1;
-        res.message = res_lang.message;
+        res.success = 0;
+        res.wrap = res_lang.wrap;
       }
     } else PROTECT(R_NilValue);
     int is_fun = 0;
 
-    if(!err && (is_fun = isFunction(target) && isFunction(current))) {
-      err_fun = ALIKEC_fun_alike_internal(target, current, set);
-      if(err_fun.target[0]) {
-        err = 1;
-        msg_tar_pre = err_fun.tar_pre;
-        msg_target = err_fun.target;
-        msg_act_pre = err_fun.act_pre;
-        msg_actual = err_fun.actual;
+    if(res.success && (is_fun = isFunction(target) && isFunction(current))) {
+      res = ALIKEC_fun_alike_internal(target, current, set);
+      if(!res.success) {
+        res.success = 0;
+        res.strings = err_fun.strings;
     } }
     // - Type ------------------------------------------------------------------
 
     // lang excluded because we can have symbol-lang comparisons that resolve
     //  to symbol symbol
 
-    if(!err && !is_lang) {
+    if(res.success && !is_lang) {
       err_type = ALIKEC_type_alike_internal(target, current, R_NilValue, set);
-      if(!err_type.success) {
-        err = 1;
-        msg_tar_pre = err_type.tar_pre;
-        msg_target = err_type.target;
-        msg_act_pre = err_type.act_pre;
-        msg_actual = err_type.actual;
-    } }
+      if(!err_type.success) res = err_type;
+    }
     // - Length ----------------------------------------------------------------
-
     /*
     Note length is not checked explicilty for language objects and functions
     since parens or dots allow for different length objects to be alike, and
     for environments since rules for alikeness are different for environments
     */
 
-    if(!err && !is_lang && !is_fun && tar_type != ENVSXP) {
+    if(res.success && !is_lang && !is_fun && tar_type != ENVSXP) {
       SEXP tar_first_el, cur_first_el;
       R_xlen_t tar_len, cur_len, tar_first_el_len, cur_first_el_len;
       // if attribute error is not class, override with col count error
       // zero lengths match any length
-      int err_tmp_1 = (!err || (is_df && err_lvl > 0));
+      int err_tmp_1 = (res.success || (res.df && res.lvl > 0));
       int err_tmp_2 = (tar_len = xlength(target)) > 0;
       if(
         err_tmp_1 && err_tmp_2 && tar_len != (cur_len = xlength(current))
       ) {
-        err = 1;
+        res.success = 0;
         err_tok1 = CSR_len_as_chr(tar_len);
         err_tok2 = CSR_len_as_chr(cur_len);
-        if(is_df) {
-          msg_tar_pre = "have";
-          msg_target = CSR_smprintf4(
-            set.nchar_max, "%s column%s",
-            err_tok1, tar_len == (R_xlen_t) 1 ? "" : "s", "",  ""
-          );
-          msg_act_pre = "has";
-          msg_actual = CSR_smprintf4(
-            set.nchar_max, "%s", err_tok2,  "", "", ""
-          );
+        if(res.df) {
+          res.strings.tar_pre = "have";
+          res.strings.target = {
+            "%s column%s", err_tok1, tar_len == (R_xlen_t) 1 ? "" : "s", "",  ""
+          };
+          res.strings.cur_pre = "has";
+          res.strings.current = {"%s", err_tok2,  "", "", ""};
         } else {
-          msg_tar_pre = "be";
-          msg_target = CSR_smprintf4(
-            set.nchar_max, "length %s", err_tok1,  "",  "", ""
-          );
-          msg_act_pre = "is";
-          msg_actual = CSR_smprintf4(
-            set.nchar_max, "%s", err_tok2,  "", "", ""
-          );
+          // Update this to use wrap??
+          res.strings.tar_pre = "be";
+          res.strings.target = {"length %s", err_tok1,  "",  "", ""};
+          res.strings.cur_pre = "is";
+          res.strings.current = {"%s", err_tok2,  "", "", ""};
         }
       } else if (
-        is_df && err_lvl > 0 && tar_type == VECSXP && XLENGTH(target) &&
+        res.df && res.lvl > 0 && tar_type == VECSXP && XLENGTH(target) &&
         TYPEOF(current) == VECSXP && XLENGTH(current) &&
         isVectorAtomic((tar_first_el = VECTOR_ELT(target, 0))) &&
         isVectorAtomic((cur_first_el = VECTOR_ELT(current, 0))) &&
@@ -309,32 +240,24 @@ struct ALIKEC_res ALIKEC_alike_obj(
         // check for row count error, note this isn't a perfect check since we
         // check the first column only
 
-        err = 1;
-        msg_tar_pre = "have";
-        msg_target = CSR_smprintf4(
-          set.nchar_max, "%s row%s",
-          CSR_len_as_chr(tar_first_el_len),
+        res.success = 0;
+        res.strings.tar_pre = "have";
+        res.strings.target = {
+          "%s row%s", CSR_len_as_chr(tar_first_el_len),
           tar_first_el_len == (R_xlen_t) 1 ? "" : "s", "", ""
-        );
-        msg_act_pre = "has";
-        msg_actual = CSR_smprintf4(
-          set.nchar_max, "%s",
-          CSR_len_as_chr(cur_first_el_len), "", "", ""
-        );
+        };
+        res.strings.cur_pre = "has";
+        res.strings.current = {
+          "%s", CSR_len_as_chr(cur_first_el_len), "", "", ""
+        };
     } }
     // If no normal, errors, use the attribute error
 
-    if(!err && err_attr) {
-      res.message = PROTECT(res_attr.message);
-    } else if(err && msg_target[0]) {
-      res.message = PROTECT(
-        ALIKEC_res_msg_def(msg_tar_pre, msg_target, msg_act_pre, msg_actual)
-      );
-    } else {
-      PROTECT(R_NilValue);
+    if(res.success && !res_attr.success) {
+      res = res_attr;
     }
   } else {
-    PROTECT(PROTECT(PROTECT(R_NilValue)));
+    PROTECT(PROTECT(R_NilValue));
   }
   // - Known Limitations -------------------------------------------------------
 
@@ -366,12 +289,6 @@ struct ALIKEC_res ALIKEC_alike_obj(
           "and may change in the future"
         );
     }
-  }
-  res.df = is_df;
-  if(err || err_attr) {
-    res.success = 0;
-  } else {
-    res.success = 1;
   }
   UNPROTECT(3);
   return res;
@@ -608,8 +525,23 @@ Note that width is only really used to control the deparse wrapping; rest of
 text is not wrapped.  Negative width will use the getOption("width");
 
 curr_sub is just current substituted
+
+This whole wrap business is needed because we do not generate the recursion
+indices until we get here, so we need a mechanism for generating languge of the
+form
+
+   attr(xxx[[1]][[2]])
+
+We have `xxx` from the get go, but when we generate the wrap (e.g. `attr(...)`)
+we cannot / do not want to generate the index yet.  The wrap business allows us
+to inject the stuff in later (here currently).  Part of the reason we don't know
+the index is that we retrieve this data as we exit from the recursion.  I guess
+it probably would be possible to just do it from the deepest point in the
+recursion, but seemed easier to naturally collect it as the recursion unwinds
+that way we only collect on the branch of the recursion that we actually need it
+for (I guess it's implicitly always hanging out in the call stack, but whatver).
 */
-struct ALIKEC_res_fin ALIKEC_alike_wrap(
+struct ALIKEC_res_iterim ALIKEC_alike_wrap(
   SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
 ) {
   if(
@@ -620,10 +552,9 @@ struct ALIKEC_res_fin ALIKEC_alike_wrap(
     error("Internal Error; `curr_sub` must be language."); // nocov
 
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
-  PROTECT(res.message);
-  struct ALIKEC_res_fin res_out = {
-    .tar_pre = "", .target="", .act_pre="", .actual="", .call = ""
-  };
+  PROTECT(res.dat.object);
+  struct ALIKEC_res res_out = ALIKEC_res_init();
+
   // Have an error, need to populate the object by deparsing the relevant
   // expression.  One issue here is we want different treatment depending on
   // how wide the error is; if the error is short enough we can include it
@@ -704,7 +635,7 @@ SEXP ALIKEC_alike_ext(
     // nocov end
   }
   struct VALC_settings set = VALC_settings_vet(settings, env);
-  struct ALIKEC_res_fin res =
+  struct ALIKEC_res_interim res =
     PROTECT(ALIKEC_alike_wrap(target, current, curr_sub, set));
   SEXP res_sxp = PROTECT(ALIKEC_string_or_true(res, set));
   UNPROTECT(2);
