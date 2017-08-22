@@ -565,12 +565,12 @@ SEXP ALIKEC_lang_alike_core(
   about recording the call / language that caused the problem since we're
   refering directly to the original object
 */
-struct ALIKEC_res_sub ALIKEC_lang_alike_internal(
+struct ALIKEC_res ALIKEC_lang_alike_internal(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
   SEXP lang_res = PROTECT(ALIKEC_lang_alike_core(target, current, set));
 
-  struct ALIKEC_res_sub res = ALIKEC_res_sub_def();
+  struct ALIKEC_res res = ALIKEC_res_sub_def();
   if(asInteger(VECTOR_ELT(lang_res, 0))) {
     PROTECT(res.message);  // stack balance
   } else {

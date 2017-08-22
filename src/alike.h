@@ -48,6 +48,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   /*
    * Contains data in fairly unprocessed form to avoid overhead.  If we decide
    * error must be thrown, then we can process it with * string_or_true, etc.
+   *
+   * For legacy reasons, we didn't collapse the _pre strings into the array
    */
   struct ALIKEC_res_strings {
     const char * tar_pre;    // be, have, etc.
@@ -57,6 +59,18 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
     const char * target[5];
     const char * actual[5];
+  };
+  // Keep track of environments in recursion to make sure we don't get into a
+  // infinite recursion loop
+
+  struct ALIKEC_env_track {
+    int stack_size;
+    int stack_ind;
+    int stack_mult;
+    int stack_size_init;
+    int no_rec;       // prevent further recursion into environments
+    SEXP * env_stack;
+    int debug;
   };
   // track indices of error, this will be allocated with as many items as
   // there are recursion levels.
@@ -110,29 +124,6 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
     SEXP wrap;
   }
-  // Keep track of environments in recursion to make sure we don't get into a
-  // infinite recursion loop
-
-  struct ALIKEC_env_track {
-    int stack_size;
-    int stack_ind;
-    int stack_mult;
-    int stack_size_init;
-    int no_rec;       // prevent further recursion into environments
-    SEXP * env_stack;
-    int debug;
-  };
-  // Structure used for functions called by 'alike_obj', main difference with
-  // the return value of 'alike_obj' is 'indices', since that is a more complex
-  // object that requires initialization
-
-  struct ALIKEC_res_sub {
-    int success;
-    SEXP message;
-    int df;      // whether df or not, not use by all functions
-    int lvl;     // Type of error used for prioritizing
-  };
-
   // - Main Funs --------------------------------------------------------------
 
   SEXP ALIKEC_alike_ext(
@@ -161,7 +152,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_compare_class_ext(SEXP prim, SEXP sec);
   SEXP ALIKEC_compare_dimnames_ext(SEXP prim, SEXP sec);
   SEXP ALIKEC_compare_dim_ext(SEXP prim, SEXP sec, SEXP target, SEXP current);
-  struct ALIKEC_res_sub ALIKEC_lang_alike_internal(
+  struct ALIKEC_res ALIKEC_lang_alike_internal(
     SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_lang_alike_ext(SEXP target, SEXP current, SEXP match_env);

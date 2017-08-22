@@ -253,7 +253,7 @@ If there is an implicit class error res.lvl will be set to 1
 
 tar_obj and cur_obj are the objects the dimensions are the attributes off.
 */
-struct ALIKEC_res_sub ALIKEC_compare_dims(
+struct ALIKEC_res ALIKEC_compare_dims(
   SEXP target, SEXP current, SEXP tar_obj, SEXP cur_obj,
   struct VALC_settings set
 ) {
@@ -419,7 +419,7 @@ Note that the calling function is responsible for handling parens so as to
 allow for stuff like: `names(dimnames(object))` and of subbing in the attribute
 names.
 */
-struct ALIKEC_res_sub ALIKEC_compare_special_char_attrs_internal(
+struct ALIKEC_res ALIKEC_compare_special_char_attrs_internal(
   SEXP target, SEXP current, struct VALC_settings set, int strict
 ) {
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
@@ -496,7 +496,7 @@ struct ALIKEC_res_sub ALIKEC_compare_special_char_attrs_internal(
 // External version for unit testing
 
 SEXP ALIKEC_compare_special_char_attrs(SEXP target, SEXP current) {
-  struct ALIKEC_res_sub res = ALIKEC_compare_special_char_attrs_internal(
+  struct ALIKEC_res res = ALIKEC_compare_special_char_attrs_internal(
     target, current, VALC_settings_init(), 0
   );
   PROTECT(res.wrap);
@@ -527,10 +527,10 @@ SEXP ALIKEC_compare_dimnames_wrap(const char * name) {
 Compare dimnames
 */
 
-struct ALIKEC_res_sub ALIKEC_compare_dimnames(
+struct ALIKEC_res ALIKEC_compare_dimnames(
   SEXP prim, SEXP sec, struct VALC_settings set
 ) {
-  struct ALIKEC_res_sub res = ALIKEC_res_init();
+  struct ALIKEC_res res = ALIKEC_res_init();
   if(sec == R_NilValue) {
     res.success = 0;
     res.strings.tar_pre = "have";
@@ -884,7 +884,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal_simple(
 Code originally inspired by `R_compute_identical` (thanks R CORE)
 */
 
-struct ALIKEC_res_sub ALIKEC_compare_attributes_internal(
+struct ALIKEC_res ALIKEC_compare_attributes_internal(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
   struct ALIKEC_res res_attr = ALIKEC_res_init();
@@ -1131,7 +1131,7 @@ struct ALIKEC_res_sub ALIKEC_compare_attributes_internal(
 
       } else if (tar_tag == R_TspSymbol) {
 
-        struct ALIKEC_res_sub ts_comp = ALIKEC_compare_ts(
+        struct ALIKEC_res ts_comp = ALIKEC_compare_ts(
           tar_attr_el_val, cur_attr_el_val, set
         );
         PROTECT(ts_comp.wrap); ps++;
