@@ -515,104 +515,59 @@ struct ALIKEC_res ALIKEC_alike_internal(
   return res;
 }
 /*
-Outermost alike function, handles full rendering including the leading
-substituted expression
+ * Augments wrap by injection call in the reserved spot
+ *
+ * This whole wrap business is needed because we do not generate the recursion
+ * indices until we get here, so we need a mechanism for generating languge of
+ * the form
+ *
+ *    attr(xxx[[1]][[2]])
+ *
+ * We have `xxx` from the get go, but when we generate the wrap (e.g.
+ * `attr(...)`) we cannot / do not want to generate the index yet.  The wrap
+ * business allows us to inject the stuff in later (here currently).  Part of
+ * the reason we don't know the index is that we retrieve this data as we exit
+ * from the recursion.  I guess it probably would be possible to just do it from
+ * the deepest point in the recursion, but seemed easier to naturally collect it
+ * as the recursion unwinds that way we only collect on the branch of the
+ * recursion that we actually need it for (I guess it's implicitly always
+ * hanging out in the call stack, but whatver).
+ */
+void ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
+  SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.rec));
+  SEXP wrap = res.wrap;
 
-Note that width is only really used to control the deparse wrapping; rest of
-text is not wrapped.  Negative width will use the getOption("width");
+  // Need to check if our call could become ambigous with the indexing
+  // element (e.g. `1 + x[[1]][[2]]` should be `(1 + x)[[1]][[2]]`
 
-curr_sub is just current substituted
+  // Condition is a wee bit sloppy, we're assuming that rec_ind is either an
+  // operator or nothing, b/c if a function then we don't need to use parens
+  // even if wrap is an op.  I'm pretty sure this is always true though.
 
-This whole wrap business is needed because we do not generate the recursion
-indices until we get here, so we need a mechanism for generating languge of the
-form
-
-   attr(xxx[[1]][[2]])
-
-We have `xxx` from the get go, but when we generate the wrap (e.g. `attr(...)`)
-we cannot / do not want to generate the index yet.  The wrap business allows us
-to inject the stuff in later (here currently).  Part of the reason we don't know
-the index is that we retrieve this data as we exit from the recursion.  I guess
-it probably would be possible to just do it from the deepest point in the
-recursion, but seemed easier to naturally collect it as the recursion unwinds
-that way we only collect on the branch of the recursion that we actually need it
-for (I guess it's implicitly always hanging out in the call stack, but whatver).
-*/
-struct ALIKEC_res_iterim ALIKEC_alike_wrap(
-  SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
-) {
   if(
-    TYPEOF(curr_sub) != LANGSXP && TYPEOF(curr_sub) != SYMSXP &&
-    !(isVectorAtomic(curr_sub) && XLENGTH(curr_sub) == 1) &&
-    curr_sub != R_NilValue
-  )
-    error("Internal Error; `curr_sub` must be language."); // nocov
+    ALIKEC_is_an_op(call) &&
+    (
+      ALIKEC_is_an_op(VECTOR_ELT(rec_ind, 0)) ||
+      ALIKEC_is_an_op_inner(VECTOR_ELT(wrap, 0))
+    )
+  ) {
+    call = PROTECT(lang2(ALIKEC_SYM_paren_open, call));
+  } else {
+    PROTECT(R_NilValue);
+  }
+  // Extra recursion index needed: this should be applied before the wrap
 
-  struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
-  PROTECT(res.dat.object);
-  struct ALIKEC_res res_out = ALIKEC_res_init();
+  if(TYPEOF(VECTOR_ELT(rec_ind, 0)) == LANGSXP) {
+    SETCAR(VECTOR_ELT(rec_ind, 1), call);
+    call = VECTOR_ELT(rec_ind, 0);
+  }
+  // Merge the wrap call with the original call so we can get stuff like
+  // `names(call)`
 
-  // Have an error, need to populate the object by deparsing the relevant
-  // expression.  One issue here is we want different treatment depending on
-  // how wide the error is; if the error is short enough we can include it
-  // inline; otherwise we need to modify how we display it
-
-  if(!res.success) {
-    // Get indices, and sub in the current substituted expression if they
-    // exist
-
-    res_out.tar_pre= CHAR(STRING_ELT(VECTOR_ELT(res.message, 0), 0));
-    res_out.target = CHAR(STRING_ELT(VECTOR_ELT(res.message, 0), 1));
-
-    res_out.act_pre = CHAR(STRING_ELT(VECTOR_ELT(res.message, 0), 2));
-    res_out.actual = CHAR(STRING_ELT(VECTOR_ELT(res.message, 0), 3));
-
-    SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.rec));
-    SEXP wrap = VECTOR_ELT(res.message, 1);
-
-    // Need to check if our call could become ambigous with the indexing
-    // element (e.g. `1 + x[[1]][[2]]` should be `(1 + x)[[1]][[2]]`
-
-    // Condition is a wee bit sloppy, we're assuming that rec_ind is either an
-    // operator or nothing, b/c if a function then we don't need to use parens
-    // even if wrap is an op.  I'm pretty sure this is always true though.
-    if(
-      ALIKEC_is_an_op(curr_sub) &&
-      (
-        ALIKEC_is_an_op(VECTOR_ELT(rec_ind, 0)) ||
-        ALIKEC_is_an_op_inner(VECTOR_ELT(wrap, 0))
-      )
-    ) {
-      curr_sub = PROTECT(lang2(ALIKEC_SYM_paren_open, curr_sub));
-    } else {
-      PROTECT(R_NilValue);
-    }
-    // Extra recursion index needed: this should be applied before the wrap
-
-    if(TYPEOF(VECTOR_ELT(rec_ind, 0)) == LANGSXP) {
-      SETCAR(VECTOR_ELT(rec_ind, 1), curr_sub);
-      curr_sub = VECTOR_ELT(rec_ind, 0);
-    }
-    // Merge the wrap call with the original call so we can get stuff like
-    // `names(curr_sub)`
-
-    if(VECTOR_ELT(wrap, 0) != R_NilValue) {
-      SETCAR(VECTOR_ELT(wrap, 1), curr_sub);
-      curr_sub = VECTOR_ELT(wrap, 0);
-    }
-    // Deparse and format the call
-
-    res_out.call_sxp = curr_sub;
-    /*
-    ALIKEC_pad_or_quote(
-      curr_sub, set.width,
-      asLogical(getAttrib(rec_ind, ALIKEC_SYM_syntacticnames)), set
-    );
-    */
-    UNPROTECT(2);
+  if(VECTOR_ELT(wrap, 0) != R_NilValue) {
+    SETCAR(VECTOR_ELT(wrap, 1), call);
   }
   UNPROTECT(1);
-  return res_out;
 }
 /*
 Main external interface
@@ -632,12 +587,12 @@ SEXP ALIKEC_alike_ext(
     // nocov end
   }
   struct VALC_settings set = VALC_settings_vet(settings, env);
-  struct ALIKEC_res_interim res =
-    ALIKEC_alike_wrap(target, current, curr_sub, set);
+  struct ALIKEC_res = ALIKEC_alike_internal(target, current, set);
   PROTECT(res.wrap)
+
+  ALIKEC_inject_call(res, curr_sub);
   SEXP res_sxp = PROTECT(ALIKEC_string_or_true(res, set));
   UNPROTECT(2);
-
   return res_sxp;
 }
 /*
@@ -650,7 +605,10 @@ SEXP ALIKEC_alike_ext(
 SEXP ALIKEC_alike_int2(
   SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
 ) {
-  return ALIKEC_strsxp_or_true(
-    ALIKEC_alike_wrap(target, current, curr_sub, set)
-  );
+  struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
+  PROTECT(res.wrap)
+  ALIKEC_inject_call(res, curr_sub);
+  SEXP res_sxp = PROTECT(ALIKEC_strsxp_or_true(res));
+  UNPROTECT(2);
+  return res_sxp;
 }
