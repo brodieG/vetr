@@ -18,10 +18,56 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 #include "validate.h"
 
-struct VALC_res VALC_res_init() {
-  return (struct VALC_res) {
-    .tpl = 0, .alike = ALIKEC_res_fin_init(), .val = R_NilValue
+struct VALC_res_list VALC_res_list_init(struct VALC_settings set) {
+  if(set.res_list_alloc < 1)
+    error("Internal Error: result alloc < 1; contact maintainer."); // nocov
+  if(set.res_list_alloc_max < set.res_list_alloc)
+    // nocov start
+    error(
+      "Internal Error: result max alloc less than alloc, contact maintainer"
+    );
+    // nocov end
+
+  struct VALC_res * list_start =
+    (struct VALC_res *) R_alloc(set.res_list_alloc, sizeof(struct VALC_res));
+
+  return (struct VALC_res_list) {
+    .idx = 0,
+    .idx_alloc = set.res_list_alloc,
+    .idx_alloc_max = set.res_list_alloc,
+    .list = list_start
   };
+}
+struct VALC_res_list VALC_res_add(VALC_res_list list, VALC_res res) {
+  if(list.idx > list.idx_alloc) {
+    error(
+      "Internal Error: res list index greater than alloc, contact maintainer."
+    );
+  } else if (list.idx == list.idx_alloc) {
+    // Need to allocate mor memory
+
+    if(list.idx_alloc_max > list.idx_alloc) {
+      int alloc_size;
+
+      if(list.idx_alloc_max - list.idx_alloc < list.idx_alloc) {
+        // No room to double, alloc to max
+
+        alloc_size == list.idx_alloc_max;
+
+      }
+
+    } else {
+      error(
+        "Reached maximum vet token result buffer size (%d); this should only ",
+        "happen if you have more than that number of tokens compounded with ",
+        "`||`.  If that is the case, see description of `result.list.size` ",
+        "parameter for `?vetr_settings`.  If not, contact maintainer."
+      )
+    }
+
+  }
+
+
 }
 /*
  * val_res should be a pairlist containing character vectors in each position
