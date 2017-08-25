@@ -33,8 +33,8 @@ struct VALC_res_list VALC_res_list_init(struct VALC_settings set) {
 
   return (struct VALC_res_list) {
     .idx = 0,
-    .idx_alloc = set.res_list_alloc,
-    .idx_alloc_max = set.res_list_alloc,
+    .idx_alloc = set.res_list_size_init,
+    .idx_alloc_max = set.res_list_size_max,
     .list = list_start
   };
 }
@@ -53,21 +53,28 @@ struct VALC_res_list VALC_res_add(VALC_res_list list, VALC_res res) {
         // No room to double, alloc to max
 
         alloc_size == list.idx_alloc_max;
-
+      } else {
+        alloc_size == list.idx_alloc * 2;
       }
-
+      list.list = (struct VALC_res *) S_realloc(
+        (char *) list.list, (long) (alloc_size * sizeof(VALC_res)),
+        (long) (list.idx_alloc * sizeof(VALC_res)),
+        sizeof(char *)
+      );
+      list.idx_alloc = alloc_size
     } else {
       error(
         "Reached maximum vet token result buffer size (%d); this should only ",
         "happen if you have more than that number of tokens compounded with ",
         "`||`.  If that is the case, see description of `result.list.size` ",
-        "parameter for `?vetr_settings`.  If not, contact maintainer."
+        "parameter for `?vetr_settings`.  If not, contact maintainer.",
+        list.idx_alloc_max;
       )
     }
-
+    list.list[list.idx] = res;
+    ++list.idx;
   }
-
-
+  return(list);
 }
 /*
  * val_res should be a pairlist containing character vectors in each position

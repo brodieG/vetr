@@ -20,7 +20,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 #include <stdint.h>
 
 /*
- * Initialize settings with default values
+ * Initialize settings with default values; why did we end up deciding to use
+ * all the 2^n - 1 values?
  */
 struct VALC_settings VALC_settings_init() {
   return (struct VALC_settings) {
@@ -37,7 +38,9 @@ struct VALC_settings VALC_settings_init() {
     .symb_sub_depth_max = 65535L,
     .nchar_max = 65535L,
     .symb_size_max = 15000L,
-    .track_hash_content_size = 63L
+    .track_hash_content_size = 63L,
+    .result_list_size_init = 64L,
+    .result_list_size_max = 2048L
   };
 }
 /*
