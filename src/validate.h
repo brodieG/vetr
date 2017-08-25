@@ -36,17 +36,17 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   // statements fail).
 
   union VALC_res_dat {
-    SEXP standard;
-    ALIKEC_res template;
+    ALIKEC_res tpl;     // Template token result
+    SEXP std;           // Standard token result
   }
   struct VALC_res {
-    int tpl,          // template or standard token res?
-    union VALC_res_dat dat
+    union VALC_res_dat dat;
+    int tpl;          // template or standard token res?
   }
   struct VALC_res_list {
-    int idx,          // index of free slot (and count of how many we have)
-    int idx_max,      // how many we've allocated memory for
-    VALC_res * list
+    VALC_res * list;
+    int idx;          // index of free slot (and count of how many we have)
+    int idx_max;      // how many we've allocated memory for
   };
 
   SEXP VALC_SYM_one_dot;

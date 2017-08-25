@@ -52,34 +52,34 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
    * For legacy reasons, we didn't collapse the _pre strings into the array
    */
   struct ALIKEC_res_strings {
-    const char * tar_pre;    // be, have, etc.
-    const char * act_pre;    // is, has, etc.
-
     // format string, must have 4 %s, followed by four other strings
 
     const char * target[5];
     const char * actual[5];
+
+    const char * tar_pre;    // be, have, etc.
+    const char * act_pre;    // is, has, etc.
   };
   // Keep track of environments in recursion to make sure we don't get into a
   // infinite recursion loop
 
   struct ALIKEC_env_track {
+    SEXP * env_stack;
     int stack_size;
     int stack_ind;
     int stack_mult;
     int stack_size_init;
     int no_rec;       // prevent further recursion into environments
-    SEXP * env_stack;
     int debug;
   };
   // track indices of error, this will be allocated with as many items as
   // there are recursion levels.
 
   struct ALIKEC_rec_track {
+    struct ALIKEC_env_track * envs;
+    struct ALIKEC_index * indices;
     size_t lvl;        // recursion depth
     size_t lvl_max;    // max recursion depth so far
-    struct ALIKEC_index * indices;
-    struct ALIKEC_env_track * envs;
     int gp;            // general purpose flag
   };
   /*
@@ -96,9 +96,19 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
    * needed.
    */
   struct ALIKEC_res {
-    int success;
+    // Message info
+
     struct ALIKEC_res_strings strings;
     struct ALIKEC_rec_track rec;
+
+    // length 2 VECSXP containing call wrapper, and link to where to sub in
+    // call, recursion index, etc.  The call wrapper will look something like
+    // `attr(NULL, "xx")`, and will have link to the NULL so we can replace it
+    // with other things.  See `ALIKEC_inject_call` for more details.
+
+    SEXP wrap;
+
+    int success;
 
     // used primarily to help decide which errors to prioritize when dealing
     // with attributes, etc.  these are really optional parameters.
@@ -117,12 +127,6 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     */
     int lvl;
 
-    // length 2 VECSXP containing call wrapper, and link to where to sub in
-    // call, recursion index, etc.  The call wrapper will look something like
-    // `attr(NULL, "xx")`, and will have link to the NULL so we can replace it
-    // with other things.  See `ALIKEC_inject_call` for more details.
-
-    SEXP wrap;
   }
   // - Main Funs --------------------------------------------------------------
 
