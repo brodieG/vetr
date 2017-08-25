@@ -172,8 +172,9 @@ SEXP VALC_evaluate_recurse(
         PROTECT(eval_tmp) : PROTECT(ScalarLogical(eval_res_c > 0));
     } else {
       eval_res.tpl = 1;
-      eval_res.alike =
-        PROTECT(ALIKEC_alike_wrap(eval_tmp, arg_value, arg_lang, set));
+      eval_res.alike = ALIKEC_alike_internal(eval_tmp, arg_value, set);
+      PROTECT(eval_res.alike.wrap);
+      ALIKEC_inject_call(eval_res.alike, arg_lang);  // Defer this later?
     }
     // Note we're handling both user exp and template eval here
 

@@ -1,3 +1,22 @@
+## Notes from 8/22
+
+Most of the alike side of things is dealt with, now we need to figure out how we
+want to store stuff in lists.  Used to be that we would just use LISTSXPs, but
+now we need a growing collection of `VALC_res` objects?  It should contain:
+
+* An array of `ALIKEC_res` objects
+* The last inserted index
+* The current allocated size
+* By extension, a value in settings that has the default initial allocated size
+
+We will need a mechanism to grow the array each time we hit the size limit.
+
+Need to remember that we will have protected as many times as there are elements
+in that array.
+
+Also, need to figure out what functions need the added argument so we can pass
+around our array pointer.
+
 ## Notes from 8/21
 
 So main thing to do is cleanly separate the "message" SEXP into the message
