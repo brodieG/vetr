@@ -42,10 +42,13 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   struct VALC_res {
     union VALC_res_dat dat;
     int tpl;          // template or standard token res?
+    int success;
   };
   struct VALC_res_list {
     VALC_res * list;
-    int idx;          // index of free slot (and count of how many we have)
+    // index of free slot (and count of how many we have), note this means that
+    // the last recorded result is at .list[.idx - 1], not .list[.idx]
+    int idx;
     int idx_alloc;    // how many we've allocated memory for
     int idx_alloc_max;// max we are allowed to allocate
   };

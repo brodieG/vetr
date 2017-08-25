@@ -23,11 +23,17 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 /*
  * @param arg_lang the substituted language corresponding to the argument
  * @param arg_tag the argument name
+ *
+ * There is some really tricky busines swith the protection stack here. For each
+ * VALC_res struct we create, we get a SEXP, and we want to keep those around
+ * until we process the error in `VALC_evaluate`, so this function introduces a
+ * stack balance issue that `VALC_evaluate` needs to rectify with the
+ * information embedded in `res_list`.
  */
 
 SEXP VALC_evaluate_recurse(
   SEXP lang, SEXP act_codes, SEXP arg_value, SEXP arg_lang, SEXP arg_tag,
-  SEXP lang_full, struct VALC_settings set
+  SEXP lang_full, struct VALC_settings set, struct VALC_res_list res_list
 ) {
   /*
   check act_codes:
@@ -85,35 +91,27 @@ SEXP VALC_evaluate_recurse(
 
     if(TYPEOF(lang) == LANGSXP) {
       int parse_count = 0;
-      SEXP err_list = PROTECT(allocList(0)); // Track errors
-      SEXP eval_res;
+      VALC_res_list eval_res;
       lang = CDR(lang);
       act_codes = CDR(act_codes);
 
       while(lang != R_NilValue) {
-        eval_res = PROTECT(
-          VALC_evaluate_recurse(
-            CAR(lang), CAR(act_codes), arg_value, arg_lang, arg_tag, lang_full,
-            set
-        ) );
-        if(TYPEOF(eval_res) == LISTSXP) {
-          if(mode == 1) {
-            // At least one non-TRUE result, which is a failure, so return
-            UNPROTECT(2);
-            return(eval_res);
-          }
-          if(mode == 2)  {// All need to fail, so store errors for now
-            err_list = listAppend(err_list, eval_res);
-          }
-        } else if (VALC_all(eval_res) > 0) {
-          if(mode == 2) {
-            UNPROTECT(2);
-            return(ScalarLogical(1)); // At least one TRUE value in or mode
-          }
+        res_list = VALC_evaluate_recurse(
+          CAR(lang), CAR(act_codes), arg_value, arg_lang, arg_tag, lang_full,
+          set, res_list
+        );
+        // recall res_list.idx points to next available slot, not last result
+        struct VALC res_val = res_list[res_list.idx - 1];
+
+        if(!res_val.success) {
+          return(res_list);
+        } else if (mode == 2) {
+          // At least one succes in OR mode
+          return(res_list);
         } else {
           // nocov start
           error("%s%s",
-            "Internal Error: unexpected return value when recursively ",
+            "Internal Error: unexpected state when recursively ",
             "evaluating parse; contact maintainer."
           );
           // nocov end
@@ -121,7 +119,6 @@ SEXP VALC_evaluate_recurse(
         lang = CDR(lang);
         act_codes = CDR(act_codes);
         parse_count++;
-        UNPROTECT(1);
       }
       if(parse_count != 2) {
         // nocov start
@@ -131,7 +128,6 @@ SEXP VALC_evaluate_recurse(
         );
         // nocov end
       }
-      UNPROTECT(1);
       // Only way to get here is if none of previous actually returned TRUE and
       // mode is OR
       if(mode == 2) {
@@ -160,30 +156,65 @@ SEXP VALC_evaluate_recurse(
         "Validation expression for argument `%s` produced an error (see previous error)."
       );
     }
-    // eval_res can technically hold up to two SEXPs, but in our use case we
-    // only ever use one or the other, so we only PROTECT once.  The SEXPs are
-    // either the actual evaluation for standard tokens, or the call for the
-    // template tokens
-
     if(mode == 10) {
       eval_res_c = VALC_all(eval_tmp);
       eval_res.tpl = 0;
-      eval_res.val = TYPEOF(eval_tmp) == STRSXP ?
-        PROTECT(eval_tmp) : PROTECT(ScalarLogical(eval_res_c > 0));
+      eval_res.succes = eval_res_c > 0
+      eval_res.dat = eval_tmp;
     } else {
       eval_res.tpl = 1;
-      eval_res.alike = ALIKEC_alike_internal(eval_tmp, arg_value, set);
+      // bit of a complicated protection mess here, we don't want eval_res in
+      // the protection stack when we're done
+
+      eval_res.dat = ALIKEC_alike_internal(eval_tmp, arg_value, set);
+      // THIS WON'T CAUSE GC!!!!  doesn't seem to now based un Rf_unprotect
+      // but potentially could change in future; need to look at protect with
+      // index or some such
+      UNPROTECT(1);
       PROTECT(eval_res.alike.wrap);
-      ALIKEC_inject_call(eval_res.alike, arg_lang);  // Defer this later?
+
+      eval_res.success = eval_res.dat.success;
     }
-    // Note we're handling both user exp and template eval here
+    // Only add to res list if we had an error
 
-    if(
-      TYPEOF(eval_res) != LGLSXP || !asLogical(eval_res)
-    ) {
-      SEXP err_msg = PROTECT(allocList(1));
-      // mode == 10 is user eval, special treatment to produce err msg
+    if(eval_res.success) UNPROTECT(1);
+    else res_list = VALC_res_add(res_list, eval_res);
 
+    return(res_list);
+  } else {
+    error("Internal Error: unexpected parse mode %d", mode);  // nocov
+  }
+  error("Internal Error: should never get here");             // nocov
+  return(res_list);  // nocov Should never get here
+}
+/* -------------------------------------------------------------------------- *\
+\* -------------------------------------------------------------------------- */
+/*
+TBD if this should call `VALC_parse` directly or not
+
+@param lang the validator expression
+@param arg_lang the substituted language being validated
+@param arg_tag the variable name being validated
+@param arg_value the value being validated
+@param lang_full solely so that we can produce error message with original call
+@param set the settings
+*/
+SEXP VALC_evaluate(
+  SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
+  struct VALC_settings set
+) {
+  if(!IS_LANG(arg_lang))
+    error("Internal Error: argument `arg_lang` must be language.");  // nocov
+
+  SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, set));
+  SEXP res = PROTECT(
+    VALC_evaluate_recurse(
+      VECTOR_ELT(lang_parsed, 0),
+      VECTOR_ELT(lang_parsed, 1),
+      arg_value, arg_lang, arg_tag, lang_full, set
+  ) );
+  // Now determine if we passed or failed
+  /*
       if(mode == 10) {
         // Tried to do this as part of init originally so we don't have to repeat
         // wholesale creation of call, but the call elements kept getting over
@@ -293,43 +324,8 @@ SEXP VALC_evaluate_recurse(
       } else { // must have been `alike` eval
         SETCAR(err_msg, eval_res);
       }
-      UNPROTECT(3);
-      return(err_msg);
-    }
-    UNPROTECT(2);
-    return(eval_res);  // this should be `TRUE`
-  } else {
-    error("Internal Error: unexpected parse mode %d", mode);  // nocov
-  }
-  error("Internal Error: should never get here");             // nocov
-  return(R_NilValue);  // nocov Should never get here
-}
-/* -------------------------------------------------------------------------- *\
-\* -------------------------------------------------------------------------- */
-/*
-TBD if this should call `VALC_parse` directly or not
+  */
 
-@param lang the validator expression
-@param arg_lang the substituted language being validated
-@param arg_tag the variable name being validated
-@param arg_value the value being validated
-@param lang_full solely so that we can produce error message with original call
-@param set the settings
-*/
-SEXP VALC_evaluate(
-  SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
-  struct VALC_settings set
-) {
-  if(!IS_LANG(arg_lang))
-    error("Internal Error: argument `arg_lang` must be language.");  // nocov
-
-  SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, set));
-  SEXP res = PROTECT(
-    VALC_evaluate_recurse(
-      VECTOR_ELT(lang_parsed, 0),
-      VECTOR_ELT(lang_parsed, 1),
-      arg_value, arg_lang, arg_tag, lang_full, set
-  ) );
   // Remove duplicates, if any
 
   switch(TYPEOF(res)) {
