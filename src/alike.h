@@ -41,10 +41,10 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   /*
    * Helper struct for re-assembled target and current strings
    */
-  struct ALIKE_tar_cur_strings {
+  struct ALIKEC_tar_cur_strings {
     const char * target;
     const char * current;
-  }
+  };
   /*
    * Contains data in fairly unprocessed form to avoid overhead.  If we decide
    * error must be thrown, then we can process it with * string_or_true, etc.
@@ -55,10 +55,10 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     // format string, must have 4 %s, followed by four other strings
 
     const char * target[5];
-    const char * actual[5];
+    const char * current[5];
 
     const char * tar_pre;    // be, have, etc.
-    const char * act_pre;    // is, has, etc.
+    const char * cur_pre;    // is, has, etc.
   };
   // Keep track of environments in recursion to make sure we don't get into a
   // infinite recursion loop
@@ -127,7 +127,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     */
     int lvl;
 
-  }
+  };
   // - Main Funs --------------------------------------------------------------
 
   SEXP ALIKEC_alike_ext(
@@ -181,7 +181,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
   void psh(const char * lab);
   SEXP ALIKEC_rec_ind_as_lang(struct ALIKEC_rec_track rec);
-  struct ALIKEC_rec_track ALIKEC_rec_def();
+  struct ALIKEC_rec_track ALIKEC_rec_track_init();
   struct ALIKEC_rec_track ALIKEC_rec_ind_chr(
     struct ALIKEC_rec_track res, const char * ind
   );
@@ -238,6 +238,10 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_merge_msg_ext(SEXP msgs);
   SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set);
   SEXP ALIKEC_merge_msg_2_ext(SEXP msgs);
+
+  static struct ALIKEC_tar_cur_strings ALIKEC_res_as_strings(
+     struct ALIKEC_res_strings strings, struct VALC_settings set
+  );
 
   // - Init and pre-install Symbols -------------------------------------------
 

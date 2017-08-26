@@ -160,6 +160,6 @@ SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current) {
   struct VALC_settings set = VALC_settings_init();
   struct ALIKEC_res res =
     ALIKEC_fun_alike_internal(target, current, set);
-  if(!res.success) return ALIKEC_res_strings_to_SEXP(res);
+  if(!res.success) return ALIKEC_res_strings_to_SEXP(res.strings);
   return(ScalarLogical(1));
 }

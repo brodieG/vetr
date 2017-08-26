@@ -489,15 +489,15 @@ SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho) {
  * out until we're absolutely sure that we need to carry it out.
  */
 struct ALIKE_tar_cur_strings ALIKEC_res_as_strings(
-  struct ALIKEC_res res, struct VALC_settings set
+  struct ALIKEC_res_strings strings, struct VALC_settings set
 ) {
   const char * tar_str = CSR_smprintf4(
-    set.nchar_max, res.strings.target[0], res.strings.target[1],
-    res.strings.target[2], res.strings.target[3], res.strings.target[4]
+    set.nchar_max, strings.target[0], strings.target[1],
+    strings.target[2], strings.target[3], strings.target[4]
   )
   const char * cur_str = CSR_smprintf4(
-    set.nchar_max, res.strings.current[0], res.strings.current[1],
-    res.strings.current[2], res.strings.current[3], res.strings.current[4]
+    set.nchar_max, strings.current[0], strings.current[1],
+    strings.current[2], strings.current[3], strings.current[4]
   )
   return (struct ALIKE_tar_cur_strings) {.target=tar_str, .current=cur_str};
 }
@@ -539,7 +539,6 @@ SEXP ALIKEC_string_or_true(
 
 SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res res, struct VALC_settings set) {
   if(!res.success) {
-    struct VALC_settings set = VALC_settings_init();
     struct ALIKEC_tar_cur_strings strings_pasted =
       ALIKEC_res_as_strings(res, set);
     const char * call = ALIKEC_pad_or_quote(

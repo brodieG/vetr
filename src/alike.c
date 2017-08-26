@@ -27,14 +27,14 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  * See `ALIKEC_string_or_true` for related function.
  */
 SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_strings strings) {
-  struct VALC_settings set = VALC_settings_init()
+  struct VALC_settings set = VALC_settings_init();
   struct ALIKEC_tar_cur_strings strings_pasted =
     ALIKEC_res_as_strings(strings, set);
 
   SEXP res = PROTECT(allocVector(STRSXP, 4));
-  SET_STRING_ELT(res, 0, mkChar(strings.strings.tar_pre));
+  SET_STRING_ELT(res, 0, mkChar(strings.tar_pre));
   SET_STRING_ELT(res, 1, mkChar(strings_pasted.target));
-  SET_STRING_ELT(res, 2, mkChar(strings.strings.cur_pre));
+  SET_STRING_ELT(res, 2, mkChar(strings.cur_pre));
   SET_STRING_ELT(res, 3, mkChar(strings_pasted.current));
   UNPROTECT(1);
   return res;
@@ -43,15 +43,15 @@ SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_strings strings) {
 Other struct initialization functions, see alike.h for descriptions
 */
 struct ALIKEC_res_strings ALIKEC_res_strings_init() {
-  return (struct ALIKE_res_strings) {
+  return (struct ALIKEC_res_strings) {
     .tar_pre="",
     .cur_pre="",
     .target={"%s%s%s%s", "", "", "", ""},
     .current={"%s%s%s%s", "", "", "", ""},
-  }
+  };
 }
 struct ALIKEC_res ALIKEC_res_init() {
-  return ALIKEC_res res = (struct ALIKEC_res) {
+  return (struct ALIKEC_res) {
     .success=1,
     .strings=ALIKEC_res_strings_init(),
     .rec=ALIKEC_rec_track_init(),
@@ -96,7 +96,8 @@ struct ALIKEC_res ALIKEC_alike_obj(
     if(s4_tar + s4_cur == 1) {
       res.success = 0;
       res.strings.tar_pre = s4_tar ? "be" : "not be";
-      res.strings.target = {"%s%s%s%s", "S4", "", "", ""};
+      const char * target[5] = {"%s%s%s%s", "S4", "", "", ""};
+      res.strings.target = target;
     } else {
       SEXP klass, klass_attrib;
       SEXP s, t;

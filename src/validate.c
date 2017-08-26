@@ -120,9 +120,6 @@ SEXP VALC_process_error(
 
   if(!xlength(val_res)) return VALC_TRUE;
 
-  SEXP val_res_cpy;
-  size_t count_top = 0;
-
   // Compose optional argument part of message. This ends up being "Argument
   // `x` should %s" where arg and should are optional
 
@@ -213,7 +210,7 @@ SEXP VALC_process_error(
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_head));
     }
   }
-  UNPROTECT(3);  // unprotects vector result
+  UNPROTECT(2);  // unprotects vector result
   if(!stop) {
     return err_vec_res;
   } else {

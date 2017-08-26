@@ -32,7 +32,8 @@ SEXP ALIKEC_res_sub_as_sxp(struct ALIKEC_res sub) {
   const char * names[4] = {"success", "message", "df", "lvl"};
   for(int i = 0; i < 4; i++) SET_STRING_ELT(out_names, i, mkChar(names[i]));
 
-  struct ALIKE_tar_cur_strings strings_pasted = ALIKEC_res_as_strings(sub);
+  struct ALIKE_tar_cur_strings strings_pasted =
+    ALIKEC_res_as_strings(sub.strings);
   SEXP message_strings = PROTECT(allocVector(STRSXP, 4));
   SET_STRING_ELT(message_strings, 0, mkChar(sub.strings.tar_pre));
   SET_STRING_ELT(message_strings, 1, mkChar(strings_pasted.target));
