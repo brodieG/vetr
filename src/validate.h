@@ -37,7 +37,11 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
   union VALC_res_dat {
     ALIKEC_res tpl;     // Template token result
-    SEXP std;           // Standard token result
+
+    // Standard token result, a 2 long VECSXP with the standard token language
+    // in position 0, and the result of evaluating it in position 1
+
+    SEXP std;
   };
   struct VALC_res {
     union VALC_res_dat dat;

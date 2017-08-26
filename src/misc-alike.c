@@ -537,7 +537,7 @@ SEXP ALIKEC_string_or_true(
  * it with ALIKEC_merge_msg
  */
 
-SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res res) {
+SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res res, struct VALC_settings set) {
   if(!res.success) {
     struct VALC_settings set = VALC_settings_init();
     struct ALIKEC_tar_cur_strings strings_pasted =

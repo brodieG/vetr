@@ -216,7 +216,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_findFun(SEXP symbol, SEXP rho);
   SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho);
   struct ALIKEC_res ALIKEC_res_init();
-  SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res res);
+  SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res res, struct VALC_settings set);
   SEXP ALIKEC_string_or_true(struct ALIKEC_res res, struct VALC_settings set);
   SEXP ALIKEC_class(SEXP obj, SEXP class);
   SEXP ALIKEC_abstract_ts(SEXP x, SEXP what);

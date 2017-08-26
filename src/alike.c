@@ -608,7 +608,7 @@ SEXP ALIKEC_alike_int2(
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
   PROTECT(res.wrap)
   ALIKEC_inject_call(res, curr_sub);
-  SEXP res_sxp = PROTECT(ALIKEC_strsxp_or_true(res));
+  SEXP res_sxp = PROTECT(ALIKEC_strsxp_or_true(res, set));
   UNPROTECT(2);
   return res_sxp;
 }

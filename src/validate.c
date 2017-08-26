@@ -21,7 +21,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 struct VALC_res_list VALC_res_list_init(struct VALC_settings set) {
   if(set.res_list_alloc < 1)
     error("Internal Error: result alloc < 1; contact maintainer."); // nocov
-  if(set.res_list_alloc_max < set.res_list_alloc)
+  if(set.res_list_alloc_max < set.res_list_size_init)
     // nocov start
     error(
       "Internal Error: result max alloc less than alloc, contact maintainer"
@@ -77,8 +77,9 @@ struct VALC_res_list VALC_res_add(VALC_res_list list, VALC_res res) {
   return(list);
 }
 /*
- * val_res should be a pairlist containing character vectors in each position
- * and each of those character vectors should be length one
+ * val_res should be a vector containing character vectors in each position
+ * and each of those character vectors should be length one if produced by
+ * standard tokens, or length 5 if they were produced by templates.
  *
  * @param val_res is the return value of VALC_evaluate
  * @param val_tag is the argument name in questions
@@ -101,7 +102,7 @@ SEXP VALC_process_error(
   // Failure, explain why; two pass process because we first need to determine
   // size of error, allocate, then convert to char
 
-  if(TYPEOF(val_res) != LISTSXP)
+  if(TYPEOF(val_res) != VECSXP)
     // nocov start
     error(
       "Internal Error: unexpected type %s when evaluating test for %s; %s",
@@ -116,6 +117,8 @@ SEXP VALC_process_error(
       "contact maintainer."
     );
     // nocov end
+
+  if(!xlength(val_res)) return VALC_TRUE;
 
   SEXP val_res_cpy;
   size_t count_top = 0;
@@ -136,34 +139,10 @@ SEXP VALC_process_error(
   char * err_base_msg = CSR_smprintf4(
     set.nchar_max, err_base, err_arg_msg, "", "", ""
   );
-  // Translate to VECSXP; need to do so because the merging logic is based on
-  // VECSXP; obviously the translation back and forth isn't optimal and we
-  // should probably change this earlier in the process
-
-  // First count how many items we have as we need different treatment depending
-  // on what we're looking at
-
-  for(
-    val_res_cpy = val_res; val_res_cpy != R_NilValue;
-    val_res_cpy = CDR(val_res_cpy)
-  ) {
-    count_top++;
-  }
-  if(!count_top) return VALC_TRUE;
-
-  SEXP err_msg_full = PROTECT(allocVector(VECSXP, count_top));
-  size_t list_ind = 0;
-
-  for(
-    val_res_cpy = val_res; val_res_cpy != R_NilValue;
-    val_res_cpy = CDR(val_res_cpy)
-  ) {
-    SET_VECTOR_ELT(err_msg_full, list_ind++, CAR(val_res_cpy));
-  }
   // Collapse similar entries into one; from this point on every entry in the
   // list should be a character(1L)
 
-  SEXP err_msg_c = PROTECT(ALIKEC_merge_msg_2(err_msg_full, set));
+  SEXP err_msg_c = PROTECT(ALIKEC_merge_msg_2(val_res, set));
   R_xlen_t i, err_len = XLENGTH(err_msg_c);
 
   // Transfer to a character vector from list, also convert to bullets if
@@ -256,15 +235,6 @@ SEXP VALC_validate(
 ) {
   SEXP res;
   struct VALC_settings set = VALC_settings_vet(settings, rho);
-  res = PROTECT(
-    VALC_evaluate(
-      target, cur_sub, VALC_SYM_current, current, par_call, set
-    )
-  );
-  if(IS_TRUE(res)) {
-    UNPROTECT(1);
-    return(ScalarLogical(1));
-  }
   if(TYPEOF(ret_mode_sxp) != STRSXP && XLENGTH(ret_mode_sxp) != 1)
     error("`vet` usage error: argument `format` must be character(1L)");
   int stop_int;
@@ -275,6 +245,15 @@ SEXP VALC_validate(
   )
     error("`vet` usage error: argument `stop` must be TRUE or FALSE");
 
+  res = PROTECT(
+    VALC_evaluate(
+      target, cur_sub, VALC_SYM_current, current, par_call, set
+    )
+  );
+  if(!xlength(res) {
+    UNPROTECT(1);
+    return(ScalarLogical(1));
+  }
   const char * ret_mode_chr = CHAR(asChar(ret_mode_sxp));
   int ret_mode;
 
