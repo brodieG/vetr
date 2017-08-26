@@ -24,7 +24,7 @@ Initialize return object
 struct ALIKEC_res_lang ALIKEC_res_lang_init() {
   return (struct ALIKEC_res_lang) {
     .success = 1,
-    .rec = ALIKEC_rec_def(),
+    .rec = ALIKEC_rec_track_init(),
     .msg_strings = {"", "", "", ""}
   };
 }
@@ -520,7 +520,7 @@ SEXP ALIKEC_lang_alike_core(
   // why we send curr_cpy_par
 
   SEXP curr_cpy_par = PROTECT(list1(duplicate(current)));
-  struct ALIKEC_rec_track rec = ALIKEC_rec_def();
+  struct ALIKEC_rec_track rec = ALIKEC_rec_track_init();
   struct ALIKEC_res_lang res = ALIKEC_lang_alike_rec(
     target, curr_cpy_par, tar_hash, cur_hash, rev_hash, tar_varnum, cur_varnum,
     formula, match_call, match_env, set, rec

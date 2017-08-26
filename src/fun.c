@@ -40,7 +40,7 @@ fun(a, b, e, f, ..., g, c, e)
 
 */
 
-struct ALIKEC_res_min ALIKEC_fun_alike_internal(
+static struct ALIKEC_res ALIKEC_fun_alike_internal(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
   if(!isFunction(target) || !isFunction(current)) error("Arguments must be functions.");

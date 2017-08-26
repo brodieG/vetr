@@ -25,15 +25,15 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  * have looked like so that our tests still pass
  */
 
-SEXP ALIKEC_res_sub_as_sxp(struct ALIKEC_res sub) {
+SEXP ALIKEC_res_sub_as_sxp(struct ALIKEC_res sub, struct VALC_settings set) {
   PROTECT(sub.wrap);  // not sure why we did this previously
   SEXP out = PROTECT(allocVector(VECSXP, 4));
   SEXP out_names = PROTECT(allocVector(STRSXP, 4));
   const char * names[4] = {"success", "message", "df", "lvl"};
   for(int i = 0; i < 4; i++) SET_STRING_ELT(out_names, i, mkChar(names[i]));
 
-  struct ALIKE_tar_cur_strings strings_pasted =
-    ALIKEC_res_as_strings(sub.strings);
+  struct ALIKEC_tar_cur_strings strings_pasted =
+    ALIKEC_res_as_strings(sub.strings, set);
   SEXP message_strings = PROTECT(allocVector(STRSXP, 4));
   SET_STRING_ELT(message_strings, 0, mkChar(sub.strings.tar_pre));
   SET_STRING_ELT(message_strings, 1, mkChar(strings_pasted.target));
@@ -138,9 +138,7 @@ struct ALIKEC_res ALIKEC_alike_attr(
   if(!res.success) {
     res_sub.success = 0;
     res_sub.strings.tar_pre = "be";
-    res_sub.strings.target = {
-      "%s%s%s%s", "`alike` the corresponding element in target", "", "", ""
-    }
+    res_sub.strings.target[1] =  "`alike` the corresponding element in target";
     res_sub.wrap = PROTECT(ALIKEC_attr_wrap(attr_symb, R_NilValue));
     UNPROTECT(1);
   }
@@ -200,15 +198,18 @@ struct ALIKEC_res ALIKEC_compare_class(
         SET_VECTOR_ELT(wrap, 1, CDR(CADR(wrap_call)));
 
         res.wrap=wrap;
-        res.strings.tar_pre = "be";
-        res.strings.target = {"\"%s\"%s%s%s", tar_class, "", "", ""}
-        res.strings.cur_pre = "is";
-        res.strings.current = {"\"%s\"%s%s%s", cur_class, "", "", ""}
+        res.strings.target[0] = "\"%s\"%s%s%s";
+        res.strings.target[1] = tar_class;
+
+        res.strings.current[0] = "\"%s\"%s%s%s";
+        res.strings.current[1] = cur_class;
       } else {
-        res.strings.tar_pre = "be";
-        res.strings.target = {"class \"%s\"%s%s%s", tar_class, "", "", ""}
-        res.strings.cur_pre = "is";
-        res.strings.current = {"\"%s\"%s%s%s", cur_class, "", "", ""}
+        res.strings.target[0] = "class \"%s\"%s%s%s";
+        res.strings.target[1] = tar_class;
+
+        res.strings.current[0] = "class \"%s\"%s%s%s";
+        res.strings.current[1] = cur_class;
+
         PROTECT(PROTECT(R_NilValue));  // stack balance
   } } }
   // Check to make sure have enough classes
@@ -220,9 +221,8 @@ struct ALIKEC_res ALIKEC_compare_class(
       res.success = 0;
 
       res.strings.tar_pre = "inherit";
-      res.strings.target = {
-        "from class \"%s\"", CHAR(STRING_ELT(target, tar_class_i)), "", "", ""
-      }
+      res.strings.target[0] = "from class \"%s\"";
+      res.strings.target[1] = CHAR(STRING_ELT(target, tar_class_i));
   } }
   // Make sure class attributes are alike
 
@@ -236,12 +236,11 @@ struct ALIKEC_res ALIKEC_compare_class(
   return res;
 }
 SEXP ALIKEC_compare_class_ext(SEXP target, SEXP current) {
-  struct ALIKEC_res res = ALIKEC_compare_class(
-    target, current, VALC_settings_init()
-  );
+  struct VALC_settings set = VALC_settings_init();
+  struct ALIKEC_res res = ALIKEC_compare_class(target, current, set);
   PROTECT(res.wrap);
-  SEXP res_sxp = ALIKEC_res_sub_as_sxp(res);
-  UNPROTECT(1);
+  SEXP res_sxp = PROTECT(ALIKEC_res_sub_as_sxp(res, set));
+  UNPROTECT(2);
   return res_sxp;
 }
 /*-----------------------------------------------------------------------------\
@@ -305,10 +304,11 @@ struct ALIKEC_res ALIKEC_compare_dims(
   if(class_err_target[0]) {
     res.success = 0;
     res.lvl = 1;
-    res.strings.tar_pre = "be";
-    res.strings.target = {"\"%s\"%s%s%s", class_err_target, "", "", ""}
-    res.strings.cur_pre = "is";
-    res.strings.current = {"\"%s\"%s%s%s", class_err_actual, "", "", ""}
+    res.strings.target[0] = "\"%s\"%s%s%s";
+    res.strings.target[1] = class_err_target;
+
+    res.strings.current[0] = "\"%s\"%s%s%s";
+    res.strings.current[1] = class_err_actual;
 
     return res;
   }
@@ -317,18 +317,20 @@ struct ALIKEC_res ALIKEC_compare_dims(
   if(current == R_NilValue) {
     res.success = 0;
     res.strings.tar_pre = "have";
-    res.strings.target = {"%s%s%s%s",  "a \"dim\" attribute", "", "", ""}
+    res.strings.target[1] =   "a \"dim\" attribute";
+
     return res;
   }
   if(target_len != current_len) {
     res.success = 0;
     res.strings.tar_pre = "have";
-    res.strings.target = {
-      "%s dimension%s%s%s", class_err_target, CSR_len_as_chr(target_len),
-      target_len == (R_xlen_t) 1 ? "" : "s", "", ""
-    }
+    res.strings.target[0] = "%s dimension%s%s%s";
+    res.strings.target[1] = class_err_target;
+    res.strings.target[2] = CSR_len_as_chr(target_len);
+    res.strings.target[2] = target_len == (R_xlen_t) 1 ? "" : "s";
+
     res.strings.cur_pre = "has";
-    res.strings.current = {"%s%s%s%s", CSR_len_as_chr(current_len), "", "", ""}
+    res.strings.current[1] = CSR_len_as_chr(current_len);
     return res;
   }
   R_xlen_t attr_i;
@@ -344,8 +346,7 @@ struct ALIKEC_res ALIKEC_compare_dims(
       res.strings.tar_pre = "have";
       res.strings.cur_pre = "has";
       // see below for res.strings.target
-      res.strings.current =
-        {"%s%s%s%s", CSR_len_as_chr((R_xlen_t)(attr_i + 1)), "", "", ""}
+      res.strings.current[1] = CSR_len_as_chr((R_xlen_t)(attr_i + 1));
 
       if(target_len == 2) {  // Matrix
         err_dim1 = "";
@@ -364,11 +365,12 @@ struct ALIKEC_res ALIKEC_compare_dims(
             );
             // nocov end
         }
-        res.strings.target = {"%s%s%s%s", tar_dim_chr, err_dim2, "", ""}
+        res.strings.target[1] = tar_dim_chr;
+        res.strings.target[2] = err_dim2;
       } else {
-        res.strings.target = {
-          "size %s at dimension %s%s%s", tar_dim_chr, err_dim2, "", "", ""
-        };
+        res.strings.target[0] = "size %s at dimension %s%s%s";
+        res.strings.target[1] = tar_dim_chr;
+        res.strings.target[2] = err_dim2;
       }
       return res;
   } }
@@ -377,12 +379,13 @@ struct ALIKEC_res ALIKEC_compare_dims(
 SEXP ALIKEC_compare_dim_ext(
   SEXP target, SEXP current, SEXP tar_obj, SEXP cur_obj
 ) {
-  return ALIKEC_res_sub_as_sxp(
-    ALIKEC_compare_dims(
-      target, current, tar_obj, cur_obj, VALC_settings_init()
-  ) );
+  struct VALC_settings set = VALC_settings_init();
+  ALIKEC_res = ALIKEC_compare_dims(target, current, tar_obj, cur_obj, set)
+  PROTECT(res.wrap);
+  SEXP res_sexp = PROTECT(ALIKEC_res_sub_as_sxp(res, set));
+  UNPROTECT(2);
+  return res_sexp;
 }
-
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
 /*
@@ -455,7 +458,7 @@ struct ALIKEC_res ALIKEC_compare_special_char_attrs_internal(
       if(!R_compute_identical(target, current, 16)){
         res_sub.success = 0;
         res_sub.strings.tar_pre = "be";
-        res_sub.stinrgs.target = {"%s%s%s%s", "identical to target"}
+        res_sub.strings.target[1] = "identical to target";
       }
     } else if (tar_type == STRSXP) {
       // Only determine what name is wrong if we know there is a mismatch since
@@ -472,10 +475,10 @@ struct ALIKEC_res ALIKEC_compare_special_char_attrs_internal(
           ) {
             UNPROTECT(1);  // undo dummy protect
             res_sub.success=0;
-            res.strings.tar_pre = "be";
-            res.strings.target = {"\"%s\"%s%s%s", tar_name_val, "", "", ""}
-            res.strings.cur_pre = "is";
-            res.strings.current = {"\"%s\"%s%s%s", cur_name_val, "", "", ""}
+            res.strings.target[0] = "\"%s\"%s%s%s";
+            res.strings.target[1] = tar_name_val;
+            res.strings.current[0] = "\"%s\"%s%s%s";
+            res.strings.current[1] = cur_name_val;
 
             res_sub.wrap = PROTECT(allocVector(VECSXP, 2));
             SEXP wrap_ind =
@@ -497,11 +500,12 @@ struct ALIKEC_res ALIKEC_compare_special_char_attrs_internal(
 // External version for unit testing
 
 SEXP ALIKEC_compare_special_char_attrs(SEXP target, SEXP current) {
+  struct VALC_settings set = VALC_settings_init();
   struct ALIKEC_res res = ALIKEC_compare_special_char_attrs_internal(
-    target, current, VALC_settings_init(), 0
+    target, current, set, 0
   );
   PROTECT(res.wrap);
-  SEXP res_sexp = PROTECT(ALIKEC_res_sub_as_sxp(res));
+  SEXP res_sexp = PROTECT(ALIKEC_res_sub_as_sxp(res, set));
   UNPROTECT(2);
   return res_sexp;
 }
@@ -535,7 +539,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
   if(sec == R_NilValue) {
     res.success = 0;
     res.strings.tar_pre = "have";
-    res.strings.target = {"%s%s%s%s", "a \"dimnames\" attribute", "", "", ""}
+    res.strings.target[1] = "a \"dimnames\" attribute";
     return res;
   }
   SEXP prim_names = getAttrib(prim, R_NamesSymbol);
@@ -609,11 +613,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
 
         if(!res_tmp.success) {
           res.success = 0;
-          res.strings.tar_pre = "be";
-          res.strings.target.strings = {
-            "%s%s%s%s",   "`alike` the corresponding element in target",
-            "", "", ""
-          }
+          res.strings.target[1] = "%s%s%s%s";
           res.wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
           UNPROTECT(1);
           return res;
@@ -627,7 +627,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
     res.success = 0;
 
     res.strings.tar_pre = "not be";
-    res.strings.target.strings = {"%s%s%s%s", "missing", "", "", ""};
+    res.strings.target.strings[1] = "missing";
     res.wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
     UNPROTECT(1);
     return res;
@@ -725,11 +725,12 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
   return res;
 }
 SEXP ALIKEC_compare_dimnames_ext(SEXP prim, SEXP sec) {
-  return(
-    ALIKEC_res_sub_as_sxp(
-      ALIKEC_compare_dimnames(
-        prim, sec, VALC_settings_init()
-  ) ) );
+  struct VALC_settings set = VALC_settings_init();
+  ALIKEC_res res = ALIKEC_compare_dimnames(prim, sec, set);
+  PROTECT(res.wrap);
+  SEXP res_sxp = PROTECT(ALIKEC_res_sub_as_sxp(res, set));
+  UNPROTECT(2);
+  return(res_sxp);
 }
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
@@ -756,10 +757,8 @@ struct ALIKEC_res ALIKEC_compare_ts(
         snprintf(tar_num, 20, "%g", tar_real[i]);
         snprintf(cur_num, 20, "%g", cur_real[i]);
 
-        res.strings.tar_pre = "be";
-        res.strings.target = {"%s%s%s%s", tar_num, "", "", ""}
-        res.strings.cur_pre = "is";
-        res.strings.current = {"%s%s%s%s", cur_num, "", "", ""}
+        res.strings.target[1] = tar_num;
+        res.strings.current[1] = cur_num;
         res.wrap = PROTECT(allocVector(VECSXP, 2));
         SEXP lang_tsp = PROTECT(lang2(R_TspSymbol, R_NilValue));
         SEXP lang_sub =
@@ -778,11 +777,12 @@ struct ALIKEC_res ALIKEC_compare_ts(
 external
 */
 SEXP ALIKEC_compare_ts_ext(SEXP target, SEXP current) {
-  return ALIKEC_res_sub_as_sxp(
-    ALIKEC_compare_ts(target, current,
-      VALC_settings_init()
-    )
-  );
+  struct VALC_settings set = VALC_settings_init();
+  ALIKEC_res res = ALIKEC_compare_ts(target, current, set);
+  PROTECT(res.wrap);
+  SEXP res_sxp = PROTECT(ALIKEC_res_sub_as_sxp(res, set));
+  UNPROTECT(2);
+  return res_sxp;
 }
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
@@ -1204,7 +1204,7 @@ SEXP ALIKEC_compare_attributes(SEXP target, SEXP current, SEXP attr_mode) {
   struct ALIKEC_res comp_res =
     ALIKEC_compare_attributes_internal(target, current, set);
   PROTECT(comp_res.wrap);
-  SEXP res = ALIKEC_res_sub_as_sxp(comp_res);
+  SEXP res = ALIKEC_res_sub_as_sxp(comp_res, set);
   UNPROTECT(1);
   return res;
 }

@@ -52,10 +52,12 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
    * For legacy reasons, we didn't collapse the _pre strings into the array
    */
   struct ALIKEC_res_strings {
-    // format string, must have 4 %s, followed by four other strings
+    // format string, must have 4 %s, followed by four other strings, these
+    // are supposed to be initialized to 5 long arrays; don't initialize them as
+    // actual arrays as they can't be modified.
 
-    const char * target[5];
-    const char * current[5];
+    const char ** target;
+    const char ** current;
 
     const char * tar_pre;    // be, have, etc.
     const char * cur_pre;    // is, has, etc.
@@ -167,7 +169,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     int formula, SEXP match_call, SEXP match_env, struct VALC_settings set,
     struct ALIKEC_rec_track rec
   );
-  struct ALIKEC_res_strings ALIKEC_fun_alike(
+  static struct ALIKEC_res ALIKEC_fun_alike_internal(
     SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current);
