@@ -137,7 +137,7 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
   struct VALC_settings set, struct ALIKEC_rec_track rec
 ) {
   SEXP current = CAR(cur_par);
-  struct ALIKEC_res_lang res = ALIKEC_res_init();
+  struct ALIKEC_res res = ALIKEC_res_init();
   res.rec = rec;
 
   // Skip parens and increment recursion; not we don't track recursion level
@@ -219,7 +219,7 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
 
     // could have constant vs. language here, right?
 
-    res.strings.target_pre = "have";
+    res.strings.tar_pre = "have";
     res.strings.target[1] =  "identical constant values";
   } else res.success = 1;
 
@@ -284,11 +284,11 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
       res.success = 0;
       res.rec = ALIKEC_rec_ind_num(res.rec, 1);
 
-      res.msg_strings.target[0] = "a call to `%s`";
-      res.msg_strings.target[1] = ALIKEC_deparse_chr(CAR(target), -1, set);
+      res.strings.target[0] = "a call to `%s`";
+      res.strings.target[1] = ALIKEC_deparse_chr(CAR(target), -1, set);
 
-      res.msg_strings.current[0] = "a call to `%s`";
-      res.msg_strings.current[1] = ALIKEC_deparse_chr(CAR(current), -1, set);
+      res.strings.current[0] = "a call to `%s`";
+      res.strings.current[1] = ALIKEC_deparse_chr(CAR(current), -1, set);
 
     } else if (CDR(target) != R_NilValue) {
       // Zero length calls match anything, so only come here if target is not
@@ -350,18 +350,17 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
           );} }
           res.success = 0;
 
-          res.msg_strings.tar_pre = "have";
-          res.msg_strings.target = CSR_smprintf4(
-            set.nchar_max, "argument `%s` %s",
-            CHAR(PRINTNAME(TAG(tar_sub))), prev_tag_msg, "", ""
-          );
-          res.msg_strings.act_pre = "has";
+          res.strings.tar_pre = "have";
+          res.strings.target[0] =  "argument `%s` %s";
+          res.strings.target[1] = CHAR(PRINTNAME(TAG(tar_sub)));
+          res.strings.target[2] = prev_tag_msg;
+          res.strings.cur_pre = "has";
+
           if(TAG(cur_sub) == R_NilValue) {
-            res.msg_strings.actual = "unnamed argument";
+            res.strings.current[1] = "unnamed argument";
           } else {
-            res.msg_strings.actual = CSR_smprintf4(
-              set.nchar_max, "`%s`", CHAR(PRINTNAME(TAG(cur_sub))), "", "", ""
-            );
+            res.strings.current[0] =  "`%s`";
+            res.strings.current[1] =  CHAR(PRINTNAME(TAG(cur_sub)));
           }
         } else {
           // Note that `lang_obj_compare` kicks off recursion as well, and
@@ -406,14 +405,12 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
             cur_sub = CDR(cur_sub);
           }
           res.success = 0;
-          res.msg_strings.tar_pre = "have";
-          res.msg_strings.target = CSR_smprintf4(
-            set.nchar_max, "%s arguments", CSR_len_as_chr(tar_len), "", "", ""
-          );
-          res.msg_strings.act_pre = "has";
-          res.msg_strings.actual = CSR_smprintf4(
-            set.nchar_max, "%s", CSR_len_as_chr(cur_len), "", "", ""
-        );}
+          res.strings.tar_pre = "have";
+          res.strings.target[0] = "%s arguments";
+          res.strings.target[1] = CSR_len_as_chr(tar_len);
+          res.strings.cur_pre = "has";
+          res.strings.current[1] = CSR_len_as_chr(cur_len);
+        }
       }
       target = current = R_NilValue;
 
@@ -492,7 +489,7 @@ SEXP ALIKEC_lang_alike_core(
 
   SEXP curr_cpy_par = PROTECT(list1(duplicate(current)));
   struct ALIKEC_rec_track rec = ALIKEC_rec_track_init();
-  struct ALIKEC_res_lang res = ALIKEC_lang_alike_rec(
+  struct ALIKEC_res res = ALIKEC_lang_alike_rec(
     target, curr_cpy_par, tar_hash, cur_hash, rev_hash, tar_varnum, cur_varnum,
     formula, match_call, match_env, set, rec
   );
@@ -512,12 +509,7 @@ SEXP ALIKEC_lang_alike_core(
   if(!res.success) {
     SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.rec));
 
-    SET_VECTOR_ELT(
-      res_fin, 1,
-      ALIKEC_res_msg_def(
-        res.msg_strings.tar_pre, res.msg_strings.target,
-        res.msg_strings.act_pre, res.msg_strings.actual
-    ) );
+    SET_VECTOR_ELT(res_fin, 1, ALIKEC_res_strings_to_SEXP(res.strings));
     SET_VECTOR_ELT(res_fin, 2, CAR(curr_cpy_par));
     SET_VECTOR_ELT(res_fin, 3, VECTOR_ELT(rec_ind, 0));
     SET_VECTOR_ELT(res_fin, 4, VECTOR_ELT(rec_ind, 1));
@@ -532,8 +524,8 @@ SEXP ALIKEC_lang_alike_core(
 
   Probalby some inefficiency in the C -> SEXP -> C translations going on; this
   is happening mostly for legacy reason so should probably clean up to stick to
-  C at some point.  One of the changes (amongst others) is that we no longer care
-  about recording the call / language that caused the problem since we're
+  C at some point.  One of the changes (amongst others) is that we no longer
+  care about recording the call / language that caused the problem since we're
   refering directly to the original object
 */
 struct ALIKEC_res ALIKEC_lang_alike_internal(
@@ -541,21 +533,22 @@ struct ALIKEC_res ALIKEC_lang_alike_internal(
 ) {
   SEXP lang_res = PROTECT(ALIKEC_lang_alike_core(target, current, set));
 
-  struct ALIKEC_res res = ALIKEC_res_sub_def();
+  struct ALIKEC_res res = ALIKEC_res_init();
   if(asInteger(VECTOR_ELT(lang_res, 0))) {
-    PROTECT(res.message);  // stack balance
+    PROTECT(res.wrap);  // stack balance
   } else {
     res.success = 0;
-    res.message = PROTECT(VECTOR_ELT(lang_res, 1));
+    SEXP message = PROTECT(VECTOR_ELT(lang_res, 1));
 
     // Deal with wrap
 
     SEXP lang_ind = VECTOR_ELT(lang_res, 3);
     SEXP lang_ind_sub = VECTOR_ELT(lang_res, 4);
 
-    SEXP wrap = VECTOR_ELT(res.message, 1);
+    SEXP wrap = VECTOR_ELT(message, 1);
     SET_VECTOR_ELT(wrap, 0, lang_ind);
     SET_VECTOR_ELT(wrap, 1, lang_ind_sub);
+    res.wrap = wrap;
   }
   UNPROTECT(2);
   return res;
@@ -576,7 +569,7 @@ SEXP ALIKEC_lang_alike_chr_ext(
 ) {
   struct VALC_settings set = VALC_settings_init();
   set.env = match_env;
-  SEXP res = PROTECT(ALIKEC_lang_alike_internal(target, current, set).message);
+  SEXP res = PROTECT(ALIKEC_lang_alike_internal(target, current, set).wrap);
   SEXP res_str;
   if(res != R_NilValue) {
     res_str = PROTECT(VECTOR_ELT(res, 0));
