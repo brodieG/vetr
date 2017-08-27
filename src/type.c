@@ -95,7 +95,11 @@ SEXP ALIKEC_type_alike(
 
   res = ALIKEC_type_alike_internal(target, current, call, set);
   if(!res.success) {
-    return(ALIKEC_string_or_true(res, set));
+    res = ALIKEC_inject_call(res, call);
+    PROTECT(res.wrap);
+    SEXP res_sexp = PROTECT(ALIKEC_string_or_true(res, set));
+    UNPROTECT(2);
+    return(res_sexp);
   } else {
     return ScalarLogical(1);
   }

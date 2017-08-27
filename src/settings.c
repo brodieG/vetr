@@ -87,7 +87,7 @@ static long VALC_is_scalar_int(
 
 struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
   struct VALC_settings settings = VALC_settings_init();
-  R_xlen_t set_len = 14;
+  R_xlen_t set_len = 16;
 
   if(TYPEOF(set_list) == VECSXP) {
     if(xlength(set_list) != set_len) {
@@ -108,7 +108,8 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
       "type.mode", "attr.mode", "lang.mode", "fun.mode", "rec.mode",
       "suppress.warnings", "fuzzy.int.max.len",
       "width", "env.depth.max", "symb.sub.depth.max", "symb.size.max",
-      "nchar.max", "track.hash.content.size", "env"
+      "nchar.max", "track.hash.content.size", "env",
+      "result.list.size.init", "result.list.size.max"
     };
     SEXP set_names_def_sxp = PROTECT(allocVector(STRSXP, set_len));
     for(R_xlen_t i = 0; i < set_len; ++i) {
@@ -179,6 +180,13 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
       );
     }
     settings.env = VECTOR_ELT(set_list, 13);
+
+    settings.result_list_size_max = VALC_is_scalar_int(
+      VECTOR_ELT(set_list, 14), "result.list.size.max", 1, INT_MAX - 1
+    );
+    settings.result_list_size_init = VALC_is_scalar_int(
+      VECTOR_ELT(set_list, 15), "result.list.size.max", 1, INT_MAX - 1
+    );
   } else if (set_list != R_NilValue) {
     error(
       "%s (is %s).",
@@ -191,11 +199,5 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
   }
   if(settings.env == R_NilValue) settings.env = env;
 
-  settings.result_list_size_max = VALC_is_scalar_int(
-    VECTOR_ELT(set_list, 14), "result.list.size.max", 1, INT_MAX - 1
-  );
-  settings.result_list_size_init = VALC_is_scalar_int(
-    VECTOR_ELT(set_list, 15), "result.list.size.max", 1, INT_MAX - 1
-  );
   return settings;
 }

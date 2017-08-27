@@ -493,8 +493,6 @@ struct ALIKEC_res ALIKEC_alike_internal(
 
   struct ALIKEC_res res = ALIKEC_res_init();
 
-  // Note, no PROTECTion since we exit immediately (res.message is SEXP)
-
   if(TYPEOF(target) == NILSXP && TYPEOF(current) != NILSXP) {
     // Handle NULL special case at top level
 
@@ -527,9 +525,19 @@ struct ALIKEC_res ALIKEC_alike_internal(
  * as the recursion unwinds that way we only collect on the branch of the
  * recursion that we actually need it for (I guess it's implicitly always
  * hanging out in the call stack, but whatver).
+ *
+ * If there is no wrap element present, then we create a new one with the call.
+ * The returned wrap needs to be protected as it may be different from the input
+ * wrap.
  */
-void ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
+struct ALIKEC_res ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
   SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.rec));
+  if(res.wrap == R_NilValue) {
+    res.wrap = PROTECT(allocVector(VECSXP, 2));
+    SET_VECTOR_ELT(res.wrap, 0, call);
+    SET_VECTOR_ELT(res.wrap, 1, R_NilValue);
+  } else PROTECT(R_NilValue);
+
   SEXP wrap = res.wrap;
 
   // Need to check if our call could become ambigous with the indexing
@@ -559,10 +567,14 @@ void ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
   // Merge the wrap call with the original call so we can get stuff like
   // `names(call)`
 
-  if(VECTOR_ELT(wrap, 0) != R_NilValue) {
+  if(
+    VECTOR_ELT(wrap, 0) != R_NilValue && TYPEOF(VECTOR_ELT(wrap, 1)) == LANGSXP
+  ) {
     SETCAR(VECTOR_ELT(wrap, 1), call);
   }
-  UNPROTECT(1);
+  res.wrap = wrap;
+  UNPROTECT(3);
+  return res;
 }
 /*
 Main external interface
@@ -584,10 +596,11 @@ SEXP ALIKEC_alike_ext(
   struct VALC_settings set = VALC_settings_vet(settings, env);
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
   PROTECT(res.wrap);
+  res = ALIKEC_inject_call(res, curr_sub);
+  PROTECT(res.wrap); // might have been changed by inject
 
-  ALIKEC_inject_call(res, curr_sub);
   SEXP res_sxp = PROTECT(ALIKEC_string_or_true(res, set));
-  UNPROTECT(2);
+  UNPROTECT(3);
   return res_sxp;
 }
 /*
@@ -602,8 +615,9 @@ SEXP ALIKEC_alike_int2(
 ) {
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
   PROTECT(res.wrap);
-  ALIKEC_inject_call(res, curr_sub);
+  res = ALIKEC_inject_call(res, curr_sub);
+  PROTECT(res.wrap);  // might have been changed by inject
   SEXP res_sxp = PROTECT(ALIKEC_strsxp_or_true(res, set));
-  UNPROTECT(2);
+  UNPROTECT(3);
   return res_sxp;
 }

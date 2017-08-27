@@ -511,8 +511,11 @@ SEXP ALIKEC_string_or_true(
   if(!res.success) {
     struct ALIKEC_tar_cur_strings strings_pasted =
       ALIKEC_res_as_strings(res.strings, set);
-    const char * call =
-      ALIKEC_pad_or_quote(VECTOR_ELT(res.wrap, 0), set.width, -1, set);
+    const char * call = "";
+
+    if(res.wrap != R_NilValue) {
+      call = ALIKEC_pad_or_quote(VECTOR_ELT(res.wrap, 0), set.width, -1, set);
+    }
 
     if(strings_pasted.target[0] && strings_pasted.current[0]) {
       const char * res_str = CSR_smprintf6(
