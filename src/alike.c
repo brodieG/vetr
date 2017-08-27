@@ -34,8 +34,13 @@ SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_strings strings) {
   SEXP res = PROTECT(allocVector(STRSXP, 4));
   SET_STRING_ELT(res, 0, mkChar(strings.tar_pre));
   SET_STRING_ELT(res, 1, mkChar(strings_pasted.target));
-  SET_STRING_ELT(res, 2, mkChar(strings.cur_pre));
-  SET_STRING_ELT(res, 3, mkChar(strings_pasted.current));
+  if(strings_pasted.current[0]) {
+    SET_STRING_ELT(res, 2, mkChar(strings.cur_pre));
+    SET_STRING_ELT(res, 3, mkChar(strings_pasted.current));
+  } else {
+    SET_STRING_ELT(res, 2, mkChar(""));
+    SET_STRING_ELT(res, 3, mkChar(""));
+  }
   UNPROTECT(1);
   return res;
 }

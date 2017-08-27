@@ -509,7 +509,19 @@ SEXP ALIKEC_lang_alike_core(
   if(!res.success) {
     SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.rec));
 
-    SET_VECTOR_ELT(res_fin, 1, ALIKEC_res_strings_to_SEXP(res.strings));
+    SEXP res_msg = PROTECT(allocVector(VECSXP, 2));
+    SEXP res_msg_names = PROTECT(allocVector(STRSXP, 2));
+    SET_VECTOR_ELT(res_msg, 0, ALIKEC_res_strings_to_SEXP(res.strings));
+    if(res.wrap == R_NilValue) {
+      res.wrap = PROTECT(allocVector(VECSXP, 2));
+    } else PROTECT(R_NilValue);
+    SET_VECTOR_ELT(res_msg, 1, res.wrap);
+    SET_STRING_ELT(res_msg_names, 0, mkChar("message"));
+    SET_STRING_ELT(res_msg_names, 1, mkChar("wrap"));
+    setAttrib(res_msg, R_NamesSymbol, res_msg_names);
+    SET_VECTOR_ELT(res_fin, 1, res_msg);
+    UNPROTECT(3);
+
     SET_VECTOR_ELT(res_fin, 2, CAR(curr_cpy_par));
     SET_VECTOR_ELT(res_fin, 3, VECTOR_ELT(rec_ind, 0));
     SET_VECTOR_ELT(res_fin, 4, VECTOR_ELT(rec_ind, 1));
@@ -538,7 +550,14 @@ struct ALIKEC_res ALIKEC_lang_alike_internal(
     PROTECT(res.wrap);  // stack balance
   } else {
     res.success = 0;
+
     SEXP message = PROTECT(VECTOR_ELT(lang_res, 1));
+    SEXP msg_txt = VECTOR_ELT(message, 0);
+
+    res.strings.tar_pre = CHAR(STRING_ELT(msg_txt, 0));
+    res.strings.target[1] = CHAR(STRING_ELT(msg_txt, 1));
+    res.strings.cur_pre = CHAR(STRING_ELT(msg_txt, 2));
+    res.strings.current[1] = CHAR(STRING_ELT(msg_txt, 3));
 
     // Deal with wrap
 
@@ -569,10 +588,11 @@ SEXP ALIKEC_lang_alike_chr_ext(
 ) {
   struct VALC_settings set = VALC_settings_init();
   set.env = match_env;
-  SEXP res = PROTECT(ALIKEC_lang_alike_internal(target, current, set).wrap);
+  struct ALIKEC_res res = ALIKEC_lang_alike_internal(target, current, set);
+  PROTECT(res.wrap);
   SEXP res_str;
-  if(res != R_NilValue) {
-    res_str = PROTECT(VECTOR_ELT(res, 0));
+  if(!res.success) {
+    res_str = PROTECT(ALIKEC_res_strings_to_SEXP(res.strings));
   } else {
     res_str = PROTECT(mkString(""));
   }
