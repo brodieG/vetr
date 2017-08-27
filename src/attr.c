@@ -41,6 +41,12 @@ SEXP ALIKEC_res_sub_as_sxp(struct ALIKEC_res sub, struct VALC_settings set) {
   SET_STRING_ELT(message_strings, 3, mkChar(strings_pasted.current));
 
   SEXP message = PROTECT(allocVector(VECSXP, 2));
+  SEXP res_msg_names = PROTECT(allocVector(STRSXP, 2));
+  SET_STRING_ELT(res_msg_names, 0, mkChar("message"));
+  SET_STRING_ELT(res_msg_names, 1, mkChar("wrap"));
+  setAttrib(message, R_NamesSymbol, res_msg_names);
+  UNPROTECT(1);
+
   SET_VECTOR_ELT(message, 0, message_strings);
   SET_VECTOR_ELT(message, 1, sub.wrap);
 
