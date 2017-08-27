@@ -481,10 +481,10 @@ struct ALIKEC_res ALIKEC_compare_special_char_attrs_internal(
           ) {
             UNPROTECT(1);  // undo dummy protect
             res_sub.success=0;
-            res.strings.target[0] = "\"%s\"%s%s%s";
-            res.strings.target[1] = tar_name_val;
-            res.strings.current[0] = "\"%s\"%s%s%s";
-            res.strings.current[1] = cur_name_val;
+            res_sub.strings.target[0] = "\"%s\"%s%s%s";
+            res_sub.strings.target[1] = tar_name_val;
+            res_sub.strings.current[0] = "\"%s\"%s%s%s";
+            res_sub.strings.current[1] = cur_name_val;
 
             res_sub.wrap = PROTECT(allocVector(VECSXP, 2));
             SEXP wrap_ind =
