@@ -38,7 +38,9 @@ struct VALC_res_list VALC_res_list_init(struct VALC_settings set) {
     .list = list_start
   };
 }
-struct VALC_res_list VALC_res_add(VALC_res_list list, VALC_res res) {
+struct VALC_res_list VALC_res_add(
+  struct VALC_res_list list, struct VALC_res res
+) {
   if(list.idx > list.idx_alloc) {
     error(
       "Internal Error: res list index greater than alloc, contact maintainer."

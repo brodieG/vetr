@@ -36,7 +36,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   // statements fail).
 
   union VALC_res_dat {
-    ALIKEC_res tpl;     // Template token result
+    struct ALIKEC_res tpl;     // Template token result
 
     // Standard token result, a 2 long VECSXP with the standard token language
     // in position 0, and the result of evaluating it in position 1
@@ -49,7 +49,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     int success;
   };
   struct VALC_res_list {
-    VALC_res * list;
+    struct VALC_res * list;
     // index of free slot (and count of how many we have), note this means that
     // the last recorded result is at .list[.idx - 1], not .list[.idx]
     int idx;
@@ -72,6 +72,10 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP VALC_check_assumptions();
 
   SEXP VALC_res_init();
+  struct VALC_res_list VALC_res_add(
+    struct VALC_res_list list, struct VALC_res res
+  );
+  struct VALC_res_list VALC_res_list_init(struct VALC_settings set);
 
   SEXP VALC_validate(
     SEXP target, SEXP current, SEXP cur_sub, SEXP par_call, SEXP rho,

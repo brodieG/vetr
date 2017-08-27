@@ -214,6 +214,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   const char * ALIKEC_deparse_chr(
     SEXP obj, int width_cutoff, struct VALC_settings set
   );
+  void ALIKEC_inject_call(struct ALIKEC_res res, SEXP call);
   SEXP ALIKEC_match_call(SEXP call, SEXP match_call, SEXP env);
   SEXP ALIKEC_findFun(SEXP symbol, SEXP rho);
   SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho);

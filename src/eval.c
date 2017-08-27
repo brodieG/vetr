@@ -30,7 +30,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  * information embedded in `res_list`.
  */
 
-SEXP VALC_evaluate_recurse(
+struct VALC_res_list VALC_evaluate_recurse(
   SEXP lang, SEXP act_codes, SEXP arg_value, SEXP arg_lang, SEXP arg_tag,
   SEXP lang_full, struct VALC_settings set, struct VALC_res_list res_list
 ) {
@@ -90,7 +90,6 @@ SEXP VALC_evaluate_recurse(
 
     if(TYPEOF(lang) == LANGSXP) {
       int parse_count = 0;
-      VALC_res_list eval_res;
       lang = CDR(lang);
       act_codes = CDR(act_codes);
 
@@ -100,7 +99,7 @@ SEXP VALC_evaluate_recurse(
           set, res_list
         );
         // recall res_list.idx points to next available slot, not last result
-        struct VALC res_val = res_list[res_list.idx - 1];
+        struct VALC_res res_val = res_list.list[res_list.idx - 1];
 
         if(!res_val.success && mode == 1) {
           return(res_list);
@@ -154,23 +153,23 @@ SEXP VALC_evaluate_recurse(
     if(mode == 10) {
       eval_res_c = VALC_all(eval_tmp);
       eval_res.tpl = 0;
-      eval_res.succes = eval_res_c > 0
-      eval_res.dat = eval_dat;
+      eval_res.success = eval_res_c > 0;
+      eval_res.dat.std = eval_dat;
     } else {
       eval_res.tpl = 1;
       // bit of a complicated protection mess here, we don't want eval_res in
       // the protection stack when we're done
 
-      eval_res.dat = ALIKEC_alike_internal(
+      eval_res.dat.tpl = ALIKEC_alike_internal(
         VECTOR_ELT(eval_dat, 1), arg_value, set
       );
       // ASSUMING THIS WON'T CAUSE GC!!!!  doesn't seem to now based un
       // Rf_unprotect but potentially could change in future; need to look at
       // protect with index or some such
       UNPROTECT(1);
-      PROTECT(eval_res.dat.wrap);
+      PROTECT(eval_res.dat.tpl.wrap);
 
-      eval_res.success = eval_res.dat.success;
+      eval_res.success = eval_res.dat.tpl.success;
     }
     // Only add to res list if we had an error
 
@@ -195,17 +194,18 @@ SEXP VALC_evaluate_recurse(
 SEXP VALC_error_standard(
   SEXP dat, SEXP arg_tag, SEXP arg_lang, struct VALC_settings set
 ) {
-  SEXP lang = VECTOR_ELT(dat.dat, 0);
-  SEXP eval_tmp = VECTOR_ELT(dat.dat, 1);
+  SEXP lang = VECTOR_ELT(dat, 0);
+  SEXP eval_tmp = VECTOR_ELT(dat, 1);
   SEXP err_attrib;
-  char * err_call, err_str;
+  const char * err_call;
+  char * err_str;
 
   // If message attribute defined, this is easy:
 
   if((err_attrib = getAttrib(lang, VALC_SYM_errmsg)) != R_NilValue) {
     if(TYPEOF(err_attrib) != STRSXP || XLENGTH(err_attrib) != 1) {
       VALC_arg_error(
-        arg_tag, lang_full,
+        arg_tag, arg_lang,
         "\"err.msg\" attribute for validation token for argument `%s` must be a one length character vector."
       );
     }
@@ -215,7 +215,7 @@ SEXP VALC_error_standard(
     // string
 
     const char * err_attrib_msg = CHAR(STRING_ELT(err_attrib, 0));
-    char * err_str = CSR_smprintf4(
+    err_str = CSR_smprintf4(
       set.nchar_max, err_attrib_msg, err_call, "", "", ""
     );
   } else {
@@ -229,7 +229,7 @@ SEXP VALC_error_standard(
     char * err_tok;
     switch(eval_res_c) {
       case -6: {
-          R_xlen_t eval_res_len = xlength(eval_res);
+          R_xlen_t eval_res_len = xlength(eval_tmp);
           err_tok = CSR_smprintf4(
             set.nchar_max,
             "chr%s \"%s\"%s%s",
@@ -238,7 +238,7 @@ SEXP VALC_error_standard(
                 set.nchar_max, " [1:%s]%s", CSR_len_as_chr(eval_res_len),
                 ""
               ) : "",
-            CHAR(STRING_ELT(eval_res, 0)),
+            CHAR(STRING_ELT(eval_tmp, 0)),
             eval_res_len > 1 ? " ..." : "",
             ""
           );
@@ -300,9 +300,9 @@ SEXP VALC_error_standard(
 SEXP VALC_error_template(
   struct ALIKEC_res res, SEXP arg_tag, SEXP arg_lang, struct VALC_settings set
 ) {
-  ALIKEC_inject_call(res.wrap, arg_lang);
+  ALIKEC_inject_call(res, arg_lang);
   SEXP res_sxp = PROTECT(ALIKEC_strsxp_or_true(res, set));
-  if(TYPEOF(res_sxp) != STRXP)
+  if(TYPEOF(res_sxp) != STRSXP)
     // nocov start
     error(
       "Internal Error: %s %s , contact maintainer.",
@@ -317,9 +317,9 @@ SEXP VALC_error_extract(
   struct VALC_res res, SEXP arg_tag, SEXP arg_lang, struct VALC_settings set
 ) {
   if(res.tpl) {
-    return VALC_error_template(res.dat, arg_tag, arg_lang, set);
+    return VALC_error_template(res.dat.tpl, arg_tag, arg_lang, set);
   } else {
-    return VALC_error_standard(res.dat, arg_tag, arg_lang, set);
+    return VALC_error_standard(res.dat.std, arg_tag, arg_lang, set);
   }
 }
 /* -------------------------------------------------------------------------- *\
@@ -347,7 +347,7 @@ SEXP VALC_evaluate(
 
   res_list = VALC_evaluate_recurse(
     VECTOR_ELT(lang_parsed, 0), VECTOR_ELT(lang_parsed, 1),
-    arg_value, arg_lang, arg_tag, lang_full, set, res_init;
+    arg_value, arg_lang, arg_tag, lang_full, set, res_init
   );
   // Now determine if we passed or failed, if idx is not zero means we had at
   // least on error.  There should be one error in AND mode, and possibly many
@@ -360,8 +360,11 @@ SEXP VALC_evaluate(
 
   SEXP res_as_str = PROTECT(allocVector(VECSXP, res_list.idx));
   if(res_list.idx) {
-    for(int i = 0; i < re_list.idx; ++i)
-      SET_VECTOR_ELT(res_as_str, i, VALC_error_extract(res_list.list[i]));
+    for(int i = 0; i < res_list.idx; ++i)
+      SET_VECTOR_ELT(
+        res_as_str, i,
+        VALC_error_extract(res_list.list[i], arg_tag, arg_lang, set)
+      );
   }
   // We used to remove duplicates here, but might make more sense to do so once
   // we get to the actual strings we're going to use so that we can sort and
