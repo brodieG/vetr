@@ -25,7 +25,7 @@ not alike
 
 call is substituted current, only used when this is called by type_alike directly otherwise doesn't do much
 */
-struct ALIKEC_res_strings ALIKEC_type_alike_internal(
+struct ALIKEC_res ALIKEC_type_alike_internal(
   SEXP target, SEXP current, SEXP call, struct VALC_settings set
 ) {
   SEXPTYPE tar_type, cur_type, tar_type_raw, cur_type_raw;
@@ -33,7 +33,7 @@ struct ALIKEC_res_strings ALIKEC_type_alike_internal(
   tar_type_raw = TYPEOF(target);
   cur_type_raw = TYPEOF(current);
 
-  struct ALIKEC_res res = ALIKE_res_interim();
+  struct ALIKEC_res res = ALIKEC_res_init();
 
   if(tar_type_raw == cur_type_raw) return res;
 
@@ -81,10 +81,10 @@ struct ALIKEC_res_strings ALIKEC_type_alike_internal(
   struct ALIKEC_res res_fin = res;
 
   res_fin.success = 0;
-  res_fin.strings.tar_pre = "be";
-  res_fin.strings.target= {"type \"%s\"", what, "", "", ""};
-  res_fin.strings.act_pre = "is";
-  res_fin.strings.actual = {"\"%s\"", type2char(cur_type), "", "", ""};
+  res_fin.strings.target[0]= "type \"%s\"";
+  res_fin.strings.target[1]= what;
+  res_fin.strings.current[0] = "\"%s\"";
+  res_fin.strings.current[1] = type2char(cur_type);
   return res_fin;
 }
 SEXP ALIKEC_type_alike(

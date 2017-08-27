@@ -488,18 +488,18 @@ SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho) {
  * Only exists because this operation is expensive and we want to defer carrying
  * out until we're absolutely sure that we need to carry it out.
  */
-struct ALIKE_tar_cur_strings ALIKEC_res_as_strings(
+struct ALIKEC_tar_cur_strings ALIKEC_res_as_strings(
   struct ALIKEC_res_strings strings, struct VALC_settings set
 ) {
   const char * tar_str = CSR_smprintf4(
     set.nchar_max, strings.target[0], strings.target[1],
     strings.target[2], strings.target[3], strings.target[4]
-  )
+  );
   const char * cur_str = CSR_smprintf4(
     set.nchar_max, strings.current[0], strings.current[1],
     strings.current[2], strings.current[3], strings.current[4]
-  )
-  return (struct ALIKE_tar_cur_strings) {.target=tar_str, .current=cur_str};
+  );
+  return (struct ALIKEC_tar_cur_strings) {.target=tar_str, .current=cur_str};
 }
 /*
 Convert convention of zero length string == TRUE to SEXP
@@ -510,7 +510,7 @@ SEXP ALIKEC_string_or_true(
 ) {
   if(!res.success) {
     struct ALIKEC_tar_cur_strings strings_pasted =
-      ALIKEC_res_as_strings(res, set);
+      ALIKEC_res_as_strings(res.strings, set);
     const char * call =
       ALIKEC_pad_or_quote(VECTOR_ELT(res.wrap, 0), set.width, -1, set);
 
@@ -518,13 +518,13 @@ SEXP ALIKEC_string_or_true(
       const char * res_str = CSR_smprintf6(
         set.nchar_max,
         "%sshould %s %s (%s %s)",
-        call, res.tar_pre, strings_pasted.target,
-        res.cur_pre, strings_pasted.current, ""
+        call, res.strings.tar_pre, strings_pasted.target,
+        res.strings.cur_pre, strings_pasted.current, ""
       );
       return(mkString(res_str));
-    } else if (res.target[0]) {
+    } else if (res.strings.target[0]) {
       const char * res_str = CSR_smprintf4(
-        set.nchar_max, "%sshould %s %s", call, res.tar_pre,
+        set.nchar_max, "%sshould %s %s", call, res.strings.tar_pre,
         strings_pasted.target,  ""
       );
       return(mkString(res_str));
@@ -540,7 +540,7 @@ SEXP ALIKEC_string_or_true(
 SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res res, struct VALC_settings set) {
   if(!res.success) {
     struct ALIKEC_tar_cur_strings strings_pasted =
-      ALIKEC_res_as_strings(res, set);
+      ALIKEC_res_as_strings(res.strings, set);
     const char * call = ALIKEC_pad_or_quote(
       VECTOR_ELT(res.wrap, 0), set.width, -1, set
     );

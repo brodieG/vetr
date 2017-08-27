@@ -19,22 +19,23 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 #include "validate.h"
 
 struct VALC_res_list VALC_res_list_init(struct VALC_settings set) {
-  if(set.res_list_alloc < 1)
+  if(set.result_list_size_init < 1)
     error("Internal Error: result alloc < 1; contact maintainer."); // nocov
-  if(set.res_list_alloc_max < set.res_list_size_init)
+  if(set.result_list_size_max < set.result_list_size_init)
     // nocov start
     error(
       "Internal Error: result max alloc less than alloc, contact maintainer"
     );
     // nocov end
 
-  struct VALC_res * list_start =
-    (struct VALC_res *) R_alloc(set.res_list_alloc, sizeof(struct VALC_res));
+  struct VALC_res * list_start = (struct VALC_res *) R_alloc(
+    set.result_list_size_init, sizeof(struct VALC_res)
+  );
 
   return (struct VALC_res_list) {
     .idx = 0,
-    .idx_alloc = set.res_list_size_init,
-    .idx_alloc_max = set.res_list_size_max,
+    .idx_alloc = set.result_list_size_init,
+    .idx_alloc_max = set.result_list_size_max,
     .list = list_start
   };
 }
@@ -54,24 +55,24 @@ struct VALC_res_list VALC_res_add(
       if(list.idx_alloc_max - list.idx_alloc < list.idx_alloc) {
         // No room to double, alloc to max
 
-        alloc_size == list.idx_alloc_max;
+        alloc_size = list.idx_alloc_max;
       } else {
-        alloc_size == list.idx_alloc * 2;
+        alloc_size = list.idx_alloc * 2;
       }
       list.list = (struct VALC_res *) S_realloc(
-        (char *) list.list, (long) (alloc_size * sizeof(VALC_res)),
-        (long) (list.idx_alloc * sizeof(VALC_res)),
+        (char *) list.list, (long) (alloc_size * sizeof(struct VALC_res)),
+        (long) (list.idx_alloc * sizeof(struct VALC_res)),
         sizeof(char *)
       );
-      list.idx_alloc = alloc_size
+      list.idx_alloc = alloc_size;
     } else {
       error(
         "Reached maximum vet token result buffer size (%d); this should only ",
         "happen if you have more than that number of tokens compounded with ",
         "`||`.  If that is the case, see description of `result.list.size` ",
         "parameter for `?vetr_settings`.  If not, contact maintainer.",
-        list.idx_alloc_max;
-      )
+        list.idx_alloc_max
+      );
     }
     list.list[list.idx] = res;
     ++list.idx;
@@ -249,7 +250,7 @@ SEXP VALC_validate(
       target, cur_sub, VALC_SYM_current, current, par_call, set
     )
   );
-  if(!xlength(res) {
+  if(!xlength(res)) {
     UNPROTECT(1);
     return(ScalarLogical(1));
   }

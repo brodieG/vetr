@@ -114,7 +114,7 @@ SEXP ALIKEC_sort_msg_ext(SEXP msgs) {
  * Note this only creates a new vector if there are duplicates within.
  */
 static SEXP ALIKEC_unique_msg(SEXP msgs) {
-  R_xlen_t len = xlength(msgs)
+  R_xlen_t len = xlength(msgs);
   if(len < 2) return(msgs);
 
   // Loop once to check for dupes
@@ -126,8 +126,9 @@ static SEXP ALIKEC_unique_msg(SEXP msgs) {
       break;
     }
   }
+  SEXP res;
   if(some_dup) {
-    SEXP res = PROTECT(allocVector(VECSXP, len));
+    res = PROTECT(allocVector(VECSXP, len));
     SET_VECTOR_ELT(res, 0, VECTOR_ELT(msgs, 0));
     R_xlen_t j = 1;
     for(R_xlen_t i = 1; i < len; ++i) {
@@ -162,7 +163,7 @@ SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set) {
     SEXP msg_sort = PROTECT(ALIKEC_sort_msg(msgs, set));
     SEXP msg_sort_c = PROTECT(ALIKEC_unique_msg(msg_sort));
 
-    R_xlen_t len = XLENGTH(msgs_sort_c), groups = 1;
+    R_xlen_t len = XLENGTH(msg_sort_c), groups = 1;
 
     // Determine how many groups of similar things there are in our list
 
