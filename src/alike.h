@@ -169,7 +169,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     int formula, SEXP match_call, SEXP match_env, struct VALC_settings set,
     struct ALIKEC_rec_track rec
   );
-  static struct ALIKEC_res ALIKEC_fun_alike_internal(
+  struct ALIKEC_res ALIKEC_fun_alike_internal(
     SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current);
@@ -241,7 +241,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set);
   SEXP ALIKEC_merge_msg_2_ext(SEXP msgs);
 
-  static struct ALIKEC_tar_cur_strings ALIKEC_res_as_strings(
+  struct ALIKEC_tar_cur_strings ALIKEC_res_as_strings(
      struct ALIKEC_res_strings strings, struct VALC_settings set
   );
 

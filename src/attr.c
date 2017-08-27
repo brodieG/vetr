@@ -346,16 +346,16 @@ struct ALIKEC_res ALIKEC_compare_dims(
       res.strings.tar_pre = "have";
       res.strings.cur_pre = "has";
       // see below for res.strings.target
-      res.strings.current[1] = CSR_len_as_chr((R_xlen_t)(attr_i + 1));
+      res.strings.current[1] =
+        CSR_len_as_chr((R_xlen_t)(INTEGER(current)[attr_i]));
 
       if(target_len == 2) {  // Matrix
         err_dim1 = "";
-        const char * err_dimtmp;
         switch(attr_i) {
           case (R_xlen_t) 0:
-            err_dim2 = tar_dim_val == 1 ? "row" : "rows"; break;
+            err_dim2 = tar_dim_val == 1 ? " row" : " rows"; break;
           case (R_xlen_t) 1:
-            err_dim2 = tar_dim_val == 1 ? "column" : "columns"; break;
+            err_dim2 = tar_dim_val == 1 ? " column" : " columns"; break;
           default:
             // nocov start
             error(
@@ -370,7 +370,7 @@ struct ALIKEC_res ALIKEC_compare_dims(
       } else {
         res.strings.target[0] = "size %s at dimension %s%s%s";
         res.strings.target[1] = tar_dim_chr;
-        res.strings.target[2] = err_dim2;
+        res.strings.target[2] = CSR_len_as_chr((R_xlen_t)(attr_i + 1));
       }
       return res;
   } }
@@ -380,7 +380,8 @@ SEXP ALIKEC_compare_dim_ext(
   SEXP target, SEXP current, SEXP tar_obj, SEXP cur_obj
 ) {
   struct VALC_settings set = VALC_settings_init();
-  ALIKEC_res = ALIKEC_compare_dims(target, current, tar_obj, cur_obj, set)
+  struct ALIKEC_res res =
+    ALIKEC_compare_dims(target, current, tar_obj, cur_obj, set);
   PROTECT(res.wrap);
   SEXP res_sexp = PROTECT(ALIKEC_res_sub_as_sxp(res, set));
   UNPROTECT(2);
@@ -457,7 +458,6 @@ struct ALIKEC_res ALIKEC_compare_special_char_attrs_internal(
     } else if (tar_type == INTSXP) {
       if(!R_compute_identical(target, current, 16)){
         res_sub.success = 0;
-        res_sub.strings.tar_pre = "be";
         res_sub.strings.target[1] = "identical to target";
       }
     } else if (tar_type == STRSXP) {
@@ -627,7 +627,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
     res.success = 0;
 
     res.strings.tar_pre = "not be";
-    res.strings.target.strings[1] = "missing";
+    res.strings.target[1] = "missing";
     res.wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
     UNPROTECT(1);
     return res;
@@ -726,7 +726,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
 }
 SEXP ALIKEC_compare_dimnames_ext(SEXP prim, SEXP sec) {
   struct VALC_settings set = VALC_settings_init();
-  ALIKEC_res res = ALIKEC_compare_dimnames(prim, sec, set);
+  struct ALIKEC_res res = ALIKEC_compare_dimnames(prim, sec, set);
   PROTECT(res.wrap);
   SEXP res_sxp = PROTECT(ALIKEC_res_sub_as_sxp(res, set));
   UNPROTECT(2);
@@ -778,7 +778,7 @@ external
 */
 SEXP ALIKEC_compare_ts_ext(SEXP target, SEXP current) {
   struct VALC_settings set = VALC_settings_init();
-  ALIKEC_res res = ALIKEC_compare_ts(target, current, set);
+  struct ALIKEC_res res = ALIKEC_compare_ts(target, current, set);
   PROTECT(res.wrap);
   SEXP res_sxp = PROTECT(ALIKEC_res_sub_as_sxp(res, set));
   UNPROTECT(2);
@@ -849,24 +849,19 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal_simple(
   if(tae_type == NILSXP || cae_type == NILSXP) {
     res.success = 0;
     res.strings.tar_pre = tae_type == NILSXP ? "not have" : "have";
-    res.strings.target = {
-      "attribute \"%s\"", CHAR(PRINTNAME(attr_sym)), "", "", ""
-    };
+    res.strings.target[0] = "attribute \"%s\"";
+    res.strings.target[1] = CHAR(PRINTNAME(attr_sym));
     PROTECT(R_NilValue);
   } else if(tae_type != cae_type) {
     res.success = 0;
-    res.strings.tar_pre = "be";
-    res.strings.target = {"%s", type2char(tae_type), "", "", ""};
-    res.strings.cur_pre = "is";
-    res.strings.current = {"%s", type2char(cae_type), "", "", ""};
+    res.strings.target[1] = type2char(tae_type);
+    res.strings.current[1] = type2char(cae_type);
     res.wrap = PROTECT(ALIKEC_attr_wrap(attr_sym, R_NilValue));
   } else if (tae_val_len != cae_val_len) {
     if(set.attr_mode || tae_val_len) {
       res.success = 0;
-      res.strings.tar_pre = "be";
-      res.strings.target = {"%s", CSR_len_as_chr(tae_val_len), "", "", ""};
-      res.strings.cur_pre = "is";
-      res.strings.current = {"%s", CSR_len_as_chr(cae_val_len), "", "", ""};
+      res.strings.target[1] = CSR_len_as_chr(tae_val_len);
+      res.strings.current[1] = CSR_len_as_chr(cae_val_len);
       res.wrap = PROTECT(ALIKEC_attr_wrap(attr_sym, R_NilValue));
       SET_VECTOR_ELT(
         res.wrap, 0,
@@ -924,7 +919,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     if(set.attr_mode == 2) {
       errs[7].success = 0;
       errs[7].strings.tar_pre = "have";
-      errs[7].strings.target = {"%s%s%s%s", "attributes", "", "", ""};
+      errs[7].strings.target[1] = "attributes";
     }
   } else {
     prim_attr = tar_attr;
@@ -942,9 +937,9 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     ) {
       errs[7].success = 0;
       errs[7].strings.tar_pre = "have";
-      errs[7].strings.target = {"%s%s%s%s", "attributes", "", "", ""};
+      errs[7].strings.target[1] = "attributes";
       errs[7].strings.cur_pre = "has";
-      errs[7].strings.current = {"%s%s%s%s", "none", "", "", ""};
+      errs[7].strings.current[1] = "none";
     }
   }
   /*
@@ -1028,9 +1023,11 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     ) {
       errs[7].success = 0;
       errs[7].strings.tar_pre = cur_attr_el == R_NilValue ? "have" : "not have";
-      errs[7].strings.target = {"%s%s%s%s", "attributes", "", "", ""};
+      errs[7].strings.target[1] = "attributes";
       errs[7].strings.cur_pre = "has";
-      errs[7].strings.current = {"attribute \"%s\"", tx, "", "", ""};
+      errs[7].strings.current[0] = "attribute \"%s\"";
+      errs[7].strings.current[1] = tx;
+
     } else if (is_srcref && !set.attr_mode) {
       // Don't check srcref if in default attribute mode
       continue;
@@ -1154,13 +1151,11 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   if(set.attr_mode == 2 && prim_attr_count != sec_attr_count) {
     errs[7].success = 0;
     errs[7].strings.tar_pre = "have";
-    errs[7].strings.target = {
-      "%sattribute%s%s%s", CSR_len_as_chr(prim_attr_count),
-      prim_attr_count != 1 ? "s" : "", "", ""
-    };
+    errs[7].strings.target[0] = "%sattribute%s%s%s";
+    errs[7].strings.target[1] = CSR_len_as_chr(prim_attr_count);
+    errs[7].strings.target[2] = prim_attr_count != 1 ? "s" : "";
     errs[7].strings.cur_pre = "has";
-    errs[7].strings.current =
-      {"%s%s%s%s", CSR_len_as_chr(sec_attr_count), "", "", ""};
+    errs[7].strings.current[1] = CSR_len_as_chr(sec_attr_count);
   }
   // Now determine which error to throw, if any
 

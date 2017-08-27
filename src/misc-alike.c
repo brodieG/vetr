@@ -488,7 +488,7 @@ SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho) {
  * Only exists because this operation is expensive and we want to defer carrying
  * out until we're absolutely sure that we need to carry it out.
  */
-static struct ALIKE_tar_cur_strings ALIKEC_res_as_strings(
+struct ALIKE_tar_cur_strings ALIKEC_res_as_strings(
   struct ALIKEC_res_strings strings, struct VALC_settings set
 ) {
   const char * tar_str = CSR_smprintf4(
