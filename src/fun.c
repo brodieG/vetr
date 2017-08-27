@@ -47,7 +47,7 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
 
   SEXP tar_form, cur_form, args;
   SEXPTYPE tar_type = TYPEOF(target), cur_type = TYPEOF(current);
-  struct ALIKEC_res_min res = ALIKEC_res_min_init();
+  struct ALIKEC_res res = ALIKEC_res_init();
 
   // Translate specials and builtins to formals, if possible
 
@@ -88,10 +88,8 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
       if(CAR(tar_form) != R_MissingArg && CAR(cur_form) == R_MissingArg) {
         res.success = 0;
         res.strings.tar_pre = "have";
-        res.strings.target = {
-          "a default value for argument `%s`%s%s%s",
-          CHAR(PRINTNAME(tar_tag)), "", "", ""
-        };
+        res.strings.target[0] = "a default value for argument `%s`%s%s%s";
+        res.strings.target[1] = CHAR(PRINTNAME(tar_tag));
         break;
       }
       last_match = tar_tag;
@@ -123,10 +121,10 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
   ) {
     if(dots && !dots_cur) {
       res.strings.tar_pre = "have";
-      res.strings.target = {"a `...` argument%s%s%s%s", "", "", "", ""};
+      res.strings.target[1] = "a `...` argument";
     } else if (!tar_args && tar_form == R_NilValue) {
       res.strings.tar_pre = "not have";
-      res.strings.target = {"any arguments%s%s%s%s", "", "", "", ""};
+      res.strings.target[1] = "any arguments";
     } else {
       const char * arg_type = "as first argument";
       const char * arg_name;
@@ -148,9 +146,11 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
         );
         // nocov end
       }
-      res.strings.tar_pre = arg_neg ? "not have" : "have":
-      res.strings.target = {"argument `%s` %s%s%s", arg_name, arg_type, "", ""};
-  );} }
+      res.strings.tar_pre = arg_neg ? "not have" : "have";
+      res.strings.target[0] = "argument `%s` %s%s%s";
+      res.strings.target[1] = arg_name;
+      res.strings.target[2] = arg_type;
+  } }
   // Success
 
   UNPROTECT(3);

@@ -21,13 +21,6 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 /*
 Initialize return object
 */
-struct ALIKEC_res_lang ALIKEC_res_lang_init() {
-  return (struct ALIKEC_res_lang) {
-    .success = 1,
-    .rec = ALIKEC_rec_track_init(),
-    .msg_strings = {"", "", "", ""}
-  };
-}
 /*
 Moves pointer on language object to skip any `(` calls since those are
 already accounted for in parsing and as such don't add anything.
@@ -137,14 +130,14 @@ Handle language object comparison
 Note that we always pass cur_par instead of current so that we can modify the
 original call (mostly by using `match.call` on it)
 */
-struct ALIKEC_res_lang ALIKEC_lang_obj_compare(
+struct ALIKEC_res ALIKEC_lang_obj_compare(
   SEXP target, SEXP cur_par, pfHashTable * tar_hash,
   pfHashTable * cur_hash, pfHashTable * rev_hash, size_t * tar_varnum,
   size_t * cur_varnum, int formula, SEXP match_call, SEXP match_env,
   struct VALC_settings set, struct ALIKEC_rec_track rec
 ) {
   SEXP current = CAR(cur_par);
-  struct ALIKEC_res_lang res = ALIKEC_res_lang_init();
+  struct ALIKEC_res_lang res = ALIKEC_res_init();
   res.rec = rec;
 
   // Skip parens and increment recursion; not we don't track recursion level
@@ -186,40 +179,27 @@ struct ALIKEC_res_lang ALIKEC_lang_obj_compare(
     }
     if(strcmp(tar_abs, cur_abs)) {
       if(*tar_varnum > *cur_varnum) {
-        res.msg_strings.tar_pre = "not be";
-        res.msg_strings.target = CSR_smprintf4(
-          set.nchar_max, "`%s`", csc_text, "", "", ""
-        );
+        res.strings.tar_pre = "not be";
+        res.strings.target[0] = "`%s`";
+        res.strings.target[1] = csc_text;
       } else {
-        res.msg_strings.tar_pre = "be";
-        res.msg_strings.target = CSR_smprintf4(
-          set.nchar_max, "`%s`", rev_symb, "", "", ""
-        );
-        res.msg_strings.act_pre = "is";
-        res.msg_strings.actual = CSR_smprintf4(
-          set.nchar_max, "`%s`", csc_text, "", "", ""
-        );
+        res.strings.target[0] = "`%s`";
+        res.strings.target[1] = rev_symb;
+        res.strings.current[0] = "`%s`";
+        res.strings.current[1] = csc_text;
       }
     } else res.success = 1;
   } else if (tsc_type == LANGSXP && csc_type != LANGSXP) {
-    res.msg_strings.tar_pre = "be";
-    res.msg_strings.target = CSR_smprintf4(
-      set.nchar_max, "a call to `%s`",
-      ALIKEC_deparse_chr(CAR(target), -1, set), "", "", ""
-    );
-    res.msg_strings.act_pre = "is";
-    res.msg_strings.actual = CSR_smprintf4(
-      set.nchar_max, "\"%s\"", type2char(csc_type), "", "", ""
-    );
+    res.strings.target[0] = "a call to `%s`";
+    res.strings.target[1] = ALIKEC_deparse_chr(CAR(target), -1, set);
+
+    res.strings.current[0] =  "\"%s\"";
+    res.strings.current[1] = type2char(csc_type);
   } else if (tsc_type != LANGSXP && csc_type == LANGSXP) {
-    res.msg_strings.tar_pre = "be";
-    res.msg_strings.target = CSR_smprintf4(
-      set.nchar_max, "\"%s\"", type2char(tsc_type), "", "", ""
-    );
-    res.msg_strings.act_pre = "is";
-    res.msg_strings.actual = CSR_smprintf4(
-      set.nchar_max, "\"%s\"", type2char(csc_type), "", "", ""
-    );
+    res.strings.target[0] =  "\"%s\"";
+    res.strings.target[1] = type2char(tsc_type);
+    res.strings.current[0] =  "\"%s\"";
+    res.strings.current[1] = type2char(csc_type);
   } else if (tsc_type == LANGSXP) {
     // Note how we pass cur_par and not current so we can modify cur_par
     // this should be changed since we don't use that feature any more
@@ -228,23 +208,19 @@ struct ALIKEC_res_lang ALIKEC_lang_obj_compare(
       cur_varnum, formula, match_call, match_env, set, res.rec
     );
   } else if(tsc_type == SYMSXP || csc_type == SYMSXP) {
-    res.msg_strings.tar_pre = "be";
-    res.msg_strings.target = CSR_smprintf4(
-      set.nchar_max, "\"%s\"", type2char(tsc_type), "", "", ""
-    );
-    res.msg_strings.act_pre = "is";
-    res.msg_strings.actual = CSR_smprintf4(
-      set.nchar_max, "\"%s\"", type2char(csc_type), "", "", ""
-    );
+    res.strings.target[0] =  "\"%s\"";
+    res.strings.target[1] = type2char(tsc_type);
+    res.strings.current[0] =  "\"%s\"";
+    res.strings.current[1] = type2char(csc_type);
+
   } else if (formula && !R_compute_identical(target, current, 16)) {
     // Maybe this shouldn't be "identical", but too much of a pain in the butt
     // to do an all.equals type comparison
 
     // could have constant vs. language here, right?
 
-    res.msg_strings.tar_pre = "have";
-    res.msg_strings.target = "identical constant values";
-
+    res.strings.target_pre = "have";
+    res.strings.target[1] =  "identical constant values";
   } else res.success = 1;
 
   // Deal with index implications of skiping parens, note + 2 because we need
@@ -277,7 +253,7 @@ typically the case when the error is not specific to a particular part of the
 call).
 */
 
-struct ALIKEC_res_lang ALIKEC_lang_alike_rec(
+struct ALIKEC_res ALIKEC_lang_alike_rec(
   SEXP target, SEXP cur_par, pfHashTable * tar_hash, pfHashTable * cur_hash,
   pfHashTable * rev_hash, size_t * tar_varnum, size_t * cur_varnum, int formula,
   SEXP match_call, SEXP match_env, struct VALC_settings set,
@@ -287,7 +263,7 @@ struct ALIKEC_res_lang ALIKEC_lang_alike_rec(
 
   // If not language object, run comparison
 
-  struct ALIKEC_res_lang res = ALIKEC_res_lang_init();
+  struct ALIKEC_res res = ALIKEC_res_init();
   res.rec = rec;
 
   if(TYPEOF(target) != LANGSXP || TYPEOF(current) != LANGSXP) {
@@ -308,17 +284,12 @@ struct ALIKEC_res_lang ALIKEC_lang_alike_rec(
       res.success = 0;
       res.rec = ALIKEC_rec_ind_num(res.rec, 1);
 
-      res.msg_strings.tar_pre = "be";
-      res.msg_strings.target = CSR_smprintf4(
-        set.nchar_max, "a call to `%s`",
-        ALIKEC_deparse_chr(CAR(target), -1, set), "", "", ""
-      );
+      res.msg_strings.target[0] = "a call to `%s`";
+      res.msg_strings.target[1] = ALIKEC_deparse_chr(CAR(target), -1, set);
 
-      res.msg_strings.act_pre = "is";
-      res.msg_strings.actual = CSR_smprintf4(
-        set.nchar_max, "a call to `%s`",
-        ALIKEC_deparse_chr(CAR(current), -1, set), "", "", ""
-      );
+      res.msg_strings.current[0] = "a call to `%s`";
+      res.msg_strings.current[1] = ALIKEC_deparse_chr(CAR(current), -1, set);
+
     } else if (CDR(target) != R_NilValue) {
       // Zero length calls match anything, so only come here if target is not
       // Nil
