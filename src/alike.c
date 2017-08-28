@@ -45,8 +45,11 @@ SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_strings strings) {
   return res;
 }
 /*
-Other struct initialization functions, see alike.h for descriptions
-*/
+ * Other struct initialization functions, see alike.h for descriptions
+ *
+ * One question here is whether we should create this object once and then
+ * re-use it unless an actual error occurs to avoid the R_alloc calls.
+ */
 struct ALIKEC_res_strings ALIKEC_res_strings_init() {
   struct ALIKEC_res_strings res;
 
@@ -76,6 +79,11 @@ struct ALIKEC_res ALIKEC_res_init() {
     .success=1,
     .strings=ALIKEC_res_strings_init(),
     .rec=ALIKEC_rec_track_init(),
+    // Would be cleaner to initialize this to allocVector(VECSXP, 2), but that
+    // costs ~20ns and we do that a lot so instead we initialize this as
+    // R_NilValue and rely on code to do the correct initialization when
+    // something actually fails.  Dirty, but performance impact seems to warrant
+    // it as we can easily instantiate dozens of these objects.
     .wrap=R_NilValue,
     .df=0,
     .lvl=0
@@ -345,10 +353,10 @@ struct ALIKEC_res ALIKEC_alike_rec(
   // PROTECT stack
 
   struct ALIKEC_res res = ALIKEC_alike_obj(target, current, set);
-  PROTECT(res.wrap);
   res.rec = rec;
 
   if(!res.success) {
+    PROTECT(res.wrap);  // failed wraps must be protected
     res.rec.lvl_max = res.rec.lvl;
   } else {
     res.rec = ALIKEC_rec_inc(res.rec);  // Increase recursion level
@@ -363,10 +371,8 @@ struct ALIKEC_res ALIKEC_alike_rec(
         res = ALIKEC_alike_rec(
           VECTOR_ELT(target, i), VECTOR_ELT(current, i), res.rec, set
         );
-        UNPROTECT(1);
-        PROTECT(res.wrap);
-
         if(!res.success) {
+          PROTECT(res.wrap);  // failed wrap must be protected
           SEXP vec_names = getAttrib(target, R_NamesSymbol);
           const char * ind_name;
           if(
@@ -458,7 +464,6 @@ struct ALIKEC_res ALIKEC_alike_rec(
         SEXP tar_tag_chr = PRINTNAME(tar_tag);
         if(tar_tag != R_NilValue && tar_tag != TAG(cur_sub)) {
           UNPROTECT(1);  // don't need wrap anymore
-          res.wrap=R_NilValue;
           res.success = 0;
           res.strings.tar_pre = "have";
           res.strings.target[0] =  "name \"%s\" at pairlist index [[%s]]";
@@ -481,6 +486,8 @@ struct ALIKEC_res ALIKEC_alike_rec(
     res.rec = ALIKEC_rec_dec(res.rec); // decrement recursion tracker
   }
   UNPROTECT(1); // if we handled msg PROTECT properly stack should be 1 deep
+
+  if(!res.success && res.wrap == R_NilValue) res.wrap=allocVector(VECSXP, 2);
   return res;
 }
 /*-----------------------------------------------------------------------------\
@@ -508,11 +515,14 @@ struct ALIKEC_res ALIKEC_alike_internal(
     res.strings.target[1] = "\"NULL\"";
     res.strings.current[0] = "\"%s\"";
     res.strings.current[1] = type2char(TYPEOF(current));
+    res.wrap = PROTECT(allocVector(VECSXP, 2));
   } else {
     // Recursively check object
 
     res = ALIKEC_alike_rec(target, current, ALIKEC_rec_track_init(), set);
+    PROTECT(R_NilValue);  /// stack balance
   }
+  UNPROTECT(1);
   return res;
 }
 /*

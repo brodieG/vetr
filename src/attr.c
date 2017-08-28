@@ -573,9 +573,14 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
     PROTECT(res_tmp.wrap);
     if(!res_tmp.success) {
       // Need to re-wrap the original error message
+      int old_lvl = res.lvl;
       res = res_tmp;
+      res.lvl = old_lvl;
       SEXP res_wrap_old = res.wrap;
       SEXP res_call = PROTECT(lang2(R_DimNamesSymbol, R_NilValue));
+
+      // not a huge fan of needing special handling for the un-init wrap in so
+      // many different cases...
 
       if(VECTOR_ELT(res_wrap_old, 1) == R_NilValue) {
         SET_VECTOR_ELT(res_wrap_old, 0, res_call);
