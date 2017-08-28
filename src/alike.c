@@ -304,6 +304,9 @@ struct ALIKEC_res ALIKEC_alike_obj(
     }
   }
   UNPROTECT(2);
+  if(!res.success && res.wrap == R_NilValue) {
+    res.wrap = allocVector(VECSXP, 2);
+  }
   return res;
 }
 /*
