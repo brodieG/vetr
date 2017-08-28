@@ -456,8 +456,7 @@ struct ALIKEC_res ALIKEC_compare_special_char_attrs_internal(
   // completely correct, will have to verify
 
   if(!res.success) {
-    res_sub.success = 0;
-    res_sub.wrap = res.wrap;
+    res_sub = res;
   } else {
     // But also have constraints on values
 
@@ -574,8 +573,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
     PROTECT(res_tmp.wrap);
     if(!res_tmp.success) {
       // Need to re-wrap the original error message
-      res.success = 0;
-      res.wrap = res_tmp.wrap;
+      res = res_tmp;
       SEXP res_wrap_old = res.wrap;
       SEXP res_call = PROTECT(lang2(R_DimNamesSymbol, R_NilValue));
 
@@ -626,16 +624,14 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
         struct ALIKEC_res res_tmp = ALIKEC_alike_internal(
           CAR(prim_attr_cpy), CAR(sec_attr_cpy), set
         );
-
         if(!res_tmp.success) {
-          res.success = 0;
-          res.strings.target[1] = "%s%s%s%s";
-          res.wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
-          UNPROTECT(1);
+          PROTECT(res_tmp.wrap);
+          res_tmp.wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
+          UNPROTECT(2);
           return res;
         }
         do_continue = 1;
-        res_tmp.wrap = R_NilValue;  // not sure this does anything useful
+        res_tmp.wrap = R_NilValue;  // this way don't worry about protect wrap
         break;
     } }
     if(do_continue) continue;
@@ -1167,7 +1163,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   if(set.attr_mode == 2 && prim_attr_count != sec_attr_count) {
     errs[7].success = 0;
     errs[7].strings.tar_pre = "have";
-    errs[7].strings.target[0] = "%sattribute%s%s%s";
+    errs[7].strings.target[0] = "%s attribute%s%s%s";
     errs[7].strings.target[1] = CSR_len_as_chr(prim_attr_count);
     errs[7].strings.target[2] = prim_attr_count != 1 ? "s" : "";
     errs[7].strings.cur_pre = "has";
