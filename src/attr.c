@@ -334,7 +334,7 @@ struct ALIKEC_res ALIKEC_compare_dims(
   if(current == R_NilValue) {
     res.success = 0;
     res.strings.tar_pre = "have";
-    res.strings.target[1] =   "a \"dim\" attribute";
+    res.strings.target[1] = "a \"dim\" attribute";
 
     return res;
   }
@@ -342,8 +342,7 @@ struct ALIKEC_res ALIKEC_compare_dims(
     res.success = 0;
     res.strings.tar_pre = "have";
     res.strings.target[0] = "%s dimension%s%s%s";
-    res.strings.target[1] = class_err_target;
-    res.strings.target[2] = CSR_len_as_chr(target_len);
+    res.strings.target[1] = CSR_len_as_chr(target_len);
     res.strings.target[2] = target_len == (R_xlen_t) 1 ? "" : "s";
 
     res.strings.cur_pre = "has";
