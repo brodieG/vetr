@@ -704,7 +704,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
         );
       PROTECT(dimnames_comp.wrap);
       if(!dimnames_comp.success) {
-        SEXP wrap = VECTOR_ELT(dimnames_comp.wrap, 1);
+        SEXP wrap = dimnames_comp.wrap;
         SEXP wrap_call, wrap_ref;
 
         if(prim_len == 2) { // matrix like
