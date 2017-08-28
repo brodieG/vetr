@@ -108,7 +108,10 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
             cur_form = cur_next;
             break;
       } } }
-      if(!tag_match) break;
+      if(!tag_match) {
+        res.success = 0;
+        break;
+      }
     }
     // Need to know loop right after tar_form is dots
     if(dots_reset) dots_last = 0;
