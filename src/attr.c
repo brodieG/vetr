@@ -32,30 +32,41 @@ SEXP ALIKEC_res_sub_as_sxp(struct ALIKEC_res sub, struct VALC_settings set) {
   const char * names[4] = {"success", "message", "df", "lvl"};
   for(int i = 0; i < 4; i++) SET_STRING_ELT(out_names, i, mkChar(names[i]));
 
-  struct ALIKEC_tar_cur_strings strings_pasted =
-    ALIKEC_res_as_strings(sub.strings, set);
-  SEXP message_strings = PROTECT(allocVector(STRSXP, 4));
-  SET_STRING_ELT(message_strings, 0, mkChar(sub.strings.tar_pre));
-  SET_STRING_ELT(message_strings, 1, mkChar(strings_pasted.target));
-  SET_STRING_ELT(message_strings, 2, mkChar(sub.strings.cur_pre));
-  SET_STRING_ELT(message_strings, 3, mkChar(strings_pasted.current));
+  SEXP message;
 
-  SEXP message = PROTECT(allocVector(VECSXP, 2));
-  SEXP res_msg_names = PROTECT(allocVector(STRSXP, 2));
-  SET_STRING_ELT(res_msg_names, 0, mkChar("message"));
-  SET_STRING_ELT(res_msg_names, 1, mkChar("wrap"));
-  setAttrib(message, R_NamesSymbol, res_msg_names);
-  UNPROTECT(1);
+  if(!sub.success) {
+    struct ALIKEC_tar_cur_strings strings_pasted =
+      ALIKEC_res_as_strings(sub.strings, set);
+    SEXP message_strings = PROTECT(allocVector(STRSXP, 4));
+    if(strings_pasted.target[0]) {
+      SET_STRING_ELT(message_strings, 0, mkChar(sub.strings.tar_pre));
+      SET_STRING_ELT(message_strings, 1, mkChar(strings_pasted.target));
+    }
+    if(strings_pasted.current[0]) {
+      SET_STRING_ELT(message_strings, 2, mkChar(sub.strings.cur_pre));
+      SET_STRING_ELT(message_strings, 3, mkChar(strings_pasted.current));
+    }
+    message = PROTECT(allocVector(VECSXP, 2));
+    SEXP res_msg_names = PROTECT(allocVector(STRSXP, 2));
+    SET_STRING_ELT(res_msg_names, 0, mkChar("message"));
+    SET_STRING_ELT(res_msg_names, 1, mkChar("wrap"));
+    setAttrib(message, R_NamesSymbol, res_msg_names);
+    UNPROTECT(1);
 
-  SET_VECTOR_ELT(message, 0, message_strings);
-  SET_VECTOR_ELT(message, 1, sub.wrap);
+    SET_VECTOR_ELT(message, 0, message_strings);
+    // For coherence with older tests before we changed result structure
+    if(sub.wrap == R_NilValue) {
+      sub.wrap = PROTECT(allocVector(VECSXP, 2));
+    } else PROTECT(R_NilValue);
+    SET_VECTOR_ELT(message, 1, sub.wrap);
+  } else message = PROTECT(PROTECT(PROTECT(R_NilValue)));
 
   SET_VECTOR_ELT(out, 0, ScalarInteger(sub.success));
   SET_VECTOR_ELT(out, 1, message);
   SET_VECTOR_ELT(out, 2, ScalarInteger(sub.df));
   SET_VECTOR_ELT(out, 3, ScalarInteger(sub.lvl));
   setAttrib(out, R_NamesSymbol, out_names);
-  UNPROTECT(5);
+  UNPROTECT(6);
 
   return out;
 }
