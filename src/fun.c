@@ -43,7 +43,8 @@ fun(a, b, e, f, ..., g, c, e)
 struct ALIKEC_res ALIKEC_fun_alike_internal(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
-  if(!isFunction(target) || !isFunction(current)) error("Arguments must be functions.");
+  if(!isFunction(target) || !isFunction(current))
+    error("Arguments must be functions.");
 
   SEXP tar_form, cur_form, args;
   SEXPTYPE tar_type = TYPEOF(target), cur_type = TYPEOF(current);
@@ -120,8 +121,10 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
 
   int cur_mismatch = cur_form != R_NilValue && last_match != R_DotsSymbol;
   if(
-    !res.success && (tar_form != R_NilValue || !tag_match || cur_mismatch)
+    res.success && (tar_form != R_NilValue || !tag_match || cur_mismatch)
   ) {
+    res.success = 0;
+
     if(dots && !dots_cur) {
       res.strings.tar_pre = "have";
       res.strings.target[1] = "a `...` argument";
@@ -153,10 +156,10 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
       res.strings.target[0] = "argument `%s` %s%s%s";
       res.strings.target[1] = arg_name;
       res.strings.target[2] = arg_type;
-  } }
-  // Success
-
+    }
+  }
   UNPROTECT(3);
+  if(!res.success) res.wrap = allocVector(VECSXP, 2);
   return res;
 }
 SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current) {
