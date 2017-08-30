@@ -191,7 +191,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
 
     int is_lang = 0;
     if(
-      !res.success &&
+      res.success &&
       (
         is_lang = (
           (tar_type == LANGSXP || tar_type == SYMSXP) &&

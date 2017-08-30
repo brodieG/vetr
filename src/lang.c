@@ -153,6 +153,9 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
   SETCAR(cur_par_dup, current);
 
   int i, i_max = asInteger(VECTOR_ELT(cur_skip_paren, 1));
+
+  PROTECT(res.wrap);   // Dummy PROTECT
+
   for(i = 0; i < i_max; i++) {
     res.rec = ALIKEC_rec_inc(res.rec);
   }
@@ -178,6 +181,7 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
       pfHashSet(rev_hash, cur_abs, rev_symb);
     }
     if(strcmp(tar_abs, cur_abs)) {
+      res.success = 0;
       if(*tar_varnum > *cur_varnum) {
         res.strings.tar_pre = "not be";
         res.strings.target[0] = "`%s`";
@@ -190,12 +194,13 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
       }
     } else res.success = 1;
   } else if (tsc_type == LANGSXP && csc_type != LANGSXP) {
+    res.success = 0;
     res.strings.target[0] = "a call to `%s`";
     res.strings.target[1] = ALIKEC_deparse_chr(CAR(target), -1, set);
-
     res.strings.current[0] =  "\"%s\"";
     res.strings.current[1] = type2char(csc_type);
   } else if (tsc_type != LANGSXP && csc_type == LANGSXP) {
+    res.success = 0;
     res.strings.target[0] =  "\"%s\"";
     res.strings.target[1] = type2char(tsc_type);
     res.strings.current[0] =  "\"%s\"";
@@ -203,22 +208,25 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
   } else if (tsc_type == LANGSXP) {
     // Note how we pass cur_par and not current so we can modify cur_par
     // this should be changed since we don't use that feature any more
+    UNPROTECT(1);
     res = ALIKEC_lang_alike_rec(
       target, cur_par_dup, tar_hash, cur_hash, rev_hash, tar_varnum,
       cur_varnum, formula, match_call, match_env, set, res.rec
     );
+    PROTECT(res.wrap);
   } else if(tsc_type == SYMSXP || csc_type == SYMSXP) {
+    res.success = 0;
     res.strings.target[0] =  "\"%s\"";
     res.strings.target[1] = type2char(tsc_type);
     res.strings.current[0] =  "\"%s\"";
     res.strings.current[1] = type2char(csc_type);
-
   } else if (formula && !R_compute_identical(target, current, 16)) {
     // Maybe this shouldn't be "identical", but too much of a pain in the butt
     // to do an all.equals type comparison
 
     // could have constant vs. language here, right?
 
+    res.success = 0;
     res.strings.tar_pre = "have";
     res.strings.target[1] =  "identical constant values";
   } else res.success = 1;
@@ -231,8 +239,9 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
       res.rec = ALIKEC_rec_ind_num(res.rec, i + 2);
       res.rec = ALIKEC_rec_dec(res.rec);
     }
+    if(res.wrap == R_NilValue) res.wrap = allocVector(VECSXP, 2);
   }
-  UNPROTECT(3);
+  UNPROTECT(4);
   return res;
 }
 
