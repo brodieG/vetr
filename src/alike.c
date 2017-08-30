@@ -353,10 +353,10 @@ struct ALIKEC_res ALIKEC_alike_rec(
   // PROTECT stack
 
   struct ALIKEC_res res = ALIKEC_alike_obj(target, current, set);
+  PROTECT(res.wrap);
   res.rec = rec;
 
   if(!res.success) {
-    PROTECT(res.wrap);  // failed wraps must be protected
     res.rec.lvl_max = res.rec.lvl;
   } else {
     res.rec = ALIKEC_rec_inc(res.rec);  // Increase recursion level
@@ -368,11 +368,13 @@ struct ALIKEC_res ALIKEC_alike_rec(
       R_xlen_t i;
 
       for(i = 0; i < tar_len; i++) {
+        // if we're here, there is nothing worth protecting in wrap
+        UNPROTECT(1);
         res = ALIKEC_alike_rec(
           VECTOR_ELT(target, i), VECTOR_ELT(current, i), res.rec, set
         );
+        PROTECT(res.wrap);
         if(!res.success) {
-          PROTECT(res.wrap);  // failed wrap must be protected
           SEXP vec_names = getAttrib(target, R_NamesSymbol);
           const char * ind_name;
           if(
@@ -412,7 +414,6 @@ struct ALIKEC_res ALIKEC_alike_rec(
       } else {
         if(target == R_GlobalEnv && current != R_GlobalEnv) {
           res.success = 0;
-          UNPROTECT(1);
           res.strings.tar_pre = "be";
           res.strings.target[1] =  "the global environment";
         } else {
@@ -432,7 +433,6 @@ struct ALIKEC_res ALIKEC_alike_rec(
             SEXP var_cur_val = findVarInFrame(current, var_name);
             if(var_cur_val == R_UnboundValue) {
               res.success = 0;
-              UNPROTECT(1);
               res.strings.tar_pre = "contain";
               res.strings.target[0] = "variable `%s`";
               res.strings.target[1] = var_name_chr;
@@ -442,13 +442,13 @@ struct ALIKEC_res ALIKEC_alike_rec(
               res = ALIKEC_alike_rec(
                 findVarInFrame(target, var_name), var_cur_val, res.rec, set
               );
-              UNPROTECT(1); // unprotect var_name, assume no GC...
+              UNPROTECT(2); // unprotect var_name, previous wrap
               PROTECT(res.wrap);
               if(!res.success) {
                 res.rec = ALIKEC_rec_ind_chr(res.rec, var_name_chr);
                 break;
           } } }
-          UNPROTECT(1);
+          UNPROTECT(1); // unprotect ls
         }
       }
     } else if (tar_type == LISTSXP) {
@@ -463,7 +463,6 @@ struct ALIKEC_res ALIKEC_alike_rec(
         SEXP tar_tag = TAG(tar_sub);
         SEXP tar_tag_chr = PRINTNAME(tar_tag);
         if(tar_tag != R_NilValue && tar_tag != TAG(cur_sub)) {
-          UNPROTECT(1);  // don't need wrap anymore
           res.success = 0;
           res.strings.tar_pre = "have";
           res.strings.target[0] =  "name \"%s\" at pairlist index [[%s]]";
@@ -471,7 +470,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
           res.strings.target[0] =  CSR_len_as_chr(i + 1);
           break;
         } else {
-          UNPROTECT(1);
+          UNPROTECT(1);  // overwriting wrap
           res = ALIKEC_alike_rec(CAR(tar_sub), CAR(cur_sub), res.rec, set);
           PROTECT(res.wrap);
           if(!res.success) {
