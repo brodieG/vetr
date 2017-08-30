@@ -232,6 +232,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   struct ALIKEC_env_track * ALIKEC_env_set_create(
     int stack_size_init, int env_limit
   );
+  int ALIKEC_is_keyword(const char *name);
   int ALIKEC_is_valid_name(const char *name);
   SEXP ALIKEC_is_valid_name_ext(SEXP name);
   int ALIKEC_is_dfish(SEXP obj);

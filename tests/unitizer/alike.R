@@ -412,8 +412,8 @@ unitizer_sect("settings", {
 
   alike(1, 2, settings=letters)
   alike(1, 2, settings=list())
-  alike(1, 2, settings=setNames(vector("list", 14), letters[1:14]))
-  alike(1, 2, settings=vector("list", 14))
+  alike(1, 2, settings=setNames(vector("list", 16), letters[1:16]))
+  alike(1, 2, settings=vector("list", 16))
 } )
 # These are also part of the examples, but here as well so that issues are
 # detected during development and not the last minute package checks

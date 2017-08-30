@@ -340,7 +340,10 @@ int ALIKEC_syntactic_names(SEXP lang) {
       if(!syntactic) break;
     }
   } else if (TYPEOF(lang) == SYMSXP) {
-    syntactic = ALIKEC_is_valid_name(CHAR(PRINTNAME(lang)));
+    const char * lang_chr = CHAR(PRINTNAME(lang));
+    syntactic =
+      (lang == R_MissingArg) ||
+      ALIKEC_is_keyword(lang_chr) || ALIKEC_is_valid_name(lang_chr);
   }
   return syntactic;
 }
@@ -382,7 +385,6 @@ const char * ALIKEC_pad_or_quote(
   if(width < 0) width = asInteger(ALIKEC_getopt("width"));
   if(width <= 0 || width == NA_INTEGER) width = 80;
   SEXP lang_dep = PROTECT(ALIKEC_deparse_width(lang, width));
-  PrintValue(lang_dep);
 
   // Handle the different deparse scenarios
 
@@ -400,7 +402,8 @@ const char * ALIKEC_pad_or_quote(
     call_post = "";
   } else {
     // In case there are non syntactic names in the call, use braces instead of
-    // backticks to avoid possible confusion
+    // backticks to avoid possible confusion; maybe it would better to just scan
+    // the deparsed string for backticks?
 
     if(syntactic) {
       call_pre = "`";
@@ -522,8 +525,7 @@ SEXP ALIKEC_string_or_true(
       // nocov end
     }
     SEXP call_inj = PROTECT(ALIKEC_inject_call(res, call));
-    PrintValue(call_inj);
-    const char * call_chr = ALIKEC_pad_or_quote(call_inj, set.width, 1, set);
+    const char * call_chr = ALIKEC_pad_or_quote(call_inj, set.width, -1, set);
     UNPROTECT(1);
 
     if(strings_pasted.target[0] && strings_pasted.current[0]) {
