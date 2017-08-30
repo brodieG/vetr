@@ -224,7 +224,7 @@ struct ALIKEC_res ALIKEC_compare_class(
         res.strings.target[0] = "class \"%s\"%s%s%s";
         res.strings.target[1] = tar_class;
 
-        res.strings.current[0] = "class \"%s\"%s%s%s";
+        res.strings.current[0] = "\"%s\"%s%s%s";
         res.strings.current[1] = cur_class;
 
         PROTECT(PROTECT(R_NilValue));  // stack balance
