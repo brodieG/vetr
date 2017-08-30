@@ -109,10 +109,7 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
             cur_form = cur_next;
             break;
       } } }
-      if(!tag_match) {
-        res.success = 0;
-        break;
-      }
+      if(!tag_match) break;     // err msg produced below
     }
     // Need to know loop right after tar_form is dots
     if(dots_reset) dots_last = 0;
@@ -120,9 +117,8 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
   // We have a mismatch; produce error message
 
   int cur_mismatch = cur_form != R_NilValue && last_match != R_DotsSymbol;
-  if(
-    res.success && (tar_form != R_NilValue || !tag_match || cur_mismatch)
-  ) {
+
+  if(tar_form != R_NilValue || !tag_match || cur_mismatch) {
     res.success = 0;
 
     if(dots && !dots_cur) {
