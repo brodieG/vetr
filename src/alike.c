@@ -486,7 +486,6 @@ struct ALIKEC_res ALIKEC_alike_rec(
   }
   UNPROTECT(1); // if we handled msg PROTECT properly stack should be 1 deep
 
-  if(!res.success && res.wrap == R_NilValue) res.wrap=allocVector(VECSXP, 2);
   return res;
 }
 /*-----------------------------------------------------------------------------\
@@ -583,7 +582,10 @@ SEXP ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
   // `names(call)`
 
   if(
-    VECTOR_ELT(wrap, 0) != R_NilValue && TYPEOF(VECTOR_ELT(wrap, 1)) == LANGSXP
+    VECTOR_ELT(wrap, 0) != R_NilValue && (
+      TYPEOF(VECTOR_ELT(wrap, 1)) == LISTSXP ||
+      TYPEOF(VECTOR_ELT(wrap, 1)) == LANGSXP
+    )
   ) {
     SETCAR(VECTOR_ELT(wrap, 1), call);
   } else {
