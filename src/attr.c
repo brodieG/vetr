@@ -630,7 +630,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
           PROTECT(res_tmp.wrap);
           res_tmp.wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
           UNPROTECT(2);
-          return res;
+          return res_tmp;
         }
         do_continue = 1;
         res_tmp.wrap = R_NilValue;  // this way don't worry about protect wrap
