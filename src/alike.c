@@ -227,6 +227,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
     */
 
     res.df = res_attr.df; // do this now otherwise possibly overwritten
+    res.lvl = res_attr.lvl;
 
     if(res.success && !is_lang && !is_fun && tar_type != ENVSXP) {
       SEXP tar_first_el, cur_first_el;
@@ -270,7 +271,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
         res.strings.tar_pre = "have";
         res.strings.target[0] = "%s row%s";
         res.strings.target[1] = CSR_len_as_chr(tar_first_el_len);
-        res.strings.target[1] = tar_first_el_len == (R_xlen_t) 1 ? "" : "s";
+        res.strings.target[2] = tar_first_el_len == (R_xlen_t) 1 ? "" : "s";
         res.strings.cur_pre = "has";
         res.strings.current[2] = CSR_len_as_chr(cur_first_el_len);
     } }
@@ -616,6 +617,7 @@ SEXP ALIKEC_alike_ext(
   struct VALC_settings set = VALC_settings_vet(settings, env);
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
   PROTECT(res.wrap);
+  PrintValue(res.wrap);
   SEXP res_sxp = PROTECT(ALIKEC_string_or_true(res, curr_sub, set));
   UNPROTECT(2);
   return res_sxp;

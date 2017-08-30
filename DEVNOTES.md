@@ -1,3 +1,13 @@
+
+## Notes from 8/29
+
+Dig into the syntactic names issue:
+
+```
+unitizer> vetr:::syntactic_names(quote(mtcars[1:10, ]))
+[1] FALSE
+```
+
 ## Notes from 8/22
 
 Most of the alike side of things is dealt with, now we need to figure out how we
