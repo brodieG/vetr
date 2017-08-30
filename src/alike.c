@@ -548,14 +548,12 @@ struct ALIKEC_res ALIKEC_alike_internal(
  * The returned wrap needs to be protected as it may be different from the input
  * wrap.
  */
-struct ALIKEC_res ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
+SEXP ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
   SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.rec));
-  if(res.wrap == R_NilValue) {
-    res.wrap = PROTECT(allocVector(VECSXP, 2));
-    SET_VECTOR_ELT(res.wrap, 0, call);
-    SET_VECTOR_ELT(res.wrap, 1, R_NilValue);
-  } else PROTECT(R_NilValue);
 
+  if(TYPEOF(res.wrap) != VECSXP || xlength(res.wrap) != 2) {
+    error("Internal Error: wrap struct eleme should be length 2 list.");
+  }
   SEXP wrap = res.wrap;
 
   // Need to check if our call could become ambigous with the indexing
@@ -589,10 +587,11 @@ struct ALIKEC_res ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
     VECTOR_ELT(wrap, 0) != R_NilValue && TYPEOF(VECTOR_ELT(wrap, 1)) == LANGSXP
   ) {
     SETCAR(VECTOR_ELT(wrap, 1), call);
+  } else {
+    SET_VECTOR_ELT(wrap, 0, call);
   }
-  res.wrap = wrap;
-  UNPROTECT(3);
-  return res;
+  UNPROTECT(2);
+  return VECTOR_ELT(wrap, 0);
 }
 /*
 Main external interface
@@ -614,11 +613,8 @@ SEXP ALIKEC_alike_ext(
   struct VALC_settings set = VALC_settings_vet(settings, env);
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
   PROTECT(res.wrap);
-  res = ALIKEC_inject_call(res, curr_sub);
-  PROTECT(res.wrap); // might have been changed by inject
-
-  SEXP res_sxp = PROTECT(ALIKEC_string_or_true(res, set));
-  UNPROTECT(3);
+  SEXP res_sxp = PROTECT(ALIKEC_string_or_true(res, curr_sub, set));
+  UNPROTECT(2);
   return res_sxp;
 }
 /*
@@ -632,10 +628,8 @@ SEXP ALIKEC_alike_int2(
   SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
 ) {
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
-  PROTECT(res.wrap);
-  res = ALIKEC_inject_call(res, curr_sub);
   PROTECT(res.wrap);  // might have been changed by inject
-  SEXP res_sxp = PROTECT(ALIKEC_strsxp_or_true(res, set));
-  UNPROTECT(3);
+  SEXP res_sxp = PROTECT(ALIKEC_strsxp_or_true(res, curr_sub, set));
+  UNPROTECT(2);
   return res_sxp;
 }

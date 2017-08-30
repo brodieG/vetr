@@ -300,9 +300,7 @@ SEXP VALC_error_standard(
 SEXP VALC_error_template(
   struct ALIKEC_res res, SEXP arg_tag, SEXP arg_lang, struct VALC_settings set
 ) {
-  res = ALIKEC_inject_call(res, arg_lang);
-  PROTECT(res.wrap);
-  SEXP res_sxp = PROTECT(ALIKEC_strsxp_or_true(res, set));
+  SEXP res_sxp = PROTECT(ALIKEC_strsxp_or_true(res, arg_lang, set));
   if(TYPEOF(res_sxp) != STRSXP)
     // nocov start
     error(
@@ -311,7 +309,7 @@ SEXP VALC_error_template(
       type2char(TYPEOF(res_sxp))
     );
     // nocov end
-  UNPROTECT(2);
+  UNPROTECT(1);
   return res_sxp;
 }
 SEXP VALC_error_extract(
