@@ -226,6 +226,8 @@ struct ALIKEC_res ALIKEC_alike_obj(
     for environments since rules for alikeness are different for environments
     */
 
+    res.df = res_attr.df; // do this now otherwise possibly overwritten
+
     if(res.success && !is_lang && !is_fun && tar_type != ENVSXP) {
       SEXP tar_first_el, cur_first_el;
       R_xlen_t tar_len, cur_len, tar_first_el_len, cur_first_el_len;
