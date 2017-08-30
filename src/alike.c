@@ -356,7 +356,13 @@ struct ALIKEC_res ALIKEC_alike_rec(
   // PROTECT stack
 
   struct ALIKEC_res res = ALIKEC_alike_obj(target, current, set);
-  PROTECT(res.wrap);
+
+  // We unfortunately have several levels of PROTECTION required next, and the
+  // depth varies according to the various branches of logic.  So we start off
+  // by PROTECTING to the max depth we will need with a few dummy PROTECTS, and
+  // UNPROTECTING the dummies and replacing for use as needed.
+
+  PROTECT(PROTECT(PROTECT(PROTECT(res.wrap))));  // 3 dummy protects
   res.rec = rec;
 
   if(!res.success) {
@@ -416,10 +422,13 @@ struct ALIKEC_res ALIKEC_alike_rec(
         res.success = 1;
       } else {
         if(target == R_GlobalEnv && current != R_GlobalEnv) {
+          UNPROTECT(1);
+          res.wrap = PROTECT(allocVector(VECSXP, 2));
           res.success = 0;
           res.strings.tar_pre = "be";
           res.strings.target[1] =  "the global environment";
         } else {
+          UNPROTECT(3);
           SEXP tar_names = PROTECT(R_lsInternal(target, TRUE));
           R_xlen_t tar_name_len = XLENGTH(tar_names), i;
 
@@ -435,23 +444,24 @@ struct ALIKEC_res ALIKEC_alike_rec(
             SEXP var_name = PROTECT(install(var_name_chr));
             SEXP var_cur_val = findVarInFrame(current, var_name);
             if(var_cur_val == R_UnboundValue) {
+              res.wrap = PROTECT(allocVector(VECSXP, 2));
               res.success = 0;
               res.strings.tar_pre = "contain";
               res.strings.target[0] = "variable `%s`";
               res.strings.target[1] = var_name_chr;
-              UNPROTECT(1); // unprotect var_name
-              break;
             } else {
               res = ALIKEC_alike_rec(
                 findVarInFrame(target, var_name), var_cur_val, res.rec, set
               );
-              UNPROTECT(2); // unprotect var_name, previous wrap
               PROTECT(res.wrap);
               if(!res.success) {
                 res.rec = ALIKEC_rec_ind_chr(res.rec, var_name_chr);
-                break;
-          } } }
-          UNPROTECT(1); // unprotect ls
+            } }
+            // Each loop adds two protection levels
+            if(!res.success) break;
+            UNPROTECT(2);
+          }
+          if(res.success) PROTECT(PROTECT(R_NilValue));
         }
       }
     } else if (tar_type == LISTSXP) {
@@ -466,11 +476,35 @@ struct ALIKEC_res ALIKEC_alike_rec(
         SEXP tar_tag = TAG(tar_sub);
         SEXP tar_tag_chr = PRINTNAME(tar_tag);
         if(tar_tag != R_NilValue && tar_tag != TAG(cur_sub)) {
+          UNPROTECT(1);  // overwriting wrap
+          res.wrap = PROTECT(allocVector(VECSXP, 2));
           res.success = 0;
-          res.strings.tar_pre = "have";
-          res.strings.target[0] =  "name \"%s\" at pairlist index [[%s]]";
-          res.strings.target[0] =  CHAR(asChar(tar_tag_chr));
-          res.strings.target[0] =  CSR_len_as_chr(i + 1);
+          res.strings.tar_pre = "be";
+          res.strings.target[0] =  "\"%s\"%s%s%s";
+          res.strings.target[1] =  CHAR(asChar(tar_tag_chr));
+
+          if(TAG(cur_sub) == R_NilValue) {
+            res.strings.current[1] =  "\"\"";
+          } else {
+            res.strings.current[0] =  "\"%s\"%s%s%s";
+            res.strings.current[1] =  CHAR(asChar(PRINTNAME(TAG(cur_sub))));
+          }
+          if(i >= INT_MAX)
+            // nocov start
+            error(
+              "Internal Error: %s%s",
+              "exceeded INT_MAX when counting through pairlist, ",
+              "contact maintainer."
+            );
+            // nocov end
+          SEXP sub_index = PROTECT(ScalarInteger(i + 1));
+          SEXP sub_sub_lang = PROTECT(lang2(R_NamesSymbol, R_NilValue));
+          SEXP sub_lang = PROTECT(
+            lang3(R_Bracket2Symbol, sub_sub_lang, sub_index)
+          );
+          SET_VECTOR_ELT(res.wrap, 0, sub_lang);
+          SET_VECTOR_ELT(res.wrap, 1, CDR(sub_sub_lang));
+          UNPROTECT(3);
           break;
         } else {
           UNPROTECT(1);  // overwriting wrap
@@ -487,8 +521,10 @@ struct ALIKEC_res ALIKEC_alike_rec(
     } } } }
     res.rec = ALIKEC_rec_dec(res.rec); // decrement recursion tracker
   }
-  UNPROTECT(1); // if we handled msg PROTECT properly stack should be 1 deep
+  // In theory we keep the total protect stack at four, although for most of
+  // the logic branches some of that is padding
 
+  UNPROTECT(4);
   return res;
 }
 /*-----------------------------------------------------------------------------\
@@ -617,7 +653,6 @@ SEXP ALIKEC_alike_ext(
   struct VALC_settings set = VALC_settings_vet(settings, env);
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
   PROTECT(res.wrap);
-  PrintValue(res.wrap);
   SEXP res_sxp = PROTECT(ALIKEC_string_or_true(res, curr_sub, set));
   UNPROTECT(2);
   return res_sxp;
