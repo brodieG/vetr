@@ -47,7 +47,7 @@ struct VALC_res_list VALC_res_add(
       "Internal Error: res list index greater than alloc, contact maintainer."
     );
   } else if (list.idx == list.idx_alloc) {
-    // Need to allocate mor memory
+    // Need to allocate more memory
 
     if(list.idx_alloc_max > list.idx_alloc) {
       int alloc_size;
@@ -74,9 +74,10 @@ struct VALC_res_list VALC_res_add(
         list.idx_alloc_max
       );
     }
-    list.list[list.idx] = res;
-    ++list.idx;
   }
+  list.list[list.idx] = res;
+  ++list.idx;
+
   return(list);
 }
 /*
