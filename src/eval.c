@@ -171,11 +171,7 @@ struct VALC_res_list VALC_evaluate_recurse(
 
       eval_res.success = eval_res.dat.tpl.success;
     }
-    // Only add to res list if we had an error
-
-    if(eval_res.success) UNPROTECT(1);
-    else res_list = VALC_res_add(res_list, eval_res);
-
+    res_list = VALC_res_add(res_list, eval_res);
     return(res_list);
   } else {
     error("Internal Error: unexpected parse mode %d", mode);  // nocov
@@ -357,13 +353,19 @@ SEXP VALC_evaluate(
     error("Internal Error: cannot have INT_MAX results, contact maintainer.");
     // nocov end
 
-  SEXP res_as_str = PROTECT(allocVector(VECSXP, res_list.idx));
-  if(res_list.idx) {
-    for(int i = 0; i < res_list.idx; ++i)
-      SET_VECTOR_ELT(
-        res_as_str, i,
-        VALC_error_extract(res_list.list[i], arg_tag, arg_lang, set)
-      );
+  SEXP res_as_str;
+
+  if(!res_list.idx || res_list.list[res_list.idx - 1].success) {
+    res_as_str = PROTECT(allocVector(VECSXP, 0));
+  } else {
+    res_as_str = PROTECT(allocVector(VECSXP, res_list.idx));
+    if(res_list.idx) {
+      for(int i = 0; i < res_list.idx; ++i)
+        SET_VECTOR_ELT(
+          res_as_str, i,
+          VALC_error_extract(res_list.list[i], arg_tag, arg_lang, set)
+        );
+    }
   }
   // We used to remove duplicates here, but might make more sense to do so once
   // we get to the actual strings we're going to use so that we can sort and
