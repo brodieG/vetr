@@ -389,7 +389,7 @@ SEXP VALC_validate_args(
     SEXP val_res = PROTECT(
       VALC_evaluate(val_tok, fun_tok, arg_tag, fun_val, val_call, set)
     );
-    if(!IS_TRUE(val_res)) {
+    if(xlength(val_res)) {
       // fail, produce error message: NOTE - might change if we try to use full
       // expression instead of just arg name
       VALC_process_error(val_res, arg_tag, fun_call, 1, 1, set);
