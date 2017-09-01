@@ -188,7 +188,8 @@ struct VALC_res_list VALC_evaluate_recurse(
  * into a final error message.  See `VALC_evaluate` for details on parameters.
  */
 SEXP VALC_error_standard(
-  SEXP dat, SEXP arg_tag, SEXP arg_lang, struct VALC_settings set
+  SEXP dat, SEXP arg_tag, SEXP arg_lang, SEXP sys_call,
+  struct VALC_settings set
 ) {
   SEXP lang = VECTOR_ELT(dat, 0);
   SEXP eval_tmp = VECTOR_ELT(dat, 1);
@@ -198,10 +199,11 @@ SEXP VALC_error_standard(
 
   // If message attribute defined, this is easy:
 
-  if((err_attrib = getAttrib(lang, VALC_SYM_errmsg)) != R_NilValue) {
+  err_attrib = getAttrib(lang, VALC_SYM_errmsg);
+  if(err_attrib != R_NilValue) {
     if(TYPEOF(err_attrib) != STRSXP || XLENGTH(err_attrib) != 1) {
       VALC_arg_error(
-        arg_tag, arg_lang,
+        arg_tag, sys_call,
         "\"err.msg\" attribute for validation token for argument `%s` must be a one length character vector."
       );
     }
@@ -221,7 +223,6 @@ SEXP VALC_error_standard(
     err_call = ALIKEC_pad_or_quote(lang, set.width, -1, set);
     int eval_res_c = VALC_all(eval_tmp);
 
-    char * err_str;
     char * err_tok;
     switch(eval_res_c) {
       case -6: {
@@ -277,10 +278,28 @@ SEXP VALC_error_standard(
       err_extra = err_extra_b;
     }
     const char * err_base = "%s%s (%s)";
-    err_str = R_alloc(
-      strlen(err_call) + strlen(err_base) + strlen(err_tok) +
-      strlen(err_extra), sizeof(char)
-    );
+
+    int alloc_size = 0;
+    int str_sizes[4] = {0, 0, 0, 0};
+    str_sizes[0] = strnlen(err_call, INT_MAX);
+    str_sizes[1] = strnlen(err_base, INT_MAX);
+    str_sizes[2] = strnlen(err_extra, INT_MAX);
+    str_sizes[3] = strnlen(err_tok, INT_MAX);
+
+    for(int i = 0; i < 4; ++i) {
+      if(INT_MAX - str_sizes[i] < alloc_size)
+        // nocov start
+        error(
+          "%s%s (%d)",
+          "Internal Error: error string longer than INT_MAX; ",
+          "contact maintainer.", i
+        );
+        // nocov end
+
+      alloc_size += str_sizes[i];
+    }
+    err_str = R_alloc(alloc_size, sizeof(char));
+
     // not sure why we're not using cstringr here
     if(sprintf(err_str, err_base, err_call, err_extra, err_tok) < 0) {
       // nocov start
@@ -309,12 +328,13 @@ SEXP VALC_error_template(
   return res_sxp;
 }
 SEXP VALC_error_extract(
-  struct VALC_res res, SEXP arg_tag, SEXP arg_lang, struct VALC_settings set
+  struct VALC_res res, SEXP arg_tag, SEXP arg_lang, SEXP sys_call,
+  struct VALC_settings set
 ) {
   if(res.tpl) {
     return VALC_error_template(res.dat.tpl, arg_tag, arg_lang, set);
   } else {
-    return VALC_error_standard(res.dat.std, arg_tag, arg_lang, set);
+    return VALC_error_standard(res.dat.std, arg_tag, arg_lang, sys_call, set);
   }
 }
 /* -------------------------------------------------------------------------- *\
@@ -344,29 +364,36 @@ SEXP VALC_evaluate(
     VECTOR_ELT(lang_parsed, 0), VECTOR_ELT(lang_parsed, 1),
     arg_value, arg_lang, arg_tag, lang_full, set, res_init
   );
-  // Now determine if we passed or failed, if idx is not zero means we had at
-  // least on error.  There should be one error in AND mode, and possibly many
-  // in OR mode.  Different rendering logic for template vs standard tokens.
-
   if(res_list.idx == INT_MAX)
     // nocov start
     error("Internal Error: cannot have INT_MAX results, contact maintainer.");
     // nocov end
+
+  // Now determine if we passed or failed, if idx is not zero means we had at
+  // least on error.  There should be one error in AND mode, and possibly many
+  // in OR mode.  Different rendering logic for template vs standard tokens.  In
+  // all cases if the last recorded item is a success or there are no recorded
+  // items, then we pass.
 
   SEXP res_as_str;
 
   if(!res_list.idx || res_list.list[res_list.idx - 1].success) {
     res_as_str = PROTECT(allocVector(VECSXP, 0));
   } else {
-    res_as_str = PROTECT(allocVector(VECSXP, res_list.idx));
-    if(res_list.idx) {
-      for(int i = 0; i < res_list.idx; ++i)
-        SET_VECTOR_ELT(
-          res_as_str, i,
-          VALC_error_extract(res_list.list[i], arg_tag, arg_lang, set)
-        );
-    }
-  }
+    // compute how many failures
+
+    int fails = 0, j = 0;
+    for(int i = 0; i < res_list.idx; ++i) fails += !res_list.list[i].success;
+    res_as_str = PROTECT(allocVector(VECSXP, fails));
+
+    for(int i = 0; i < res_list.idx; ++i) {
+      struct VALC_res res = res_list.list[i];
+      if(res.success) continue;
+      SET_VECTOR_ELT(
+        res_as_str, j++,
+        VALC_error_extract(res, arg_tag, arg_lang, lang_full, set)
+      );
+  } }
   // We used to remove duplicates here, but might make more sense to do so once
   // we get to the actual strings we're going to use so that we can sort and
   // check for repeated values.
