@@ -91,6 +91,7 @@ struct ALIKEC_res ALIKEC_res_init() {
 }
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
+
 /*
 Object Check
 
@@ -121,13 +122,13 @@ struct ALIKEC_res ALIKEC_alike_obj(
   s4_cur = ((IS_S4_OBJECT)(current) != 0);
 
   // don't run length or attribute checks on S4
-  if(!res.success && (s4_cur || s4_tar)) {
+  if(res.success && (s4_cur || s4_tar)) {
     if(s4_tar + s4_cur == 1) {
       res.success = 0;
       res.strings.tar_pre = s4_tar ? "be" : "not be";
       res.strings.target[1] = "S4";
     } else {
-      SEXP klass, klass_attrib;
+      SEXP klass, klass_cur, klass_attrib, klass_cur_attrib;
 
       klass = getAttrib(target, R_ClassSymbol);
       if(xlength(klass) != 1 || TYPEOF(klass) != STRSXP) {
@@ -140,10 +141,23 @@ struct ALIKEC_res ALIKEC_alike_obj(
         // nocov end
       }
       const char * klass_c = CHAR(asChar(klass));
-      // We used to construct an inherits call here; not entirely clear why we
-      // did this instead of just using Rf_inherits
 
-      if(!inherits(current, klass_c)) {
+      // Construct call to `inherits`; we evaluate in base env since class
+      // definitions should still be visible and this way unlikely that
+      // inherits gets overwritten.  Can't use Rf_inherits because that doesn't
+      // work for S4 classes, and we can't figure out a way to access inherits3
+      // from src/main/objects.c directly
+
+      SEXP t, s;
+      t = s = PROTECT(allocList(3));
+      SET_TYPEOF(s, LANGSXP);
+      SETCAR(t, ALIKEC_SYM_inherits); t = CDR(t);
+      SETCAR(t, current); t = CDR(t);
+      SETCAR(t, klass);
+      int inherits = asLogical(eval(s, R_BaseEnv));
+      UNPROTECT(1);
+
+      if(!inherits) {
         res.success = 0;
         res.strings.tar_pre = "inherit from";
 
@@ -156,9 +170,33 @@ struct ALIKEC_res ALIKEC_alike_obj(
           );
           // nocov end
         }
-        res.strings.target[0] = "S4 class \"%s\" (package: %s)";
+        res.strings.target[0] = "S4 class \"%s\" from pkg:%s";
         res.strings.target[1] = klass_c;
         res.strings.target[2] = CHAR(asChar(klass_attrib));
+
+        klass_cur = getAttrib(current, R_ClassSymbol);
+        if(xlength(klass_cur) != 1 || TYPEOF(klass_cur) != STRSXP) {
+          // nocov start
+          error(
+            "Internal Error: unexpected S4 class \"class\" attribute %s%s",
+            "of length != 1 or type not character vector; ",
+            "contact package maintainer"
+          );
+          // nocov end
+        }
+        klass_cur_attrib = getAttrib(klass_cur, ALIKEC_SYM_package);
+        if(xlength(klass_cur_attrib) != 1 || TYPEOF(klass_cur_attrib) != STRSXP) {
+          // nocov start
+          error(
+            "Internal Error: unexpected S4 class \"class\" %s",
+            "attribute does not have `package` attribute in expected structure"
+          );
+          // nocov end
+        }
+        const char * klass_cur_c = CHAR(asChar(klass_cur));
+        res.strings.current[0] = "\"%s\" from pkg:%s%s%s";
+        res.strings.current[1] = klass_cur_c;
+        res.strings.current[2] = CHAR(asChar(klass_cur_attrib));
       }
     }
     PROTECT(PROTECT(R_NilValue)); // stack balance with next `else if`
