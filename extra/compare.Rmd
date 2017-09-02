@@ -149,7 +149,7 @@ sometimes cryptic.  All the reviewed packages seek to improve on this:
 * `assertive`, and `checkmate` provide clearer error messages with additional
   information for the included [Predicate Functions](#predicate-function),
   particularly for `assertive`.
-* `vetr` provide clearer error messages with additional informations for object
+* `vetr` provide clearer error messages with additional information for object
   structure (type, length, attributes), and for values with `all_bw`.
 
 All packages allow users to attach custom error messages to [Check
@@ -180,7 +180,7 @@ tests could lead to different results.  See [benchmarks](#benchmarks).
 
 We want to write a functions that accept a length two numeric vector with no
 missing values.  To illustrate we use functions that enforce that requirement
-and do nothing else, starting with one using `stopifnot`:
+and do nothing else, starting with `stopifnot`:
 
 ```{r}
 simple_stopifnot <- function(x)
@@ -209,8 +209,8 @@ simple_vetr <- function(x)
 contains the [Template Token](#templated-token) `numeric(2L)`, and the [Standard
 Token](#standard-token) `!is.na(.)`.  [Template Tokens](#templated-token)
 require that parameters match their structure (i.e. length, type, and
-attributes).  [Standard Tokens](#standard-token), marked by the `.` symbol, are
-evaluated as they would be by `stopifnot`.
+attributes).  [Standard Tokens](#standard-token), marked by the presence of the
+`.` symbol, are evaluated as they would be by `stopifnot`.
 
 Templates should be familiar to `vapply` users, but there are some wrinkles.
 For example zero-length templates like `numeric()` match any length objects.
@@ -248,7 +248,7 @@ simple_vetr(pi)
 
 In addition to what our parameter is not, `vetr` tells you what it is, gives you
 the original call of the function, and gives you the input as it appears
-in the calling frame (`pi`).
+in the calling frame (i.e. `length(pi)` instead of `length(x)`).
 
 `assertthat` makes the error message friendlier, but does not add information:
 
@@ -361,8 +361,11 @@ complex_assertthat <- function(x) {
 ### Vector Values
 
 Suppose we wish to ensure our input is a strictly positive numeric vector with
-no missing values.  With `r vec <- -1:1` and `stopifnot` we would use:
+no missing values.  With `vec <- -1:1` and `stopifnot` we would use:
 
+```{r echo=FALSE}
+vec <- -1:1
+```
 ```{r}
 vector_stopifnot <- function(x) stopifnot(is.numeric(x), !anyNA(x), all(x > 0))
 vector_stopifnot(vec)
