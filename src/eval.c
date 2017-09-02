@@ -134,7 +134,14 @@ struct VALC_res_list VALC_evaluate_recurse(
     }
   } else if(mode == 10 || mode == 999) {
     struct VALC_res eval_res;
-    SEXP eval_tmp, eval_dat=PROTECT(allocVector(VECSXP, 2));
+    // Depending on whether we're dealing with a template or a standard token,
+    // we'll need to mess with what value gets protected.  Expectation is that
+    // we will on net add one PROTECT per result we add to the result list
+
+    PROTECT_INDEX ipx;
+    SEXP eval_tmp, eval_dat;
+    PROTECT_WITH_INDEX(eval_dat=allocVector(VECSXP, 2), &ipx);
+
     int err_val = 0;
     int eval_res_c = -1000;  // initialize to illegal value
     int * err_point = &err_val;
@@ -157,17 +164,14 @@ struct VALC_res_list VALC_evaluate_recurse(
       eval_res.dat.std = eval_dat;
     } else {
       eval_res.tpl = 1;
-      // bit of a complicated protection mess here, we don't want eval_res in
-      // the protection stack when we're done
+      // bit of a complicated protection mess here, we don't want eval_dat in
+      // the protection stack when we're done, but we want the wrap in it, so we
+      // use REPROTECT to take over its spot in the stack
 
       eval_res.dat.tpl = ALIKEC_alike_internal(
         VECTOR_ELT(eval_dat, 1), arg_value, set
       );
-      // ASSUMING THIS WON'T CAUSE GC!!!!  doesn't seem to now based un
-      // Rf_unprotect but potentially could change in future; need to look at
-      // protect with index or some such
-      UNPROTECT(1);
-      PROTECT(eval_res.dat.tpl.wrap);
+      REPROTECT(eval_res.dat.tpl.wrap, ipx);
 
       eval_res.success = eval_res.dat.tpl.success;
     }

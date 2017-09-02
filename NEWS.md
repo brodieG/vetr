@@ -1,8 +1,14 @@
-## 0.1.0.9000
+## 0.2.0
 
+* [#48](https://github.com/brodieG/validate/issues/48): Implement `all_bw`, a
+  more efficient version of `!anyNA(.) && all(. < x) && all(. > y)`
+* [#64](https://github.com/brodieG/validate/issues/64): Rewrite result handling
+  for multi token expressions to avoid unnecessary slow downs
+* [#73](https://github.com/brodieG/validate/issues/73): Cleaner protection stack
+  handling
 * [#56](https://github.com/brodieG/validate/issues/56): Over-aggressive
   detection of infinite recursion in symbol substitution
-* Implement `all_bw`
+* [#59](https://github.com/brodieG/validate/issues/59): Add a `CONTRIBUTING.md`
 * Custom tokens that return character vectors see the first element of that
   vector incorporated in the error message
 * Assorted typos (@franknarf1, @DasonK)
