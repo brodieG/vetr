@@ -213,3 +213,31 @@ unitizer_sect("Custom tokens", {
   vet(cust.tok.2, TRUE)
 })
 
+unitizer_sect("Result Buffer", {
+  # testing that result buffer expands correctly
+
+  set1 <- vetr_settings(result.list.size.init=1)
+
+  vet.exp <- quote(1 || 1:2 || 1:3 || 1:4 || 1:5 || 1:6 || 1:7 || 1:8)
+
+  vet(vet.exp, 1:8, settings=set1)
+  vet(vet.exp, 1:9, settings=set1)
+
+  set2 <- vetr_settings(result.list.size.init=1, result.list.size.max=7)
+
+  vet(vet.exp, 1:8, settings=set2)
+  vet(vet.exp, 1:9, settings=set2)
+
+  set3 <- vetr_settings(result.list.size.init=1, result.list.size.max=8)
+
+  vet(vet.exp, 1:8, settings=set3)
+  vet(vet.exp, 1:9, settings=set3)
+
+  # impossible settings
+
+  set4 <- vetr_settings(result.list.size.init="hello", result.list.size.max=8)
+  set5 <- vetr_settings(result.list.size.init=1, result.list.size.max="hello")
+
+  vet(1, 1, settings=set4)
+  vet(1, 1, settings=set5)
+})

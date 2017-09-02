@@ -43,9 +43,11 @@ struct VALC_res_list VALC_res_add(
   struct VALC_res_list list, struct VALC_res res
 ) {
   if(list.idx > list.idx_alloc) {
+    // nocov start
     error(
       "Internal Error: res list index greater than alloc, contact maintainer."
     );
+    // nocov end
   } else if (list.idx == list.idx_alloc) {
     // Need to allocate more memory
 
@@ -67,11 +69,13 @@ struct VALC_res_list VALC_res_add(
       list.idx_alloc = alloc_size;
     } else {
       error(
-        "Reached maximum vet token result buffer size (%d); this should only ",
-        "happen if you have more than that number of tokens compounded with ",
-        "`||`.  If that is the case, see description of `result.list.size` ",
-        "parameter for `?vetr_settings`.  If not, contact maintainer.",
-        list.idx_alloc_max
+        "%s (%d); %s%s%s%s",
+        "Reached maximum vet token result buffer size",
+        list.idx_alloc_max,
+        "this should only happen if you have more than that number of tokens ",
+        "compounded with `||`.  If that is the case, see description of ",
+        "`result.list.size` parameter for `?vetr_settings`.  If not, contact ",
+        "maintainer."
       );
     }
   }
@@ -235,17 +239,20 @@ SEXP VALC_validate(
   SEXP ret_mode_sxp, SEXP stop, SEXP settings
 ) {
   SEXP res;
-  struct VALC_settings set = VALC_settings_vet(settings, rho);
   if(TYPEOF(ret_mode_sxp) != STRSXP && XLENGTH(ret_mode_sxp) != 1)
-    error("`vet` usage error: argument `format` must be character(1L)");
+    error("`vet` usage error: argument `format` must be character(1L).");
   int stop_int;
 
   if(
     (TYPEOF(stop) != LGLSXP && XLENGTH(stop) != 1) ||
     ((stop_int = asInteger(stop)) == NA_INTEGER)
   )
-    error("`vet` usage error: argument `stop` must be TRUE or FALSE");
+    error("`vet` usage error: argument `stop` must be TRUE or FALSE.");
 
+  if(TYPEOF(rho) != ENVSXP)
+    error("`vet` usage error: argument `env` must be an environment.");
+
+  struct VALC_settings set = VALC_settings_vet(settings, rho);
   res = PROTECT(
     VALC_evaluate(
       target, cur_sub, VALC_SYM_current, current, par_call, set
