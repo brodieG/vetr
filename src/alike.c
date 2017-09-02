@@ -291,8 +291,15 @@ struct ALIKEC_res ALIKEC_alike_obj(
         } else {
           // Update this to use wrap??
           res.strings.tar_pre = "be";
-          res.strings.target[0] = "length %s";
+          res.strings.target[0] = "%s";
           res.strings.cur_pre = "is";
+
+          UNPROTECT(1);
+          res.wrap = PROTECT(allocVector(VECSXP, 2));
+          SEXP len_lang = PROTECT(lang2(ALIKEC_SYM_length, R_NilValue));
+          SET_VECTOR_ELT(res.wrap, 0, len_lang);
+          SET_VECTOR_ELT(res.wrap, 1, CDR(len_lang));
+          UNPROTECT(1);
         }
       } else if (
         res.df && res.lvl > 0 && tar_type == VECSXP && XLENGTH(target) &&
