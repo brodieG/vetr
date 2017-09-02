@@ -17,6 +17,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 
 #include <float.h>
+#include <stdint.h>
 #include <Rinternals.h>
 
 /*
