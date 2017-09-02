@@ -102,6 +102,10 @@ unitizer_sect("Compound Expressions", {
   exp.b <- quote(is.vector(.))
   
   vet(exp.a && exp.b, -(1:3))
+
+  # Duplicate expressions should get collapsed in error message
+
+  vet(1 || "a" || 1 || "a" || 1 || letters, 1:3)
 })
 
 unitizer_sect("Other Return Modes", {
@@ -192,6 +196,9 @@ unitizer_sect("Language", {
   vet(.., 1.4)
   . <- quote(numeric(1L))
   vet(.., 1.5)
+})
+unitizer_sect("Errors", {
+  vet(1, 1, env="hello")
 })
 
 unitizer_sect("Custom tokens", {
