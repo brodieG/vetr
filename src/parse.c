@@ -159,7 +159,7 @@ SEXP VALC_sub_symbol(
         CHAR(PRINTNAME(arg_tag)),
         "in vetting token for object with the same symbol.  Please use `.` ",
         "to reference the object being checked by the vetting token (e.g. ",
-        "`vet(. > 0, x)` instead of `vet(x > 0, x)`)"
+        "use `vet(. > 0, x)` instead of `vet(x > 0, x)`)"
       );
     }
     const char * symb_chr = CHAR(PRINTNAME(lang));

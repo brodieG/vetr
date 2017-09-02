@@ -258,7 +258,9 @@ SEXP VALC_validate(
   struct VALC_settings set = VALC_settings_vet(settings, rho);
   res = PROTECT(
     VALC_evaluate(
-      target, cur_sub, VALC_SYM_current, current, par_call, set
+      target, cur_sub,
+      TYPEOF(cur_sub) == SYMSXP ? cur_sub : VALC_SYM_current,
+      current, par_call, set
     )
   );
   if(!xlength(res)) {
