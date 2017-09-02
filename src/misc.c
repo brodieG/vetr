@@ -32,9 +32,6 @@ SEXP VALC_test3(SEXP a, SEXP b, SEXP c) {
 
 // - Helper Functions ----------------------------------------------------------
 
-int IS_TRUE(SEXP x) {
-  return(TYPEOF(x) == LGLSXP && XLENGTH(x) == 1 && asLogical(x));
-}
 int IS_LANG(SEXP x) {
   return(
     TYPEOF(x) == LANGSXP || TYPEOF(x) == SYMSXP ||

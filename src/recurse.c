@@ -79,7 +79,7 @@ struct ALIKEC_rec_track ALIKEC_rec_ind_num(
   union ALIKEC_index_raw ind_u = {.num = ind};
   return ALIKEC_rec_ind_set(res, (struct ALIKEC_index) {ind_u, 0});
 }
-struct ALIKEC_rec_track ALIKEC_rec_def() {
+struct ALIKEC_rec_track ALIKEC_rec_track_init() {
   return (struct ALIKEC_rec_track) {
     .lvl = 0,
     .lvl_max = 0,

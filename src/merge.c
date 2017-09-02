@@ -107,7 +107,42 @@ SEXP ALIKEC_sort_msg_ext(SEXP msgs) {
   struct VALC_settings set = VALC_settings_vet(R_NilValue, R_BaseEnv);
   return ALIKEC_sort_msg(msgs, set);
 }
+/*
+ * Dedup messages, however, note that you are expected to sort the input first
+ * as this only dedups adjacent values.
+ *
+ * Note this only creates a new vector if there are duplicates within.
+ */
+static SEXP ALIKEC_unique_msg(SEXP msgs) {
+  R_xlen_t len = xlength(msgs);
+  if(len < 2) return(msgs);
 
+  // Loop once to check for dupes
+
+  int some_dup = 0;
+  for(R_xlen_t i = 1; i < len; ++i) {
+    if(R_compute_identical(VECTOR_ELT(msgs, i - 1), VECTOR_ELT(msgs, i), 16)) {
+      some_dup = 1;
+      break;
+    }
+  }
+  SEXP res;
+  if(some_dup) {
+    res = PROTECT(allocVector(VECSXP, len));
+    SET_VECTOR_ELT(res, 0, VECTOR_ELT(msgs, 0));
+    R_xlen_t j = 1;
+    for(R_xlen_t i = 1; i < len; ++i) {
+      if(
+        !R_compute_identical(VECTOR_ELT(msgs, i - 1), VECTOR_ELT(msgs, i), 16)
+      ) {
+        SET_VECTOR_ELT(res, j++, VECTOR_ELT(msgs, i));
+      }
+    }
+    SETLENGTH(res, j);
+    UNPROTECT(1);
+  } else res = msgs;
+  return res;
+}
 /*
  * Combine length five length character vectors where the first, second,
  * fourth and fifth fourth elements are identical.
@@ -115,24 +150,26 @@ SEXP ALIKEC_sort_msg_ext(SEXP msgs) {
  * msgs a list of character vectors of the same length.
  *
  * One length vectors are treated as unmergeable.
+ *
+ * Duplicate vectors are removed
  */
 
 SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set) {
-  R_xlen_t len = XLENGTH(msgs);
   SEXP res;
 
-  if(len > 1) {
+  if(XLENGTH(msgs) > 1) {
     // 1. Sort the strings (really only need to do this if longer than 3, but oh
     // well
-
     SEXP msg_sort = PROTECT(ALIKEC_sort_msg(msgs, set));
-    R_xlen_t groups = 1;
+    SEXP msg_sort_c = PROTECT(ALIKEC_unique_msg(msg_sort));
+
+    R_xlen_t len = XLENGTH(msg_sort_c), groups = 1;
 
     // Determine how many groups of similar things there are in our list
 
     for(R_xlen_t i=1; i < len; i++) {
-      SEXP v_elt = VECTOR_ELT(msg_sort, i);
-      SEXP v_elt_prv = VECTOR_ELT(msg_sort, i - 1);
+      SEXP v_elt = VECTOR_ELT(msg_sort_c, i);
+      SEXP v_elt_prv = VECTOR_ELT(msg_sort_c, i - 1);
       if(
         XLENGTH(v_elt) == 1 ||
         strcmp(CHAR(STRING_ELT(v_elt, 0)), CHAR(STRING_ELT(v_elt_prv, 0))) ||
@@ -156,10 +193,10 @@ SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set) {
 
       for(R_xlen_t i=0; i < len; i++) {
 
-        SEXP v_elt_nxt = R_NilValue, v_elt = VECTOR_ELT(msg_sort, i);
+        SEXP v_elt_nxt = R_NilValue, v_elt = VECTOR_ELT(msg_sort_c, i);
 
         if(i < len - 1) {
-          v_elt_nxt = VECTOR_ELT(msg_sort, i + 1);
+          v_elt_nxt = VECTOR_ELT(msg_sort_c, i + 1);
         }
         // Note, we'll only ever acces v_elt_nxt if we're not at the last value
         // in the loop so it is okay for it to be R_NilValue in that iteration
@@ -199,11 +236,11 @@ SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set) {
         }
       }
     } else {
-      res = PROTECT(msgs); // stack balance
+      res = PROTECT(msg_sort_c); // stack balance
     }
-  } else res = PROTECT(PROTECT(msgs)); // stack balance
+  } else res = PROTECT(PROTECT(PROTECT(msgs))); // stack balance
 
-  UNPROTECT(2);
+  UNPROTECT(3);
   return res;
 }
 SEXP ALIKEC_merge_msg_ext(SEXP msgs) {

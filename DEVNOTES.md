@@ -1,4 +1,133 @@
-## Notes for the next day
+
+## Notes from 8/29
+
+Dig into the syntactic names issue:
+
+```
+unitizer> vetr:::syntactic_names(quote(mtcars[1:10, ]))
+[1] FALSE
+```
+
+## Notes from 8/22
+
+Most of the alike side of things is dealt with, now we need to figure out how we
+want to store stuff in lists.  Used to be that we would just use LISTSXPs, but
+now we need a growing collection of `VALC_res` objects?  It should contain:
+
+* An array of `ALIKEC_res` objects
+* The last inserted index
+* The current allocated size
+* By extension, a value in settings that has the default initial allocated size
+
+We will need a mechanism to grow the array each time we hit the size limit.
+
+Need to remember that we will have protected as many times as there are elements
+in that array.
+
+Also, need to figure out what functions need the added argument so we can pass
+around our array pointer.
+
+## Notes from 8/21
+
+So main thing to do is cleanly separate the "message" SEXP into the message
+character values as part of the `ALIKEC_res_interim` object or some such, and
+just the wrap object.
+
+So we need to restructure the `ALIKEC_res` and `ALIKEC_res_sub` objects to
+contain all the string structure.  Additionally, it seems like the interim
+object really doesn't need the call object?  I guess it can be there explicitly
+as a call object to distinguish it from the `wrap` object?  The only real use
+case is that after we've wrapped the call and are ready to return it to `vetr`
+we need to put it someplace.
+
+So we need objects that:
+
+* Track the strings
+* Track the strings + recursion index + wrap lang
+* Track the strings + wrap lang + attr type
+* Track the strings + final call
+
+Also need to track success status, df status, attr level
+
+* `ALIKEC_res_strings`: just the strings
+* `ALIKEC_res_min`: strings + success
+* `ALIKEC_res_wrap`: strings + success + wrap + [rec index] + [df] + [attr]
+* `ALIKEC_res`: strings + success + call
+
+One thing left to do: figure out what `ALIKEC_wrap` should be returning.
+
+## Notes from 8/20
+
+Currently working through trying to delay the construction of error messages to
+the very last minute.
+
+Seems like the main issue is that that in VALC_evaluate, we need to change from
+a simple LISTSXP to some homegrown object containing all the errors.  The major
+issue we're going to have here is that we need to make sure that the protection
+stack works out since as we've heading right now the VALC_res needs to be
+protected explicitly since it contains non-SEXP crap in it.  Most likely we'll
+need to change that to be a SEXP that contains the vector messages in component
+pieces plus the ancillary stuff.
+
+All this is to delay having to call `pad_or_quote` or `smprintf` business.  Have
+to wonder if we truly optimized those, maybe we could just skip worrying about
+these?  Seems like no matter what we'll have to create some CHARSXPS...
+
+We'll need to figure out how to update `VALC_process_error` to deal with the new
+format.
+
+Looks like creating a 5 long character vector with new strings (i.e. requiring
+new CHARSXPs) takes about 4 microseconds, which seems way too long.  So maybe an
+alternative solution is to pass around a results object that contains the result
+data as C objects, and one `LISTSXP` with all the SEXP objects.  This means that
+every function that returns an `ALIKEC_res_fin` or `VALC_res` object needs to be
+modified to accept the result object as an input.
+
+Actually, not quite, we just need the `VALC_res` ones.  We can just harvest and
+copy over the `ALIKEC_res_fin` separately.
+
+There are two types of SEXPs we need to handle:
+
+1. The call info from `alike` that has all the `names(x)[1]` stuff
+2. The result of evaluating standard tokens
+
+For the non-SEXP stuff, which is most likely to be the alike strings, do we want
+to implement a pair list type structure, or a resizing array?  Probably pair
+list.  For standard tokens seems like recording the value of the `eval_c`
+variable might be sufficient.
+
+## ALIKE structs
+
+### `ALIKEC_res_interim`
+
+#### Inputs
+
+* `ALIKEC_res_strings_to_SEXP` doesnt use object slot
+* `ALIKEC_res_interim_as_strings` doesn't use object slot
+
+For the next two, while used, call could just as easily be passed separately
+
+* `ALIKEC_strsxp_or_true` deparses object into call
+* `ALIKEC_string_or_true` deparses object into call
+
+#### Output
+
+* `ALIKEC_alike_wrap` generates the final call object that can then be deparsed,
+  so can be saved as a simple call
+* `ALIKEC_type_alike_internal` doesn't even use the object
+* `ALIKEC_fun_alike_internal` doesn't even use the object
+
+### `ALIKEC_res`
+
+#### Inputs
+
+* `ALIKEC_wrap`
+
+#### Output
+
+* `ALIKEC_alike_obj`
+* `ALIKEC_alike_rec`
+* `ALIKEC_alike_internal`
 
 ## NSE?
 

@@ -30,6 +30,33 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 #ifndef _VETR_H
 #define _VETR_H
 
+  // Our result holds the C and R data in separate structures mostly because it
+  // would be slow to translate the C stuff into R so we defer that until we're
+  // actually positive we have to make the conversion (i.e. all branches of OR
+  // statements fail).
+
+  union VALC_res_dat {
+    struct ALIKEC_res tpl;     // Template token result
+
+    // Standard token result, a 2 long VECSXP with the standard token language
+    // in position 0, and the result of evaluating it in position 1
+
+    SEXP std;
+  };
+  struct VALC_res {
+    union VALC_res_dat dat;
+    int tpl;          // template or standard token res?
+    int success;
+  };
+  struct VALC_res_list {
+    struct VALC_res * list;
+    // index of free slot (and count of how many we have), note this means that
+    // the last recorded result is at .list[.idx - 1], not .list[.idx]
+    int idx;
+    int idx_alloc;    // how many we've allocated memory for
+    int idx_alloc_max;// max we are allowed to allocate
+  };
+
   SEXP VALC_SYM_one_dot;
   SEXP VALC_SYM_deparse;
   SEXP VALC_SYM_paren;
@@ -43,6 +70,12 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP VALC_test3(SEXP a, SEXP b, SEXP c);
 
   SEXP VALC_check_assumptions();
+
+  SEXP VALC_res_init();
+  struct VALC_res_list VALC_res_add(
+    struct VALC_res_list list, struct VALC_res res
+  );
+  struct VALC_res_list VALC_res_list_init(struct VALC_settings set);
 
   SEXP VALC_validate(
     SEXP target, SEXP current, SEXP cur_sub, SEXP par_call, SEXP rho,

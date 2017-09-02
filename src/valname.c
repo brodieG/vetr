@@ -41,13 +41,23 @@ size_t Mbrtowc(wchar_t *wc, const char *s, size_t n, mbstate_t *ps)
   }
   return used;
 }
+int ALIKEC_is_keyword(const char *name) {
+  const char * keywords[19] = {
+    "NULL", "NA", "TRUE", "FALSE", "Inf", "NaN", "NA_integer_", "NA_real_",
+    "NA_character_", "NA_complex_", "function", "while", "repeat", "for",
+    "if", "in", "else", "next", "break"
+  };
+  for (int i = 0; i < 19; i++)
+    if (strcmp(keywords[i], name) == 0) return 1;
+
+  return 0;
+}
 /*
  * Taken and adapted from R 3.2.2 src/main/gram.c@4915
  */
 int ALIKEC_is_valid_name(const char *name)
 {
   const char *p = name;
-  int i;
 
   if(mbcslocale) {
     /* the only way to establish which chars are alpha etc is to
@@ -77,18 +87,8 @@ int ALIKEC_is_valid_name(const char *name)
     if (c != '\0') return 0;
     // nocov end
   }
-
   if (strcmp(name, "...") == 0) return 1;
-
-  const char * keywords[20] = {
-    "NULL", "NA", "TRUE", "FALSE", "Inf", "NaN", "NA_integer_", "NA_real_",
-    "NA_character_", "NA_complex_", "function", "while", "repeat", "for",
-    "if", "in", "else", "next", "break", "..."
-  };
-  for (i = 0; i < 20; i++)
-    if (strcmp(keywords[i], name) == 0) return 0;
-
-  return 1;
+  return !ALIKEC_is_keyword(name);
 }
 /*
  * External version for testing
