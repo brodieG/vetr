@@ -1,9 +1,13 @@
 ## 0.2.0
 
 * [#48](https://github.com/brodieG/validate/issues/48): Implement `all_bw`, a
-  more efficient version of `!anyNA(.) && all(. < x) && all(. > y)`
+  more efficient version of `!anyNA(.) && all(. < x) && all(. > y)`.  As part of
+  this, check expressions that return character vectors will have part of the
+  first element of that vector included in the error message.
 * [#64](https://github.com/brodieG/validate/issues/64): Rewrite result handling
   for multi token expressions to avoid unnecessary slow downs
+* [#70](https://github.com/brodieG/validate/issues/70): Feedback from Richie
+  Cotton and Michel Lang re: comparison "vignette"
 * [#73](https://github.com/brodieG/validate/issues/73): Cleaner protection stack
   handling
 * [#56](https://github.com/brodieG/validate/issues/56): Over-aggressive
