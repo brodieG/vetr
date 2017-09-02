@@ -119,7 +119,7 @@ More details on the categories in the summary table:
 Ideally packages should have a minimal learning curve.
 
 * `asserthat` hews closely to `stopifnot` semantics so it is trivial to learn.
-* `assertive`, `checkmate` requires familiarity with their many [Predicate
+* `assertive`, `checkmate` require familiarity with their many [Predicate
   Functions](#predicate-function).
 * `vetr` requires understanding how to build the templates used in structure
   checks.
@@ -149,7 +149,7 @@ sometimes cryptic.  All the reviewed packages seek to improve on this:
 * `assertive`, and `checkmate` provide clearer error messages with additional
   information for the included [Predicate Functions](#predicate-function),
   particularly for `assertive`.
-* `vetr` provide clearer error messages with additional informations for object
+* `vetr` provide clearer error messages with additional information for object
   structure (type, length, attributes), and for values with `all_bw`.
 
 All packages allow users to attach custom error messages to [Check
@@ -180,7 +180,7 @@ tests could lead to different results.  See [benchmarks](#benchmarks).
 
 We want to write a functions that accept a length two numeric vector with no
 missing values.  To illustrate we use functions that enforce that requirement
-and do nothing else, starting with one using `stopifnot`:
+and do nothing else, starting with `stopifnot`:
 
 ```{r}
 simple_stopifnot <- function(x)
@@ -209,8 +209,8 @@ simple_vetr <- function(x)
 contains the [Template Token](#templated-token) `numeric(2L)`, and the [Standard
 Token](#standard-token) `!is.na(.)`.  [Template Tokens](#templated-token)
 require that parameters match their structure (i.e. length, type, and
-attributes).  [Standard Tokens](#standard-token), marked by the `.` symbol, are
-evaluated as they would be by `stopifnot`.
+attributes).  [Standard Tokens](#standard-token), marked by the presence of the
+`.` symbol, are evaluated as they would be by `stopifnot`.
 
 Templates should be familiar to `vapply` users, but there are some wrinkles.
 For example zero-length templates like `numeric()` match any length objects.
@@ -248,7 +248,7 @@ simple_vetr(pi)
 
 In addition to what our parameter is not, `vetr` tells you what it is, gives you
 the original call of the function, and gives you the input as it appears
-in the calling frame (`pi`).
+in the calling frame (i.e. `length(pi)` instead of `length(x)`).
 
 `assertthat` makes the error message friendlier, but does not add information:
 
@@ -294,6 +294,10 @@ complex_stopifnot <- function(x) {
 complex_stopifnot(iris.fake)
 ```
 
+While some of these checks may seem over-the-top, R's informality with respect
+to S3 classes make them necessary.  For example, nothing guarantees that an
+object with class "data.frame" has type "list" as it should.
+
 `vetr` carries out all those checks and more by inferring them from a template:
 
 ```{r}
@@ -327,7 +331,7 @@ complex_checkmate(iris.fake)
 `stopifnot`, and with similar error messages so we omit them here.  See the code
 appendix for those implementations.
 
-```{r iris.other, echo=F, eval=F}
+```{r iris.other, echo=F}
 complex_assertive <- function(x) {
   assert_is_list(x)
   assert_all_are_equal_to(length(x), 5)
@@ -341,8 +345,6 @@ complex_assertive <- function(x) {
     identical(levels(x$Species), levels(iris$Species))
   )
 }
-complex_assertive(iris.fake)
-
 complex_assertthat <- function(x) {
   assert_that(
     is.data.frame(x),                     # this only checks class
@@ -354,14 +356,16 @@ complex_assertthat <- function(x) {
     identical(typeof(x$Species), "integer"),
     identical(levels(x$Species), levels(iris$Species))
 ) }
-complex_assertthat(iris.fake)
 ```
 
 ### Vector Values
 
 Suppose we wish to ensure our input is a strictly positive numeric vector with
-no missing values.  With `r vec <- -1:1` and `stopifnot` we would use:
+no missing values.  With `vec <- -1:1` and `stopifnot` we would use:
 
+```{r echo=FALSE}
+vec <- -1:1
+```
 ```{r}
 vector_stopifnot <- function(x) stopifnot(is.numeric(x), !anyNA(x), all(x > 0))
 vector_stopifnot(vec)
@@ -394,7 +398,7 @@ vector_checkmate(vec)
 error message:
 
 ```{r}}
-vector_assertive <- function(x) assert_all_are_in_left_open_range(x, lower=0)
+vector_assertive <- function(x) assert_all_are_positive(x)
 vector_assertive(vec)
 ```
 
@@ -476,9 +480,8 @@ mb(
 )
 ```
 
-Checking vector values in a long vector (note, `assertive` is **3 orders of
-magnitude slower**, likely because it applies an R function call to each element,
-so we run it fewer times):
+`vetr` is the fastest option for checking that values in a long vector are in
+range:
 
 ```{r}
 str.pos.vec <- runif(5e5) + 1  # test with a 500K long vector
@@ -490,15 +493,20 @@ mb(
   vector_stopifnot(str.pos.vec),
   vector_vetr(str.pos.vec)
 )
+```
+
+This is primarily because we use `vetr::all_bw` instead of the semantically
+equivalent `!anyNA(.) && all(. > 0)` expression.  `all_bw` is implemented in C
+and avoids the intermediate vectors required to evaluate the standard R version.
+`checkmate` does the same with `qassert`.
+
+`assertive` is substantially slower so we benchmark it separately:
+
+```{r, echo=FALSE}
 mb(times=5,
   vector_assertive(str.pos.vec)
 )
 ```
-
-`vetr` is now the fastest option because we use `vetr::all_bw` instead of the
-semantically equivalent `!anyNA(.) && all(. > 0)` expression.  `all_bw` is
-implemented in C and avoids the intermediate vectors required to evaluate the
-standard R version.  `checkmate` does the same with `qassert`.
 
 If your functions will never be run thousands of times then you probably do not
 need to worry about the differences shown here.  However, general purpose
@@ -662,6 +670,9 @@ definitions elsewhere.
 * [The State of Assertions in
   R](https://4dpiecharts.com/2015/07/03/the-state-of-assertions-in-r/),  Richie
   Cotton, July 2015
+* [Testing R
+  Code](https://www.crcpress.com/Testing-R-Code/Cotton/p/book/9781498763653),
+  Richie Cotton, January 2017
 
 ### Ancillary Code
 
@@ -677,7 +688,11 @@ We use a thin wrapper around `microbenchmark`:
 These are the implementations we omitted from the iris checks in the [details
 section](#details).
 
-```{r iris.other}
+```{r iris.other, eval=F}
+```
+```{r}
+complex_assertive(iris.fake)
+complex_assertthat(iris.fake)
 ```
 
 ### Session Info
