@@ -179,8 +179,8 @@ A NULL terminator is always added at the end of the string.
 */
 char * CSR_strmcpy_int(const char * str, size_t maxlen, int warn) {
   if(!maxlen) return("");
-  if(maxlen == SIZE_T_MAX)
-    error("Argument `maxlen` must be at least one smaller than SIZE_T_MAX.");
+  if(maxlen == SIZE_MAX)
+    error("Argument `maxlen` must be at least one smaller than SIZE_MAX.");
 
   size_t len = CSR_strmlen_x(str, maxlen);
   if(warn && len == maxlen && str[len])
@@ -221,7 +221,7 @@ char * CSR_strmcpy(const char * str, size_t maxlen) {
  */
 void CSR_strappend(char * target, const char * str, size_t maxlen) {
   if(maxlen) {
-    if(maxlen > SIZE_T_MAX - 1) {
+    if(maxlen > SIZE_MAX - 1) {
       error("%s%s",
         "Argument `maxlen` must be at least one smaller than max possible ",
         "size_t value."
@@ -252,7 +252,7 @@ void CSR_strappend(char * target, const char * str, size_t maxlen) {
  * Add two size_t if possible, error otherwise
  */
 size_t CSR_add_szt(size_t a, size_t b) {
-  if(SIZE_T_MAX - a < b)
+  if(SIZE_MAX - a < b)
     error("%s%s",
       "size_t overflow: you tried to add two size_t numbers that together ",
       "overflow size_t"

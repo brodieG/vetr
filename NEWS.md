@@ -6,6 +6,8 @@
   first element of that vector included in the error message.
 * [#64](https://github.com/brodieG/validate/issues/64): Rewrite result handling
   for multi token expressions to avoid unnecessary slow downs
+* [#77](https://github.com/brodieG/validate/issues/77): Replace `SIZE_T_MAX`
+  with `SIZE_MAX` for portability
 * [#70](https://github.com/brodieG/validate/issues/70): Feedback from Richie
   Cotton and Michel Lang re: comparison "vignette"
 * [#73](https://github.com/brodieG/validate/issues/73): Cleaner protection stack

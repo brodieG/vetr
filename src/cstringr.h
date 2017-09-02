@@ -18,6 +18,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 #include <R.h>
 #include <Rinternals.h>
+#include <stdint.h>
 #include <ctype.h>
 
 #ifndef _CSTRINGR_H
