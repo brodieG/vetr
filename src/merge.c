@@ -135,10 +135,10 @@ static SEXP ALIKEC_unique_msg(SEXP msgs) {
       if(
         !R_compute_identical(VECTOR_ELT(msgs, i - 1), VECTOR_ELT(msgs, i), 16)
       ) {
-        SET_VECTOR_ELT(res, j++, VECTOR_ELT(msgs, 1));
+        SET_VECTOR_ELT(res, j++, VECTOR_ELT(msgs, i));
       }
     }
-    SETLENGTH(res, j - 1);
+    SETLENGTH(res, j);
     UNPROTECT(1);
   } else res = msgs;
   return res;
@@ -236,7 +236,7 @@ SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set) {
         }
       }
     } else {
-      res = PROTECT(msgs); // stack balance
+      res = PROTECT(msg_sort_c); // stack balance
     }
   } else res = PROTECT(PROTECT(PROTECT(msgs))); // stack balance
 
