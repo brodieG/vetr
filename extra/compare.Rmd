@@ -119,7 +119,7 @@ More details on the categories in the summary table:
 Ideally packages should have a minimal learning curve.
 
 * `asserthat` hews closely to `stopifnot` semantics so it is trivial to learn.
-* `assertive`, `checkmate` requires familiarity with their many [Predicate
+* `assertive`, `checkmate` require familiarity with their many [Predicate
   Functions](#predicate-function).
 * `vetr` requires understanding how to build the templates used in structure
   checks.
@@ -394,7 +394,7 @@ vector_checkmate(vec)
 error message:
 
 ```{r}}
-vector_assertive <- function(x) assert_all_are_in_left_open_range(x, lower=0)
+vector_assertive <- function(x) assert_all_are_positive(x)
 vector_assertive(vec)
 ```
 
@@ -476,10 +476,7 @@ mb(
 )
 ```
 
-Checking vector values in a long vector (note, `assertive` is **3 orders of
-magnitude slower**, likely because it applies an R function call to each element,
-so we run it fewer times):
-
+Checking vector values in a long vector:
 ```{r}
 str.pos.vec <- runif(5e5) + 1  # test with a 500K long vector
 ```
@@ -490,6 +487,12 @@ mb(
   vector_stopifnot(str.pos.vec),
   vector_vetr(str.pos.vec)
 )
+```
+
+`assertive` is substantially slower, likely because it applies an R function
+call to each element, so we benchmark it separately:
+
+```{r, echo=FALSE}
 mb(times=5,
   vector_assertive(str.pos.vec)
 )
@@ -662,6 +665,9 @@ definitions elsewhere.
 * [The State of Assertions in
   R](https://4dpiecharts.com/2015/07/03/the-state-of-assertions-in-r/),  Richie
   Cotton, July 2015
+* [Testing R
+  Code](https://www.crcpress.com/Testing-R-Code/Cotton/p/book/9781498763653),
+  Richie Cotton, January 2017
 
 ### Ancillary Code
 
