@@ -93,15 +93,17 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   int IS_TRUE(SEXP x);
   int IS_LANG(SEXP x);
   SEXP VALC_parse(
-    SEXP lang, SEXP var_name, struct VALC_settings settings
+    SEXP lang, SEXP var_name, struct VALC_settings settings, SEXP arg_tag
   );
   SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho);
   void VALC_parse_recurse(
     SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is,
-    SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash
+    SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash,
+    SEXP arg_tag
   );
   SEXP VALC_sub_symbol(
-    SEXP lang, struct VALC_settings set, struct track_hash * track_hash
+    SEXP lang, struct VALC_settings set, struct track_hash * track_hash,
+    SEXP arg_tag
   );
   SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho);
   void VALC_install_objs();
