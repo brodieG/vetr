@@ -62,8 +62,8 @@ SEXP VALC_check_assumptions() {
   // Because we check that strings are no longer than this, but then allocate
   // memory as INT_MAX + 1 with a size_t, so need to make sure that fits
 
-  if(SIZE_T_MAX - 1 < INT_MAX)
-    error(err_base, "SIZE_T_MAX not sufficiently larger than INT_MAX", "");
+  if(SIZE_MAX - 1 < INT_MAX)
+    error(err_base, "SIZE_MAX not sufficiently larger than INT_MAX", "");
   return ScalarLogical(1);
 }
 // nocov end
