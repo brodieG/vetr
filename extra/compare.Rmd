@@ -294,6 +294,10 @@ complex_stopifnot <- function(x) {
 complex_stopifnot(iris.fake)
 ```
 
+While some of these checks may seem over-the-top, R's informality with respect
+to S3 classes make them necessary.  For example, nothing guarantees that an
+object with class "data.frame" has type "list" as it should.
+
 `vetr` carries out all those checks and more by inferring them from a template:
 
 ```{r}
