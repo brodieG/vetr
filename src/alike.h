@@ -135,9 +135,6 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_alike_ext(
     SEXP target, SEXP current, SEXP cur_sub, SEXP env, SEXP settings
   );
-  SEXP ALIKEC_alike_int2(
-    SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
-  );
   struct ALIKEC_res ALIKEC_alike_internal(
     SEXP target, SEXP current, struct VALC_settings set
   );
@@ -219,10 +216,10 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_findFun(SEXP symbol, SEXP rho);
   SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho);
   struct ALIKEC_res ALIKEC_res_init();
-  SEXP ALIKEC_strsxp_or_true(
+  SEXP ALIKEC_res_as_strsxp(
     struct ALIKEC_res res, SEXP call, struct VALC_settings set
   );
-  SEXP ALIKEC_string_or_true(
+  SEXP ALIKEC_res_as_string(
     struct ALIKEC_res res, SEXP call, struct VALC_settings set
   );
   SEXP ALIKEC_class(SEXP obj, SEXP class);
@@ -247,7 +244,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set);
   SEXP ALIKEC_merge_msg_2_ext(SEXP msgs);
 
-  struct ALIKEC_tar_cur_strings ALIKEC_res_as_strings(
+  struct ALIKEC_tar_cur_strings ALIKEC_get_res_strings(
      struct ALIKEC_res_strings strings, struct VALC_settings set
   );
 

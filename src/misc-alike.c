@@ -492,7 +492,7 @@ SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho) {
  * Only exists because this operation is expensive and we want to defer carrying
  * out until we're absolutely sure that we need to carry it out.
  */
-struct ALIKEC_tar_cur_strings ALIKEC_res_as_strings(
+struct ALIKEC_tar_cur_strings ALIKEC_get_res_strings(
   struct ALIKEC_res_strings strings, struct VALC_settings set
 ) {
   const char * tar_str = CSR_smprintf4(
@@ -509,12 +509,13 @@ struct ALIKEC_tar_cur_strings ALIKEC_res_as_strings(
 Convert convention of zero length string == TRUE to SEXP
 */
 
-SEXP ALIKEC_string_or_true(
+SEXP ALIKEC_res_as_string(
   struct ALIKEC_res res, SEXP call, struct VALC_settings set
 ) {
+  const char * res_str;
   if(!res.success) {
     struct ALIKEC_tar_cur_strings strings_pasted =
-      ALIKEC_res_as_strings(res.strings, set);
+      ALIKEC_get_res_strings(res.strings, set);
 
     if(TYPEOF(res.wrap) != VECSXP || xlength(res.wrap) != 2) {
       // nocov start
@@ -529,45 +530,44 @@ SEXP ALIKEC_string_or_true(
     UNPROTECT(1);
 
     if(strings_pasted.target[0] && strings_pasted.current[0]) {
-      const char * res_str = CSR_smprintf6(
+      res_str = CSR_smprintf6(
         set.nchar_max,
         "%sshould %s %s (%s %s)",
         call_chr, res.strings.tar_pre, strings_pasted.target,
         res.strings.cur_pre, strings_pasted.current, ""
       );
-      return(mkString(res_str));
     } else if (res.strings.target[0]) {
-      const char * res_str = CSR_smprintf4(
+      res_str = CSR_smprintf4(
         set.nchar_max, "%sshould %s %s", call_chr, res.strings.tar_pre,
         strings_pasted.target,  ""
       );
-      return(mkString(res_str));
     }
-  }
-  return(ScalarLogical(1));
+  } else error("Internal Error: res_as_string only works with failing res.");
+  return(mkString(res_str));
 }
 /*
- * variation on ALIKEC_string_or_true that returns the full vector so we can use
+ * variation on ALIKEC_res_as_string that returns the full vector so we can use
  * it with ALIKEC_merge_msg
  */
 
-SEXP ALIKEC_strsxp_or_true(
+SEXP ALIKEC_res_as_strsxp(
   struct ALIKEC_res res, SEXP call, struct VALC_settings set
 ) {
+  SEXP res_fin;
   if(!res.success) {
     struct ALIKEC_tar_cur_strings strings_pasted =
-      ALIKEC_res_as_strings(res.strings, set);
+      ALIKEC_get_res_strings(res.strings, set);
     SEXP call_inj = PROTECT(ALIKEC_inject_call(res, call));
     const char * call_chr = ALIKEC_pad_or_quote(call_inj, set.width, -1, set);
-    SEXP res_fin = PROTECT(allocVector(STRSXP, 5));
+    res_fin = PROTECT(allocVector(STRSXP, 5));
     SET_STRING_ELT(res_fin, 0, mkChar(call_chr));
     SET_STRING_ELT(res_fin, 1, mkChar(res.strings.tar_pre));
     SET_STRING_ELT(res_fin, 2, mkChar(strings_pasted.target));
     SET_STRING_ELT(res_fin, 3, mkChar(res.strings.cur_pre));
     SET_STRING_ELT(res_fin, 4, mkChar(strings_pasted.current));
     UNPROTECT(2);
-    return(res_fin);
-  } else return(ScalarLogical(1));
+  } else error("Internal Error: res_as_strsxp only works with failing res.");
+  return(res_fin);
 }
 /*
 Basic checks that `obj` could be a data frame; does not check class, only that

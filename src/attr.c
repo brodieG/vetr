@@ -36,7 +36,7 @@ SEXP ALIKEC_res_sub_as_sxp(struct ALIKEC_res sub, struct VALC_settings set) {
 
   if(!sub.success) {
     struct ALIKEC_tar_cur_strings strings_pasted =
-      ALIKEC_res_as_strings(sub.strings, set);
+      ALIKEC_get_res_strings(sub.strings, set);
     SEXP message_strings = PROTECT(allocVector(STRSXP, 4));
     if(strings_pasted.target[0]) {
       SET_STRING_ELT(message_strings, 0, mkChar(sub.strings.tar_pre));

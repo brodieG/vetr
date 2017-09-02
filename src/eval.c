@@ -315,7 +315,7 @@ SEXP VALC_error_standard(
 SEXP VALC_error_template(
   struct ALIKEC_res res, SEXP arg_tag, SEXP arg_lang, struct VALC_settings set
 ) {
-  SEXP res_sxp = PROTECT(ALIKEC_strsxp_or_true(res, arg_lang, set));
+  SEXP res_sxp = PROTECT(ALIKEC_res_as_strsxp(res, arg_lang, set));
   if(TYPEOF(res_sxp) != STRSXP)
     // nocov start
     error(

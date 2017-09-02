@@ -250,7 +250,10 @@ SEXP VALC_validate(
     error("`vet` usage error: argument `stop` must be TRUE or FALSE.");
 
   if(TYPEOF(rho) != ENVSXP)
-    error("`vet` usage error: argument `env` must be an environment.");
+    error(
+      "`vet` usage error: argument `env` must be an environment (is %s).",
+      type2char(TYPEOF(rho))
+    );
 
   struct VALC_settings set = VALC_settings_vet(settings, rho);
   res = PROTECT(

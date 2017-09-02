@@ -24,12 +24,12 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 /*
  * Create a SEXP out of an ALIKEC_res_strings struct
  *
- * See `ALIKEC_string_or_true` for related function.
+ * See `ALIKEC_res_as_string` for related function.
  */
 SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_strings strings) {
   struct VALC_settings set = VALC_settings_init();
   struct ALIKEC_tar_cur_strings strings_pasted =
-    ALIKEC_res_as_strings(strings, set);
+    ALIKEC_get_res_strings(strings, set);
 
   SEXP res = PROTECT(allocVector(STRSXP, 4));
   SET_STRING_ELT(res, 0, mkChar(strings.tar_pre));
@@ -688,7 +688,9 @@ SEXP ALIKEC_alike_ext(
   struct VALC_settings set = VALC_settings_vet(settings, env);
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
   PROTECT(res.wrap);
-  SEXP res_sxp = PROTECT(ALIKEC_string_or_true(res, curr_sub, set));
+  SEXP res_sxp;
+  if(res.success) res_sxp = PROTECT(ScalarLogical(1));
+  else res_sxp = PROTECT(ALIKEC_res_as_string(res, curr_sub, set));
   UNPROTECT(2);
   return res_sxp;
 }

@@ -98,7 +98,7 @@ SEXP ALIKEC_type_alike(
   PROTECT(res.wrap);
   SEXP res_sexp;
   if(!res.success) {
-    res_sexp = PROTECT(ALIKEC_string_or_true(res, call, set));
+    res_sexp = PROTECT(ALIKEC_res_as_string(res, call, set));
   } else {
     res_sexp = PROTECT(ScalarLogical(1));
   }
