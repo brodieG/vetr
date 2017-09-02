@@ -85,6 +85,7 @@ struct ALIKEC_res ALIKEC_type_alike_internal(
   res_fin.strings.target[1]= what;
   res_fin.strings.current[0] = "\"%s\"";
   res_fin.strings.current[1] = type2char(cur_type);
+  res_fin.wrap = allocVector(VECSXP, 2); // note not PROTECTing
   return res_fin;
 }
 SEXP ALIKEC_type_alike(
@@ -94,13 +95,15 @@ SEXP ALIKEC_type_alike(
   struct VALC_settings set = VALC_settings_vet(settings, R_BaseEnv);
 
   res = ALIKEC_type_alike_internal(target, current, call, set);
+  PROTECT(res.wrap);
+  SEXP res_sexp;
   if(!res.success) {
-    SEXP res_sexp = PROTECT(ALIKEC_string_or_true(res, call, set));
-    UNPROTECT(1);
-    return(res_sexp);
+    res_sexp = PROTECT(ALIKEC_string_or_true(res, call, set));
   } else {
-    return ScalarLogical(1);
+    res_sexp = PROTECT(ScalarLogical(1));
   }
+  UNPROTECT(2);
+  return(res_sexp);
 }
 
 /* - typeof ----------------------------------------------------------------- */
