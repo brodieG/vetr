@@ -627,7 +627,7 @@ SEXP ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
   SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.rec));
 
   if(TYPEOF(res.wrap) != VECSXP || xlength(res.wrap) != 2) {
-    error("Internal Error: wrap struct eleme should be length 2 list.");
+    error("Internal Error: wrap struct eleme should be length 2 list.");// nocov
   }
   SEXP wrap = res.wrap;
 
@@ -659,10 +659,7 @@ SEXP ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
   // `names(call)`
 
   if(
-    VECTOR_ELT(wrap, 0) != R_NilValue && (
-      TYPEOF(VECTOR_ELT(wrap, 1)) == LISTSXP ||
-      TYPEOF(VECTOR_ELT(wrap, 1)) == LANGSXP
-    )
+    VECTOR_ELT(wrap, 0) != R_NilValue && TYPEOF(VECTOR_ELT(wrap, 1)) == LISTSXP
   ) {
     SETCAR(VECTOR_ELT(wrap, 1), call);
   } else {
@@ -692,22 +689,6 @@ SEXP ALIKEC_alike_ext(
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
   PROTECT(res.wrap);
   SEXP res_sxp = PROTECT(ALIKEC_string_or_true(res, curr_sub, set));
-  UNPROTECT(2);
-  return res_sxp;
-}
-/*
- * Another secondary, but takes the set struct instead of SEXP list, and returns
- * length 5 character vectors for the errors instead of length 1 so that the
- * return values can be used with ALIKEC_merge_msg.
- *
- * Intended primarily for use by vetr
- */
-SEXP ALIKEC_alike_int2(
-  SEXP target, SEXP current, SEXP curr_sub, struct VALC_settings set
-) {
-  struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
-  PROTECT(res.wrap);  // might have been changed by inject
-  SEXP res_sxp = PROTECT(ALIKEC_strsxp_or_true(res, curr_sub, set));
   UNPROTECT(2);
   return res_sxp;
 }
