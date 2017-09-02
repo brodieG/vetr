@@ -331,7 +331,7 @@ complex_checkmate(iris.fake)
 `stopifnot`, and with similar error messages so we omit them here.  See the code
 appendix for those implementations.
 
-```{r iris.other, echo=F, eval=F}
+```{r iris.other, echo=F}
 complex_assertive <- function(x) {
   assert_is_list(x)
   assert_all_are_equal_to(length(x), 5)
@@ -345,8 +345,6 @@ complex_assertive <- function(x) {
     identical(levels(x$Species), levels(iris$Species))
   )
 }
-complex_assertive(iris.fake)
-
 complex_assertthat <- function(x) {
   assert_that(
     is.data.frame(x),                     # this only checks class
@@ -358,7 +356,6 @@ complex_assertthat <- function(x) {
     identical(typeof(x$Species), "integer"),
     identical(levels(x$Species), levels(iris$Species))
 ) }
-complex_assertthat(iris.fake)
 ```
 
 ### Vector Values
@@ -480,7 +477,9 @@ mb(
 )
 ```
 
-Checking vector values in a long vector:
+`vetr` is the fastest option for checking that values in a long vector are in
+range:
+
 ```{r}
 str.pos.vec <- runif(5e5) + 1  # test with a 500K long vector
 ```
@@ -493,19 +492,18 @@ mb(
 )
 ```
 
-`assertive` is substantially slower, likely because it applies an R function
-call to each element, so we benchmark it separately:
+This is primarily because we use `vetr::all_bw` instead of the semantically
+equivalent `!anyNA(.) && all(. > 0)` expression.  `all_bw` is implemented in C
+and avoids the intermediate vectors required to evaluate the standard R version.
+`checkmate` does the same with `qassert`.
+
+`assertive` is substantially slower so we benchmark it separately:
 
 ```{r, echo=FALSE}
 mb(times=5,
   vector_assertive(str.pos.vec)
 )
 ```
-
-`vetr` is now the fastest option because we use `vetr::all_bw` instead of the
-semantically equivalent `!anyNA(.) && all(. > 0)` expression.  `all_bw` is
-implemented in C and avoids the intermediate vectors required to evaluate the
-standard R version.  `checkmate` does the same with `qassert`.
 
 If your functions will never be run thousands of times then you probably do not
 need to worry about the differences shown here.  However, general purpose
@@ -687,7 +685,11 @@ We use a thin wrapper around `microbenchmark`:
 These are the implementations we omitted from the iris checks in the [details
 section](#details).
 
-```{r iris.other}
+```{r iris.other, eval=F}
+```
+```{r}
+complex_assertive(iris.fake)
+complex_assertthat(iris.fake)
 ```
 
 ### Session Info
