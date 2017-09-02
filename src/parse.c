@@ -232,8 +232,6 @@ SEXP VALC_parse(
   // an actualy dot that we shouldn't substitute recursively, instead it should
   // be substituted with `name_sub`.
 
-  PrintValue(lang);
-  PrintValue(var_name);
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
   lang_cpy = VALC_name_sub(lang_cpy, var_name);
   if(mode != 2) {
@@ -253,8 +251,6 @@ SEXP VALC_parse(
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
   SET_VECTOR_ELT(res_vec, 1, res);
   UNPROTECT(4);
-  Rprintf("Finished\n");
-  PrintValue(lang_cpy);
   return(res_vec);
 }
 SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {

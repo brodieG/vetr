@@ -358,7 +358,6 @@ SEXP VALC_evaluate(
   if(!IS_LANG(arg_lang))
     error("Internal Error: argument `arg_lang` must be language.");  // nocov
 
-  PrintValue(arg_tag);
   SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, set, arg_tag));
   struct VALC_res_list res_list, res_init = VALC_res_list_init(set);
 
