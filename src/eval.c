@@ -231,9 +231,10 @@ SEXP VALC_error_standard(
     switch(eval_res_c) {
       case -6: {
           R_xlen_t eval_res_len = xlength(eval_tmp);
+          // This could be slow, ideally we would avoid running CSR_smprintf
           err_tok = CSR_smprintf4(
             set.nchar_max,
-            "chr%s \"%s\"%s%s",
+            "is chr%s: \"%s\"%s%s",
             eval_res_len > 1 ?
               CSR_smprintf2(
                 set.nchar_max, " [1:%s]%s", CSR_len_as_chr(eval_res_len),
