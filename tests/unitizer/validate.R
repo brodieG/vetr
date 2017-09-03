@@ -144,6 +144,10 @@ unitizer_sect("Multi-line Stuff", {
   val.exp <- quote(!anyNA(.))
   vet(val.exp, c(234234131431, 123413413413, NA))
 })
+unitizer_sect("Embedded String Errors", {
+  vet(all_bw(., 0, 1), 0:5)
+  vet(all.equal(., 1:5), 1:6)
+})
 
 unitizer_sect("Language", {
   # Note issue #18; not 100% sure this is correct, actually it should be, the
