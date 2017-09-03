@@ -107,11 +107,11 @@ token is just one token not because of the parentheses around it but because it
 is a call to `&` as opposed to `&&`.  Here we use the parentheses to remove
 parsing ambiguity caused by `&` and `&&` having the same operator precedence.
 
-After the tokens have been identified they are classified as custom tokens or
-template tokens.  Custom tokens are those that contain the `.` symbol.  Every
+After the tokens have been identified they are classified as standard tokens or
+template tokens.  Standard tokens are those that contain the `.` symbol.  Every
 other token is considered a template token.
 
-Custom tokens are further processed by substituting any `.` with the value
+Standard tokens are further processed by substituting any `.` with the value
 of the object being vetted.  These tokens are then evaluated and if those
 evaluations produce `TRUE` or logical vectors containing only `TRUE`, the tokens
 pass, otherwise they fail.  With:
@@ -151,10 +151,10 @@ vet(logical(1) || (numeric(1) && (. > 0 & . < 1)), 42)
 
 If you need to reference a literal dot (`.`) in a token, you can escape it by
 adding another dot so that `.` becomes `..`.  If you want to reference `...`
-you'll need to use `....`.  If you have a custom token that does not
+you'll need to use `....`.  If you have a standard token that does not
 reference the vetting object (i.e. does not use `.`) you can mark it as a
-custom token by wrapping it in `.()` (if you want to use a literal `.()` you can
-use `..()`).
+standard token by wrapping it in `.()` (if you want to use a literal `.()` you
+can use `..()`).
 
 If you need `&&` or `||` to be interpreted literally you can wrap the call in
 `I` to tell `vet` to treat the entire call as a single token:
@@ -174,7 +174,7 @@ results.  For example:
 I(logical(1L) && my_special_fun(.))
 ```
 
-will always fail because `logical(1L)` is part of a custom token and is
+will always fail because `logical(1L)` is part of a standard token and is
 evaluated as `FALSE` rather than used a template token for a scalar logical.
 
 ## In Functions
