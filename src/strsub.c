@@ -17,17 +17,61 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 #include "cstringr.h"
 /*
- * This appears to update with `Sys.setlocale`
+ * This appears to update with `Sys.setlocale`, but super annoyingly we get a
+ * CMD check note about this, so we need to resort to parsing `Sys.getlocale`
+ * which seems more than suboptimal.  Oddly, mbcslocale doesn't trigger the same
+ * note.
  */
-extern Rboolean utf8locale;
+// extern Rboolean utf8locale;
 
 /*
  * Most of the functionality in this file already exists built in to R, so we
  * suggest you check out `nchar`, `substr`, etc.  This is mostly a learning
  * exercise for me.
+ *
  */
-static inline int is_utf8_enc(cetype_t type) {
-  return type == CE_UTF8 || (type == CE_NATIVE && utf8locale);
+static int is_utf8_enc(cetype_t type) {
+  SEXP sys_getlocale = PROTECT(install("Sys.getlocale"));
+  SEXP lc_ctype = PROTECT(mkString("LC_CTYPE"));
+  SEXP loc_call = PROTECT(lang2(sys_getlocale, lc_ctype));
+
+  int err_val = 0;
+  SEXP eval_tmp = PROTECT(R_tryEval(loc_call, R_BaseEnv, &err_val));
+  if(err_val)
+    // nocov start
+    error("Internal Error: failed getting UTF8 locale; contact maintainer.");
+    // nocov end
+
+  if(TYPEOF(eval_tmp) != STRSXP && xlength(eval_tmp) != 1)
+    // nocov start
+    error("Internal Error: UTF8 locale not a string; contact maintainer.");
+    // nocov end
+
+  const char * loc_string = CHAR(asChar(eval_tmp));
+
+  int loc_len = strnlen(loc_string, INT_MAX);
+
+  if(loc_len == INT_MAX)
+    // nocov start
+    error(
+      "%s%s",
+      "Internal Error: UTF8 locale string possibly longer than INT_MAX; ",
+      "contact maintainer."
+    );
+    // nocov end
+
+  int res = type == CE_UTF8 ||
+    (
+      type == CE_NATIVE && loc_len >= 5 &&
+      loc_string[loc_len - 1] == '8' &&
+      loc_string[loc_len - 2] == '-' &&
+      (loc_string[loc_len - 3] == 'F' || loc_string[loc_len - 3] == 'f') &&
+      (loc_string[loc_len - 4] == 'T' || loc_string[loc_len - 4] == 't') &&
+      (loc_string[loc_len - 5] == 'U' || loc_string[loc_len - 5] == 'u')
+    );
+
+  UNPROTECT(4);
+  return res;
 }
 /*
  * Computes how many bytes a character take.

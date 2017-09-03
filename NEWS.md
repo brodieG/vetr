@@ -4,6 +4,10 @@
   more efficient version of `!anyNA(.) && all(. < x) && all(. > y)`.  As part of
   this, check expressions that return character vectors will have part of the
   first element of that vector included in the error message.
+* [#69](https://github.com/brodieG/validate/issues/69): Vetting expressions that
+  use the symbol of the object being vetted are no longer valid.  This avoid
+  confusion caused by intended standard tokens being treated as template tokens
+  because they use the object symbol instead of `.` to refer to the object.
 * [#64](https://github.com/brodieG/validate/issues/64): Rewrite result handling
   for multi token expressions to avoid unnecessary slow downs
 * [#77](https://github.com/brodieG/validate/issues/77): Replace `SIZE_T_MAX`
