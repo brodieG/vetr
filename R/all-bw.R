@@ -6,9 +6,10 @@
 #'
 #' You can modify the comparison to be strictly greater/less than via the
 #' `bounds` parameter, and the treatment of NAs with `na.rm`.  Note that NAs are
-#' considered to be considered to be out of bounds by default.  While
-#' possibly incorrect, this is both conservative and convenient.  Zero length
-#' `x` will always succeed.
+#' considered to be out of bounds by default.  While semantically incorrect
+#' since we cannot know whether an NA value is in or out of bounds, this
+#' assumption is both conservative and convenient.  Zero length `x` will always
+#' succeed.
 #'
 #' If `x` and `lo`/`hi` are different types, `lo`/`hi` will be coerced to the
 #' type of `x`.  When `lo`/`hi` are numeric and `x` is integer, if `lo`/`hi`
@@ -32,8 +33,9 @@
 #' @param bounds `character(1L)` for values between `lo` and `hi`:
 #'   * \dQuote{[]} include `lo` and `hi`
 #'   * \dQuote{()} exclude `lo` and `hi`
-#'   * \dQuote{[)} include `lo`, exclude `hi`
 #'   * \dQuote{(]} exclude `lo`, include `hi`
+#'   * \dQuote{[)} include `lo`, exclude `hi`
+#'
 #' @return TRUE if all values in `x` conform to the specified bounds, a string
 #'   describing the first position that fails otherwise
 #' @examples

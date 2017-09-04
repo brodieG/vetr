@@ -27,13 +27,8 @@ treat them as always being out of bounds.}
 \itemize{
 \item \dQuote{[]} include \code{lo} and \code{hi}
 \item \dQuote{()} exclude \code{lo} and \code{hi}
-\item \dQuote{[)} include \code{lo}, exclude \code{hi}
 \item \dQuote{(]} exclude \code{lo}, include \code{hi}
-}
-
-[)} include \code{lo}, exclude \code{hi}
-\itemize{
-\item \dQuote{(]: R:)%7D%20include%20%60lo%60,%20exclude%20%60hi%60%0A%20%20*%20%5CdQuote%7B(
+\item \dQuote{[)} include \code{lo}, exclude \code{hi}
 }}
 }
 \value{
@@ -48,9 +43,10 @@ describing why not all values are in range instead of FALSE on failure.
 \details{
 You can modify the comparison to be strictly greater/less than via the
 \code{bounds} parameter, and the treatment of NAs with \code{na.rm}.  Note that NAs are
-considered to be considered to be out of bounds by default.  While
-possibly incorrect, this is both conservative and convenient.  Zero length
-\code{x} will always succeed.
+considered to be out of bounds by default.  While semantically incorrect
+since we cannot know whether an NA value is in or out of bounds, this
+assumption is both conservative and convenient.  Zero length \code{x} will always
+succeed.
 
 If \code{x} and \code{lo}/\code{hi} are different types, \code{lo}/\code{hi} will be coerced to the
 type of \code{x}.  When \code{lo}/\code{hi} are numeric and \code{x} is integer, if \code{lo}/\code{hi}
