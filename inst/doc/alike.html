@@ -110,7 +110,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="kw">alike</span>(<span class="kw">integer</span>(<span class="dv">5</span>), <span class="dv">1</span>:<span class="dv">5</span>)      <span class="co"># different values, but same structure</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(<span class="kw">integer</span>(<span class="dv">5</span>), <span class="dv">1</span>:<span class="dv">4</span>)      <span class="co"># wrong size</span></code></pre></div>
-<pre><code>## [1] &quot;`1:4` should be length 5 (is 4)&quot;</code></pre>
+<pre><code>## [1] &quot;`length(1:4)` should be 5 (is 4)&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(<span class="kw">integer</span>(<span class="dv">26</span>), letters) <span class="co"># same size, but different types</span></code></pre></div>
 <pre><code>## [1] &quot;`letters` should be type \&quot;integer-like\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
 <p><code>alike</code> only compares structural elements that are defined in <code>target</code> (a.k.a. the template). This allows “wildcard” templates. For example, we consider length zero vectors to have undefined length so those match vectors of any length:</p>
@@ -153,7 +153,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h2>Object Comparison</h2>
 <div id="overview" class="section level3">
 <h3>Overview</h3>
-<p><code>alike</code> compares objects on <a href="#type-comparison">type</a>, <a href="length-comparison">length</a>, and attributes. Recursive structures are compared element by element. <a href="#language-objects">Language objects</a> and <a href="#functions">functions</a> are compared specially because the concept of a value within those is more complex (e.g., is the <code>+</code> in <code>x + y</code> just a value?).</p>
+<p><code>alike</code> compares objects on <a href="#type-comparison">type</a>, <a href="#length-comparison">length</a>, and attributes. Recursive structures are compared element by element. <a href="#language-objects">Language objects</a> and <a href="#functions">functions</a> are compared specially because the concept of a value within those is more complex (e.g., is the <code>+</code> in <code>x + y</code> just a value?).</p>
 <p>We will defer discussion of attribute comparison to the <a href="#attribute-comparison">attributes section</a>.</p>
 </div>
 <div id="length-comparison" class="section level3">
@@ -196,7 +196,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <pre><code>## [1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## but not three length list
 <span class="kw">alike</span>(<span class="kw">list</span>(<span class="ot">NULL</span>, <span class="ot">NULL</span>), <span class="kw">list</span>(<span class="dv">1</span>:<span class="dv">10</span>, letters, iris))</code></pre></div>
-<pre><code>## [1] &quot;`list(1:10, letters, iris)` should be length 2 (is 3)&quot;</code></pre>
+<pre><code>## [1] &quot;`length(list(1:10, letters, iris))` should be 2 (is 3)&quot;</code></pre>
 <p>Note that top level <code>NULL</code>s do not act as wildcards:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(<span class="ot">NULL</span>, <span class="dv">1</span>:<span class="dv">10</span>)                   <span class="co"># NULL only matches NULL</span></code></pre></div>
 <pre><code>## [1] &quot;`1:10` should be \&quot;NULL\&quot; (is \&quot;integer\&quot;)&quot;</code></pre>
@@ -423,17 +423,17 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
   <span class="kw">type_and_len</span>(rivers, rivers)
 )</code></pre></div>
 <pre><code>## Mean eval time from 10000 iterations, in microseconds:
-##   identical(rivers, rivers)     ~  0.7
-##   alike(rivers, rivers)         ~  2.1
-##   type_and_len(rivers, rivers)  ~  1.8</code></pre>
+##   identical(rivers, rivers)     ~  0.5
+##   alike(rivers, rivers)         ~  2.9
+##   type_and_len(rivers, rivers)  ~  1.7</code></pre>
 <p>While <code>alike</code> is slower than <code>identical</code> and the comparable bare bones R function, it is competitive with a bare bones R function that checks types and length. As objects grow more complex, <code>identical</code> will obviously pull ahead, though <code>alike</code> should be sufficiently fast for most applications:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(<span class="dt">times=</span><span class="fl">1e4</span>,
   <span class="kw">identical</span>(mtcars, mtcars),
   <span class="kw">alike</span>(mtcars, mtcars)
 )</code></pre></div>
 <pre><code>## Mean eval time from 10000 iterations, in microseconds:
-##   identical(mtcars, mtcars)  ~  0.7
-##   alike(mtcars, mtcars)      ~  5.4</code></pre>
+##   identical(mtcars, mtcars)  ~   0.6
+##   alike(mtcars, mtcars)      ~  11.3</code></pre>
 <p>In the above example, we are comparing the data frames, their attributes, and the 11 columns individually.</p>
 <p>Keep in mind that the complexity of the <code>alike</code> comparison is driven by the complexity of the template, not the object we are checking, so we can always manage the expense of the <code>alike</code> evaluation.</p>
 <p>Comparisons that succeed will be substantially faster than comparisons that fail as the construction of error messages is non-trivial and we have prioritized optimization in the success case.</p>
@@ -448,8 +448,8 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
   <span class="kw">identical</span>(mdl.tpl, mdl.tpl)
 )</code></pre></div>
 <pre><code>## Mean eval time from 1000 iterations, in microseconds:
-##   alike(mdl.tpl, mdl.tpl)      ~   133
-##   all.equal(mdl.tpl, mdl.tpl)  ~  1783
+##   alike(mdl.tpl, mdl.tpl)      ~   177
+##   all.equal(mdl.tpl, mdl.tpl)  ~  1775
 ##   identical(mdl.tpl, mdl.tpl)  ~     1</code></pre>
 <p>Even with template as large as <code>lm</code> results (check <code>str(mdl.tpl)</code>) we can evaluate <code>alike</code> thousands of times before the overhead becomes noticeable.</p>
 </div>
@@ -464,8 +464,8 @@ df.cur &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span cl
   <span class="kw">alike</span>(<span class="kw">data.frame</span>(<span class="kw">integer</span>(), <span class="kw">numeric</span>()), df.cur)
 )</code></pre></div>
 <pre><code>## Mean eval time from 1000 iterations, in microseconds:
-##   alike(df.tpl, df.cur)                            ~    7
-##   alike(data.frame(integer(), numeric()), df.cur)  ~  384</code></pre>
+##   alike(df.tpl, df.cur)                     ~    7
+##   alike(data.frame(integer(), numeric())..  ~  376</code></pre>
 <p><code>data.frame</code> is a particularly slow constructor, but in general you are best served by defining your templates (including calls to <code>abstract</code>) outside of your function so they are created on package load rather than every time your function is called.</p>
 </div>
 </div>

@@ -4,7 +4,9 @@
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "##",
-  fig.path = "README-"
+  fig.path = "README-",
+  error = TRUE,
+  comment = NA
 )
 library(vetr)
 ```
@@ -48,9 +50,10 @@ See [vignette][4] for additional details on how the `vetr` function works.
 
 ## Additional Documentation
 
-* [`vetr` vignette][1], `?vet`, `?vetr`, `example(vet)`, `example(vetr)`
+* [`vetr` vignette][1], `?vet`, `?vetr`, `example(vet)`, `example(vetr)`.
 * [`alike` vignette][2], `?alike`, and `example(alike)` for discussion of
-  templates
+  templates.
+* A survey of [parameter validation functions][5].
 
 ## Development Status
 
@@ -73,7 +76,7 @@ Or for the development version:
 devtools::install_github('brodieg/vetr@development')
 ```
 
-## Related Programs
+## Alternatives
 
 There are many alternatives available to `vetr`.  We do a survey of the
 following in our [parameter validation functions][5] review:

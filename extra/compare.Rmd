@@ -351,7 +351,7 @@ vector_stopifnot(vec)
 generates more useful error messages:
 
 ```{r}
-vector_vetr <- function(x) vetr(numeric() && all_bw(., 0, Inf,  bounds="(]"))
+vector_vetr <- function(x) vetr(numeric() && all_bw(., lo=0, bounds="(]"))
 vector_vetr(vec)
 ```
 
@@ -390,9 +390,9 @@ square numeric matrix, or a scalar numeric:
 sqr.mx <- quote(ncol(.) == nrow(.))
 num.mx <- matrix(numeric(), 0, 0)       # 0 x 0 matrix, matches any matrix
 sqr.num.mx <- quote(sqr.mx && num.mx)
-sqr.num.mx.or.sclr.num <- quote(vetr.sqr.num.mx || numeric(1L))
+sqr.num.mx.or.sclr.num <- quote(sqr.num.mx || numeric(1L))
 
-compound_vetr <- function(x) vetr(vetr.sqr.num.mx.or.sclr.num)
+compound_vetr <- function(x) vetr(sqr.num.mx.or.sclr.num)
 
 rect.mx <- matrix(1:12, 3)
 compound_vetr(rect.mx)

@@ -91,12 +91,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li><a href="#benchmarks">Benchmarks</a></li>
 <li><a href="#templates-and-performance">Templates and Performance</a></li>
 </ul></li>
-<li><a href="#alternatives">Alternatives</a><ul>
-<li><a href="#stopifnot"><code>stopifnot</code></a></li>
-<li><a href="#s4-classes">S4 Classes</a></li>
-<li><a href="#valaddin">Valaddin</a></li>
-<li><a href="#other-third-party-packages">Other Third Party Packages</a></li>
-</ul></li>
+<li><a href="#alternatives">Alternatives</a></li>
 </ul>
 </div>
 
@@ -120,56 +115,55 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(vetr)
 tpl &lt;-<span class="st"> </span><span class="kw">numeric</span>(1L)
 <span class="kw">vet</span>(tpl, <span class="dv">1</span>:<span class="dv">3</span>)</code></pre></div>
-<pre><code>## [1] &quot;`1:3` should be length 1 (is 3)&quot;</code></pre>
+<pre><code>[1] &quot;`length(1:3)` should be 1 (is 3)&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl, <span class="st">&quot;hello&quot;</span>)</code></pre></div>
-<pre><code>## [1] &quot;`\&quot;hello\&quot;` should be type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
+<pre><code>[1] &quot;`\&quot;hello\&quot;` should be type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl, <span class="dv">42</span>)</code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <p>Zero length templates match any length:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tpl &lt;-<span class="st"> </span><span class="kw">integer</span>()
 <span class="kw">vet</span>(tpl, 1L:3L)</code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl, 1L)</code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <p>And for convenience short (&lt;= 100 length) integer-like numerics are considered integer:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tpl &lt;-<span class="st"> </span><span class="kw">integer</span>(1L)
 <span class="kw">vet</span>(tpl, <span class="dv">1</span>)       <span class="co"># this is a numeric, not an integer</span></code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl, <span class="fl">1.0001</span>)</code></pre></div>
-<pre><code>## [1] &quot;`1.0001` should be type \&quot;integer-like\&quot; (is \&quot;double\&quot;)&quot;</code></pre>
+<pre><code>[1] &quot;`1.0001` should be type \&quot;integer-like\&quot; (is \&quot;double\&quot;)&quot;</code></pre>
 <p><code>vetr</code> can compare recursive objects such as lists, or data.frames:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tpl.iris &lt;-<span class="st"> </span>iris[<span class="dv">0</span>, ]      <span class="co"># 0 row DF matches any number of rows in object</span>
 iris.fake &lt;-<span class="st"> </span>iris
 <span class="kw">levels</span>(iris.fake$Species)[<span class="dv">3</span>] &lt;-<span class="st"> &quot;sibirica&quot;</span>   <span class="co"># tweak levels</span>
 
 <span class="kw">vet</span>(tpl.iris, iris)</code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl.iris, iris.fake)</code></pre></div>
-<pre><code>## [1] &quot;`levels(iris.fake$Species)[3]` should be \&quot;virginica\&quot; (is \&quot;sibirica\&quot;)&quot;</code></pre>
+<pre><code>[1] &quot;`levels(iris.fake$Species)[3]` should be \&quot;virginica\&quot; (is \&quot;sibirica\&quot;)&quot;</code></pre>
 <p>From our declared template <code>iris[0, ]</code>, <code>vetr</code> infers all the required checks. In this case, <code>vet(iris[0, ], iris.fake, stop=TRUE)</code> is equivalent to:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stopifnot_iris &lt;-<span class="st"> </span>function(x) {
   <span class="kw">stopifnot</span>(
-    <span class="kw">is.list</span>(x), <span class="kw">inherits</span>(x, <span class="st">&quot;data.frame&quot;</span>),
-    <span class="kw">length</span>(x) ==<span class="st"> </span><span class="dv">5</span>, <span class="kw">is.integer</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>)),
-    <span class="kw">identical</span>(
-      <span class="kw">names</span>(x),
-      <span class="kw">c</span>(<span class="st">&quot;Sepal.Length&quot;</span>, <span class="st">&quot;Sepal.Width&quot;</span>, <span class="st">&quot;Petal.Length&quot;</span>, <span class="st">&quot;Petal.Width&quot;</span>, <span class="st">&quot;Species&quot;</span>)
-    ),
-    <span class="kw">all</span>(<span class="kw">vapply</span>(x[<span class="dv">1</span>:<span class="dv">4</span>], is.numeric, <span class="kw">logical</span>(1L))),
-    <span class="kw">typeof</span>(x$Species) ==<span class="st"> &quot;integer&quot;</span>, <span class="kw">is.factor</span>(x$Species),
-    <span class="kw">identical</span>(<span class="kw">levels</span>(x$Species), <span class="kw">c</span>(<span class="st">&quot;setosa&quot;</span>, <span class="st">&quot;versicolor&quot;</span>, <span class="st">&quot;virginica&quot;</span>))
+    <span class="kw">is.data.frame</span>(x),
+    <span class="kw">is.list</span>(x),
+    <span class="kw">length</span>(x) ==<span class="st"> </span><span class="kw">length</span>(iris),
+    <span class="kw">identical</span>(<span class="kw">lapply</span>(x, class), <span class="kw">lapply</span>(iris, class)),
+    <span class="kw">is.integer</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>)),
+    <span class="kw">identical</span>(<span class="kw">names</span>(x), <span class="kw">names</span>(iris)),
+    <span class="kw">identical</span>(<span class="kw">typeof</span>(x$Species), <span class="st">&quot;integer&quot;</span>),
+    <span class="kw">identical</span>(<span class="kw">levels</span>(x$Species), <span class="kw">levels</span>(iris$Species))
   )
 }
 <span class="kw">stopifnot_iris</span>(iris.fake)</code></pre></div>
-<pre><code>## Error: identical(levels(x$Species), c(&quot;setosa&quot;, &quot;versicolor&quot;, &quot;virginica&quot;)) is not TRUE</code></pre>
-<p><code>vetr</code> saved us typing, and the time and thought needed to come up with the things that need to be compared.</p>
-<p>You could just as easily have created templates for nested lists, or data frames in lists. Templates are compared to objects with the <code>alike</code>. For a thorough description of templates and how they work see the <a href="./alike.html"><code>alike</code> vignette</a>. For template examples see <code>example(alike)</code>.</p>
+<pre><code>Error: identical(levels(x$Species), levels(iris$Species)) is not TRUE</code></pre>
+<p><code>vetr</code> saved us typing, and the time and thought needed to come up with what needs to be compared.</p>
+<p>You could just as easily have created templates for nested lists, or data frames in lists. Templates are compared to objects with the <code>alike</code> function. For a thorough description of templates and how they work see the <a href="./alike.html"><code>alike</code> vignette</a>. For template examples see <code>example(alike)</code>.</p>
 </div>
 <div id="auto-generated-error-messages" class="section level3">
 <h3>Auto-Generated Error Messages</h3>
 <p>Let’s revisit the error message:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl.iris, iris.fake)</code></pre></div>
-<pre><code>## [1] &quot;`levels(iris.fake$Species)[3]` should be \&quot;virginica\&quot; (is \&quot;sibirica\&quot;)&quot;</code></pre>
+<pre><code>[1] &quot;`levels(iris.fake$Species)[3]` should be \&quot;virginica\&quot; (is \&quot;sibirica\&quot;)&quot;</code></pre>
 <p>It tells us:</p>
 <ul>
 <li>The reason for the failure</li>
@@ -185,34 +179,34 @@ iris.fake &lt;-<span class="st"> </span>iris
 <h3>Introduction</h3>
 <p>You can combine templates with <code>&amp;&amp;</code> / <code>||</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) ||<span class="st"> </span><span class="ot">NULL</span>, <span class="ot">NULL</span>)</code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) ||<span class="st"> </span><span class="ot">NULL</span>, <span class="dv">42</span>)</code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) ||<span class="st"> </span><span class="ot">NULL</span>, <span class="st">&quot;foo&quot;</span>)</code></pre></div>
-<pre><code>## [1] &quot;`\&quot;foo\&quot;` should be \&quot;NULL\&quot;, or type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
+<pre><code>[1] &quot;`\&quot;foo\&quot;` should be \&quot;NULL\&quot;, or type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
 <p>Templates only check structure. When you need to check values use <code>.</code> to refer to the object:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) &amp;&amp;<span class="st"> </span>. &gt;<span class="st"> </span><span class="dv">0</span>, -<span class="dv">42</span>)  <span class="co"># strictly positive scalar numeric</span></code></pre></div>
-<pre><code>## [1] &quot;`-42 &gt; 0` is not TRUE (FALSE)&quot;</code></pre>
+<pre><code>[1] &quot;`-42 &gt; 0` is not TRUE (FALSE)&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) &amp;&amp;<span class="st"> </span>. &gt;<span class="st"> </span><span class="dv">0</span>, <span class="dv">42</span>)</code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <p>You can compose vetting expressions as language objects and combine them:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">scalar.num.pos &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">numeric</span>(1L) &amp;&amp;<span class="st"> </span>. &gt;<span class="st"> </span><span class="dv">0</span>)
 foo.or.bar &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">character</span>(1L) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">'foo'</span>, <span class="st">'bar'</span>))
 vet.exp &lt;-<span class="st"> </span><span class="kw">quote</span>(scalar.num.pos ||<span class="st"> </span>foo.or.bar)
 
 <span class="kw">vet</span>(vet.exp, <span class="dv">42</span>)</code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(vet.exp, <span class="st">&quot;foo&quot;</span>)</code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(vet.exp, <span class="st">&quot;baz&quot;</span>)</code></pre></div>
-<pre><code>## [1] &quot;At least one of these should pass:&quot;                         
-## [2] &quot;  - `\&quot;baz\&quot;` should be type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;
-## [3] &quot;  - `\&quot;baz\&quot; %in% c(\&quot;foo\&quot;, \&quot;bar\&quot;)` is not TRUE (FALSE)&quot;</code></pre>
+<pre><code>[1] &quot;At least one of these should pass:&quot;                         
+[2] &quot;  - `\&quot;baz\&quot; %in% c(\&quot;foo\&quot;, \&quot;bar\&quot;)` is not TRUE (FALSE)&quot; 
+[3] &quot;  - `\&quot;baz\&quot;` should be type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
 <p>There are a number of predefined vetting tokens you can use in your vetting expressions:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(NUM.POS, -<span class="kw">runif</span>(<span class="dv">5</span>))    <span class="co"># positive numeric</span></code></pre></div>
-<pre><code>## [1] &quot;`-runif(5)` should contain only positive values, but has negatives&quot;</code></pre>
+<pre><code>[1] &quot;`-runif(5)` should contain only positive values, but has negatives&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(LGL<span class="fl">.1</span>, <span class="ot">NA</span>)             <span class="co"># TRUE or FALSE</span></code></pre></div>
-<pre><code>## [1] &quot;`NA` should not contain NAs, but does&quot;</code></pre>
+<pre><code>[1] &quot;`NA` should not contain NAs, but does&quot;</code></pre>
 <p>See <code>?vet_token</code> for a full listing, and for instructions on how to define your own tokens with custom error messages.</p>
 <p>Vetting expressions are designed to be intuitive to use, but their implementation is complex. We recommend you look at <code>example(vet)</code> for usage ideas, or at the <a href="#non-standard-evaluation">“Non Standard Evaluation” section of the vignette</a> for the gory details.</p>
 </div>
@@ -250,10 +244,10 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <p>Once a vetting expression has been recursively substituted, it is parsed into tokens. Tokens are the parts of the vetting expression bounded by the <code>&amp;&amp;</code> and <code>||</code> operators and optionally enclosed in parentheses. For example, there are three tokens in the following vetting expression:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">logical</span>(<span class="dv">1</span>) ||<span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>(. &gt;<span class="st"> </span><span class="dv">0</span> &amp;<span class="st"> </span>. &lt;<span class="st"> </span><span class="dv">1</span>))</code></pre></div>
 <p>They are <code>logical(1)</code>, <code>numeric(1)</code>, and <code>. &gt; 0 &amp; . &lt; 1</code>. The last token is just one token not because of the parentheses around it but because it is a call to <code>&amp;</code> as opposed to <code>&amp;&amp;</code>. Here we use the parentheses to remove parsing ambiguity caused by <code>&amp;</code> and <code>&amp;&amp;</code> having the same operator precedence.</p>
-<p>After the tokens have been identified they are classified as custom tokens or template tokens. Custom tokens are those that contain the <code>.</code> symbol. Every other token is considered a template token.</p>
-<p>Custom tokens are further processed by substituting any <code>.</code> with the value of the object being vetted. These tokens are then evaluated and if those evaluations produce <code>TRUE</code> or logical vectors containing only <code>TRUE</code>, the tokens pass, otherwise they fail. With:</p>
+<p>After the tokens have been identified they are classified as standard tokens or template tokens. Standard tokens are those that contain the <code>.</code> symbol. Every other token is considered a template token.</p>
+<p>Standard tokens are further processed by substituting any <code>.</code> with the value of the object being vetted. These tokens are then evaluated and if those evaluations produce <code>TRUE</code> or logical vectors containing only <code>TRUE</code>, the tokens pass, otherwise they fail. With:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(. &gt;<span class="st"> </span><span class="dv">0</span>, <span class="dv">1</span>:<span class="dv">3</span>)</code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <p><code>. &gt; 0</code> becomes <code>1:3 &gt; 0</code>, which evaluates to <code>c(TRUE, TRUE, TRUE)</code> and the token passes.</p>
 <p>Template tokens, i.e. tokens without a <code>.</code> symbol, are evaluated and the resulting R object is sent along with the object to vet to <code>alike</code> for structural comparison. If <code>alike</code> returns <code>TRUE</code> then the token passes, otherwise it fails.</p>
 <p>Finally, the result of evaluating each token is plugged back into the original expression. So<sup>1</sup>:</p>
@@ -266,19 +260,19 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <span class="ot">FALSE</span></code></pre></div>
 <p>And the vetting fails:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">logical</span>(<span class="dv">1</span>) ||<span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>(. &gt;<span class="st"> </span><span class="dv">0</span> &amp;<span class="st"> </span>. &lt;<span class="st"> </span><span class="dv">1</span>)), <span class="dv">42</span>)</code></pre></div>
-<pre><code>## [1] &quot;At least one of these should pass:&quot;                 
-## [2] &quot;  - `42` should be type \&quot;logical\&quot; (is \&quot;double\&quot;)&quot;
-## [3] &quot;  - `42 &gt; 0 &amp; 42 &lt; 1` is not TRUE (FALSE)&quot;</code></pre>
+<pre><code>[1] &quot;At least one of these should pass:&quot;                 
+[2] &quot;  - `42 &gt; 0 &amp; 42 &lt; 1` is not TRUE (FALSE)&quot;          
+[3] &quot;  - `42` should be type \&quot;logical\&quot; (is \&quot;double\&quot;)&quot;</code></pre>
 </div>
 </div>
 <div id="special-cases" class="section level3">
 <h3>Special Cases</h3>
-<p>If you need to reference a literal dot (<code>.</code>) in a token, you can escape it by adding another dot so that <code>.</code> becomes <code>..</code>. If you want to reference <code>...</code> you’ll need to use <code>....</code>. If you have a custom token that does not reference the vetting object (i.e. does not use <code>.</code>) you can mark it as a custom token by wrapping it in <code>.()</code> (if you want to use a literal <code>.()</code> you can use <code>..()</code>).</p>
+<p>If you need to reference a literal dot (<code>.</code>) in a token, you can escape it by adding another dot so that <code>.</code> becomes <code>..</code>. If you want to reference <code>...</code> you’ll need to use <code>....</code>. If you have a standard token that does not reference the vetting object (i.e. does not use <code>.</code>) you can mark it as a standard token by wrapping it in <code>.()</code> (if you want to use a literal <code>.()</code> you can use <code>..()</code>).</p>
 <p>If you need <code>&amp;&amp;</code> or <code>||</code> to be interpreted literally you can wrap the call in <code>I</code> to tell <code>vet</code> to treat the entire call as a single token:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">I</span>(<span class="kw">length</span>(a) ==<span class="st"> </span><span class="kw">length</span>(b) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="dv">0</span>:<span class="dv">1</span>)</code></pre></div>
 <p><code>vet</code> will stop searching for tokens at the first call to a function other than <code>(</code>, <code>&amp;&amp;</code>, and <code>||</code>. The use of <code>I</code> here is just an example of this behavior and convenient since <code>I</code> does not change the meaning of the vetting token. An implication of this is you should not nest template tokens inside functions as <code>vet</code> will not identify them as template tokens and you may get unexpected results. For example:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">I</span>(<span class="kw">logical</span>(1L) &amp;&amp;<span class="st"> </span><span class="kw">my_special_fun</span>(.))</code></pre></div>
-<p>will always fail because <code>logical(1L)</code> is part of a custom token and is evaluated as <code>FALSE</code> rather than used a template token for a scalar logical.</p>
+<p>will always fail because <code>logical(1L)</code> is part of a standard token and is evaluated as <code>FALSE</code> rather than used a template token for a scalar logical.</p>
 </div>
 </div>
 <div id="in-functions" class="section level2">
@@ -293,20 +287,20 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
   <span class="ot">TRUE</span>  <span class="co"># do work...</span>
 }
 <span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">12</span>, <span class="dv">3</span>), <span class="ot">TRUE</span>, <span class="st">&quot;baz&quot;</span>)</code></pre></div>
-<pre><code>## Error in fun(x = matrix(1:12, 3), y = TRUE, z = &quot;baz&quot;): For argument `x`, `matrix(1:12, 3)` should have 3 columns (has 4)</code></pre>
+<pre><code>Error in fun(x = matrix(1:12, 3), y = TRUE, z = &quot;baz&quot;): For argument `x`, `matrix(1:12, 3)` should have 3 columns (has 4)</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">12</span>, <span class="dv">4</span>), <span class="ot">TRUE</span>, <span class="st">&quot;baz&quot;</span>)</code></pre></div>
-<pre><code>## Error in fun(x = matrix(1:12, 4), y = TRUE, z = &quot;baz&quot;): For argument `z`, `&quot;baz&quot; %in% c(&quot;foo&quot;, &quot;bar&quot;)` is not TRUE (FALSE)</code></pre>
+<pre><code>Error in fun(x = matrix(1:12, 4), y = TRUE, z = &quot;baz&quot;): For argument `z`, `&quot;baz&quot; %in% c(&quot;foo&quot;, &quot;bar&quot;)` is not TRUE (FALSE)</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">12</span>, <span class="dv">4</span>), <span class="ot">TRUE</span>, <span class="st">&quot;foo&quot;</span>)</code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <p>The arguments to <code>vetr</code> are matched to the arguments of the enclosing function in the same way as with <code>match.call</code>. For example, if we wished to vet just the third argument:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fun &lt;-<span class="st"> </span>function(x, y, z) {
   <span class="kw">vetr</span>(<span class="dt">z=</span><span class="kw">character</span>(1L) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;foo&quot;</span>, <span class="st">&quot;bar&quot;</span>))
   <span class="ot">TRUE</span>  <span class="co"># do work...</span>
 }
 <span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">12</span>, <span class="dv">3</span>), <span class="ot">TRUE</span>, <span class="st">&quot;baz&quot;</span>)</code></pre></div>
-<pre><code>## Error in fun(x = matrix(1:12, 3), y = TRUE, z = &quot;baz&quot;): For argument `z`, `&quot;baz&quot; %in% c(&quot;foo&quot;, &quot;bar&quot;)` is not TRUE (FALSE)</code></pre>
+<pre><code>Error in fun(x = matrix(1:12, 3), y = TRUE, z = &quot;baz&quot;): For argument `z`, `&quot;baz&quot; %in% c(&quot;foo&quot;, &quot;bar&quot;)` is not TRUE (FALSE)</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">12</span>, <span class="dv">4</span>), <span class="ot">TRUE</span>, <span class="st">&quot;bar&quot;</span>)</code></pre></div>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>[1] TRUE</code></pre>
 <p>Vetting expressions work the same way with <code>vetr</code> as they do with <code>vet</code>.</p>
 </div>
 <div id="performance-considerations" class="section level2">
@@ -321,10 +315,10 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
   <span class="kw">vetr_iris</span>(iris),
   <span class="kw">stopifnot_iris</span>(iris)   <span class="co"># defined in &quot;Templates&quot; section</span>
 )</code></pre></div>
-<pre><code>## Mean eval time from 10000 iterations, in microseconds:
-##   vet(tpl.iris, iris)   ~   10.9
-##   vetr_iris(iris)       ~   20.1
-##   stopifnot_iris(iris)  ~  108.2</code></pre>
+<pre><code>Mean eval time from 10000 iterations, in microseconds:
+  vet(tpl.iris, iris)   ~  17.8
+  vetr_iris(iris)       ~  27.7
+  stopifnot_iris(iris)  ~  86.8</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -332,8 +326,8 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <p>Complex templates will be slower to evaluate than simple ones, particularly for lists with lots of nested elements. Note however that the cost of the vetting expression is a function of the complexity of the template, not that of the value being vetted.</p>
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
-<pre><code>## Mean eval time from 1000 iterations, in microseconds:
-##   data.frame(a = numeric())  ~  141</code></pre>
+<pre><code>Mean eval time from 1000 iterations, in microseconds:
+  data.frame(a = numeric())  ~  143</code></pre>
 <p>In this case the <code>data.frame</code> call alone take over 100us. In your package code you could use:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>())
 
@@ -346,41 +340,25 @@ my_fun &lt;-<span class="st"> </span>function(x) {
 </div>
 <div id="alternatives" class="section level2">
 <h2>Alternatives</h2>
-<div id="stopifnot" class="section level3">
-<h3><code>stopifnot</code></h3>
-<p><code>stopifnot</code> is a fine solution in many cases, but the error messages that result from it can be cryptic, and it can take a fair bit of effort to set-up comprehensive tests for complex objects. Additionally, it is slower except perhaps for the simplest of checks.</p>
-</div>
-<div id="s4-classes" class="section level3">
-<h3>S4 Classes</h3>
-<p>The natural solution to enforcing structural requirements in R objects is to use S4 classes. Unfortunately S3 objects are so prevalent in R that a “backwards compatible” mechanism for enforcing structure requirement is warranted.</p>
-</div>
-<div id="valaddin" class="section level3">
-<h3>Valaddin</h3>
-<p><a href="https://github.com/egnha/valaddin">valaddin</a> is a great package by <a href="https://github.com/egnha">Eugene Ha</a>. Both <code>valaddin</code> and <code>vetr</code> are primarily intended for function input vetting.</p>
-<p><code>valaddin</code> works by modifying function objects, which makes it easy to add validation to existing functions in the workspace or functions from packages you do not control. The interface is very flexible and allows you to specify pretty much any vetting requirement you wish.</p>
-<p><code>vetr</code> requires you to modify the source of a function or to explicitly wrap a function in another. <code>vetr</code> does have some advantages though:</p>
+<p>There are many alternatives available to <code>vetr</code>. We do a survey of the following in our <a href="http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/extra/compare.html">parameter validation functions</a> review:</p>
 <ul>
-<li>Declarative template based vetting</li>
-<li>Auto-composition of helpful error messages</li>
-<li>Written in C so it is <a href="https://gist.github.com/brodieG/01bdb9b664c39cd892e9cd755be0e449">substantially faster</a> (e.g. ~ order of magnitude in simple checks)</li>
+<li><code>stopifnot</code> by R Core</li>
+<li><a href="https://github.com/brodieG/vetr"><code>vetr</code></a> by Yours Truly</li>
+<li><a href="https://github.com/hadley/assertthat"><code>asserthat</code></a> by Hadley Wickham</li>
+<li><a href="https://www.r-pkg.org/pkg/assertive"><code>assertive</code></a> by Richie Cotton</li>
+<li><a href="https://github.com/mllg/checkmate"><code>checkmate</code></a> by Michael Lang</li>
 </ul>
-<p><a href="https://github.com/egnha/valaddin">valaddin</a> definitely has its own advantages though, so you should review its vignette to decide what works best for you.</p>
-</div>
-<div id="other-third-party-packages" class="section level3">
-<h3>Other Third Party Packages</h3>
+<p>The following packages also perform related tasks, although we do not review them:</p>
 <ul>
-<li>
-<a href="https://github.com/smbache/ensurer">ensurer</a> by Stefan M Bache allows you to specify contracts for data validation and has an experimental implementation of type-safe functions.
-<li>
-<a href="https://github.com/data-cleaning/validate">validate</a> by Mark van der Loo and Edwin de Jonge provides tools for checking data
-<li>
-<a href="https://github.com/jimhester/types">types</a> by Jim Hester provides a mechanism for defining what types arguments should be, though it does not directly enforce them
-<li>
-<a href="https://github.com/gaborcsardi/argufy">argufy</a> by Gábor Csárdi adds parameter checks via Roxygen (not published to CRAN)
+<li><a href="https://github.com/egnha/valaddin"><code>valaddin</code></a> v0.1.0 by Eugene Ha, a framework for augmenting existing functions with validation contracts. Currently the package is undergoing a major overhaul so we will add it to the comparison once the new release (v0.3.0) is out.</li>
+<li><a href="https://github.com/smbache/ensurer"><code>ensurer</code></a> v1.1 by Stefan M. Bache, a framework for flexibly creating and combining validation contracts. The development version adds an experimental method for creating type safe functions, but it is not published to CRAN so we do not test it here.</li>
+<li><a href="https://github.com/data-cleaning/validate"><code>validate</code></a> by Mark van der Loo and Edwin de Jonge, with a primary focus on validating data in data frames and similar data structures.</li>
+<li><a href="https://github.com/ropensci/assertr"><code>assertr</code></a> by Tony Fischetti, also focused on data validation in data frames and similar structures.</li>
+<li><a href="https://github.com/jimhester/types"><code>types</code></a> by Jim Hester, which implements but does not enforce type hinting.</li>
+<li><a href="https://github.com/gaborcsardi/argufy"><code>argufy</code></a> by Gábor Csárdi, which implements parameter validation via roxygen tags (not released to CRAN).</li>
 </ul>
 <hr />
 <p><sup>1</sup>We take some liberties in this example for clarity. For instance, <code>alike</code> returns a character vector on failure, not <code>FALSE</code>, so really what <code>vet</code> is doing is <code>isTRUE(alike(...))</code>.</p>
-</div>
 </div>
 
 

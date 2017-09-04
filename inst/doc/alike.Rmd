@@ -50,7 +50,7 @@ alike(data.frame(), list())  # but a list does not have the data.frame attribute
 ```
 
 As an extension to the wildcard concept, we interpret partially specified [core
-R attributes](#special-attributes).  Here we allow any three column integer
+R attributes](#Special Attributes).  Here we allow any three column integer
 matrix to match:
 
 ```{r}
@@ -96,7 +96,7 @@ There are several advantages to template based comparisons:
 ### Overview
 
 `alike` compares objects on [type](#type-comparison),
-[length](length-comparison), and attributes. Recursive structures are compared
+[length](#length-comparison), and attributes. Recursive structures are compared
 element by element.  [Language objects](#language-objects) and
 [functions](#functions) are compared specially because the concept of a value
 within those is more complex (e.g., is the `+` in `x + y` just a value?).
