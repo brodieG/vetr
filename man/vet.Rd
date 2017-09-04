@@ -31,7 +31,7 @@ with none of the formatting or surrounding verbiage
 }}
 
 \item{stop}{TRUE or FALSE whether to call \code{\link[=stop]{stop()}} on failure
-(default) or not}
+or not (default)}
 
 \item{settings}{a settings list as produced by \code{\link[=vetr_settings]{vetr_settings()}}, or NULL to
 use the default settings}
@@ -56,10 +56,10 @@ of the deparsed call
 \section{Vetting Expressions}{
 
 
-Vetting expressions can be template tokens, custom tokens, or any
-combination of template and custom tokens combined with \code{&&} and/or \code{||}.
+Vetting expressions can be template tokens, standard tokens, or any
+combination of template and standard tokens combined with \code{&&} and/or \code{||}.
 Template tokens are R objects that define the required structure, much like
-the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Custom tokens are tokens that
+the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Standard tokens are tokens that
 contain the \code{.} symbol and are used to vet values.
 
 See \code{vignette('vetr', package='vetr')} and examples for details on how
@@ -108,11 +108,11 @@ vet(tpl, val.2)
 
 ## See `example(alike)` for more template examples
 
-## Custom tokens allow you to check values
+## Standard tokens allow you to check values
 vet(. > 0, runif(10))
 vet(. > 0, -runif(10))
 
-## You can combine templates and custom tokens with
+## You can combine templates and standard tokens with
 ## `&&` and/or `||`
 vet(numeric(2L) && . > 0, runif(2))
 vet(numeric(2L) && . > 0, runif(10))
