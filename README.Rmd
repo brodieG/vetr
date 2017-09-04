@@ -73,16 +73,13 @@ Or for the development version:
 devtools::install_github('brodieg/vetr@development')
 ```
 
-## Related Packages
+## Related Programs
 
-<ul>
-  <li><a href='https://github.com/egnha/valaddin'>valaddin</a> by Eugene Ha (see
-  <a
-  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#valaddin'>vignette</a>
-  for a more detailed comparison) has very similar objectives to `vetr`
+There are many alternatives available to `vetr`.  We do a survey of the
+following in our [parameter validation functions][5] review:
+
 ```{r child='vignettes/rmdhunks/related-packages.Rmd'}
 ```
-</ul>
 
 ## Acknowledgments
 
@@ -105,6 +102,10 @@ Thank you to:
   Allaire](https://github.com/jjallaire) etal for
   [rmarkdown](https://cran.r-project.org/package=rmarkdown), and by extension
   John MacFarlane for [pandoc](http://pandoc.org/).
+* [Michel Lang]() for pushing me to implement `all_bw` to compete with his own
+  package [`checkmate`](https://github.com/mllg/checkmate).
+* [Eugene Ha]() for pointing me to several other relevant packages, which in
+  turn led to the [survey of related packages][5].
 * Stefan M. Bache for the idea of having a function for testing objects directly
   (originally `vetr` only worked with function arguments), which I took from
   ensurer.
@@ -133,3 +134,4 @@ Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 [2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/alike.html
 [3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#non-standard-evaluation
 [4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#in-functions
+[5]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/extra/compare.html
