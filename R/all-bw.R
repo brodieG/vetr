@@ -6,7 +6,7 @@
 #'
 #' You can modify the comparison to be strictly greater/less than via the
 #' `bounds` parameter, and the treatment of NAs with `na.rm`.  Note that NAs are
-#' considered to be out of bounds by default.  While semantically incorrect
+#' considered to be out of bounds by default.  While technically incorrect
 #' since we cannot know whether an NA value is in or out of bounds, this
 #' assumption is both conservative and convenient.  Zero length `x` will always
 #' succeed.

@@ -43,7 +43,7 @@ describing why not all values are in range instead of FALSE on failure.
 \details{
 You can modify the comparison to be strictly greater/less than via the
 \code{bounds} parameter, and the treatment of NAs with \code{na.rm}.  Note that NAs are
-considered to be out of bounds by default.  While semantically incorrect
+considered to be out of bounds by default.  While technically incorrect
 since we cannot know whether an NA value is in or out of bounds, this
 assumption is both conservative and convenient.  Zero length \code{x} will always
 succeed.
