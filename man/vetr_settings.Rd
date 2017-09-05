@@ -87,14 +87,14 @@ argument to \code{vet}; if NULL will use the calling frame to
 
 \item{result.list.size.init}{initial value for token tracking.   This will be
 grown by a factor of two each time it fills up until we reach
-\code{result.list.size.max}}
+\code{result.list.size.max}.}
 
-\item{result.list.size.max}{maximum number of tokens compounded with \code{||} we
-keep track of, intended mostly as a safeguard in case a logic error causes
-us to keep allocating memory.  Set to 1024 as a default value since it
-should be exceedingly rare to have vetting expressions with such a large
-number of \code{||} compounded tokens, enough so that if we reach that number it
-is more likely something went wrong.}
+\item{result.list.size.max}{maximum number of tokens we keep track of,
+intended mostly as a safeguard in case a logic error causes us to keep
+allocating memory.  Set to 1024 as a default value since it should be
+exceedingly rare to have vetting expressions with such a large number of
+tokens, enough so that if we reach that number it is more likely something
+went wrong.}
 }
 \value{
 list with all the setting values

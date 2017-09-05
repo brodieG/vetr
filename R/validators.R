@@ -46,7 +46,7 @@
 #' to allow NAs or infinite values just use a template object (e.g.
 #' `integer(1L)`).
 #'
-#' @note **This will only work with custom expressions containing `.`**.  Anything
+#' @note **This will only work with standard tokens containing `.`**.  Anything
 #' else will be interpreted as a template token.
 #'
 #' @export

@@ -28,10 +28,10 @@
 #'
 #' @section Vetting Expressions:
 #'
-#' Vetting expressions can be template tokens, custom tokens, or any
-#' combination of template and custom tokens combined with `&&` and/or `||`.
+#' Vetting expressions can be template tokens, standard tokens, or any
+#' combination of template and standard tokens combined with `&&` and/or `||`.
 #' Template tokens are R objects that define the required structure, much like
-#' the `FUN.VALUE` argument to [vapply()].  Custom tokens are tokens that
+#' the `FUN.VALUE` argument to [vapply()].  Standard tokens are tokens that
 #' contain the `.` symbol and are used to vet values.
 #'
 #' See `vignette('vetr', package='vetr')` and examples for details on how
@@ -58,7 +58,7 @@
 #'       with none of the formatting or surrounding verbiage
 #' }
 #' @param stop TRUE or FALSE whether to call [stop()] on failure
-#'   (default) or not
+#'   or not (default)
 #' @param settings a settings list as produced by [vetr_settings()], or NULL to
 #'   use the default settings
 #' @return TRUE if validation succeeds, otherwise varies according to value
@@ -105,11 +105,11 @@
 #'
 #' ## See `example(alike)` for more template examples
 #'
-#' ## Custom tokens allow you to check values
+#' ## Standard tokens allow you to check values
 #' vet(. > 0, runif(10))
 #' vet(. > 0, -runif(10))
 #'
-#' ## You can combine templates and custom tokens with
+#' ## You can combine templates and standard tokens with
 #' ## `&&` and/or `||`
 #' vet(numeric(2L) && . > 0, runif(2))
 #' vet(numeric(2L) && . > 0, runif(10))

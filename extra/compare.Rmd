@@ -1,6 +1,7 @@
 ---
-title: "Parameter Validation Functions"
+title: "Parameter Validation Mechanisms in R"
 author: "Brodie Gaslam"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output:
     rmarkdown::html_vignette:
         toc: true
@@ -35,32 +36,8 @@ Systematically vetting function parameters is as tedious as it is important.
 Fortunately many functions and packages exist to assist with the process.  We
 will review:
 
-* `stopifnot` by R Core
-* [`vetr`](https://github.com/brodieG/vetr) v0.2.0 by Yours Truly
-* [`asserthat`](https://github.com/hadley/assertthat) v0.2.0 by Hadley Wickham
-* [`assertive`](https://www.r-pkg.org/pkg/assertive) v0.3-5 by Richie Cotton
-* [`checkmate`](https://github.com/mllg/checkmate) v1.8.3 by Michael Lang
-
-The following packages also perform related tasks, although we do not review
-them:
-
-* [`valaddin`](https://github.com/egnha/valaddin) v0.1.0 by Eugene Ha, a
-  framework for augmenting existing functions with validation contracts.
-  Currently the package is undergoing a major overhaul so we will add it to the
-  comparison once the new release (v0.3.0) is out.
-* [`ensurer`](https://github.com/smbache/ensurer) v1.1 by Stefan M. Bache, a
-  framework for flexibly creating and combining validation contracts.  The
-  development version adds an experimental method for creating type safe
-  functions, but it is not published to CRAN so we do not test it here.
-* [`validate`](https://github.com/data-cleaning/validate) by Mark van
-  der Loo and Edwin de Jonge, with a primary focus on validating data in data
-  frames and similar data structures.
-* [`assertr`](https://github.com/ropensci/assertr) by Tony Fischetti, also
-  focused on data validation in data frames and similar structures.
-* [`types`](https://github.com/jimhester/types) by Jim Hester, which implements
-  but does not enforce type hinting.
-* [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi, which
-  implements parameter validation via roxygen tags (not released to CRAN).
+```{r child='../vignettes/rmdhunks/related-packages.Rmd'}
+```
 
 ### Summary
 
@@ -316,7 +293,7 @@ examination.
 
 `checkmate` is reasonably succinct:
 
-```{r}
+```{r complex_checkmate}
 complex_checkmate <- function(x) {
   assertDataFrame(x, types=unlist(iris.col.classes), ncols=5)
   assertTRUE(is.list(x))
@@ -375,7 +352,7 @@ vector_stopifnot(vec)
 generates more useful error messages:
 
 ```{r}
-vector_vetr <- function(x) vetr(numeric() && all_bw(., 0, Inf,  bounds="(]"))
+vector_vetr <- function(x) vetr(numeric() && all_bw(., lo=0, bounds="(]"))
 vector_vetr(vec)
 ```
 
@@ -410,13 +387,13 @@ implements a special type of programmable [Non Standard Evaluation](#nse).  Here
 we write a [Vetting Expression](#vetting-expression) that accepts either a
 square numeric matrix, or a scalar numeric:
 
-```{r}
+```{r detail_compound}
 sqr.mx <- quote(ncol(.) == nrow(.))
 num.mx <- matrix(numeric(), 0, 0)       # 0 x 0 matrix, matches any matrix
 sqr.num.mx <- quote(sqr.mx && num.mx)
-sqr.num.mx.or.sclr.num <- quote(vetr.sqr.num.mx || numeric(1L))
+sqr.num.mx.or.sclr.num <- quote(sqr.num.mx || numeric(1L))
 
-compound_vetr <- function(x) vetr(vetr.sqr.num.mx.or.sclr.num)
+compound_vetr <- function(x) vetr(sqr.num.mx.or.sclr.num)
 
 rect.mx <- matrix(1:12, 3)
 compound_vetr(rect.mx)
@@ -444,8 +421,9 @@ Starting with the simple checks on `nums <- runif(2)`:
 mb <- function(...) {
   mb.call <- match.call()
   mb.call[[1]] <- quote(microbenchmark::microbenchmark)
-
-  mb.res <- summary(eval(mb.call, envir=parent.frame()))
+  gc()
+  mb.dat <- eval(mb.call, envir=parent.frame())
+  mb.res <- summary(mb.dat)
   mb.res <- mb.res[order(mb.res$median), ]
   mb.res[, -1] <- lapply(
     mb.res[, -1], function(x) sprintf("  %s", format(round(x, 1), big.mark=","))
@@ -456,7 +434,7 @@ mb <- function(...) {
   print(mb.res[, c('expr', 'lq', 'median', 'uq', 'mean')], quote=FALSE)
 }
 ```
-```{r, echo=FALSE}
+```{r bench_simple, echo=FALSE}
 nums <- runif(2)
 mb(
   simple_stopifnot(nums),
@@ -470,7 +448,7 @@ mb(
 
 For complex objects `vetr` takes the lead:
 
-```{r, echo=FALSE}
+```{r bench_complex, echo=FALSE}
 mb(
   complex_assertive(iris),
   complex_assertthat(iris),
@@ -486,7 +464,7 @@ range:
 ```{r}
 str.pos.vec <- runif(5e5) + 1  # test with a 500K long vector
 ```
-```{r, echo=FALSE}
+```{r bench_vec, echo=FALSE}
 mb(
   vector_assertthat(str.pos.vec),
   vector_checkmate(str.pos.vec),
@@ -522,7 +500,7 @@ some cases even those ~10 microseconds are too much.  For those you can use
 Expressions](#vetting-expression) just like `vetr`, or go even further and call
 `vetr::alike` directly to do template comparisons:
 
-```{r}
+```{r faster}
 simple_vet <- function(x) vet(numeric(2L) && !anyNA(.), x, stop=TRUE)
 simple_vet(pi)
 
@@ -536,8 +514,8 @@ simple_alike(pi)
 The error messages / ease of use degrade, but we do improve our timings (again,
 with `nums <- runif(2)`):
 
-```{r, echo=FALSE}
-mb(
+```{r bench_faster, echo=FALSE}
+mb(times=10000,
   simple_vet(nums),
   simple_vetr(nums),
   simple_checkmate(nums),

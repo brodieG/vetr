@@ -13,7 +13,7 @@ vignette: >
 ---
 
 ```{r global_options, echo=FALSE}
-knitr::opts_chunk$set(error=TRUE)
+knitr::opts_chunk$set(error=TRUE, comment=NA)
 library(vetr)
 ```
 
@@ -96,7 +96,7 @@ There are several advantages to template based comparisons:
 ### Overview
 
 `alike` compares objects on [type](#type-comparison),
-[length](length-comparison), and attributes. Recursive structures are compared
+[length](#length-comparison), and attributes. Recursive structures are compared
 element by element.  [Language objects](#language-objects) and
 [functions](#functions) are compared specially because the concept of a value
 within those is more complex (e.g., is the `+` in `x + y` just a value?).

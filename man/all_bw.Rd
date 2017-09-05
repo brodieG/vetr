@@ -20,20 +20,15 @@ use \code{Inf} to indicate unbounded (default), must be greater than or equal to
 \item{na.rm}{TRUE, or FALSE (default), whether NAs are considered to be
 in bounds.  Unlike with \code{\link[=all]{all()}}, for \code{all_bw} \code{na.rm=FALSE} returns an
 error string if there are NAs instead of NA.  Arguably NA, but not NaN,
-should be considered to be in \code{[-Inf,Inf]}, but since \code{NA < Inf} is NA we
+should be considered to be in \code{[-Inf,Inf]}, but since \code{NA &lt; Inf} is NA we
 treat them as always being out of bounds.}
 
 \item{bounds}{\code{character(1L)} for values between \code{lo} and \code{hi}:
 \itemize{
 \item \dQuote{[]} include \code{lo} and \code{hi}
 \item \dQuote{()} exclude \code{lo} and \code{hi}
-\item \dQuote{[)} include \code{lo}, exclude \code{hi}
 \item \dQuote{(]} exclude \code{lo}, include \code{hi}
-}
-
-[)} include \code{lo}, exclude \code{hi}
-\itemize{
-\item \dQuote{(]: R:)%7D%20include%20%60lo%60,%20exclude%20%60hi%60%0A%20%20*%20%5CdQuote%7B(
+\item \dQuote{[)} include \code{lo}, exclude \code{hi}
 }}
 }
 \value{
@@ -41,16 +36,17 @@ TRUE if all values in \code{x} conform to the specified bounds, a string
 describing the first position that fails otherwise
 }
 \description{
-Equivalent to \code{!anyNA(x) && all(x >= lo & x <= hi, na.rm=TRUE)} with default
+Equivalent to \code{!anyNA(x) &amp;&amp; all(x &gt;= lo &amp; x &lt;= hi, na.rm=TRUE)} with default
 settings, except that it is substantially faster and returns a string
 describing why not all values are in range instead of FALSE on failure.
 }
 \details{
 You can modify the comparison to be strictly greater/less than via the
 \code{bounds} parameter, and the treatment of NAs with \code{na.rm}.  Note that NAs are
-considered to be considered to be out of bounds by default.  While
-possibly incorrect, this is both conservative and convenient.  Zero length
-\code{x} will always succeed.
+considered to be out of bounds by default.  While technically incorrect
+since we cannot know whether an NA value is in or out of bounds, this
+assumption is both conservative and convenient.  Zero length \code{x} will always
+succeed.
 
 If \code{x} and \code{lo}/\code{hi} are different types, \code{lo}/\code{hi} will be coerced to the
 type of \code{x}.  When \code{lo}/\code{hi} are numeric and \code{x} is integer, if \code{lo}/\code{hi}
