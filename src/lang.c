@@ -115,13 +115,19 @@ SEXP ALIKEC_match_call(
     UNPROTECT(1);
     return call;
   }
-  // remember, match_call is pre-defined as: match.call(def, quote(call))
+  // remember, match_call is pre-defined as: match.call(def, quote(call)), also,
+  // in theory should never be SHARED since it is a SEXP created in C code only
+  // for internal use.
+
+  if (MAYBE_SHARED(match_call)) PROTECT(match_call = duplicate(match_call));
+  else PROTECT(R_NilValue);
+
   SETCADR(match_call, fun);
-  UNPROTECT(1);
   SETCADR(CADDR(match_call), call);
   int tmp = 0;
   int * err =& tmp;
-  SEXP res = R_tryEvalSilent(match_call, env, err);
+  SEXP res = PROTECT(R_tryEvalSilent(match_call, env, err));
+  UNPROTECT(3);
   if(* err) return call; else return res;
 }
 /*
