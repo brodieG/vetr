@@ -1,7 +1,7 @@
 ---
 title: "Parameter Validation Mechanisms in R"
 author: "Brodie Gaslam"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output:
     rmarkdown::html_vignette:
         toc: true
@@ -421,8 +421,9 @@ Starting with the simple checks on `nums <- runif(2)`:
 mb <- function(...) {
   mb.call <- match.call()
   mb.call[[1]] <- quote(microbenchmark::microbenchmark)
-
-  mb.res <- summary(eval(mb.call, envir=parent.frame()))
+  gc()
+  mb.dat <- eval(mb.call, envir=parent.frame())
+  mb.res <- summary(mb.dat)
   mb.res <- mb.res[order(mb.res$median), ]
   mb.res[, -1] <- lapply(
     mb.res[, -1], function(x) sprintf("  %s", format(round(x, 1), big.mark=","))
@@ -514,7 +515,7 @@ The error messages / ease of use degrade, but we do improve our timings (again,
 with `nums <- runif(2)`):
 
 ```{r bench_faster, echo=FALSE}
-mb(
+mb(times=10000,
   simple_vet(nums),
   simple_vetr(nums),
   simple_checkmate(nums),
