@@ -1,18 +1,19 @@
 ## 0.2.0
 
 * [#48](https://github.com/brodieG/validate/issues/48): Implement `all_bw`, a
-  more efficient version of `!anyNA(.) && all(. < x) && all(. > y)`.  As part of
-  this, check expressions that return character vectors will have part of the
-  first element of that vector included in the error message.
+  more efficient version of `!anyNA(.) && all(. < x) && all(. > y)`.
+* [#65](https://github.com/brodieG/validate/issues/65)
+  [#51](https://github.com/brodieG/validate/issues/51): Check expressions that
+  return character vectors will have part of the first element of that vector
+  included in the error message.
 * [#69](https://github.com/brodieG/validate/issues/69): Vetting expressions that
   use the symbol of the object being vetted are no longer valid.  This avoid
   confusion caused by intended standard tokens being treated as template tokens
   because they use the object symbol instead of `.` to refer to the object.
-* [#65](https://github.com/brodieG/validate/issues/65): Vetting tokens that
-  return strings instead of logicals now have that string embedded in the return
-  value of `vet`/`vetr`.
 * [#64](https://github.com/brodieG/validate/issues/64): Rewrite result handling
   for multi token expressions to avoid unnecessary slow downs
+* [#76](https://github.com/brodieG/validate/issues/76): Standardize defined
+  terms (e.g. Standard vs Template Tokens)
 * [#77](https://github.com/brodieG/validate/issues/77): Replace `SIZE_T_MAX`
   with `SIZE_MAX` for portability
 * [#70](https://github.com/brodieG/validate/issues/70): Feedback from Richie
