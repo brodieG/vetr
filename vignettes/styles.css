@@ -202,8 +202,8 @@ h4 {
   color: #777;
   font-size: 105%;
 }
-
-h4.author, h4.date {display: none;}
+h4.author {display: none;}
+h4.date {margin-top: -20px;}
 
 h5, h6 {
   /*border-bottom: 1px solid #ccc;*/

@@ -1,6 +1,7 @@
 ---
-title: "Parameter Validation Functions"
+title: "Parameter Validation Mechanisms in R"
 author: "Brodie Gaslam"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
     rmarkdown::html_vignette:
         toc: true
@@ -292,7 +293,7 @@ examination.
 
 `checkmate` is reasonably succinct:
 
-```{r}
+```{r complex_checkmate}
 complex_checkmate <- function(x) {
   assertDataFrame(x, types=unlist(iris.col.classes), ncols=5)
   assertTRUE(is.list(x))
@@ -386,7 +387,7 @@ implements a special type of programmable [Non Standard Evaluation](#nse).  Here
 we write a [Vetting Expression](#vetting-expression) that accepts either a
 square numeric matrix, or a scalar numeric:
 
-```{r}
+```{r detail_compound}
 sqr.mx <- quote(ncol(.) == nrow(.))
 num.mx <- matrix(numeric(), 0, 0)       # 0 x 0 matrix, matches any matrix
 sqr.num.mx <- quote(sqr.mx && num.mx)
@@ -432,7 +433,7 @@ mb <- function(...) {
   print(mb.res[, c('expr', 'lq', 'median', 'uq', 'mean')], quote=FALSE)
 }
 ```
-```{r, echo=FALSE}
+```{r bench_simple, echo=FALSE}
 nums <- runif(2)
 mb(
   simple_stopifnot(nums),
@@ -446,7 +447,7 @@ mb(
 
 For complex objects `vetr` takes the lead:
 
-```{r, echo=FALSE}
+```{r bench_complex, echo=FALSE}
 mb(
   complex_assertive(iris),
   complex_assertthat(iris),
@@ -462,7 +463,7 @@ range:
 ```{r}
 str.pos.vec <- runif(5e5) + 1  # test with a 500K long vector
 ```
-```{r, echo=FALSE}
+```{r bench_vec, echo=FALSE}
 mb(
   vector_assertthat(str.pos.vec),
   vector_checkmate(str.pos.vec),
@@ -498,7 +499,7 @@ some cases even those ~10 microseconds are too much.  For those you can use
 Expressions](#vetting-expression) just like `vetr`, or go even further and call
 `vetr::alike` directly to do template comparisons:
 
-```{r}
+```{r faster}
 simple_vet <- function(x) vet(numeric(2L) && !anyNA(.), x, stop=TRUE)
 simple_vet(pi)
 
@@ -512,7 +513,7 @@ simple_alike(pi)
 The error messages / ease of use degrade, but we do improve our timings (again,
 with `nums <- runif(2)`):
 
-```{r, echo=FALSE}
+```{r bench_faster, echo=FALSE}
 mb(
   simple_vet(nums),
   simple_vetr(nums),
