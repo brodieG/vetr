@@ -96,28 +96,29 @@ Thank you to:
 * [Dirk Eddelbuettel](https://github.com/eddelbuettel) and [Carl
   Boettiger](https://github.com/cboettig) for the
   [rocker](https://github.com/rocker-org/rocker) project, and [Gábor
-  Csárdi](https://github.com/gaborcsardi) and the R-consortium for
-  [Rhub](https://github.com/r-hub/rhub), without which testing bugs on R-devel
-  and other platforms would be a nightmare.
+  Csárdi](https://github.com/gaborcsardi) and the
+  [R-consortium](https://www.r-consortium.org/) for
+  [Rhub](https://github.com/r-hub), without which testing bugs on R-devel and
+  other platforms would be a nightmare.
+* Hadley Wickham for [devtools](https://cran.r-project.org/package=devtools) and
+  [roxygen2](https://cran.r-project.org/package=roxygen2).
 * [Yihui Xie](https://github.com/yihui) for
   [knitr](https://cran.r-project.org/package=knitr) and  [J.J.
   Allaire](https://github.com/jjallaire) etal for
   [rmarkdown](https://cran.r-project.org/package=rmarkdown), and by extension
   John MacFarlane for [pandoc](http://pandoc.org/).
-* [Michel Lang]() for pushing me to implement `all_bw` to compete with his own
-  package [`checkmate`](https://github.com/mllg/checkmate).
-* [Eugene Ha]() for pointing me to several other relevant packages, which in
-  turn led to the [survey of related packages][5].
-* Stefan M. Bache for the idea of having a function for testing objects directly
-  (originally `vetr` only worked with function arguments), which I took from
-  ensurer.
-* Hadley Wickham for [devtools](https://cran.r-project.org/package=devtools),
-  and for pointing me to Stefan M. Bache's ensurer package.
-* [Markus Kuhn](http://www.cl.cam.ac.uk/~mgk25/) for [UTF-8 stress test
-  data](http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt)
 * Olaf Mersmann for
   [microbenchmark](https://cran.r-project.org/package=microbenchmark), because
   microsecond matter.
+* [Michel Lang](https://github.com/mllg) for pushing me to implement `all_bw` to
+  compete with his own package [`checkmate`](https://cran.r-project.org/package=checkmate).
+* [Eugene Ha](https://github.com/egnha) for pointing me to several other
+  relevant packages, which in turn led to the [survey of related packages][5].
+* [Markus Kuhn](http://www.cl.cam.ac.uk/~mgk25/) for [UTF-8 stress test
+  data](http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt).
+* Stefan M. Bache for the idea of having a function for testing objects directly
+  (originally `vetr` only worked with function arguments), which I took from
+  ensurer.
 * All open source developers out there that make their work freely available
   for others to use.
 * [Github](https://github.com/), [Travis-CI](https://travis-ci.org/),
