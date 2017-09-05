@@ -20,7 +20,7 @@ use \code{Inf} to indicate unbounded (default), must be greater than or equal to
 \item{na.rm}{TRUE, or FALSE (default), whether NAs are considered to be
 in bounds.  Unlike with \code{\link[=all]{all()}}, for \code{all_bw} \code{na.rm=FALSE} returns an
 error string if there are NAs instead of NA.  Arguably NA, but not NaN,
-should be considered to be in \code{[-Inf,Inf]}, but since \code{NA < Inf} is NA we
+should be considered to be in \code{[-Inf,Inf]}, but since \code{NA &lt; Inf} is NA we
 treat them as always being out of bounds.}
 
 \item{bounds}{\code{character(1L)} for values between \code{lo} and \code{hi}:
@@ -36,7 +36,7 @@ TRUE if all values in \code{x} conform to the specified bounds, a string
 describing the first position that fails otherwise
 }
 \description{
-Equivalent to \code{!anyNA(x) && all(x >= lo & x <= hi, na.rm=TRUE)} with default
+Equivalent to \code{!anyNA(x) &amp;&amp; all(x &gt;= lo &amp; x &lt;= hi, na.rm=TRUE)} with default
 settings, except that it is substantially faster and returns a string
 describing why not all values are in range instead of FALSE on failure.
 }
