@@ -18,6 +18,8 @@
   with `SIZE_MAX` for portability
 * [#70](https://github.com/brodieG/validate/issues/70): Feedback from Richie
   Cotton and Michel Lang re: comparison "vignette"
+* [#45](https://github.com/brodieG/validate/issues/45): Cleanup error messages
+  for objects that should be NULL.
 * [#73](https://github.com/brodieG/validate/issues/73): Cleaner protection stack
   handling
 * [#56](https://github.com/brodieG/validate/issues/56): Over-aggressive
