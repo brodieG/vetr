@@ -594,7 +594,7 @@ struct ALIKEC_res ALIKEC_alike_internal(
     // Handle NULL special case at top level
 
     res.success = 0;
-    res.strings.target[1] = "\"NULL\"";
+    res.strings.target[1] = "`NULL`";
     res.strings.current[0] = "\"%s\"";
     res.strings.current[1] = type2char(TYPEOF(current));
     res.wrap = PROTECT(allocVector(VECSXP, 2));
