@@ -146,7 +146,7 @@ vet(numeric(1L) || NULL, NULL)
 vet(numeric(1L) || NULL, 42)
 ## [1] TRUE
 vet(numeric(1L) || NULL, "foo")
-## [1] "`\"foo\"` should be \"NULL\", or type \"numeric\" (is \"character\")"
+## [1] "`\"foo\"` should be `NULL`, or type \"numeric\" (is \"character\")"
 ```
 
 Templates only check structure.  When you need to check values use `.` to
@@ -301,6 +301,9 @@ Thank you to:
   [R-consortium](https://www.r-consortium.org/) for
   [Rhub](https://github.com/r-hub), without which testing bugs on R-devel and
   other platforms would be a nightmare.
+* Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) to help detect
+  errors in compiled code, and in particular for reaching out to me to help fix
+  problems in this package.
 * Hadley Wickham for [devtools](https://cran.r-project.org/package=devtools) and
   [roxygen2](https://cran.r-project.org/package=roxygen2).
 * [Yihui Xie](https://github.com/yihui) for
