@@ -89,8 +89,9 @@ SEXP ALIKEC_attr_wrap(SEXP tag, SEXP call) {
   } else {
     SEXP tag_name = PROTECT(allocVector(STRSXP, 1));
     SET_STRING_ELT(tag_name, 0, PRINTNAME(tag));
-    SET_VECTOR_ELT(wrap, 0, lang3(ALIKEC_SYM_attr, call, tag_name));
-    UNPROTECT(1);
+    SEXP attr_call = PROTECT(lang3(ALIKEC_SYM_attr, call, tag_name));
+    SET_VECTOR_ELT(wrap, 0, attr_call);
+    UNPROTECT(2);
   }
   SET_VECTOR_ELT(wrap, 1, CDR(VECTOR_ELT(wrap, 0)));
   UNPROTECT(1);
@@ -205,11 +206,10 @@ struct ALIKEC_res ALIKEC_compare_class(
       res.success = 0;
 
       if(cur_class_len > 1) {
-        SEXP wrap_call = PROTECT(
-          lang3(
-            R_BracketSymbol, lang2(R_ClassSymbol, R_NilValue),
-            ScalarReal(cur_class_i + 1)
-        ) );
+
+        SEXP class_call = PROTECT(lang2(R_ClassSymbol, R_NilValue));
+        SEXP sub_idx = PROTECT(ScalarReal(cur_class_i + 1));
+        SEXP wrap_call = PROTECT(lang3(R_BracketSymbol, class_call, sub_idx));
         SEXP wrap = PROTECT(allocVector(VECSXP, 2));
         SET_VECTOR_ELT(wrap, 0, wrap_call);
         SET_VECTOR_ELT(wrap, 1, CDR(CADR(wrap_call)));
@@ -227,7 +227,7 @@ struct ALIKEC_res ALIKEC_compare_class(
         res.strings.current[0] = "\"%s\"%s%s%s";
         res.strings.current[1] = cur_class;
 
-        PROTECT(PROTECT(R_NilValue));  // stack balance
+        PROTECT(PROTECT(PROTECT(PROTECT(R_NilValue))));  // stack balance
   } } }
   // Check to make sure have enough classes
 
@@ -249,7 +249,7 @@ struct ALIKEC_res ALIKEC_compare_class(
     PROTECT(res.wrap);
   } else PROTECT(R_NilValue);
   res.df = is_df;
-  UNPROTECT(3);
+  UNPROTECT(5);
   return res;
 }
 SEXP ALIKEC_compare_class_ext(SEXP target, SEXP current) {
@@ -496,10 +496,10 @@ struct ALIKEC_res ALIKEC_compare_special_char_attrs_internal(
             res_sub.strings.current[1] = cur_name_val;
 
             res_sub.wrap = PROTECT(allocVector(VECSXP, 2));
-            SEXP wrap_ind =
-              PROTECT(lang3(R_BracketSymbol, R_NilValue, ScalarReal(i + 1)));
+            SEXP sub_ind = PROTECT(ScalarReal(i + 1));
+            SEXP wrap_ind = PROTECT(lang3(R_BracketSymbol, R_NilValue, sub_ind));
             SET_VECTOR_ELT(res_sub.wrap, 0, wrap_ind);
-            UNPROTECT(1);
+            UNPROTECT(2);
             SET_VECTOR_ELT(res_sub.wrap, 1, CDR(VECTOR_ELT(res_sub.wrap, 0)));
             break;
       } } }
