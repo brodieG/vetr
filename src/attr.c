@@ -537,13 +537,11 @@ to element to substiute
 */
 SEXP ALIKEC_compare_dimnames_wrap(const char * name) {
   SEXP wrap = PROTECT(allocVector(VECSXP, 2));
-  SET_VECTOR_ELT(
-    wrap, 0, lang3(
-      ALIKEC_SYM_attr, lang2(R_DimNamesSymbol, R_NilValue),
-      mkString(name)
-  ) );
+  SEXP dimn_call = PROTECT(lang2(R_DimNamesSymbol, R_NilValue));
+  SEXP dimn = PROTECT(mkString(name));
+  SET_VECTOR_ELT(wrap, 0, lang3(ALIKEC_SYM_attr, dimn_call, dimn));
   SET_VECTOR_ELT(wrap, 1, CDDR(VECTOR_ELT(wrap, 0)));
-  UNPROTECT(1);
+  UNPROTECT(3);
   return(wrap);
 }
 /*
@@ -560,8 +558,8 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
     res.strings.target[1] = "a \"dimnames\" attribute";
     return res;
   }
-  SEXP prim_names = getAttrib(prim, R_NamesSymbol);
-  SEXP sec_names = getAttrib(sec, R_NamesSymbol);
+  SEXP prim_names = PROTECT(getAttrib(prim, R_NamesSymbol));
+  SEXP sec_names = PROTECT(getAttrib(sec, R_NamesSymbol));
   R_xlen_t prim_len, sec_len;
   SEXPTYPE prim_type = TYPEOF(prim), sec_type = TYPEOF(sec);
   if( // not a standard dimnames attribute
@@ -590,7 +588,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
       SET_VECTOR_ELT(res_wrap_old, 1, CDR(res_call));
       UNPROTECT(1);
     }
-    UNPROTECT(1);
+    UNPROTECT(3);
     return res;
   }
   /* The following likely doesn't need to be done for every dimnames so there
@@ -632,7 +630,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
         if(!res_tmp.success) {
           PROTECT(res_tmp.wrap);
           res_tmp.wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
-          UNPROTECT(2);
+          UNPROTECT(4);
           return res_tmp;
         }
         do_continue = 1;
@@ -646,12 +644,15 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
     res.strings.tar_pre = "not be";
     res.strings.target[1] = "missing";
     res.wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
-    UNPROTECT(1);
+    UNPROTECT(3);
     return res;
   }
   // Compare actual dimnames attr
 
-  if(!prim_len) return res;  // zero length list matches anything
+  if(!prim_len) {
+    UNPROTECT(2);
+    return res;  // zero length list matches anything
+  }
 
   // dimnames names
 
@@ -684,7 +685,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
         SETCAR(VECTOR_ELT(wrap, 1), wrap_call);
       }
       SET_VECTOR_ELT(wrap, 1, CDR(CADR(wrap_call)));
-      UNPROTECT(2);
+      UNPROTECT(4);
       return dimnames_name_comp;
     }
     dimnames_name_comp.wrap = R_NilValue;
@@ -711,6 +712,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
         if(prim_len == 2) { // matrix like
           wrap_call = PROTECT(lang2(R_NilValue, R_NilValue));
           wrap_ref = CDR(wrap_call);
+          PROTECT(PROTECT(R_NilValue)); // stack balance
           switch(attr_i) {
             case (R_xlen_t) 0: SETCAR(wrap_call, R_RowNamesSymbol); break;
             case (R_xlen_t) 1: SETCAR(wrap_call, ALIKEC_SYM_colnames); break;
@@ -721,11 +723,9 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
             }
           }
         } else {
-          wrap_call = PROTECT(
-            lang3(
-              R_Bracket2Symbol, lang2(R_DimNamesSymbol, R_NilValue),
-              ScalarReal(attr_i + 1)
-          ) );
+          SEXP dimn_call = PROTECT(lang2(R_DimNamesSymbol, R_NilValue));
+          SEXP sub_ind = PROTECT(ScalarReal(attr_i + 1));
+          wrap_call = PROTECT(lang3(R_Bracket2Symbol, dimn_call, sub_ind));
           wrap_ref = CDR(CADR(wrap_call));
         }
         if(VECTOR_ELT(wrap, 0) != R_NilValue) {
@@ -734,11 +734,12 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
           SET_VECTOR_ELT(wrap, 0, wrap_call);
         }
         SET_VECTOR_ELT(wrap, 1, wrap_ref);
-        UNPROTECT(2);
+        UNPROTECT(4);
         return dimnames_comp;
       }
       UNPROTECT(1);
   } }
+  UNPROTECT(2);
   return res;
 }
 SEXP ALIKEC_compare_dimnames_ext(SEXP prim, SEXP sec) {
@@ -778,11 +779,12 @@ struct ALIKEC_res ALIKEC_compare_ts(
         res.strings.current[1] = cur_num;
         res.wrap = PROTECT(allocVector(VECSXP, 2));
         SEXP lang_tsp = PROTECT(lang2(R_TspSymbol, R_NilValue));
+        SEXP sub_idx = PROTECT(ScalarReal(i + 1));
         SEXP lang_sub =
-          PROTECT(lang3(R_BracketSymbol, lang_tsp ,ScalarReal(i + 1)));
+          PROTECT(lang3(R_BracketSymbol, lang_tsp, sub_idx));
         SET_VECTOR_ELT(res.wrap, 0, lang_sub);
         SET_VECTOR_ELT(res.wrap, 1, CDR(CADR(VECTOR_ELT(res.wrap, 0))));
-        UNPROTECT(3);
+        UNPROTECT(4);
         return res;
     } }
   } else {
