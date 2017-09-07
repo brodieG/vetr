@@ -201,6 +201,8 @@ struct ALIKEC_res ALIKEC_compare_class(
     tar_class = CHAR(STRING_ELT(target, tar_class_i));
     if(!is_df && !strcmp(tar_class, "data.frame")) is_df = 1;
 
+    // Only enter on first class mismatch, so protectins only happen once
+
     if(res.success && strcmp(cur_class, tar_class)) { // class mismatch
 
       res.success = 0;
@@ -232,7 +234,8 @@ struct ALIKEC_res ALIKEC_compare_class(
   // Check to make sure have enough classes
 
   if(res.success) {
-    PROTECT(PROTECT(R_NilValue));  // stack balance from the `for` loop
+    // stack balance from the `for` loop
+    PROTECT(PROTECT(PROTECT(PROTECT(R_NilValue))));
 
     if(tar_class_len > cur_class_len) {
       res.success = 0;
