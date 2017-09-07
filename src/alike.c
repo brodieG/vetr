@@ -407,7 +407,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
   // by PROTECTING to the max depth we will need with a few dummy PROTECTS, and
   // UNPROTECTING the dummies and replacing for use as needed.
 
-  PROTECT(PROTECT(PROTECT(PROTECT(res.wrap))));  // 3 dummy protects
+  PROTECT(PROTECT(PROTECT(PROTECT(PROTECT(res.wrap)))));  // 4 dummy protects
   res.rec = rec;
 
   if(!res.success) {
@@ -473,7 +473,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
           res.strings.tar_pre = "be";
           res.strings.target[1] =  "the global environment";
         } else {
-          UNPROTECT(3);
+          UNPROTECT(4);
           SEXP tar_names = PROTECT(R_lsInternal(target, TRUE));
           R_xlen_t tar_name_len = XLENGTH(tar_names), i;
 
@@ -487,7 +487,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
           for(i = 0; i < tar_len; i++) {
             const char * var_name_chr = CHAR(STRING_ELT(tar_names, i));
             SEXP var_name = PROTECT(install(var_name_chr));
-            SEXP var_cur_val = findVarInFrame(current, var_name);
+            SEXP var_cur_val = PROTECT(findVarInFrame(current, var_name));
             if(var_cur_val == R_UnboundValue) {
               res.wrap = PROTECT(allocVector(VECSXP, 2));
               res.success = 0;
@@ -502,11 +502,11 @@ struct ALIKEC_res ALIKEC_alike_rec(
               if(!res.success) {
                 res.rec = ALIKEC_rec_ind_chr(res.rec, var_name_chr);
             } }
-            // Each loop adds two protection levels
+            // Each loop adds three protection levels
             if(!res.success) break;
-            UNPROTECT(2);
+            UNPROTECT(3);
           }
-          if(res.success) PROTECT(PROTECT(R_NilValue));
+          if(res.success) PROTECT(PROTECT(PROTECT(R_NilValue)));
         }
       }
     } else if (tar_type == LISTSXP) {
@@ -566,10 +566,10 @@ struct ALIKEC_res ALIKEC_alike_rec(
     } } } }
     res.rec = ALIKEC_rec_dec(res.rec); // decrement recursion tracker
   }
-  // In theory we keep the total protect stack at four, although for most of
+  // In theory we keep the total protect stack at five, although for most of
   // the logic branches some of that is padding
 
-  UNPROTECT(4);
+  UNPROTECT(5);
   return res;
 }
 /*-----------------------------------------------------------------------------\
