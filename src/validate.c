@@ -62,9 +62,8 @@ struct VALC_res_list VALC_res_add(
         alloc_size = list.idx_alloc * 2;
       }
       list.list = (struct VALC_res *) S_realloc(
-        (char *) list.list, (long) (alloc_size * sizeof(struct VALC_res)),
-        (long) (list.idx_alloc * sizeof(struct VALC_res)),
-        sizeof(char *)
+        (char *) list.list, (long) alloc_size,
+        (long) list.idx_alloc, sizeof(struct VALC_res)
       );
       list.idx_alloc = alloc_size;
     } else {
