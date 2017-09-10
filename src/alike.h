@@ -100,8 +100,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   struct ALIKEC_res {
     // Message info
 
-    struct ALIKEC_res_strings strings;
     struct ALIKEC_rec_track rec;
+    struct ALIKEC_res_strings strings;
 
     // length 2 VECSXP containing call wrapper, and link to where to sub in
     // call, recursion index, etc.  The call wrapper will look something like
