@@ -122,9 +122,13 @@ SEXPTYPE ALIKEC_typeof_internal(SEXP object) {
         fiddling, but at end of day this still wouldn't be fast enough to
         realistically use on a very large vector, so it doesn't really matter
         */
-        for(i = 0; i < obj_len; i++)
-          if(!isnan(obj_real[i]) && obj_real[i] != (int)obj_real[i])
+        for(i = 0; i < obj_len; i++) {
+          if(
+            (isnan(obj_real[i]) || !isfinite(obj_real[i])) ||
+            obj_real[i] != (int)obj_real[i]
+          )
             return REALSXP;
+        }
         return INTSXP;
       }
       break;
