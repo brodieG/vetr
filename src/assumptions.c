@@ -43,6 +43,14 @@ SEXP VALC_check_assumptions() {
 
   if(sizeof(int) < 4) error(err_base, "ints are not at least 32 bits", "");
 
+  // If this is not TRUE, there could be alignment issues for some of our
+  // structs that use size_t elements given that R_alloc only guarantees double
+  // alignment.  This requirements is too strict as written; really we need
+  // size_t to be LTE double provided that 2^n * size_t == double.
+
+  if(sizeof(size_t) != sizeof(double))
+    error(err_base, "size_t and double not same size");
+
   // Important for some our boundary condition assumptions, in particular that
   // NA_INTEGER < int x.
 
