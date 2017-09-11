@@ -21,18 +21,6 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 /*
- * Issue 69: make sure that the vetting expression don't contain references to
- * the variable in question to avoid confusion
- *
- * Annoyingly this needs to be done after recursive sub happens...
- */
-
-void VALC_check_names(SEXP val_exp, SEXP call) {
-}
-
-/* -------------------------------------------------------------------------- *\
-\* -------------------------------------------------------------------------- */
-/*
 Name replacement, substitutes `.` for argname and multi dots for one dot fewer.
 This is specifically for the `.`.  The standard symbol substitution happens via
 `VALC_symb_sub`.  Note that we skip `VALC_symb_sub` for `.` when it wasn't
