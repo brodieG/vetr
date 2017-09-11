@@ -180,7 +180,7 @@ struct ALIKEC_res ALIKEC_compare_class(
     return ALIKEC_alike_attr(target, current, R_ClassSymbol, set);
 
   int tar_class_len, cur_class_len, len_delta, tar_class_i, cur_class_i,
-      is_df = 0;
+      is_df = 0, idx_fail = -1;
   const char * cur_class;
   const char * tar_class;
   struct ALIKEC_res res = ALIKEC_res_init();
@@ -206,35 +206,36 @@ struct ALIKEC_res ALIKEC_compare_class(
     if(res.success && strcmp(cur_class, tar_class)) { // class mismatch
 
       res.success = 0;
-
-      if(cur_class_len > 1) {
-
-        SEXP class_call = PROTECT(lang2(R_ClassSymbol, R_NilValue));
-        SEXP sub_idx = PROTECT(ScalarReal(cur_class_i + 1));
-        SEXP wrap_call = PROTECT(lang3(R_BracketSymbol, class_call, sub_idx));
-        SEXP wrap = PROTECT(allocVector(VECSXP, 2));
-        SET_VECTOR_ELT(wrap, 0, wrap_call);
-        SET_VECTOR_ELT(wrap, 1, CDR(CADR(wrap_call)));
-
-        res.wrap=wrap;
-        res.strings.target[0] = "\"%s\"%s%s%s";
-        res.strings.target[1] = tar_class;
-
-        res.strings.current[0] = "\"%s\"%s%s%s";
-        res.strings.current[1] = cur_class;
-      } else {
-        res.strings.target[0] = "class \"%s\"%s%s%s";
-        res.strings.target[1] = tar_class;
-
-        res.strings.current[0] = "\"%s\"%s%s%s";
-        res.strings.current[1] = cur_class;
-
-        PROTECT(PROTECT(PROTECT(PROTECT(R_NilValue))));  // stack balance
-  } } }
+      idx_fail = cur_class_i;
+  } }
   // Check to make sure have enough classes
 
-  if(res.success) {
-    // stack balance from the `for` loop
+  if(!res.success) {
+    if(cur_class_len > 1) {
+      SEXP class_call = PROTECT(lang2(R_ClassSymbol, R_NilValue));
+      SEXP sub_idx = PROTECT(ScalarReal(idx_fail + 1));
+      SEXP wrap_call = PROTECT(lang3(R_BracketSymbol, class_call, sub_idx));
+      SEXP wrap = PROTECT(allocVector(VECSXP, 2));
+      SET_VECTOR_ELT(wrap, 0, wrap_call);
+      SET_VECTOR_ELT(wrap, 1, CDR(CADR(wrap_call)));
+
+      res.wrap=wrap;
+      res.strings.target[0] = "\"%s\"%s%s%s";
+      res.strings.target[1] = tar_class;
+
+      res.strings.current[0] = "\"%s\"%s%s%s";
+      res.strings.current[1] = cur_class;
+    } else {
+      res.strings.target[0] = "class \"%s\"%s%s%s";
+      res.strings.target[1] = tar_class;
+
+      res.strings.current[0] = "\"%s\"%s%s%s";
+      res.strings.current[1] = cur_class;
+
+      PROTECT(PROTECT(PROTECT(PROTECT(R_NilValue))));  // stack balance
+    }
+  } else {
+    // stack balance for above
     PROTECT(PROTECT(PROTECT(PROTECT(R_NilValue))));
 
     if(tar_class_len > cur_class_len) {
@@ -243,7 +244,8 @@ struct ALIKEC_res ALIKEC_compare_class(
       res.strings.tar_pre = "inherit";
       res.strings.target[0] = "from class \"%s\"";
       res.strings.target[1] = CHAR(STRING_ELT(target, tar_class_i));
-  } }
+    }
+  }
   // Make sure class attributes are alike
 
   if(res.success) {
@@ -546,6 +548,8 @@ SEXP ALIKEC_compare_dimnames_wrap(const char * name) {
 }
 /*
 Compare dimnames
+
+Code here is awful, should just return in one place, not 50...
 */
 
 struct ALIKEC_res ALIKEC_compare_dimnames(
