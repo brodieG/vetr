@@ -181,8 +181,8 @@ struct ALIKEC_res ALIKEC_compare_class(
 
   int tar_class_len, cur_class_len, len_delta, tar_class_i, cur_class_i,
       is_df = 0, idx_fail = -1;
-  const char * cur_class;
-  const char * tar_class;
+  const char * cur_class, * cur_class_fail = "";
+  const char * tar_class, * tar_class_fail = "";
   struct ALIKEC_res res = ALIKEC_res_init();
 
   tar_class_len = XLENGTH(target);
@@ -207,6 +207,8 @@ struct ALIKEC_res ALIKEC_compare_class(
 
       res.success = 0;
       idx_fail = cur_class_i;
+      tar_class_fail = tar_class;
+      cur_class_fail = cur_class;
   } }
   // Check to make sure have enough classes
 
@@ -221,10 +223,10 @@ struct ALIKEC_res ALIKEC_compare_class(
 
       res.wrap=wrap;
       res.strings.target[0] = "\"%s\"%s%s%s";
-      res.strings.target[1] = tar_class;
+      res.strings.target[1] = tar_class_fail;
 
       res.strings.current[0] = "\"%s\"%s%s%s";
-      res.strings.current[1] = cur_class;
+      res.strings.current[1] = cur_class_fail;
     } else {
       res.strings.target[0] = "class \"%s\"%s%s%s";
       res.strings.target[1] = tar_class;
