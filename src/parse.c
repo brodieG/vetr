@@ -149,9 +149,16 @@ SEXP VALC_sub_symbol(
   SEXP lang, struct VALC_settings set, struct track_hash * track_hash,
   SEXP arg_tag
 ) {
-  size_t protect_i = 0;
   int check_arg_tag = TYPEOF(arg_tag) == SYMSXP;
   SEXP rho = set.env;
+
+  // Each loop iteration may create a SEXP, but we only care about the last SEXP
+  // generated, so we will repeatedly PROTECT the last SEXP at the location
+  // below
+
+  PROTECT_INDEX ipx;
+  PROTECT_WITH_INDEX(R_NilValue, &ipx);
+
   while(TYPEOF(lang) == SYMSXP && lang != R_MissingArg) {
     if(check_arg_tag && lang == arg_tag) {
       error(
@@ -179,17 +186,17 @@ SEXP VALC_sub_symbol(
     }
     int var_found_resolves_symbol = 0;
     if(findVar(lang, rho) != R_UnboundValue) {
-      SEXP found_val = eval(lang, rho);
+      SEXP found_val = PROTECT(eval(lang, rho));
       SEXPTYPE found_val_type = TYPEOF(found_val);
       if(found_val_type == LANGSXP || found_val_type == SYMSXP) {
-        lang = PROTECT(duplicate(found_val));
-      } else PROTECT(R_NilValue);  // Balance
+        REPROTECT(lang = duplicate(found_val), ipx);
+      }
       var_found_resolves_symbol = found_val_type == SYMSXP;
-    } else PROTECT(R_NilValue);  // Balance
-    protect_i = CSR_add_szt(protect_i, 1);
+      UNPROTECT(1);
+    }
     if(!var_found_resolves_symbol) break;
   }
-  UNPROTECT(protect_i);
+  UNPROTECT(1);
   return(lang);
 }
 SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
