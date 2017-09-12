@@ -88,9 +88,9 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
     if(tar_tag == cur_tag) {
       if(CAR(tar_form) != R_MissingArg && CAR(cur_form) == R_MissingArg) {
         res.success = 0;
-        res.strings.tar_pre = "have";
-        res.strings.target[0] = "a default value for argument `%s`%s%s%s";
-        res.strings.target[1] = CHAR(PRINTNAME(tar_tag));
+        res.dat.strings.tar_pre = "have";
+        res.dat.strings.target[0] = "a default value for argument `%s`%s%s%s";
+        res.dat.strings.target[1] = CHAR(PRINTNAME(tar_tag));
         break;
       }
       last_match = tar_tag;
@@ -122,11 +122,11 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
     res.success = 0;
 
     if(dots && !dots_cur) {
-      res.strings.tar_pre = "have";
-      res.strings.target[1] = "a `...` argument";
+      res.dat.strings.tar_pre = "have";
+      res.dat.strings.target[1] = "a `...` argument";
     } else if (!tar_args && tar_form == R_NilValue) {
-      res.strings.tar_pre = "not have";
-      res.strings.target[1] = "any arguments";
+      res.dat.strings.tar_pre = "not have";
+      res.dat.strings.target[1] = "any arguments";
     } else {
       const char * arg_type = "as first argument";
       const char * arg_name;
@@ -148,10 +148,10 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
         );
         // nocov end
       }
-      res.strings.tar_pre = arg_neg ? "not have" : "have";
-      res.strings.target[0] = "argument `%s` %s%s%s";
-      res.strings.target[1] = arg_name;
-      res.strings.target[2] = arg_type;
+      res.dat.strings.tar_pre = arg_neg ? "not have" : "have";
+      res.dat.strings.target[0] = "argument `%s` %s%s%s";
+      res.dat.strings.target[1] = arg_name;
+      res.dat.strings.target[2] = arg_type;
     }
   }
   UNPROTECT(3);
@@ -162,6 +162,6 @@ SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current) {
   struct VALC_settings set = VALC_settings_init();
   struct ALIKEC_res res =
     ALIKEC_fun_alike_internal(target, current, set);
-  if(!res.success) return ALIKEC_res_strings_to_SEXP(res.strings);
+  if(!res.success) return ALIKEC_res_strings_to_SEXP(res.dat.strings);
   return(ScalarLogical(1));
 }

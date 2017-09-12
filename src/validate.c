@@ -17,7 +17,9 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 
 #include "validate.h"
-
+/*
+ * Result has a SEXP in .list_sxp that must be protected.
+ */
 struct VALC_res_list VALC_res_list_init(struct VALC_settings set) {
   if(set.result_list_size_init < 1)
     error("Internal Error: result alloc < 1; contact maintainer."); // nocov
@@ -28,15 +30,16 @@ struct VALC_res_list VALC_res_list_init(struct VALC_settings set) {
     );
     // nocov end
 
-  struct VALC_res * list_start = (struct VALC_res *) R_alloc(
-    set.result_list_size_init, sizeof(struct VALC_res)
+  struct VALC_res_node * list_start = (struct VALC_res_node *) R_alloc(
+    set.result_list_size_init, sizeof(struct VALC_res_node)
   );
 
   return (struct VALC_res_list) {
     .idx = 0,
     .idx_alloc = set.result_list_size_init,
     .idx_alloc_max = set.result_list_size_max,
-    .list = list_start
+    .list_tpl = list_start,
+    .list_sxp = allocList(0)
   };
 }
 struct VALC_res_list VALC_res_add(
@@ -61,9 +64,9 @@ struct VALC_res_list VALC_res_add(
       } else {
         alloc_size = list.idx_alloc * 2;
       }
-      list.list = (struct VALC_res *) S_realloc(
-        (char *) list.list, (long) alloc_size,
-        (long) list.idx_alloc, sizeof(struct VALC_res)
+      list.list_tpl = (struct VALC_res_node *) S_realloc(
+        (char *) list.list_tpl, (long) alloc_size,
+        (long) list.idx_alloc, sizeof(struct VALC_res_node)
       );
       list.idx_alloc = alloc_size;
     } else {
@@ -78,8 +81,20 @@ struct VALC_res_list VALC_res_add(
       );
     }
   }
-  list.list[list.idx] = res;
+  list.list_tpl[list.idx] = (struct VALC_res_node) {
+    .tpl_dat = res.dat.tpl_dat,
+    .tpl = res.tpl,
+    .success = res.success
+  };
   ++list.idx;
+
+  Rprintf("About to set CADR\n");
+  PrintValue(res.dat.sxp_dat);
+  PrintValue(list.list_sxp_tail);
+  SETCADR(list.list_sxp_tail, res.dat.sxp_dat);
+  Rprintf("done set CADR\n");
+  list.list_sxp_tail = CDR(list.list_sxp_tail);
+  Rprintf("done\n");
 
   return(list);
 }

@@ -515,7 +515,7 @@ SEXP ALIKEC_res_as_string(
   const char * res_str;
   if(!res.success) {
     struct ALIKEC_tar_cur_strings strings_pasted =
-      ALIKEC_get_res_strings(res.strings, set);
+      ALIKEC_get_res_strings(res.dat.strings, set);
 
     if(TYPEOF(res.wrap) != VECSXP || xlength(res.wrap) != 2) {
       // nocov start
@@ -533,12 +533,12 @@ SEXP ALIKEC_res_as_string(
       res_str = CSR_smprintf6(
         set.nchar_max,
         "%sshould %s %s (%s %s)",
-        call_chr, res.strings.tar_pre, strings_pasted.target,
-        res.strings.cur_pre, strings_pasted.current, ""
+        call_chr, res.dat.strings.tar_pre, strings_pasted.target,
+        res.dat.strings.cur_pre, strings_pasted.current, ""
       );
-    } else if (res.strings.target[0]) {
+    } else if (res.dat.strings.target[0]) {
       res_str = CSR_smprintf4(
-        set.nchar_max, "%sshould %s %s", call_chr, res.strings.tar_pre,
+        set.nchar_max, "%sshould %s %s", call_chr, res.dat.strings.tar_pre,
         strings_pasted.target,  ""
       );
     }
@@ -556,14 +556,14 @@ SEXP ALIKEC_res_as_strsxp(
   SEXP res_fin;
   if(!res.success) {
     struct ALIKEC_tar_cur_strings strings_pasted =
-      ALIKEC_get_res_strings(res.strings, set);
+      ALIKEC_get_res_strings(res.dat.strings, set);
     SEXP call_inj = PROTECT(ALIKEC_inject_call(res, call));
     const char * call_chr = ALIKEC_pad_or_quote(call_inj, set.width, -1, set);
     res_fin = PROTECT(allocVector(STRSXP, 5));
     SET_STRING_ELT(res_fin, 0, mkChar(call_chr));
-    SET_STRING_ELT(res_fin, 1, mkChar(res.strings.tar_pre));
+    SET_STRING_ELT(res_fin, 1, mkChar(res.dat.strings.tar_pre));
     SET_STRING_ELT(res_fin, 2, mkChar(strings_pasted.target));
-    SET_STRING_ELT(res_fin, 3, mkChar(res.strings.cur_pre));
+    SET_STRING_ELT(res_fin, 3, mkChar(res.dat.strings.cur_pre));
     SET_STRING_ELT(res_fin, 4, mkChar(strings_pasted.current));
     UNPROTECT(2);
   } else error("Internal Error: res_as_strsxp only works with failing res.");

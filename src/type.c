@@ -81,11 +81,11 @@ struct ALIKEC_res ALIKEC_type_alike_internal(
   struct ALIKEC_res res_fin = res;
 
   res_fin.success = 0;
-  res_fin.strings.target[0]= "type \"%s\"";
-  res_fin.strings.target[1]= what;
-  res_fin.strings.current[0] = "\"%s\"";
-  res_fin.strings.current[1] = type2char(cur_type);
-  res_fin.wrap = allocVector(VECSXP, 2); // note not PROTECTing
+  res_fin.dat.strings.target[0]= "type \"%s\"";
+  res_fin.dat.strings.target[1]= what;
+  res_fin.dat.strings.current[0] = "\"%s\"";
+  res_fin.dat.strings.current[1] = type2char(cur_type);
+  res_fin.wrap = allocVector(VECSXP, 2); // note not PROTECTing b/c return
   return res_fin;
 }
 SEXP ALIKEC_type_alike(

@@ -84,33 +84,9 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     size_t lvl_max;    // max recursion depth so far
     int gp;            // general purpose flag
   };
-  /*
-   * For functions that need to track the call and recursion index
-   *
-   * Note contains SEXP so MUST BE PROTECTED.
-   *
-   * This structure contains all the information required to generate a failure
-   * message from a failed comparison, but allows us to defer the actual slow
-   * message construction  up to the very end.
-   *
-   * Rather than have several different very similar structs, we just use this
-   * struct anyplace a return or input value with a subset of the data is
-   * needed.
-   */
-  struct ALIKEC_res {
-    // Message info
-
+  struct ALIKEC_res_dat {
     struct ALIKEC_rec_track rec;
     struct ALIKEC_res_strings strings;
-
-    // length 2 VECSXP containing call wrapper, and link to where to sub in
-    // call, recursion index, etc.  The call wrapper will look something like
-    // `attr(NULL, "xx")`, and will have link to the NULL so we can replace it
-    // with other things.  See `ALIKEC_inject_call` for more details.
-
-    SEXP wrap;
-
-    int success;
 
     // used primarily to help decide which errors to prioritize when dealing
     // with attributes, etc.  these are really optional parameters.
@@ -128,7 +104,35 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
      *   7. missing
     */
     int lvl;
+  };
+  /*
+   * For functions that need to track the call and recursion index
+   *
+   * Note contains SEXP so MUST BE PROTECTED.
+   *
+   * This structure contains all the information required to generate a failure
+   * message from a failed comparison, but allows us to defer the actual slow
+   * message construction  up to the very end.
+   *
+   * Rather than have several different very similar structs, we just use this
+   * struct anyplace a return or input value with a subset of the data is
+   * needed.
+   */
+  struct ALIKEC_res {
+    // All the data required to construct the error messages
 
+    struct ALIKEC_res_dat dat;
+
+    // length 2 VECSXP containing call wrapper, and link to where to sub in
+    // call, recursion index, etc.  The call wrapper will look something like
+    // `attr(NULL, "xx")`, and will have link to the NULL so we can replace it
+    // with other things.  See `ALIKEC_inject_call` for more details.
+
+    SEXP wrap;
+
+    // Whether template comparison worked
+
+    int success;
   };
   // - Main Funs --------------------------------------------------------------
 
