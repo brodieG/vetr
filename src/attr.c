@@ -564,11 +564,20 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
     res.strings.target[1] = "a \"dimnames\" attribute";
     return res;
   }
+  // Result will contain a SEXP, so generate a protection index for it to
+  // simplify the protectin stack handling
+
+  PROTECT_INDEX ipx;
+  PROTECT_WITH_INDEX(R_NilValue, &ipx);
+
   SEXP prim_names = PROTECT(getAttrib(prim, R_NamesSymbol));
   SEXP sec_names = PROTECT(getAttrib(sec, R_NamesSymbol));
   R_xlen_t prim_len, sec_len;
   SEXPTYPE prim_type = TYPEOF(prim), sec_type = TYPEOF(sec);
-  if( // not a standard dimnames attribute
+
+  // not a standard dimnames attribute, so do a normal alike
+
+  if(
     prim_type != sec_type || prim_type != VECSXP ||
     (
       prim_names != R_NilValue &&
@@ -576,176 +585,177 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
     ) ||
     ((prim_len = XLENGTH(prim)) && prim_len != (sec_len = XLENGTH(sec)))
   ) {
-    struct ALIKEC_res res_tmp = ALIKEC_alike_internal(prim, sec, set);
-    PROTECT(res_tmp.wrap);
-    if(!res_tmp.success) {
+    res = ALIKEC_alike_internal(prim, sec, set);
+    REPROTECT(res.wrap, ipx);
+
+    if(!res.success) {
       // Need to re-wrap the original error message
-      int old_lvl = res.lvl;
-      res = res_tmp;
-      res.lvl = old_lvl;
-      SEXP res_wrap_old = res.wrap;
       SEXP res_call = PROTECT(lang2(R_DimNamesSymbol, R_NilValue));
 
-      if(VECTOR_ELT(res_wrap_old, 1) == R_NilValue) {
-        SET_VECTOR_ELT(res_wrap_old, 0, res_call);
+      if(VECTOR_ELT(res.wrap, 1) == R_NilValue) {
+        SET_VECTOR_ELT(res.wrap, 0, res_call);
       } else {
-        SETCAR(VECTOR_ELT(res_wrap_old, 1), res_call);
+        SETCAR(VECTOR_ELT(res.wrap, 1), res_call);
       }
-      SET_VECTOR_ELT(res_wrap_old, 1, CDR(res_call));
+      SET_VECTOR_ELT(res.wrap, 1, CDR(res_call));
       UNPROTECT(1);
     }
-    UNPROTECT(3);
-    return res;
   }
-  /* The following likely doesn't need to be done for every dimnames so there
-  probably is some optimization to be had here, should look into it if it
-  seems slow; for example, `xlength` will cycle through all values, and so will
-  the checking all attributes; also, do we really need to check whether dimnames
-  has attributes other than names?*/
+  if(res.success) {
+    /* The following likely doesn't need to be done for every dimnames so there
+    probably is some optimization to be had here, should look into it if it
+    seems slow; for example, `xlength` will cycle through all values, and so
+    will the checking all attributes; also, do we really need to check whether
+    dimnames has attributes other than names?*/
 
-  SEXP prim_attr = ATTRIB(prim), sec_attr = ATTRIB(sec);
+    SEXP prim_attr = ATTRIB(prim), sec_attr = ATTRIB(sec);
 
-  /*
-  Check that all `dimnames` attributes other than `names` that are both in
-  target and current are alike; this is also a double loop that could be
-  optimized; can't do the normal check because we need to leave out the
-  `names` attribute from the comparison.  This could be simplified if we had
-  an attribute comparison function that could skip a particular attribute.
-  */
+    /*
+    Check that all `dimnames` attributes other than `names` that are both in
+    target and current are alike; this is also a double loop that could be
+    optimized; can't do the normal check because we need to leave out the
+    `names` attribute from the comparison.  This could be simplified if we had
+    an attribute comparison function that could skip a particular attribute.
+    */
 
-  SEXP prim_attr_cpy, sec_attr_cpy;
-  for(
-    prim_attr_cpy = prim_attr; prim_attr_cpy != R_NilValue;
-    prim_attr_cpy = CDR(prim_attr_cpy)
-  ) {
-    SEXP prim_tag_symb = TAG(prim_attr_cpy);
-    const char * prim_tag = CHAR(PRINTNAME(prim_tag_symb));
-    int do_continue = 0;
-    if(prim_tag_symb == R_NamesSymbol) continue;
+    SEXP prim_attr_cpy, sec_attr_cpy;
     for(
-      sec_attr_cpy = sec_attr; sec_attr_cpy != R_NilValue;
-      sec_attr_cpy = CDR(sec_attr_cpy)
+      prim_attr_cpy = prim_attr; prim_attr_cpy != R_NilValue;
+      prim_attr_cpy = CDR(prim_attr_cpy)
     ) {
-      if(prim_tag_symb == TAG(sec_attr_cpy)) {
-        // Note we don't use any of the contents other than .success, so we
-        // don't protect .wrap
+      SEXP prim_tag_symb = TAG(prim_attr_cpy);
+      const char * prim_tag = CHAR(PRINTNAME(prim_tag_symb));
+      int do_continue = 0;
+      // skip names attribute
+      if(prim_tag_symb == R_NamesSymbol) continue;
+      for(
+        sec_attr_cpy = sec_attr; sec_attr_cpy != R_NilValue;
+        sec_attr_cpy = CDR(sec_attr_cpy)
+      ) {
+        if(prim_tag_symb == TAG(sec_attr_cpy)) {
+          // Note we don't use any of the contents other than .success, so we
+          // don't protect .wrap
 
-        struct ALIKEC_res res_tmp = ALIKEC_alike_internal(
-          CAR(prim_attr_cpy), CAR(sec_attr_cpy), set
-        );
-        if(!res_tmp.success) {
-          PROTECT(res_tmp.wrap);
-          res_tmp.wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
-          UNPROTECT(4);
-          return res_tmp;
-        }
-        do_continue = 1;
-        res_tmp.wrap = R_NilValue;  // this way don't worry about protect wrap
-        break;
-    } }
-    if(do_continue) continue;
-    // missing attribute
-    res.success = 0;
-
-    res.strings.tar_pre = "not be";
-    res.strings.target[1] = "missing";
-    res.wrap = PROTECT(ALIKEC_compare_dimnames_wrap(prim_tag));
-    UNPROTECT(3);
-    return res;
-  }
-  // Compare actual dimnames attr
-
-  if(!prim_len) {
-    UNPROTECT(2);
-    return res;  // zero length list matches anything
-  }
-
-  // dimnames names
-
-  if(prim_names != R_NilValue) {
-    struct ALIKEC_res dimnames_name_comp =
-      ALIKEC_compare_special_char_attrs_internal(prim_names, sec_names, set, 0);
-    PROTECT(dimnames_name_comp.wrap);
-
-    if(!dimnames_name_comp.success) {
-      // re-wrap in names(dimnames())
-      SEXP wrap = dimnames_name_comp.wrap;
-      SEXP wrap_call = PROTECT(
-        lang2(R_NamesSymbol, lang2(R_DimNamesSymbol, R_NilValue))
-      );
-      if(VECTOR_ELT(wrap, 0) == R_NilValue) {
-        // nocov start
-        // All of these errors are going to have some `[x]` accessor, only way
-        // would be if were using integer names, but that is not actually
-        // supported here (might be with rownames); also, malformed names are
-        // handled earlier in this function
-        error(
-          "Internal Error: %s%s",
-          "it should not be possible to generate a `names(dimnames())` error ",
-          "that doesn't involve some other call componenet"
-        );
-        // If we did hit this case, then the following would be how to handle it
-        // SET_VECTOR_ELT(wrap, 0, wrap_call);
-        // nocov end
-      } else {
-        SETCAR(VECTOR_ELT(wrap, 1), wrap_call);
+          struct ALIKEC_res res = ALIKEC_alike_internal(
+            CAR(prim_attr_cpy), CAR(sec_attr_cpy), set
+          );
+          if(!res.success) {
+            REPROTECT(res.wrap = ALIKEC_compare_dimnames_wrap(prim_tag), ipx);
+            do_continue = 2;
+            break;
+          } else {
+            do_continue = 1;
+            break;
+      } } }
+      switch(do_continue) {
+        case 1: continue; // success, next outer loop attr
+        case 2: break;    // failure, exit outer loop
       }
-      SET_VECTOR_ELT(wrap, 1, CDR(CADR(wrap_call)));
-      UNPROTECT(4);
-      return dimnames_name_comp;
+      // missing attribute
+
+      res.success = 0;
+      res.strings.tar_pre = "not be";
+      res.strings.target[1] = "missing";
+      REPROTECT(res.wrap = ALIKEC_compare_dimnames_wrap(prim_tag), ipx);
     }
-    dimnames_name_comp.wrap = R_NilValue;
-    UNPROTECT(1);
   }
-  // look at dimnames themselves
+  // Compare actual dimnames attr, note that zero length primary attribute
+  // matches any sec attribute
 
-  SEXP prim_obj, sec_obj;
-  R_xlen_t attr_i;
+  if(res.success && prim_len) {
+    // dimnames names
 
-  for(attr_i = (R_xlen_t) 0; attr_i < prim_len; attr_i++) {
-    if((prim_obj = VECTOR_ELT(prim, attr_i)) != R_NilValue) {
-      sec_obj = VECTOR_ELT(sec, attr_i);
+    if(prim_names != R_NilValue) {
+      res = ALIKEC_compare_special_char_attrs_internal(
+        prim_names, sec_names, set, 0
+      );
+      REPROTECT(res.wrap, ipx);
 
-      struct ALIKEC_res dimnames_comp =
-        ALIKEC_compare_special_char_attrs_internal(
-          prim_obj, sec_obj, set, 0
+      if(!res.success) {
+        // re-wrap in names(dimnames())
+        SEXP wrap = res.wrap;
+        SEXP wrap_call = PROTECT(
+          lang2(R_NamesSymbol, lang2(R_DimNamesSymbol, R_NilValue))
         );
-      PROTECT(dimnames_comp.wrap);
-      if(!dimnames_comp.success) {
-        SEXP wrap = dimnames_comp.wrap;
-        SEXP wrap_call, wrap_ref;
-
-        if(prim_len == 2) { // matrix like
-          wrap_call = PROTECT(lang2(R_NilValue, R_NilValue));
-          wrap_ref = CDR(wrap_call);
-          PROTECT(PROTECT(R_NilValue)); // stack balance
-          switch(attr_i) {
-            case (R_xlen_t) 0: SETCAR(wrap_call, R_RowNamesSymbol); break;
-            case (R_xlen_t) 1: SETCAR(wrap_call, ALIKEC_SYM_colnames); break;
-            default: {
-              // nocov start
-              error("Internal Error: dimnames dimension; contact maintainer.");
-              // nocov end
-            }
-          }
+        if(VECTOR_ELT(wrap, 0) == R_NilValue) {
+          // nocov start
+          // All of these errors are going to have some `[x]` accessor, only way
+          // would be if were using integer names, but that is not actually
+          // supported here (might be with rownames); also, malformed names are
+          // handled earlier in this function
+          error(
+            "Internal Error: %s%s",
+            "it should not be possible to generate a `names(dimnames())` error ",
+            "that doesn't involve some other call componenet"
+          );
+          // If we did hit it then the following would be how to handle it
+          // SET_VECTOR_ELT(wrap, 0, wrap_call);
+          // nocov end
         } else {
-          SEXP dimn_call = PROTECT(lang2(R_DimNamesSymbol, R_NilValue));
-          SEXP sub_ind = PROTECT(ScalarReal(attr_i + 1));
-          wrap_call = PROTECT(lang3(R_Bracket2Symbol, dimn_call, sub_ind));
-          wrap_ref = CDR(CADR(wrap_call));
-        }
-        if(VECTOR_ELT(wrap, 0) != R_NilValue) {
           SETCAR(VECTOR_ELT(wrap, 1), wrap_call);
-        } else {
-          SET_VECTOR_ELT(wrap, 0, wrap_call);
         }
-        SET_VECTOR_ELT(wrap, 1, wrap_ref);
-        UNPROTECT(4);
-        return dimnames_comp;
+        SET_VECTOR_ELT(wrap, 1, CDR(CADR(wrap_call)));
+        UNPROTECT(1);
       }
-      UNPROTECT(1);
+    }
+    // look at dimnames themselves (i.e. not the names)
+
+    if(res.success) {
+      SEXP prim_obj, sec_obj;
+      R_xlen_t attr_i;
+
+      for(attr_i = (R_xlen_t) 0; attr_i < prim_len; attr_i++) {
+        if((prim_obj = VECTOR_ELT(prim, attr_i)) != R_NilValue) {
+          sec_obj = VECTOR_ELT(sec, attr_i);
+
+          res = ALIKEC_compare_special_char_attrs_internal(
+            prim_obj, sec_obj, set, 0
+          );
+          REPROTECT(res.wrap, ipx);
+          if(!res.success) {
+            SEXP wrap = res.wrap;
+            SEXP wrap_call, wrap_ref;
+
+            if(prim_len == 2) { // matrix like
+              wrap_call = PROTECT(lang2(R_NilValue, R_NilValue));
+              wrap_ref = CDR(wrap_call);
+              PROTECT(PROTECT(R_NilValue)); // stack balance
+              switch(attr_i) {
+                case (R_xlen_t) 0:
+                  SETCAR(wrap_call, R_RowNamesSymbol); break;
+                case (R_xlen_t) 1:
+                  SETCAR(wrap_call, ALIKEC_SYM_colnames); break;
+                default: {
+                  // nocov start
+                  error(
+                    "Internal Error: dimnames dimension; contact maintainer."
+                  );
+                  // nocov end
+              } }
+            } else {
+              SEXP dimn_call = PROTECT(lang2(R_DimNamesSymbol, R_NilValue));
+              SEXP sub_ind = PROTECT(ScalarReal(attr_i + 1));
+              wrap_call = PROTECT(lang3(R_Bracket2Symbol, dimn_call, sub_ind));
+              wrap_ref = CDR(CADR(wrap_call));
+            }
+            if(VECTOR_ELT(wrap, 0) != R_NilValue) {
+              SETCAR(VECTOR_ELT(wrap, 1), wrap_call);
+            } else {
+              SET_VECTOR_ELT(wrap, 0, wrap_call);
+            }
+            SET_VECTOR_ELT(wrap, 1, wrap_ref);
+            UNPROTECT(3);
+            break;
+      } } }
   } }
-  UNPROTECT(2);
+  // because this is an attribute error and don't want to return a recursion
+  // depth recorded (we think?)
+
+  res.lvl = 0;
+  // The only thing left PROTECTED should be the element we've been
+  // reprotecting, and the very first two PROTECTS
+
+  UNPROTECT(3);
   return res;
 }
 SEXP ALIKEC_compare_dimnames_ext(SEXP prim, SEXP sec) {
