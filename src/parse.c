@@ -228,10 +228,10 @@ SEXP VALC_parse(
   // be substituted with `name_sub`.
 
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
-  lang_cpy = VALC_name_sub(lang_cpy, var_name);
+  lang_cpy = PROTECT(VALC_name_sub(lang_cpy, var_name));
   if(mode != 2) {
-    lang_cpy = VALC_sub_symbol(lang_cpy, set, track_hash, arg_tag);
-  }
+    lang_cpy = PROTECT(VALC_sub_symbol(lang_cpy, set, track_hash, arg_tag));
+  } else PROTECT(R_NilValue);
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
@@ -245,7 +245,7 @@ SEXP VALC_parse(
   res_vec = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
   SET_VECTOR_ELT(res_vec, 1, res);
-  UNPROTECT(4);
+  UNPROTECT(6);
   return(res_vec);
 }
 SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
