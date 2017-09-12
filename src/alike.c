@@ -402,12 +402,14 @@ struct ALIKEC_res ALIKEC_alike_rec(
 
   struct ALIKEC_res res = ALIKEC_alike_obj(target, current, set);
 
-  // We unfortunately have several levels of PROTECTION required next, and the
-  // depth varies according to the various branches of logic.  So we start off
-  // by PROTECTING to the max depth we will need with a few dummy PROTECTS, and
-  // UNPROTECTING the dummies and replacing for use as needed.
+  // Result will contain a SEXP, so generate a protection index for it to
+  // simplify the protectin stack handling
 
-  PROTECT(PROTECT(PROTECT(PROTECT(PROTECT(res.wrap)))));  // 4 dummy protects
+  PROTECT_INDEX ipx;
+  PROTECT_WITH_INDEX(res.wrap, &ipx);
+
+  // Pass on recursive index data
+
   res.rec = rec;
 
   if(!res.success) {
@@ -423,11 +425,10 @@ struct ALIKEC_res ALIKEC_alike_rec(
 
       for(i = 0; i < tar_len; i++) {
         // if we're here, there is nothing worth protecting in wrap
-        UNPROTECT(1);
         res = ALIKEC_alike_rec(
           VECTOR_ELT(target, i), VECTOR_ELT(current, i), res.rec, set
         );
-        PROTECT(res.wrap);
+        REPROTECT(res.wrap, ipx);
         if(!res.success) {
           SEXP vec_names = getAttrib(target, R_NamesSymbol);
           const char * ind_name;
@@ -467,13 +468,11 @@ struct ALIKEC_res ALIKEC_alike_rec(
         res.success = 1;
       } else {
         if(target == R_GlobalEnv && current != R_GlobalEnv) {
-          UNPROTECT(1);
-          res.wrap = PROTECT(allocVector(VECSXP, 2));
+          REPROTECT(res.wrap = allocVector(VECSXP, 2), ipx);
           res.success = 0;
           res.strings.tar_pre = "be";
           res.strings.target[1] =  "the global environment";
         } else {
-          UNPROTECT(4);
           SEXP tar_names = PROTECT(R_lsInternal(target, TRUE));
           R_xlen_t tar_name_len = XLENGTH(tar_names), i;
 
@@ -489,7 +488,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
             SEXP var_name = PROTECT(install(var_name_chr));
             SEXP var_cur_val = PROTECT(findVarInFrame(current, var_name));
             if(var_cur_val == R_UnboundValue) {
-              res.wrap = PROTECT(allocVector(VECSXP, 2));
+              REPROTECT(res.wrap = allocVector(VECSXP, 2), ipx);
               res.success = 0;
               res.strings.tar_pre = "contain";
               res.strings.target[0] = "variable `%s`";
@@ -498,15 +497,14 @@ struct ALIKEC_res ALIKEC_alike_rec(
               res = ALIKEC_alike_rec(
                 findVarInFrame(target, var_name), var_cur_val, res.rec, set
               );
-              PROTECT(res.wrap);
+              REPROTECT(res.wrap, ipx);
               if(!res.success) {
                 res.rec = ALIKEC_rec_ind_chr(res.rec, var_name_chr);
             } }
             // Each loop adds three protection levels
             if(!res.success) break;
-            UNPROTECT(3);
+            UNPROTECT(2);
           }
-          if(res.success) PROTECT(PROTECT(PROTECT(R_NilValue)));
         }
       }
     } else if (tar_type == LISTSXP) {
@@ -521,8 +519,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
         SEXP tar_tag = TAG(tar_sub);
         SEXP tar_tag_chr = PRINTNAME(tar_tag);
         if(tar_tag != R_NilValue && tar_tag != TAG(cur_sub)) {
-          UNPROTECT(1);  // overwriting wrap
-          res.wrap = PROTECT(allocVector(VECSXP, 2));
+          REPROTECT(res.wrap = allocVector(VECSXP, 2), ipx);
           res.success = 0;
           res.strings.tar_pre = "be";
           res.strings.target[0] =  "\"%s\"%s%s%s";
@@ -552,9 +549,8 @@ struct ALIKEC_res ALIKEC_alike_rec(
           UNPROTECT(3);
           break;
         } else {
-          UNPROTECT(1);  // overwriting wrap
           res = ALIKEC_alike_rec(CAR(tar_sub), CAR(cur_sub), res.rec, set);
-          PROTECT(res.wrap);
+          REPROTECT(res.wrap, ipx);
           if(!res.success) {
             if(tar_tag != R_NilValue)
               res.rec =
@@ -566,10 +562,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
     } } } }
     res.rec = ALIKEC_rec_dec(res.rec); // decrement recursion tracker
   }
-  // In theory we keep the total protect stack at five, although for most of
-  // the logic branches some of that is padding
-
-  UNPROTECT(5);
+  UNPROTECT(1);
   return res;
 }
 /*-----------------------------------------------------------------------------\
