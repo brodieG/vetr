@@ -946,7 +946,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     ALIKEC_res_init(), ALIKEC_res_init(), ALIKEC_res_init(),
     ALIKEC_res_init(), ALIKEC_res_init()
   };
-  size_t ps = 0;  // track protect stack size
+  size_t nprotect = 0;  // track protect stack size
 
   if(tar_attr == R_NilValue) {
     rev = 1;
@@ -1079,7 +1079,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
         tar_attr_el_val, cur_attr_el_val, prim_tag, set
       );
       PROTECT(R_NilValue);
-      ++ps;
+      ++nprotect;
 
     // = Custom Checks =========================================================
 
@@ -1102,7 +1102,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
           tar_attr_el_val_tmp, cur_attr_el_val_tmp, set
         );
         PROTECT(class_comp.wrap);
-        ps += 3;
+        nprotect += 3;
         is_df = class_comp.df;
         errs[0] = class_comp;
         if(!class_comp.success) break;
@@ -1114,7 +1114,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
           ALIKEC_compare_special_char_attrs_internal(
             tar_attr_el_val, cur_attr_el_val, set, 0
           );
-        PROTECT(name_comp.wrap); ps++;
+        PROTECT(name_comp.wrap); nprotect++;
         if(!name_comp.success) {
           int is_names = tar_tag == R_NamesSymbol;
           int err_ind = is_names ? 3 : 4;
@@ -1136,7 +1136,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
         struct ALIKEC_res dim_comp = ALIKEC_compare_dims(
           tar_attr_el_val, cur_attr_el_val, target, current, set
         );
-        PROTECT(dim_comp.wrap); ps++;
+        PROTECT(dim_comp.wrap); nprotect++;
 
         // implicit class error upgrades to major error
 
@@ -1149,7 +1149,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
         struct ALIKEC_res dimname_comp = ALIKEC_compare_dimnames(
           tar_attr_el_val, cur_attr_el_val, set
         );
-        PROTECT(dimname_comp.wrap); ps++;
+        PROTECT(dimname_comp.wrap); nprotect++;
         errs[5] = dimname_comp;
 
       // - levels --------------------------------------------------------------
@@ -1158,7 +1158,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
         struct ALIKEC_res levels_comp = ALIKEC_compare_levels(
           tar_attr_el_val, cur_attr_el_val, set
         );
-        PROTECT(levels_comp.wrap); ps++;
+        PROTECT(levels_comp.wrap); nprotect++;
         errs[6] = levels_comp;
 
       // - tsp -----------------------------------------------------------------
@@ -1168,7 +1168,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
         struct ALIKEC_res ts_comp = ALIKEC_compare_ts(
           tar_attr_el_val, cur_attr_el_val, set
         );
-        PROTECT(ts_comp.wrap); ps++;
+        PROTECT(ts_comp.wrap); nprotect++;
         errs[1] = ts_comp;
 
       // - normal attrs --------------------------------------------------------
@@ -1178,7 +1178,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
           ALIKEC_compare_attributes_internal_simple(
             tar_attr_el_val, cur_attr_el_val, prim_tag, set
           );
-        PROTECT(attr_comp.wrap); ps++;
+        PROTECT(attr_comp.wrap); nprotect++;
         errs[6] = attr_comp;
       }
   } }
@@ -1212,7 +1212,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
       break;
   } }
   res_attr.df = is_df;
-  UNPROTECT(ps);
+  UNPROTECT(nprotect);
   return res_attr;
 }
 /*-----------------------------------------------------------------------------\
