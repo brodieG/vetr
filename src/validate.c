@@ -34,13 +34,16 @@ struct VALC_res_list VALC_res_list_init(struct VALC_settings set) {
     set.result_list_size_init, sizeof(struct VALC_res_node)
   );
 
-  return (struct VALC_res_list) {
+  struct VALC_res_list res_list = (struct VALC_res_list) {
     .idx = 0,
     .idx_alloc = set.result_list_size_init,
     .idx_alloc_max = set.result_list_size_max,
     .list_tpl = list_start,
-    .list_sxp = allocList(0)
+    .list_sxp = PROTECT(list1(R_NilValue))
   };
+  res_list.list_sxp_tail = res_list.list_sxp;
+  UNPROTECT(1);
+  return res_list;
 }
 struct VALC_res_list VALC_res_add(
   struct VALC_res_list list, struct VALC_res res
@@ -88,13 +91,9 @@ struct VALC_res_list VALC_res_add(
   };
   ++list.idx;
 
-  Rprintf("About to set CADR\n");
-  PrintValue(res.dat.sxp_dat);
-  PrintValue(list.list_sxp_tail);
-  SETCADR(list.list_sxp_tail, res.dat.sxp_dat);
-  Rprintf("done set CADR\n");
+  SETCAR(list.list_sxp_tail, res.dat.sxp_dat);
+  SETCDR(list.list_sxp_tail, list1(R_NilValue));
   list.list_sxp_tail = CDR(list.list_sxp_tail);
-  Rprintf("done\n");
 
   return(list);
 }
