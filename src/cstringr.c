@@ -17,6 +17,19 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 
 #include "cstringr.h"
+/*
+ * Most of these functions were written as a learning exercise in C string
+ * manipulation.  In most cases they are not strictly necessary.  Additionally,
+ * most of them try to be "safe" by not reading past "maxlen", but in many of
+ * our uses we don't actually know the buffer size ahead of time and use a
+ * generic maxlen value, which pretty much defeats the purpose...
+ *
+ * There isn't really any real harm assuming the strings are terminated, which
+ * they should be since they are either retrieved from CHRSXPs, or generated
+ * internally.
+ *
+ * DO NOT USE THESE STRING MANIPULATION FUNS OUTSIDE OF THIS PACKAGE.
+ */
 
 /* Estimate how many characters a R_xlen_t number can be represented with
  *
@@ -130,7 +143,9 @@ SEXP CSR_num_as_chr_ext(SEXP a, SEXP as_int) {
   return mkString(CSR_num_as_chr(asReal(a), asInteger(as_int)));
 }
 /*
-A safe strmlen, errors if exceeds `maxlen`
+A slightly safer strmlen, errors if exceeds `maxlen`
+
+Not really safe since there is no actual guarantee that the allocated buffer is longer than maxlen or that it contains character 0.
 
 If success, returns size of string excluding the NULL terminator.  If the NULL
 terminator is not found prior to `maxlen`, then errors.
@@ -155,16 +170,33 @@ size_t CSR_strmlen(const char * str, size_t maxlen) {
 }
 /*
 IMPORTANT: only use with CSR_strmcpy since that will not try to copy past maxlen
+
+Used to be implemented with `memchr` but we removed that because it seemed to
+want to read past buffer ends.  Some docs suggest this is possible given that it
+reads full words in (or maybe even multiple words), though that would also
+require for R_alloc to allocate non-full words, which seems odd.
+
+Length returned does not include the NULL terminator.
 */
 size_t CSR_strmlen_x(const char * str, size_t maxlen) {
-  const char *p = (const char *) memchr(str, 0, maxlen);
-  size_t res;
-  if(!p) {
-    res = maxlen;
-  } else {
-    res = p - str;
-  }
-  return res;
+
+  const char * str_i = str;
+  if(maxlen > UINTPTR_MAX)
+    // nocov start
+    error("Internal error in strmlen, maxlen > UINTPTR_MAX not support");
+    // nocov end
+  if((uintptr_t)str > UINTPTR_MAX - maxlen)
+    // nocov start
+    error(
+      "Internal error in strmlen, maxlen would imply pointer overflow"
+    );
+    // nocov end
+
+  const char * str_end = str + maxlen;
+
+  while(*str_i && str_i < str_end) ++str_i;
+
+  return (size_t) (str_i - str);
 }
 /*
 If str has more than size characters, returns a copy of str truncated to size
