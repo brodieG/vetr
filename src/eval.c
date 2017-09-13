@@ -415,10 +415,12 @@ SEXP VALC_evaluate(
     for(int i = 0; i < res_list.idx; ++i) {
       struct VALC_res_node res = res_list.list_tpl[i];
       if(sxp_dat == R_NilValue)
+        // nocov start
         error(
           "Internal Error: SEXP and data list unsynchronized; %s",
           "contact maintainer"
         );
+        // nocov end
       if(!res.success) {
         SET_VECTOR_ELT(
           res_as_str, j++,
