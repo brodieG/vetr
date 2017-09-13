@@ -149,7 +149,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
   SEXPTYPE ALIKEC_typeof_internal(SEXP object);
   struct ALIKEC_res ALIKEC_type_alike_internal(
-    SEXP target, SEXP current, SEXP call, struct VALC_settings set
+    SEXP target, SEXP current, struct VALC_settings set
   );
   SEXP ALIKEC_compare_attributes(SEXP target, SEXP current, SEXP attr_mode);
   SEXP ALIKEC_compare_special_char_attrs(SEXP target, SEXP current);

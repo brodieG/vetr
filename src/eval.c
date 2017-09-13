@@ -203,7 +203,7 @@ struct VALC_res_list VALC_evaluate_recurse(
  * These produce a STRSXP containing the error details that can be assembled
  * into a final error message.  See `VALC_evaluate` for details on parameters.
  */
-SEXP VALC_error_standard(
+static SEXP VALC_error_standard(
   SEXP sxp_dat, SEXP arg_tag, SEXP arg_lang, SEXP sys_call,
   struct VALC_settings set
 ) {
@@ -329,8 +329,8 @@ SEXP VALC_error_standard(
   }
   return mkString(err_str);
 }
-SEXP VALC_error_template(
-  struct ALIKEC_res_dat res, SEXP sxp_dat, SEXP arg_tag, SEXP arg_lang,
+static SEXP VALC_error_template(
+  struct ALIKEC_res_dat res, SEXP sxp_dat, SEXP arg_lang,
   struct VALC_settings set
 ) {
   struct ALIKEC_res res_alike = (struct ALIKEC_res) {
@@ -350,12 +350,12 @@ SEXP VALC_error_template(
   UNPROTECT(1);
   return res_sxp;
 }
-SEXP VALC_error_extract(
+static SEXP VALC_error_extract(
   struct VALC_res_node res, SEXP sxp_dat, SEXP arg_tag, SEXP arg_lang,
   SEXP sys_call, struct VALC_settings set
 ) {
   if(res.tpl) {
-    return VALC_error_template(res.tpl_dat, sxp_dat, arg_tag, arg_lang, set);
+    return VALC_error_template(res.tpl_dat, sxp_dat, arg_lang, set);
   } else {
     return VALC_error_standard(sxp_dat, arg_tag, arg_lang, sys_call, set);
   }

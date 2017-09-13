@@ -258,7 +258,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
 
     if(res.success && !is_lang) {
       UNPROTECT(1);
-      res = ALIKEC_type_alike_internal(target, current, R_NilValue, set);
+      res = ALIKEC_type_alike_internal(target, current, set);
       PROTECT(res.wrap);
     }
     // - Length ----------------------------------------------------------------

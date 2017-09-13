@@ -26,7 +26,7 @@ not alike
 call is substituted current, only used when this is called by type_alike directly otherwise doesn't do much
 */
 struct ALIKEC_res ALIKEC_type_alike_internal(
-  SEXP target, SEXP current, SEXP call, struct VALC_settings set
+  SEXP target, SEXP current, struct VALC_settings set
 ) {
   SEXPTYPE tar_type, cur_type, tar_type_raw, cur_type_raw;
   int int_like = 0;
@@ -94,7 +94,7 @@ SEXP ALIKEC_type_alike(
   struct ALIKEC_res res;
   struct VALC_settings set = VALC_settings_vet(settings, R_BaseEnv);
 
-  res = ALIKEC_type_alike_internal(target, current, call, set);
+  res = ALIKEC_type_alike_internal(target, current, set);
   PROTECT(res.wrap);
   SEXP res_sexp;
   if(!res.success) {
