@@ -506,6 +506,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
             if(!res.success) break;
             UNPROTECT(2);
           }
+          UNPROTECT(1);
         }
       }
     } else if (tar_type == LISTSXP) {
