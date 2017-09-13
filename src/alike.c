@@ -502,9 +502,8 @@ struct ALIKEC_res ALIKEC_alike_rec(
               if(!res.success) {
                 res.dat.rec = ALIKEC_rec_ind_chr(res.dat.rec, var_name_chr);
             } }
-            // Each loop adds three protection levels
-            if(!res.success) break;
             UNPROTECT(2);
+            if(!res.success) break;
           }
           UNPROTECT(1);
         }
