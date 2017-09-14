@@ -96,7 +96,7 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
         set_len
       );
     }
-    SEXP set_names = getAttrib(set_list, R_NamesSymbol);
+    SEXP set_names = PROTECT(getAttrib(set_list, R_NamesSymbol));
     if(set_names == R_NilValue || TYPEOF(set_names) != STRSXP) {
       error(
         "%s%s%s", "`vet/vetr` usage error: ",
@@ -113,7 +113,9 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
     };
     SEXP set_names_def_sxp = PROTECT(allocVector(STRSXP, set_len));
     for(R_xlen_t i = 0; i < set_len; ++i) {
-      SET_STRING_ELT(set_names_def_sxp, i, mkChar(set_names_default[i]));
+      SEXP chr_name = PROTECT(mkChar(set_names_default[i]));
+      SET_STRING_ELT(set_names_def_sxp, i, chr_name);
+      UNPROTECT(1);
     }
     if(!R_compute_identical(set_names, set_names_def_sxp, 16)) {
       error(
@@ -123,7 +125,7 @@ struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env) {
       );
     }
     set_names_def_sxp = R_NilValue;
-    UNPROTECT(1);
+    UNPROTECT(2);
     // check the scalar integers
 
     settings.type_mode =

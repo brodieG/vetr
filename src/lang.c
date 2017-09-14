@@ -115,13 +115,19 @@ SEXP ALIKEC_match_call(
     UNPROTECT(1);
     return call;
   }
-  // remember, match_call is pre-defined as: match.call(def, quote(call))
+  // remember, match_call is pre-defined as: match.call(def, quote(call)), also,
+  // in theory should never be SHARED since it is a SEXP created in C code only
+  // for internal use.
+
+  if (MAYBE_SHARED(match_call)) PROTECT(match_call = duplicate(match_call));
+  else PROTECT(R_NilValue);
+
   SETCADR(match_call, fun);
-  UNPROTECT(1);
   SETCADR(CADDR(match_call), call);
   int tmp = 0;
   int * err =& tmp;
-  SEXP res = R_tryEvalSilent(match_call, env, err);
+  SEXP res = PROTECT(R_tryEvalSilent(match_call, env, err));
+  UNPROTECT(3);
   if(* err) return call; else return res;
 }
 /*
@@ -138,7 +144,7 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
 ) {
   SEXP current = CAR(cur_par);
   struct ALIKEC_res res = ALIKEC_res_init();
-  res.rec = rec;
+  res.dat.rec = rec;
 
   // Skip parens and increment recursion; not we don't track recursion level
   // for target
@@ -157,7 +163,7 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
   PROTECT(res.wrap);   // Dummy PROTECT
 
   for(i = 0; i < i_max; i++) {
-    res.rec = ALIKEC_rec_inc(res.rec);
+    res.dat.rec = ALIKEC_rec_inc(res.dat.rec);
   }
   target = VECTOR_ELT(tar_skip_paren, 0);
 
@@ -183,43 +189,43 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
     if(strcmp(tar_abs, cur_abs)) {
       res.success = 0;
       if(*tar_varnum > *cur_varnum) {
-        res.strings.tar_pre = "not be";
-        res.strings.target[0] = "`%s`";
-        res.strings.target[1] = csc_text;
+        res.dat.strings.tar_pre = "not be";
+        res.dat.strings.target[0] = "`%s`";
+        res.dat.strings.target[1] = csc_text;
       } else {
-        res.strings.target[0] = "`%s`";
-        res.strings.target[1] = rev_symb;
-        res.strings.current[0] = "`%s`";
-        res.strings.current[1] = csc_text;
+        res.dat.strings.target[0] = "`%s`";
+        res.dat.strings.target[1] = rev_symb;
+        res.dat.strings.current[0] = "`%s`";
+        res.dat.strings.current[1] = csc_text;
       }
     } else res.success = 1;
   } else if (tsc_type == LANGSXP && csc_type != LANGSXP) {
     res.success = 0;
-    res.strings.target[0] = "a call to `%s`";
-    res.strings.target[1] = ALIKEC_deparse_chr(CAR(target), -1, set);
-    res.strings.current[0] =  "\"%s\"";
-    res.strings.current[1] = type2char(csc_type);
+    res.dat.strings.target[0] = "a call to `%s`";
+    res.dat.strings.target[1] = ALIKEC_deparse_chr(CAR(target), -1, set);
+    res.dat.strings.current[0] =  "\"%s\"";
+    res.dat.strings.current[1] = type2char(csc_type);
   } else if (tsc_type != LANGSXP && csc_type == LANGSXP) {
     res.success = 0;
-    res.strings.target[0] =  "\"%s\"";
-    res.strings.target[1] = type2char(tsc_type);
-    res.strings.current[0] =  "\"%s\"";
-    res.strings.current[1] = type2char(csc_type);
+    res.dat.strings.target[0] =  "\"%s\"";
+    res.dat.strings.target[1] = type2char(tsc_type);
+    res.dat.strings.current[0] =  "\"%s\"";
+    res.dat.strings.current[1] = type2char(csc_type);
   } else if (tsc_type == LANGSXP) {
     // Note how we pass cur_par and not current so we can modify cur_par
     // this should be changed since we don't use that feature any more
     UNPROTECT(1);
     res = ALIKEC_lang_alike_rec(
       target, cur_par_dup, tar_hash, cur_hash, rev_hash, tar_varnum,
-      cur_varnum, formula, match_call, match_env, set, res.rec
+      cur_varnum, formula, match_call, match_env, set, res.dat.rec
     );
     PROTECT(res.wrap);
   } else if(tsc_type == SYMSXP || csc_type == SYMSXP) {
     res.success = 0;
-    res.strings.target[0] =  "\"%s\"";
-    res.strings.target[1] = type2char(tsc_type);
-    res.strings.current[0] =  "\"%s\"";
-    res.strings.current[1] = type2char(csc_type);
+    res.dat.strings.target[0] =  "\"%s\"";
+    res.dat.strings.target[1] = type2char(tsc_type);
+    res.dat.strings.current[0] =  "\"%s\"";
+    res.dat.strings.current[1] = type2char(csc_type);
   } else if (formula && !R_compute_identical(target, current, 16)) {
     // Maybe this shouldn't be "identical", but too much of a pain in the butt
     // to do an all.equals type comparison
@@ -227,8 +233,8 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
     // could have constant vs. language here, right?
 
     res.success = 0;
-    res.strings.tar_pre = "have";
-    res.strings.target[1] =  "identical constant values";
+    res.dat.strings.tar_pre = "have";
+    res.dat.strings.target[1] =  "identical constant values";
   } else res.success = 1;
 
   // Deal with index implications of skiping parens, note + 2 because we need
@@ -236,8 +242,8 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
 
   if(!res.success) {
     for(i = 0; i < i_max; i++) {
-      res.rec = ALIKEC_rec_ind_num(res.rec, i + 2);
-      res.rec = ALIKEC_rec_dec(res.rec);
+      res.dat.rec = ALIKEC_rec_ind_num(res.dat.rec, i + 2);
+      res.dat.rec = ALIKEC_rec_dec(res.dat.rec);
     }
     if(res.wrap == R_NilValue) res.wrap = allocVector(VECSXP, 2);
   }
@@ -273,17 +279,17 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
   // If not language object, run comparison
 
   struct ALIKEC_res res = ALIKEC_res_init();
-  res.rec = rec;
+  res.dat.rec = rec;
 
   if(TYPEOF(target) != LANGSXP || TYPEOF(current) != LANGSXP) {
     res =  ALIKEC_lang_obj_compare(
       target, cur_par, tar_hash, cur_hash, rev_hash, tar_varnum,
-      cur_varnum, formula, match_call, match_env, set, res.rec
+      cur_varnum, formula, match_call, match_env, set, res.dat.rec
     );
   } else {
     // If language object, then recurse
 
-    res.rec = ALIKEC_rec_inc(res.rec);
+    res.dat.rec = ALIKEC_rec_inc(res.dat.rec);
 
     SEXP tar_fun = CAR(target), cur_fun = CAR(current);
 
@@ -291,13 +297,13 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
 
     if(tar_fun != R_NilValue && !R_compute_identical(tar_fun, cur_fun, 16)) {
       res.success = 0;
-      res.rec = ALIKEC_rec_ind_num(res.rec, 1);
+      res.dat.rec = ALIKEC_rec_ind_num(res.dat.rec, 1);
 
-      res.strings.target[0] = "a call to `%s`";
-      res.strings.target[1] = ALIKEC_deparse_chr(CAR(target), -1, set);
+      res.dat.strings.target[0] = "a call to `%s`";
+      res.dat.strings.target[1] = ALIKEC_deparse_chr(CAR(target), -1, set);
 
-      res.strings.current[0] = "a call to `%s`";
-      res.strings.current[1] = ALIKEC_deparse_chr(CAR(current), -1, set);
+      res.dat.strings.current[0] = "a call to `%s`";
+      res.dat.strings.current[1] = ALIKEC_deparse_chr(CAR(current), -1, set);
 
     } else if (CDR(target) != R_NilValue) {
       // Zero length calls match anything, so only come here if target is not
@@ -359,17 +365,17 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
           );} }
           res.success = 0;
 
-          res.strings.tar_pre = "have";
-          res.strings.target[0] =  "argument `%s` %s";
-          res.strings.target[1] = CHAR(PRINTNAME(TAG(tar_sub)));
-          res.strings.target[2] = prev_tag_msg;
-          res.strings.cur_pre = "has";
+          res.dat.strings.tar_pre = "have";
+          res.dat.strings.target[0] =  "argument `%s` %s";
+          res.dat.strings.target[1] = CHAR(PRINTNAME(TAG(tar_sub)));
+          res.dat.strings.target[2] = prev_tag_msg;
+          res.dat.strings.cur_pre = "has";
 
           if(TAG(cur_sub) == R_NilValue) {
-            res.strings.current[1] = "unnamed argument";
+            res.dat.strings.current[1] = "unnamed argument";
           } else {
-            res.strings.current[0] =  "`%s`";
-            res.strings.current[1] =  CHAR(PRINTNAME(TAG(cur_sub)));
+            res.dat.strings.current[0] =  "`%s`";
+            res.dat.strings.current[1] =  CHAR(PRINTNAME(TAG(cur_sub)));
           }
         } else {
           // Note that `lang_obj_compare` kicks off recursion as well, and
@@ -378,7 +384,8 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
           SEXP tar_sub_car = CAR(tar_sub);
           res = ALIKEC_lang_obj_compare(
             tar_sub_car, cur_sub, tar_hash, cur_hash, rev_hash,
-            tar_varnum, cur_varnum, formula, match_call, match_env, set, res.rec
+            tar_varnum, cur_varnum, formula, match_call, match_env, set,
+            res.dat.rec
           );
           update_rec_ind = 1;
         }
@@ -388,11 +395,11 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
         if(!res.success) {
           if(update_rec_ind) {
             if(cur_sub_tag != R_NilValue && use_names)
-              res.rec =
-                ALIKEC_rec_ind_chr(res.rec, CHAR(PRINTNAME(cur_sub_tag)));
+              res.dat.rec =
+                ALIKEC_rec_ind_chr(res.dat.rec, CHAR(PRINTNAME(cur_sub_tag)));
             else
-              res.rec =
-                ALIKEC_rec_ind_num(res.rec, arg_num + 2);
+              res.dat.rec =
+                ALIKEC_rec_ind_num(res.dat.rec, arg_num + 2);
           }
           break;
         }
@@ -414,18 +421,18 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
             cur_sub = CDR(cur_sub);
           }
           res.success = 0;
-          res.strings.tar_pre = "have";
-          res.strings.target[0] = "%s arguments";
-          res.strings.target[1] = CSR_len_as_chr(tar_len);
-          res.strings.cur_pre = "has";
-          res.strings.current[1] = CSR_len_as_chr(cur_len);
+          res.dat.strings.tar_pre = "have";
+          res.dat.strings.target[0] = "%s arguments";
+          res.dat.strings.target[1] = CSR_len_as_chr(tar_len);
+          res.dat.strings.cur_pre = "has";
+          res.dat.strings.current[1] = CSR_len_as_chr(cur_len);
         }
       }
       target = current = R_NilValue;
 
       UNPROTECT(2);
     }
-    res.rec = ALIKEC_rec_dec(res.rec);
+    res.dat.rec = ALIKEC_rec_dec(res.dat.rec);
   }
   return res;
 }
@@ -516,11 +523,11 @@ SEXP ALIKEC_lang_alike_core(
   SET_VECTOR_ELT(res_fin, 0, ScalarLogical(res.success));
 
   if(!res.success) {
-    SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.rec));
+    SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.dat.rec));
 
     SEXP res_msg = PROTECT(allocVector(VECSXP, 2));
     SEXP res_msg_names = PROTECT(allocVector(STRSXP, 2));
-    SET_VECTOR_ELT(res_msg, 0, ALIKEC_res_strings_to_SEXP(res.strings));
+    SET_VECTOR_ELT(res_msg, 0, ALIKEC_res_strings_to_SEXP(res.dat.strings));
     if(res.wrap == R_NilValue) {
       res.wrap = PROTECT(allocVector(VECSXP, 2));
     } else PROTECT(R_NilValue);
@@ -563,10 +570,10 @@ struct ALIKEC_res ALIKEC_lang_alike_internal(
     SEXP message = PROTECT(VECTOR_ELT(lang_res, 1));
     SEXP msg_txt = VECTOR_ELT(message, 0);
 
-    res.strings.tar_pre = CHAR(STRING_ELT(msg_txt, 0));
-    res.strings.target[1] = CHAR(STRING_ELT(msg_txt, 1));
-    res.strings.cur_pre = CHAR(STRING_ELT(msg_txt, 2));
-    res.strings.current[1] = CHAR(STRING_ELT(msg_txt, 3));
+    res.dat.strings.tar_pre = CHAR(STRING_ELT(msg_txt, 0));
+    res.dat.strings.target[1] = CHAR(STRING_ELT(msg_txt, 1));
+    res.dat.strings.cur_pre = CHAR(STRING_ELT(msg_txt, 2));
+    res.dat.strings.current[1] = CHAR(STRING_ELT(msg_txt, 3));
 
     // Deal with wrap
 
@@ -601,7 +608,7 @@ SEXP ALIKEC_lang_alike_chr_ext(
   PROTECT(res.wrap);
   SEXP res_str;
   if(!res.success) {
-    res_str = PROTECT(ALIKEC_res_strings_to_SEXP(res.strings));
+    res_str = PROTECT(ALIKEC_res_strings_to_SEXP(res.dat.strings));
   } else {
     res_str = PROTECT(mkString(""));
   }

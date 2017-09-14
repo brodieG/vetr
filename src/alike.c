@@ -77,16 +77,18 @@ struct ALIKEC_res_strings ALIKEC_res_strings_init() {
 struct ALIKEC_res ALIKEC_res_init() {
   return (struct ALIKEC_res) {
     .success=1,
-    .strings=ALIKEC_res_strings_init(),
-    .rec=ALIKEC_rec_track_init(),
+    .dat=(struct ALIKEC_res_dat) {
+      .strings=ALIKEC_res_strings_init(),
+      .rec=ALIKEC_rec_track_init(),
+      .df=0,
+      .lvl=0
+    },
     // Would be cleaner to initialize this to allocVector(VECSXP, 2), but that
     // costs ~20ns and we do that a lot so instead we initialize this as
     // R_NilValue and rely on code to do the correct initialization when
     // something actually fails.  Dirty, but performance impact seems to warrant
     // it as we can easily instantiate dozens of these objects.
     .wrap=R_NilValue,
-    .df=0,
-    .lvl=0
   };
 }
 /*-----------------------------------------------------------------------------\
@@ -112,8 +114,8 @@ struct ALIKEC_res ALIKEC_alike_obj(
   err_tok1 = err_tok2 = msg_tmp = "";
 
   struct ALIKEC_res res = ALIKEC_res_init();
-  res.df = 0;
-  res.lvl = 6;
+  res.dat.df = 0;
+  res.dat.lvl = 6;
 
   tar_type = TYPEOF(target);
   cur_type = TYPEOF(current);
@@ -125,8 +127,8 @@ struct ALIKEC_res ALIKEC_alike_obj(
   if(res.success && (s4_cur || s4_tar)) {
     if(s4_tar + s4_cur == 1) {
       res.success = 0;
-      res.strings.tar_pre = s4_tar ? "be" : "not be";
-      res.strings.target[1] = "S4";
+      res.dat.strings.tar_pre = s4_tar ? "be" : "not be";
+      res.dat.strings.target[1] = "S4";
     } else {
       SEXP klass, klass_cur, klass_attrib, klass_cur_attrib;
 
@@ -159,7 +161,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
 
       if(!inherits) {
         res.success = 0;
-        res.strings.tar_pre = "inherit from";
+        res.dat.strings.tar_pre = "inherit from";
 
         klass_attrib = getAttrib(klass, ALIKEC_SYM_package);
         if(xlength(klass_attrib) != 1 || TYPEOF(klass_attrib) != STRSXP) {
@@ -170,9 +172,9 @@ struct ALIKEC_res ALIKEC_alike_obj(
           );
           // nocov end
         }
-        res.strings.target[0] = "S4 class \"%s\" from pkg:%s";
-        res.strings.target[1] = klass_c;
-        res.strings.target[2] = CHAR(asChar(klass_attrib));
+        res.dat.strings.target[0] = "S4 class \"%s\" from pkg:%s";
+        res.dat.strings.target[1] = klass_c;
+        res.dat.strings.target[2] = CHAR(asChar(klass_attrib));
 
         klass_cur = getAttrib(current, R_ClassSymbol);
         if(xlength(klass_cur) != 1 || TYPEOF(klass_cur) != STRSXP) {
@@ -185,7 +187,9 @@ struct ALIKEC_res ALIKEC_alike_obj(
           // nocov end
         }
         klass_cur_attrib = getAttrib(klass_cur, ALIKEC_SYM_package);
-        if(xlength(klass_cur_attrib) != 1 || TYPEOF(klass_cur_attrib) != STRSXP) {
+        if(
+          xlength(klass_cur_attrib) != 1 || TYPEOF(klass_cur_attrib) != STRSXP
+        ) {
           // nocov start
           error(
             "Internal Error: unexpected S4 class \"class\" %s",
@@ -194,9 +198,9 @@ struct ALIKEC_res ALIKEC_alike_obj(
           // nocov end
         }
         const char * klass_cur_c = CHAR(asChar(klass_cur));
-        res.strings.current[0] = "\"%s\" from pkg:%s%s%s";
-        res.strings.current[1] = klass_cur_c;
-        res.strings.current[2] = CHAR(asChar(klass_cur_attrib));
+        res.dat.strings.current[0] = "\"%s\" from pkg:%s%s%s";
+        res.dat.strings.current[1] = klass_cur_c;
+        res.dat.strings.current[2] = CHAR(asChar(klass_cur_attrib));
       }
     }
     PROTECT(PROTECT(R_NilValue)); // stack balance with next `else if`
@@ -223,7 +227,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
       // If top level error (class), make sure not overriden by others so make
       // it a overall error instead of just and attribute error
 
-      if(res_attr.lvl <= 2)  res = res_attr;
+      if(res_attr.dat.lvl <= 2)  res = res_attr;
     }
     // - Special Language Objects && Funs --------------------------------------
 
@@ -254,7 +258,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
 
     if(res.success && !is_lang) {
       UNPROTECT(1);
-      res = ALIKEC_type_alike_internal(target, current, R_NilValue, set);
+      res = ALIKEC_type_alike_internal(target, current, set);
       PROTECT(res.wrap);
     }
     // - Length ----------------------------------------------------------------
@@ -264,15 +268,15 @@ struct ALIKEC_res ALIKEC_alike_obj(
     for environments since rules for alikeness are different for environments
     */
 
-    res.df = res_attr.df; // do this now otherwise possibly overwritten
-    res.lvl = res_attr.lvl;
+    res.dat.df = res_attr.dat.df; // do this now otherwise possibly overwritten
+    res.dat.lvl = res_attr.dat.lvl;
 
     if(res.success && !is_lang && !is_fun && tar_type != ENVSXP) {
       SEXP tar_first_el, cur_first_el;
       R_xlen_t tar_len, cur_len, tar_first_el_len, cur_first_el_len;
       // if attribute error is not class, override with col count error
       // zero lengths match any length
-      int err_tmp_1 = (res.success || (res.df && res.lvl > 0));
+      int err_tmp_1 = (res.success || (res.dat.df && res.dat.lvl > 0));
       int err_tmp_2 = (tar_len = xlength(target)) > 0;
       if(
         err_tmp_1 && err_tmp_2 && tar_len != (cur_len = xlength(current))
@@ -280,19 +284,19 @@ struct ALIKEC_res ALIKEC_alike_obj(
         res.success = 0;
         err_tok1 = CSR_len_as_chr(tar_len);
         err_tok2 = CSR_len_as_chr(cur_len);
-        res.strings.target[1] = err_tok1;
-        res.strings.current[1] = err_tok2;
+        res.dat.strings.target[1] = err_tok1;
+        res.dat.strings.current[1] = err_tok2;
 
-        if(res.df) {
-          res.strings.tar_pre = "have";
-          res.strings.target[0] = "%s column%s";
-          res.strings.target[2] = tar_len == (R_xlen_t) 1 ? "" : "s";
-          res.strings.cur_pre = "has";
+        if(res.dat.df) {
+          res.dat.strings.tar_pre = "have";
+          res.dat.strings.target[0] = "%s column%s";
+          res.dat.strings.target[2] = tar_len == (R_xlen_t) 1 ? "" : "s";
+          res.dat.strings.cur_pre = "has";
         } else {
           // Update this to use wrap??
-          res.strings.tar_pre = "be";
-          res.strings.target[0] = "%s";
-          res.strings.cur_pre = "is";
+          res.dat.strings.tar_pre = "be";
+          res.dat.strings.target[0] = "%s";
+          res.dat.strings.cur_pre = "is";
 
           UNPROTECT(1);
           res.wrap = PROTECT(allocVector(VECSXP, 2));
@@ -302,8 +306,8 @@ struct ALIKEC_res ALIKEC_alike_obj(
           UNPROTECT(1);
         }
       } else if (
-        res.df && res.lvl > 0 && tar_type == VECSXP && XLENGTH(target) &&
-        TYPEOF(current) == VECSXP && XLENGTH(current) &&
+        res.dat.df && res.dat.lvl > 0 && tar_type == VECSXP &&
+        XLENGTH(target) && TYPEOF(current) == VECSXP && XLENGTH(current) &&
         isVectorAtomic((tar_first_el = VECTOR_ELT(target, 0))) &&
         isVectorAtomic((cur_first_el = VECTOR_ELT(current, 0))) &&
         (tar_first_el_len = XLENGTH(tar_first_el)) && tar_first_el_len &&
@@ -313,12 +317,12 @@ struct ALIKEC_res ALIKEC_alike_obj(
         // check the first column only
 
         res.success = 0;
-        res.strings.tar_pre = "have";
-        res.strings.target[0] = "%s row%s";
-        res.strings.target[1] = CSR_len_as_chr(tar_first_el_len);
-        res.strings.target[2] = tar_first_el_len == (R_xlen_t) 1 ? "" : "s";
-        res.strings.cur_pre = "has";
-        res.strings.current[2] = CSR_len_as_chr(cur_first_el_len);
+        res.dat.strings.tar_pre = "have";
+        res.dat.strings.target[0] = "%s row%s";
+        res.dat.strings.target[1] = CSR_len_as_chr(tar_first_el_len);
+        res.dat.strings.target[2] = tar_first_el_len == (R_xlen_t) 1 ? "" : "s";
+        res.dat.strings.cur_pre = "has";
+        res.dat.strings.current[2] = CSR_len_as_chr(cur_first_el_len);
     } }
     // If no normal, errors, use the attribute error
 
@@ -395,25 +399,24 @@ struct ALIKEC_res ALIKEC_alike_rec(
   */
   void R_CheckUserInterrupt(void);
 
-  // normal logic, which will have checked length and attributes, etc.  Note
-  // funny protection here, we PROTECT the message, and if we ever modify
-  // res or res.message we UNPROTECT and reprotect to avoid growing the
-  // PROTECT stack
+  // normal logic, which will have checked length and attributes, etc.
 
   struct ALIKEC_res res = ALIKEC_alike_obj(target, current, set);
 
-  // We unfortunately have several levels of PROTECTION required next, and the
-  // depth varies according to the various branches of logic.  So we start off
-  // by PROTECTING to the max depth we will need with a few dummy PROTECTS, and
-  // UNPROTECTING the dummies and replacing for use as needed.
+  // Result will contain a SEXP, so generate a protection index for it to
+  // simplify the protectin stack handling
 
-  PROTECT(PROTECT(PROTECT(PROTECT(res.wrap))));  // 3 dummy protects
-  res.rec = rec;
+  PROTECT_INDEX ipx;
+  PROTECT_WITH_INDEX(res.wrap, &ipx);
+
+  // Pass on recursive index data
+
+  res.dat.rec = rec;
 
   if(!res.success) {
-    res.rec.lvl_max = res.rec.lvl;
+    res.dat.rec.lvl_max = res.dat.rec.lvl;
   } else {
-    res.rec = ALIKEC_rec_inc(res.rec);  // Increase recursion level
+    res.dat.rec = ALIKEC_rec_inc(res.dat.rec);  // Increase recursion level
 
     R_xlen_t tar_len = xlength(target);
     SEXPTYPE tar_type = TYPEOF(target);
@@ -423,11 +426,10 @@ struct ALIKEC_res ALIKEC_alike_rec(
 
       for(i = 0; i < tar_len; i++) {
         // if we're here, there is nothing worth protecting in wrap
-        UNPROTECT(1);
         res = ALIKEC_alike_rec(
-          VECTOR_ELT(target, i), VECTOR_ELT(current, i), res.rec, set
+          VECTOR_ELT(target, i), VECTOR_ELT(current, i), res.dat.rec, set
         );
-        PROTECT(res.wrap);
+        REPROTECT(res.wrap, ipx);
         if(!res.success) {
           SEXP vec_names = getAttrib(target, R_NamesSymbol);
           const char * ind_name;
@@ -435,9 +437,9 @@ struct ALIKEC_res ALIKEC_alike_rec(
             vec_names == R_NilValue ||
             !((ind_name = CHAR(STRING_ELT(vec_names, i))))[0]
           )
-            res.rec = ALIKEC_rec_ind_num(res.rec, i + 1);
+            res.dat.rec = ALIKEC_rec_ind_num(res.dat.rec, i + 1);
           else
-            res.rec = ALIKEC_rec_ind_chr(res.rec, ind_name);
+            res.dat.rec = ALIKEC_rec_ind_chr(res.dat.rec, ind_name);
           break;
         }
       }
@@ -447,13 +449,13 @@ struct ALIKEC_res ALIKEC_alike_rec(
       // in attributes as othrewise we could get inifinite recursion since
       // rec tracking is specific to each call to ALIKEC_alike_internal
 
-      if(!res.rec.envs) res.rec.envs =
+      if(!res.dat.rec.envs) res.dat.rec.envs =
         ALIKEC_env_set_create(16, set.env_depth_max);
 
       int env_stack_status =
-        ALIKEC_env_track(target, res.rec.envs, set.env_depth_max);
-      if(!res.rec.envs->no_rec)
-        res.rec.envs->no_rec = !env_stack_status;
+        ALIKEC_env_track(target, res.dat.rec.envs, set.env_depth_max);
+      if(!res.dat.rec.envs->no_rec)
+        res.dat.rec.envs->no_rec = !env_stack_status;
       if(env_stack_status  < 0 && !set.suppress_warnings) {
         warning(
           "`alike` environment stack exhausted at recursion depth %d; %s%s",
@@ -461,19 +463,17 @@ struct ALIKEC_res ALIKEC_alike_rec(
           "unable to recurse any further into environments; see ",
           "`env.depth.max` parameter for `vetr_settings`."
         );
-        res.rec.envs->no_rec = 1; // so we only get warning once
+        res.dat.rec.envs->no_rec = 1; // so we only get warning once
       }
-      if(res.rec.envs->no_rec || target == current) {
+      if(res.dat.rec.envs->no_rec || target == current) {
         res.success = 1;
       } else {
         if(target == R_GlobalEnv && current != R_GlobalEnv) {
-          UNPROTECT(1);
-          res.wrap = PROTECT(allocVector(VECSXP, 2));
+          REPROTECT(res.wrap = allocVector(VECSXP, 2), ipx);
           res.success = 0;
-          res.strings.tar_pre = "be";
-          res.strings.target[1] =  "the global environment";
+          res.dat.strings.tar_pre = "be";
+          res.dat.strings.target[1] =  "the global environment";
         } else {
-          UNPROTECT(3);
           SEXP tar_names = PROTECT(R_lsInternal(target, TRUE));
           R_xlen_t tar_name_len = XLENGTH(tar_names), i;
 
@@ -487,26 +487,25 @@ struct ALIKEC_res ALIKEC_alike_rec(
           for(i = 0; i < tar_len; i++) {
             const char * var_name_chr = CHAR(STRING_ELT(tar_names, i));
             SEXP var_name = PROTECT(install(var_name_chr));
-            SEXP var_cur_val = findVarInFrame(current, var_name);
+            SEXP var_cur_val = PROTECT(findVarInFrame(current, var_name));
             if(var_cur_val == R_UnboundValue) {
-              res.wrap = PROTECT(allocVector(VECSXP, 2));
+              REPROTECT(res.wrap = allocVector(VECSXP, 2), ipx);
               res.success = 0;
-              res.strings.tar_pre = "contain";
-              res.strings.target[0] = "variable `%s`";
-              res.strings.target[1] = var_name_chr;
+              res.dat.strings.tar_pre = "contain";
+              res.dat.strings.target[0] = "variable `%s`";
+              res.dat.strings.target[1] = var_name_chr;
             } else {
               res = ALIKEC_alike_rec(
-                findVarInFrame(target, var_name), var_cur_val, res.rec, set
+                findVarInFrame(target, var_name), var_cur_val, res.dat.rec, set
               );
-              PROTECT(res.wrap);
+              REPROTECT(res.wrap, ipx);
               if(!res.success) {
-                res.rec = ALIKEC_rec_ind_chr(res.rec, var_name_chr);
+                res.dat.rec = ALIKEC_rec_ind_chr(res.dat.rec, var_name_chr);
             } }
-            // Each loop adds two protection levels
-            if(!res.success) break;
             UNPROTECT(2);
+            if(!res.success) break;
           }
-          if(res.success) PROTECT(PROTECT(R_NilValue));
+          UNPROTECT(1);
         }
       }
     } else if (tar_type == LISTSXP) {
@@ -521,18 +520,17 @@ struct ALIKEC_res ALIKEC_alike_rec(
         SEXP tar_tag = TAG(tar_sub);
         SEXP tar_tag_chr = PRINTNAME(tar_tag);
         if(tar_tag != R_NilValue && tar_tag != TAG(cur_sub)) {
-          UNPROTECT(1);  // overwriting wrap
-          res.wrap = PROTECT(allocVector(VECSXP, 2));
+          REPROTECT(res.wrap = allocVector(VECSXP, 2), ipx);
           res.success = 0;
-          res.strings.tar_pre = "be";
-          res.strings.target[0] =  "\"%s\"%s%s%s";
-          res.strings.target[1] =  CHAR(asChar(tar_tag_chr));
+          res.dat.strings.tar_pre = "be";
+          res.dat.strings.target[0] =  "\"%s\"%s%s%s";
+          res.dat.strings.target[1] =  CHAR(asChar(tar_tag_chr));
 
           if(TAG(cur_sub) == R_NilValue) {
-            res.strings.current[1] =  "\"\"";
+            res.dat.strings.current[1] =  "\"\"";
           } else {
-            res.strings.current[0] =  "\"%s\"%s%s%s";
-            res.strings.current[1] =  CHAR(asChar(PRINTNAME(TAG(cur_sub))));
+            res.dat.strings.current[0] =  "\"%s\"%s%s%s";
+            res.dat.strings.current[1] =  CHAR(asChar(PRINTNAME(TAG(cur_sub))));
           }
           if(i >= INT_MAX)
             // nocov start
@@ -552,24 +550,20 @@ struct ALIKEC_res ALIKEC_alike_rec(
           UNPROTECT(3);
           break;
         } else {
-          UNPROTECT(1);  // overwriting wrap
-          res = ALIKEC_alike_rec(CAR(tar_sub), CAR(cur_sub), res.rec, set);
-          PROTECT(res.wrap);
+          res = ALIKEC_alike_rec(CAR(tar_sub), CAR(cur_sub), res.dat.rec, set);
+          REPROTECT(res.wrap, ipx);
           if(!res.success) {
             if(tar_tag != R_NilValue)
-              res.rec =
-                ALIKEC_rec_ind_chr(res.rec, CHAR(asChar(tar_tag_chr)));
+              res.dat.rec =
+                ALIKEC_rec_ind_chr(res.dat.rec, CHAR(asChar(tar_tag_chr)));
             else
-              res.rec =
-                ALIKEC_rec_ind_num(res.rec, i + 1);
+              res.dat.rec =
+                ALIKEC_rec_ind_num(res.dat.rec, i + 1);
             break;
     } } } }
-    res.rec = ALIKEC_rec_dec(res.rec); // decrement recursion tracker
+    res.dat.rec = ALIKEC_rec_dec(res.dat.rec); // decrement recursion tracker
   }
-  // In theory we keep the total protect stack at four, although for most of
-  // the logic branches some of that is padding
-
-  UNPROTECT(4);
+  UNPROTECT(1);
   return res;
 }
 /*-----------------------------------------------------------------------------\
@@ -594,9 +588,9 @@ struct ALIKEC_res ALIKEC_alike_internal(
     // Handle NULL special case at top level
 
     res.success = 0;
-    res.strings.target[1] = "`NULL`";
-    res.strings.current[0] = "\"%s\"";
-    res.strings.current[1] = type2char(TYPEOF(current));
+    res.dat.strings.target[1] = "`NULL`";
+    res.dat.strings.current[0] = "\"%s\"";
+    res.dat.strings.current[1] = type2char(TYPEOF(current));
     res.wrap = PROTECT(allocVector(VECSXP, 2));
   } else {
     // Recursively check object
@@ -631,7 +625,7 @@ struct ALIKEC_res ALIKEC_alike_internal(
  * wrap.
  */
 SEXP ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
-  SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.rec));
+  SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.dat.rec));
 
   if(TYPEOF(res.wrap) != VECSXP || xlength(res.wrap) != 2) {
     error("Internal Error: wrap struct eleme should be length 2 list.");// nocov

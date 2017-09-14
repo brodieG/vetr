@@ -1,3 +1,14 @@
+## Submission Checklist
+
+* Review CRAN policy
+* Check version
+* Run tests with
+    * winbuilder
+    * valgrind
+    * rchk
+* Check coverage
+
+
 ## Submission Notes:
 
 This is a new package submission.

@@ -282,7 +282,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     // Limiting to 8 less than SIZE_T_MAX to make room for a last 4 byte UTF8
     // character, '..', and the NULL terminator
 
-    size_t byte_count = 0, byte_count_prev, byte_count_prev_prev;
+    int byte_count = 0, byte_count_prev, byte_count_prev_prev;
     int is_utf8 = 0;
     int byte_off = 0;
 

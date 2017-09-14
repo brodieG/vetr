@@ -146,7 +146,7 @@ vet(numeric(1L) || NULL, NULL)
 vet(numeric(1L) || NULL, 42)
 ## [1] TRUE
 vet(numeric(1L) || NULL, "foo")
-## [1] "`\"foo\"` should be \"NULL\", or type \"numeric\" (is \"character\")"
+## [1] "`\"foo\"` should be `NULL`, or type \"numeric\" (is \"character\")"
 ```
 
 Templates only check structure.  When you need to check values use `.` to
@@ -292,6 +292,9 @@ Thank you to:
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
   the repository, and Uwe Ligges in particular for maintaining
   [Winbuilder](http://win-builder.r-project.org/).
+* Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) and rcsnt, to help
+  detect errors in compiled code, and in particular for his infinite patience in
+  helping me resolve the issues he identified for me.
 * [Jim Hester](https://github.com/jimhester) because
   [covr](https://cran.r-project.org/package=covr) rocks.
 * [Dirk Eddelbuettel](https://github.com/eddelbuettel) and [Carl

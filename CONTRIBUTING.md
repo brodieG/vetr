@@ -1,7 +1,7 @@
-# Contributing to `vetr`
+# Contributing
 
-Thank you for your interest in contributing to `vetr`.  To make sure you do not
-waste your time or mine, please read and follow the guidelines here.
+Thank you for your interest in contributing to this package.  To make sure you
+do not waste your time or mine, please read and follow the guidelines here.
 
 ## Reporting Issues
 
@@ -26,7 +26,7 @@ creates a maintenance burden that I might not be willing to take on.
 
 I realize the requirements I lay out here are annoying.  If they prevent you
 from making a contribution I am sorry and sympathize, having been on the
-opposite side of such requirements myself.  Nonetheless The requirements stand
+opposite side of such requirements myself.  Nonetheless the requirements stand
 to ensure your contribution does not end up creating more work than it
 saves.
 
@@ -55,3 +55,9 @@ Suggested:
 * object.name
 * FormalClassName
 * formalMethodName()
+
+## Thank You!
+
+For taking the time to read these contribution guidelines.  I apologize if they
+seem a little hostile, but time, yours and mine, is precious and it would be a
+shame to waste any of it.

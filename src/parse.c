@@ -21,18 +21,6 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 /*
- * Issue 69: make sure that the vetting expression don't contain references to
- * the variable in question to avoid confusion
- *
- * Annoyingly this needs to be done after recursive sub happens...
- */
-
-void VALC_check_names(SEXP val_exp, SEXP call) {
-}
-
-/* -------------------------------------------------------------------------- *\
-\* -------------------------------------------------------------------------- */
-/*
 Name replacement, substitutes `.` for argname and multi dots for one dot fewer.
 This is specifically for the `.`.  The standard symbol substitution happens via
 `VALC_symb_sub`.  Note that we skip `VALC_symb_sub` for `.` when it wasn't
@@ -149,9 +137,16 @@ SEXP VALC_sub_symbol(
   SEXP lang, struct VALC_settings set, struct track_hash * track_hash,
   SEXP arg_tag
 ) {
-  size_t protect_i = 0;
   int check_arg_tag = TYPEOF(arg_tag) == SYMSXP;
   SEXP rho = set.env;
+
+  // Each loop iteration may create a SEXP, but we only care about the last SEXP
+  // generated, so we will repeatedly PROTECT the last SEXP at the location
+  // below
+
+  PROTECT_INDEX ipx;
+  PROTECT_WITH_INDEX(R_NilValue, &ipx);
+
   while(TYPEOF(lang) == SYMSXP && lang != R_MissingArg) {
     if(check_arg_tag && lang == arg_tag) {
       error(
@@ -179,17 +174,17 @@ SEXP VALC_sub_symbol(
     }
     int var_found_resolves_symbol = 0;
     if(findVar(lang, rho) != R_UnboundValue) {
-      SEXP found_val = eval(lang, rho);
+      SEXP found_val = PROTECT(eval(lang, rho));
       SEXPTYPE found_val_type = TYPEOF(found_val);
       if(found_val_type == LANGSXP || found_val_type == SYMSXP) {
-        lang = PROTECT(duplicate(found_val));
-      } else PROTECT(R_NilValue);  // Balance
+        REPROTECT(lang = duplicate(found_val), ipx);
+      }
       var_found_resolves_symbol = found_val_type == SYMSXP;
-    } else PROTECT(R_NilValue);  // Balance
-    protect_i = CSR_add_szt(protect_i, 1);
+      UNPROTECT(1);
+    }
     if(!var_found_resolves_symbol) break;
   }
-  UNPROTECT(protect_i);
+  UNPROTECT(1);
   return(lang);
 }
 SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
@@ -233,10 +228,10 @@ SEXP VALC_parse(
   // be substituted with `name_sub`.
 
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
-  lang_cpy = VALC_name_sub(lang_cpy, var_name);
+  lang_cpy = PROTECT(VALC_name_sub(lang_cpy, var_name));
   if(mode != 2) {
-    lang_cpy = VALC_sub_symbol(lang_cpy, set, track_hash, arg_tag);
-  }
+    lang_cpy = PROTECT(VALC_sub_symbol(lang_cpy, set, track_hash, arg_tag));
+  } else PROTECT(R_NilValue);
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
@@ -250,7 +245,7 @@ SEXP VALC_parse(
   res_vec = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
   SET_VECTOR_ELT(res_vec, 1, res);
-  UNPROTECT(4);
+  UNPROTECT(6);
   return(res_vec);
 }
 SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {

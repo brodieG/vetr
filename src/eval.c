@@ -99,7 +99,7 @@ struct VALC_res_list VALC_evaluate_recurse(
           set, res_list
         );
         // recall res_list.idx points to next available slot, not last result
-        struct VALC_res res_val = res_list.list[res_list.idx - 1];
+        struct VALC_res_node res_val = res_list.list_tpl[res_list.idx - 1];
 
         if(!res_val.success && mode == 1) {
           return(res_list);
@@ -135,8 +135,8 @@ struct VALC_res_list VALC_evaluate_recurse(
   } else if(mode == 10 || mode == 999) {
     struct VALC_res eval_res;
     // Depending on whether we're dealing with a template or a standard token,
-    // we'll need to mess with what value gets protected.  Expectation is that
-    // we will on net add one PROTECT per result we add to the result list
+    // we'll need to mess with what value gets protected.  The input `res_list`
+    // contains a PROTECTed LSTSXP that we'll use to protect everything
 
     PROTECT_INDEX ipx;
     SEXP eval_tmp, eval_dat;
@@ -158,24 +158,28 @@ struct VALC_res_list VALC_evaluate_recurse(
       );
     }
     if(mode == 10) {
-      eval_res_c = VALC_all(eval_tmp);
+      eval_res_c = VALC_all(VECTOR_ELT(eval_dat, 1));
       eval_res.tpl = 0;
       eval_res.success = eval_res_c > 0;
-      eval_res.dat.std = eval_dat;
+      eval_res.dat.sxp_dat = eval_dat;
     } else {
       eval_res.tpl = 1;
       // bit of a complicated protection mess here, we don't want eval_dat in
       // the protection stack when we're done, but we want the wrap in it, so we
       // use REPROTECT to take over its spot in the stack
 
-      eval_res.dat.tpl = ALIKEC_alike_internal(
+      struct ALIKEC_res res_alike = ALIKEC_alike_internal(
         VECTOR_ELT(eval_dat, 1), arg_value, set
       );
-      REPROTECT(eval_res.dat.tpl.wrap, ipx);
+      REPROTECT(res_alike.wrap, ipx);
 
-      eval_res.success = eval_res.dat.tpl.success;
+      eval_res.dat.tpl_dat = res_alike.dat;
+      eval_res.dat.sxp_dat = res_alike.wrap;
+
+      eval_res.success = res_alike.success;
     }
     res_list = VALC_res_add(res_list, eval_res);
+    UNPROTECT(1);
     return(res_list);
   } else {
     error("Internal Error: unexpected parse mode %d", mode);  // nocov
@@ -191,12 +195,12 @@ struct VALC_res_list VALC_evaluate_recurse(
  * These produce a STRSXP containing the error details that can be assembled
  * into a final error message.  See `VALC_evaluate` for details on parameters.
  */
-SEXP VALC_error_standard(
-  SEXP dat, SEXP arg_tag, SEXP arg_lang, SEXP sys_call,
+static SEXP VALC_error_standard(
+  SEXP sxp_dat, SEXP arg_tag, SEXP arg_lang, SEXP sys_call,
   struct VALC_settings set
 ) {
-  SEXP lang = VECTOR_ELT(dat, 0);
-  SEXP eval_tmp = VECTOR_ELT(dat, 1);
+  SEXP lang = VECTOR_ELT(sxp_dat, 0);
+  SEXP eval_tmp = VECTOR_ELT(sxp_dat, 1);
   SEXP err_attrib;
   const char * err_call;
   char * err_str;
@@ -317,10 +321,16 @@ SEXP VALC_error_standard(
   }
   return mkString(err_str);
 }
-SEXP VALC_error_template(
-  struct ALIKEC_res res, SEXP arg_tag, SEXP arg_lang, struct VALC_settings set
+static SEXP VALC_error_template(
+  struct ALIKEC_res_dat res, SEXP sxp_dat, SEXP arg_lang,
+  struct VALC_settings set
 ) {
-  SEXP res_sxp = PROTECT(ALIKEC_res_as_strsxp(res, arg_lang, set));
+  struct ALIKEC_res res_alike = (struct ALIKEC_res) {
+    .dat=res,
+    .wrap=sxp_dat,
+    .success=0  // we're assuming this
+  };
+  SEXP res_sxp = PROTECT(ALIKEC_res_as_strsxp(res_alike, arg_lang, set));
   if(TYPEOF(res_sxp) != STRSXP)
     // nocov start
     error(
@@ -332,14 +342,14 @@ SEXP VALC_error_template(
   UNPROTECT(1);
   return res_sxp;
 }
-SEXP VALC_error_extract(
-  struct VALC_res res, SEXP arg_tag, SEXP arg_lang, SEXP sys_call,
-  struct VALC_settings set
+static SEXP VALC_error_extract(
+  struct VALC_res_node res, SEXP sxp_dat, SEXP arg_tag, SEXP arg_lang,
+  SEXP sys_call, struct VALC_settings set
 ) {
   if(res.tpl) {
-    return VALC_error_template(res.dat.tpl, arg_tag, arg_lang, set);
+    return VALC_error_template(res.tpl_dat, sxp_dat, arg_lang, set);
   } else {
-    return VALC_error_standard(res.dat.std, arg_tag, arg_lang, sys_call, set);
+    return VALC_error_standard(sxp_dat, arg_tag, arg_lang, sys_call, set);
   }
 }
 /* -------------------------------------------------------------------------- *\
@@ -361,9 +371,7 @@ SEXP VALC_evaluate(
 
   SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, set, arg_tag));
   struct VALC_res_list res_list, res_init = VALC_res_list_init(set);
-
-  // Recursive evaluation will increment PROTECTION stack for each failure that
-  // is encountered
+  PROTECT(res_init.list_sxp);
 
   res_list = VALC_evaluate_recurse(
     VECTOR_ELT(lang_parsed, 0), VECTOR_ELT(lang_parsed, 1),
@@ -382,28 +390,41 @@ SEXP VALC_evaluate(
 
   SEXP res_as_str;
 
-  if(!res_list.idx || res_list.list[res_list.idx - 1].success) {
+  if(!res_list.idx || res_list.list_tpl[res_list.idx - 1].success) {
     res_as_str = PROTECT(allocVector(VECSXP, 0));
   } else {
     // compute how many failures
 
     int fails = 0, j = 0;
-    for(int i = 0; i < res_list.idx; ++i) fails += !res_list.list[i].success;
+    for(int i = 0; i < res_list.idx; ++i)
+      fails += !res_list.list_tpl[i].success;
     res_as_str = PROTECT(allocVector(VECSXP, fails));
+    SEXP sxp_dat = res_list.list_sxp;
 
     for(int i = 0; i < res_list.idx; ++i) {
-      struct VALC_res res = res_list.list[i];
-      if(res.success) continue;
-      SET_VECTOR_ELT(
-        res_as_str, j++,
-        VALC_error_extract(res, arg_tag, arg_lang, lang_full, set)
-      );
+      struct VALC_res_node res = res_list.list_tpl[i];
+      if(sxp_dat == R_NilValue)
+        // nocov start
+        error(
+          "Internal Error: SEXP and data list unsynchronized; %s",
+          "contact maintainer"
+        );
+        // nocov end
+      if(!res.success) {
+        SET_VECTOR_ELT(
+          res_as_str, j++,
+          VALC_error_extract(
+            res, CAR(sxp_dat), arg_tag, arg_lang, lang_full, set
+          )
+        );
+      }
+      sxp_dat = CDR(sxp_dat);
   } }
   // We used to remove duplicates here, but might make more sense to do so once
   // we get to the actual strings we're going to use so that we can sort and
   // check for repeated values.
 
-  UNPROTECT(2 + res_list.idx);
+  UNPROTECT(3);
   return(res_as_str);
 }
 SEXP VALC_evaluate_ext(
