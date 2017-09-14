@@ -29,10 +29,10 @@
 #' @section Vetting Expressions:
 #'
 #' Vetting expressions can be template tokens, standard tokens, or any
-#' combination of template and standard tokens combined with `&&` and/or `||`.
-#' Template tokens are R objects that define the required structure, much like
-#' the `FUN.VALUE` argument to [vapply()].  Standard tokens are tokens that
-#' contain the `.` symbol and are used to vet values.
+#' combination of template and standard tokens combined with \code{&&} and/or
+#' \code{||}.  Template tokens are R objects that define the required structure,
+#' much like the `FUN.VALUE` argument to [vapply()].  Standard tokens are tokens
+#' that contain the `.` symbol and are used to vet values.
 #'
 #' See `vignette('vetr', package='vetr')` and examples for details on how
 #' to craft vetting expressions.
