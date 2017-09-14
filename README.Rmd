@@ -91,6 +91,9 @@ Thank you to:
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
   the repository, and Uwe Ligges in particular for maintaining
   [Winbuilder](http://win-builder.r-project.org/).
+* Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) and rcsnt, to help
+  detect errors in compiled code, and in particular for his infinite patience in
+  helping me resolve the issues he identified for me.
 * [Jim Hester](https://github.com/jimhester) because
   [covr](https://cran.r-project.org/package=covr) rocks.
 * [Dirk Eddelbuettel](https://github.com/eddelbuettel) and [Carl
@@ -100,9 +103,6 @@ Thank you to:
   [R-consortium](https://www.r-consortium.org/) for
   [Rhub](https://github.com/r-hub), without which testing bugs on R-devel and
   other platforms would be a nightmare.
-* Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) to help detect
-  errors in compiled code, and in particular for reaching out to me to help fix
-  problems in this package.
 * Hadley Wickham for [devtools](https://cran.r-project.org/package=devtools) and
   [roxygen2](https://cran.r-project.org/package=roxygen2).
 * [Yihui Xie](https://github.com/yihui) for
