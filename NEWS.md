@@ -1,5 +1,7 @@
 ## 0.2.0
 
+* [#43](https://github.com/brodieG/vetr/issues/43): Fix rchck, rcnst, UBSAN,
+  valgrind (ht @kalibera).
 * [#48](https://github.com/brodieG/vetr/issues/48): Implement `all_bw`, a
   more efficient version of `!anyNA(.) && all(. < x) && all(. > y)`.
 * [#65](https://github.com/brodieG/vetr/issues/65)
