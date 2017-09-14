@@ -303,15 +303,13 @@ unitizer_sect("Calls / Formulas", {
   # attributes
 
   c0 <- quote(fun(a, b, a, 25))
-  c0.1 <- c0.2 <- c0.3 <- c0
+  c0.1 <- c0.2 <- c0
   attr(c0.1, "blah") <- "hello"
   attr(c0.2, "blah") <- 1:3
-  attr(c0.3[[1L]], "blah") <- "hello"
 
   alike(c0, c0.1)     # TRUE
   alike(c0.1, c0)     # Missing attribute
   alike(c0.1, c0.2)   # Attribute mismatch
-  alike(c0.3, c0)     # TRUE, sub-attr shouldn't cause problem
 
   # Formulas
 
