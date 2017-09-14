@@ -1,7 +1,7 @@
 #' Verify Values in Vector are Between Two Others
 #'
-#' Equivalent to `!anyNA(x) && all(x >= lo & x <= hi, na.rm=TRUE)` with default
-#' settings, except that it is substantially faster and returns a string
+#' Equivalent to \code{!anyNA(x) && all(x >= lo & x <= hi, na.rm=TRUE)} with
+#' default settings, except that it is substantially faster and returns a string
 #' describing why not all values are in range instead of FALSE on failure.
 #'
 #' You can modify the comparison to be strictly greater/less than via the

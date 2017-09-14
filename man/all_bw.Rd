@@ -36,8 +36,8 @@ TRUE if all values in \code{x} conform to the specified bounds, a string
 describing the first position that fails otherwise
 }
 \description{
-Equivalent to \code{!anyNA(x) &amp;&amp; all(x &gt;= lo &amp; x &lt;= hi, na.rm=TRUE)} with default
-settings, except that it is substantially faster and returns a string
+Equivalent to \code{!anyNA(x) && all(x >= lo & x <= hi, na.rm=TRUE)} with
+default settings, except that it is substantially faster and returns a string
 describing why not all values are in range instead of FALSE on failure.
 }
 \details{

@@ -64,8 +64,10 @@ vet(vet.exp, "foo")
 vet(vet.exp, "baz")
 
 ## ------------------------------------------------------------------------
-vet(NUM.POS, -runif(5))    # positive numeric
-vet(LGL.1, NA)             # TRUE or FALSE
+vet(all_bw(., 0, 1), runif(5) + 1)
+
+## ------------------------------------------------------------------------
+vet(NUM.POS, -runif(5))    # positive numeric; see `?vet_token` for others
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  vet(. > 0, 1:3)

@@ -110,10 +110,10 @@ are also documented here.
 }
 \details{
 Allows you to supply error messages for vetting to use for each error
-token.  Your token should not contain top level \code{&amp;&amp;} or \code{||}.  If
+token.  Your token should not contain top level \code{&&} or \code{||}.  If
 it does your error message will not be reported because \code{vetr} looks for
 error messages attached to atomic tokens.  If your token must involve
-top level \code{&amp;&amp;} or \code{||}, use \code{I(x &amp;&amp; y)} to ensure that
+top level \code{&&} or \code{||}, use \code{I(x && y)} to ensure that
 your error message is used by \code{vet}, but beware than in doing so you do
 not use templates within the \code{I} call as everything therein will be
 interpreted as a vetting expression rather than a template.
