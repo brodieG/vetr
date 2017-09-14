@@ -1,7 +1,5 @@
 ## 0.2.0
 
-* [#43](https://github.com/brodieG/vetr/issues/43): Fix rchck, rcnst, UBSAN,
-  valgrind (ht @kalibera).
 * [#48](https://github.com/brodieG/vetr/issues/48): Implement `all_bw`, a
   more efficient version of `!anyNA(.) && all(. < x) && all(. > y)`.
 * [#65](https://github.com/brodieG/vetr/issues/65)
@@ -14,6 +12,8 @@
   because they use the object symbol instead of `.` to refer to the object.
 * [#64](https://github.com/brodieG/vetr/issues/64): Rewrite result handling
   for multi token expressions to avoid unnecessary slow downs
+* [#43](https://github.com/brodieG/vetr/issues/43): Fix rchck, rcnst, UBSAN,
+  valgrind (ht @kalibera).
 * [#76](https://github.com/brodieG/vetr/issues/76): Standardize defined
   terms (e.g. Standard vs Template Tokens)
 * [#77](https://github.com/brodieG/vetr/issues/77): Replace `SIZE_T_MAX`
@@ -26,6 +26,8 @@
   handling
 * [#56](https://github.com/brodieG/vetr/issues/56): Over-aggressive
   detection of infinite recursion in symbol substitution
+* [#81](https://github.com/brodieG/vetr/issues/81): Remove test that attached
+  attribute to symbol (illegal in R-devel now).
 * [#59](https://github.com/brodieG/vetr/issues/59): Add a `CONTRIBUTING.md`
 * Custom tokens that return character vectors see the first element of that
   vector incorporated in the error message
