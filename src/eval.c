@@ -34,7 +34,6 @@ struct VALC_res_list VALC_evaluate_recurse(
   SEXP lang, SEXP act_codes, SEXP arg_value, SEXP arg_lang, SEXP arg_tag,
   SEXP lang_full, struct VALC_settings set, struct VALC_res_list res_list
 ) {
-  Rprintf("enter rec\n");
   /*
   check act_codes:
     if 1 or 2
@@ -158,15 +157,11 @@ struct VALC_res_list VALC_evaluate_recurse(
         "Validation expression for argument `%s` produced an error (see previous error)."
       );
     }
-    Rprintf("process result %d\n", mode);
     if(mode == 10) {
-      PrintValue(eval_dat);
       eval_res_c = VALC_all(VECTOR_ELT(eval_dat, 1));
-      Rprintf("VALC_all\n");
       eval_res.tpl = 0;
       eval_res.success = eval_res_c > 0;
       eval_res.dat.sxp_dat = eval_dat;
-      Rprintf("done valc_all\n");
     } else {
       eval_res.tpl = 1;
       // bit of a complicated protection mess here, we don't want eval_dat in
@@ -177,16 +172,13 @@ struct VALC_res_list VALC_evaluate_recurse(
         VECTOR_ELT(eval_dat, 1), arg_value, set
       );
       REPROTECT(res_alike.wrap, ipx);
-      Rprintf("alike_internal\n");
 
       eval_res.dat.tpl_dat = res_alike.dat;
       eval_res.dat.sxp_dat = res_alike.wrap;
 
       eval_res.success = res_alike.success;
     }
-    Rprintf("start add\n");
     res_list = VALC_res_add(res_list, eval_res);
-    Rprintf("end add\n");
     UNPROTECT(1);
     return(res_list);
   } else {
@@ -378,16 +370,13 @@ SEXP VALC_evaluate(
     error("Internal Error: argument `arg_lang` must be language.");  // nocov
 
   SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, set, arg_tag));
-  Rprintf("parsed\n");
   struct VALC_res_list res_list, res_init = VALC_res_list_init(set);
-  Rprintf("list inited\n");
   PROTECT(res_init.list_sxp);
 
   res_list = VALC_evaluate_recurse(
     VECTOR_ELT(lang_parsed, 0), VECTOR_ELT(lang_parsed, 1),
     arg_value, arg_lang, arg_tag, lang_full, set, res_init
   );
-  Rprintf("recurse done\n");
   if(res_list.idx == INT_MAX)
     // nocov start
     error("Internal Error: cannot have INT_MAX results, contact maintainer.");
