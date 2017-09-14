@@ -100,7 +100,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="easily" class="section level3">
 <h3>Easily</h3>
 <p>When you write functions that operate on S3 or unclassed objects you can either trust that your inputs will be structured as expected, or tediously check that they are.</p>
-<p><code>vetr</code> takes the tedium out of structure verification, so that you can trust, but verify. It lets you express structural requirements declaratively with templates, and it auto-generates human-friendly error messages as needed.</p>
+<p><code>vetr</code> takes the tedium out of structure verification so that you can trust, but verify. It lets you express structural requirements declaratively with templates, and it auto-generates human-friendly error messages as needed.</p>
 </div>
 <div id="quickly" class="section level3">
 <h3>Quickly</h3>
@@ -183,7 +183,7 @@ iris.fake &lt;-<span class="st"> </span>iris
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) ||<span class="st"> </span><span class="ot">NULL</span>, <span class="dv">42</span>)</code></pre></div>
 <pre><code>[1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) ||<span class="st"> </span><span class="ot">NULL</span>, <span class="st">&quot;foo&quot;</span>)</code></pre></div>
-<pre><code>[1] &quot;`\&quot;foo\&quot;` should be \&quot;NULL\&quot;, or type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
+<pre><code>[1] &quot;`\&quot;foo\&quot;` should be `NULL`, or type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
 <p>Templates only check structure. When you need to check values use <code>.</code> to refer to the object:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) &amp;&amp;<span class="st"> </span>. &gt;<span class="st"> </span><span class="dv">0</span>, -<span class="dv">42</span>)  <span class="co"># strictly positive scalar numeric</span></code></pre></div>
 <pre><code>[1] &quot;`-42 &gt; 0` is not TRUE (FALSE)&quot;</code></pre>
@@ -202,12 +202,12 @@ vet.exp &lt;-<span class="st"> </span><span class="kw">quote</span>(scalar.num.p
 <pre><code>[1] &quot;At least one of these should pass:&quot;                         
 [2] &quot;  - `\&quot;baz\&quot; %in% c(\&quot;foo\&quot;, \&quot;bar\&quot;)` is not TRUE (FALSE)&quot; 
 [3] &quot;  - `\&quot;baz\&quot;` should be type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
-<p>There are a number of predefined vetting tokens you can use in your vetting expressions:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(NUM.POS, -<span class="kw">runif</span>(<span class="dv">5</span>))    <span class="co"># positive numeric</span></code></pre></div>
+<p><code>all_bw</code> is available for value range checks (~10x faster than <code>!anyNA(.) &amp;&amp; all(. &gt;= x &amp; . &lt;= y)</code> for large vectors):</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">all_bw</span>(., <span class="dv">0</span>, <span class="dv">1</span>), <span class="kw">runif</span>(<span class="dv">5</span>) +<span class="st"> </span><span class="dv">1</span>)</code></pre></div>
+<pre><code>[1] &quot;`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \&quot;`1.728872` at index 1 not in `[0,1]`\&quot;)&quot;</code></pre>
+<p>There are a number of predefined vetting tokens you can use in your vetting expressions such as:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(NUM.POS, -<span class="kw">runif</span>(<span class="dv">5</span>))    <span class="co"># positive numeric; see `?vet_token` for others</span></code></pre></div>
 <pre><code>[1] &quot;`-runif(5)` should contain only positive values, but has negatives&quot;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(LGL<span class="fl">.1</span>, <span class="ot">NA</span>)             <span class="co"># TRUE or FALSE</span></code></pre></div>
-<pre><code>[1] &quot;`NA` should not contain NAs, but does&quot;</code></pre>
-<p>See <code>?vet_token</code> for a full listing, and for instructions on how to define your own tokens with custom error messages.</p>
 <p>Vetting expressions are designed to be intuitive to use, but their implementation is complex. We recommend you look at <code>example(vet)</code> for usage ideas, or at the <a href="#non-standard-evaluation">“Non Standard Evaluation” section of the vignette</a> for the gory details.</p>
 </div>
 <div id="non-standard-evaluation" class="section level3">
@@ -316,9 +316,9 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
   <span class="kw">stopifnot_iris</span>(iris)   <span class="co"># defined in &quot;Templates&quot; section</span>
 )</code></pre></div>
 <pre><code>Mean eval time from 10000 iterations, in microseconds:
-  vet(tpl.iris, iris)   ~  18.1
-  vetr_iris(iris)       ~  28.3
-  stopifnot_iris(iris)  ~  91.8</code></pre>
+  vet(tpl.iris, iris)   ~  17.9
+  vetr_iris(iris)       ~  27.3
+  stopifnot_iris(iris)  ~  94.8</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -327,7 +327,7 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
 <pre><code>Mean eval time from 1000 iterations, in microseconds:
-  data.frame(a = numeric())  ~  144</code></pre>
+  data.frame(a = numeric())  ~  145.5</code></pre>
 <p>In this case the <code>data.frame</code> call alone take over 100us. In your package code you could use:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>())
 
