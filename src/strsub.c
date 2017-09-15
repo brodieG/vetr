@@ -282,7 +282,7 @@ SEXP CSR_strsub(SEXP string, SEXP chars, SEXP mark_trunc) {
     // Limiting to 8 less than SIZE_T_MAX to make room for a last 4 byte UTF8
     // character, '..', and the NULL terminator
 
-    int byte_count = 0, byte_count_prev, byte_count_prev_prev;
+    int byte_count = 0, byte_count_prev = 0, byte_count_prev_prev = 0;
     int is_utf8 = 0;
     int byte_off = 0;
 
@@ -419,13 +419,11 @@ SEXP CSR_char_offsets(SEXP string) {
   char_start = as_utf8_char(chr_cont);
 
   int byte_count = 0, char_count = 0;
-  int too_long = 0; // track if any strings longer than INT_MAX
 
   while((char_val = *(char_ptr = (char_start + byte_count)))) {
     int byte_off = char_offset(char_ptr, char_enc == CE_BYTES);
     if((byte_count > INT_MAX - abs(byte_off))) {
       // nocov start
-      too_long = 1;
       error("Internal Error: string has more than INT_MAX bytes.");
       break;
       // nocov end

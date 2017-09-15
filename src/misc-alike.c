@@ -512,7 +512,7 @@ Convert convention of zero length string == TRUE to SEXP
 SEXP ALIKEC_res_as_string(
   struct ALIKEC_res res, SEXP call, struct VALC_settings set
 ) {
-  const char * res_str;
+  const char * res_str = "<UNINITSTRING>";
   if(!res.success) {
     struct ALIKEC_tar_cur_strings strings_pasted =
       ALIKEC_get_res_strings(res.dat.strings, set);

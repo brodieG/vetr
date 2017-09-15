@@ -182,8 +182,8 @@ struct ALIKEC_res ALIKEC_compare_class(
 
   int tar_class_len, cur_class_len, len_delta, tar_class_i, cur_class_i,
       is_df = 0, idx_fail = -1;
-  const char * cur_class, * cur_class_fail = "";
-  const char * tar_class, * tar_class_fail = "";
+  const char * cur_class = "<UNINITSTRING>", * cur_class_fail = "";
+  const char * tar_class = "<UNINITSTRING>", * tar_class_fail = "";
   struct ALIKEC_res res = ALIKEC_res_init();
 
   tar_class_len = XLENGTH(target);
@@ -363,7 +363,7 @@ struct ALIKEC_res ALIKEC_compare_dims(
   for(attr_i = (R_xlen_t)0; attr_i < target_len; attr_i++) {
     tar_dim_val = INTEGER(target)[attr_i];
     const char * tar_dim_chr = CSR_len_as_chr((R_xlen_t)tar_dim_val);
-    char * err_dim1, * err_dim2;
+    char * err_dim2;
 
     if(tar_dim_val && tar_dim_val != INTEGER(current)[attr_i]) {
       res.success = 0;
@@ -374,7 +374,6 @@ struct ALIKEC_res ALIKEC_compare_dims(
         CSR_len_as_chr((R_xlen_t)(INTEGER(current)[attr_i]));
 
       if(target_len == 2) {  // Matrix
-        err_dim1 = "";
         switch(attr_i) {
           case (R_xlen_t) 0:
             err_dim2 = tar_dim_val == 1 ? " row" : " rows"; break;
