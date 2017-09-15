@@ -29,8 +29,6 @@
 * [#81](https://github.com/brodieG/vetr/issues/81): Remove test that attached
   attribute to symbol (illegal in R-devel now).
 * [#59](https://github.com/brodieG/vetr/issues/59): Add a `CONTRIBUTING.md`
-* Custom tokens that return character vectors see the first element of that
-  vector incorporated in the error message
 * Assorted typos (@franknarf1, @DasonK)
 
 ## 0.1.0
