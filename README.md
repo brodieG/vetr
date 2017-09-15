@@ -18,7 +18,7 @@ When you write functions that operate on  S3 or unclassed objects you can either
 trust that your inputs will be structured as expected, or tediously check that
 they are.
 
-`vetr` takes the tedium out of structure verification, so that you can trust,
+`vetr` takes the tedium out of structure verification so that you can trust,
 but verify.  It lets you express structural requirements declaratively with
 templates, and it auto-generates human-friendly error messages as needed.
 
@@ -178,19 +178,23 @@ vet(vet.exp, "baz")
 ## [3] "  - `\"baz\"` should be type \"numeric\" (is \"character\")"
 ```
 
-There are a number of predefined vetting tokens you can use in your
-vetting expressions:
+`all_bw` is available for value range checks (~10x faster than `!anyNA(.) &&
+all(. >= x & . <= y)` for large vectors):
 
 
 ```r
-vet(NUM.POS, -runif(5))    # positive numeric
-## [1] "`-runif(5)` should contain only positive values, but has negatives"
-vet(LGL.1, NA)             # TRUE or FALSE
-## [1] "`NA` should not contain NAs, but does"
+vet(all_bw(., 0, 1), runif(5) + 1)
+## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.990844` at index 1 not in `[0,1]`\")"
 ```
 
-See `?vet_token` for a full listing, and for instructions on how to define your
-own tokens with custom error messages.
+There are a number of predefined vetting tokens you can use in your
+vetting expressions such as:
+
+
+```r
+vet(NUM.POS, -runif(5))    # positive numeric; see `?vet_token` for others
+## [1] "`-runif(5)` should contain only positive values, but has negatives"
+```
 
 Vetting expressions are designed to be intuitive to use, but their
 implementation is complex.  We recommend you look at `example(vet)` for usage
