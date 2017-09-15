@@ -14,9 +14,9 @@
 #
 # Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
-#' A Fuzzier Version \code{\link{typeof}}
+#' A Fuzzier Version of [typeof()]
 #'
-#' Numerics that are equivalent to integers (e.g \code{x == floor(x)}) are
+#' Numerics that are equivalent to integers (e.g `x == floor(x)`) are
 #' classified as integers, and builtin and special functions are reported as
 #' closures.
 #'
@@ -36,12 +36,12 @@ type_of <- function(object)
 
 #' Compare Types of Objects
 #'
-#' By default, checks \code{\link{type_of}} objects and two objects are
-#' considered \code{type_alike} if they have the same type.  There is special
+#' By default, checks [type_of()] objects and two objects are
+#' considered `type_alike` if they have the same type.  There is special
 #' handling for integers, numerics, and functions.
 #'
-#' For integers and numerics, if \code{current} is integer or integer-like
-#' (e.g. 1.0) it will match real or integer \code{target} values.  Closures,
+#' For integers and numerics, if `current` is integer or integer-like
+#' (e.g. 1.0) it will match real or integer `target` values.  Closures,
 #' built-ins, and specials are all treated as type function.
 #'
 #' Specific behavior can be tuned with the `type.mode` parameter to the

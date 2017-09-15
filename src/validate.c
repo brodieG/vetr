@@ -18,8 +18,89 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 #include "validate.h"
 /*
- * val_res should be a pairlist containing character vectors in each position
- * and each of those character vectors should be length one
+ * Result has a SEXP in .list_sxp that must be protected.
+ */
+struct VALC_res_list VALC_res_list_init(struct VALC_settings set) {
+  if(set.result_list_size_init < 1)
+    error("Internal Error: result alloc < 1; contact maintainer."); // nocov
+  if(set.result_list_size_max < set.result_list_size_init)
+    // nocov start
+    error(
+      "Internal Error: result max alloc less than alloc, contact maintainer"
+    );
+    // nocov end
+
+  struct VALC_res_node * list_start = (struct VALC_res_node *) R_alloc(
+    set.result_list_size_init, sizeof(struct VALC_res_node)
+  );
+
+  struct VALC_res_list res_list = (struct VALC_res_list) {
+    .idx = 0,
+    .idx_alloc = set.result_list_size_init,
+    .idx_alloc_max = set.result_list_size_max,
+    .list_tpl = list_start,
+    .list_sxp = PROTECT(list1(R_NilValue))
+  };
+  res_list.list_sxp_tail = res_list.list_sxp;
+  UNPROTECT(1);
+  return res_list;
+}
+struct VALC_res_list VALC_res_add(
+  struct VALC_res_list list, struct VALC_res res
+) {
+  if(list.idx > list.idx_alloc) {
+    // nocov start
+    error(
+      "Internal Error: res list index greater than alloc, contact maintainer."
+    );
+    // nocov end
+  } else if (list.idx == list.idx_alloc) {
+    // Need to allocate more memory
+
+    if(list.idx_alloc_max > list.idx_alloc) {
+      int alloc_size;
+
+      if(list.idx_alloc_max - list.idx_alloc < list.idx_alloc) {
+        // No room to double, alloc to max
+
+        alloc_size = list.idx_alloc_max;
+      } else {
+        alloc_size = list.idx_alloc * 2;
+      }
+      list.list_tpl = (struct VALC_res_node *) S_realloc(
+        (char *) list.list_tpl, (long) alloc_size,
+        (long) list.idx_alloc, sizeof(struct VALC_res_node)
+      );
+      list.idx_alloc = alloc_size;
+    } else {
+      error(
+        "%s (%d); %s%s%s%s",
+        "Reached maximum vet token result buffer size",
+        list.idx_alloc_max,
+        "this should only happen if you have more than that number of tokens ",
+        "compounded with `||`.  If that is the case, see description of ",
+        "`result.list.size` parameter for `?vetr_settings`.  If not, contact ",
+        "maintainer."
+      );
+    }
+  }
+  list.list_tpl[list.idx] = (struct VALC_res_node) {
+    .tpl_dat = res.dat.tpl_dat,
+    .tpl = res.tpl,
+    .success = res.success
+  };
+  ++list.idx;
+
+  SETCAR(list.list_sxp_tail, res.dat.sxp_dat);
+  SETCDR(list.list_sxp_tail, list1(R_NilValue));
+  list.list_sxp_tail = CDR(list.list_sxp_tail);
+
+  return(list);
+}
+/*
+ * val_res should be a vector containing character vectors in each position
+ * and each of those character vectors should be length one if produced by
+ * standard tokens, or length 5 if they were produced by templates.
  *
  * @param val_res is the return value of VALC_evaluate
  * @param val_tag is the argument name in questions
@@ -42,7 +123,7 @@ SEXP VALC_process_error(
   // Failure, explain why; two pass process because we first need to determine
   // size of error, allocate, then convert to char
 
-  if(TYPEOF(val_res) != LISTSXP)
+  if(TYPEOF(val_res) != VECSXP)
     // nocov start
     error(
       "Internal Error: unexpected type %s when evaluating test for %s; %s",
@@ -58,8 +139,7 @@ SEXP VALC_process_error(
     );
     // nocov end
 
-  SEXP val_res_cpy;
-  size_t count_top = 0;
+  if(!xlength(val_res)) return VALC_TRUE;
 
   // Compose optional argument part of message. This ends up being "Argument
   // `x` should %s" where arg and should are optional
@@ -77,34 +157,10 @@ SEXP VALC_process_error(
   char * err_base_msg = CSR_smprintf4(
     set.nchar_max, err_base, err_arg_msg, "", "", ""
   );
-  // Translate to VECSXP; need to do so because the merging logic is based on
-  // VECSXP; obviously the translation back and forth isn't optimal and we
-  // should probably change this earlier in the process
-
-  // First count how many items we have as we need different treatment depending
-  // on what we're looking at
-
-  for(
-    val_res_cpy = val_res; val_res_cpy != R_NilValue;
-    val_res_cpy = CDR(val_res_cpy)
-  ) {
-    count_top++;
-  }
-  if(!count_top) return VALC_TRUE;
-
-  SEXP err_msg_full = PROTECT(allocVector(VECSXP, count_top));
-  size_t list_ind = 0;
-
-  for(
-    val_res_cpy = val_res; val_res_cpy != R_NilValue;
-    val_res_cpy = CDR(val_res_cpy)
-  ) {
-    SET_VECTOR_ELT(err_msg_full, list_ind++, CAR(val_res_cpy));
-  }
   // Collapse similar entries into one; from this point on every entry in the
   // list should be a character(1L)
 
-  SEXP err_msg_c = PROTECT(ALIKEC_merge_msg_2(err_msg_full, set));
+  SEXP err_msg_c = PROTECT(ALIKEC_merge_msg_2(val_res, set));
   R_xlen_t i, err_len = XLENGTH(err_msg_c);
 
   // Transfer to a character vector from list, also convert to bullets if
@@ -175,7 +231,7 @@ SEXP VALC_process_error(
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_head));
     }
   }
-  UNPROTECT(3);  // unprotects vector result
+  UNPROTECT(2);  // unprotects vector result
   if(!stop) {
     return err_vec_res;
   } else {
@@ -196,26 +252,34 @@ SEXP VALC_validate(
   SEXP ret_mode_sxp, SEXP stop, SEXP settings
 ) {
   SEXP res;
-  struct VALC_settings set = VALC_settings_vet(settings, rho);
-  res = PROTECT(
-    VALC_evaluate(
-      target, cur_sub, VALC_SYM_current, current, par_call, set
-    )
-  );
-  if(IS_TRUE(res)) {
-    UNPROTECT(1);
-    return(ScalarLogical(1));
-  }
   if(TYPEOF(ret_mode_sxp) != STRSXP && XLENGTH(ret_mode_sxp) != 1)
-    error("`vet` usage error: argument `format` must be character(1L)");
+    error("`vet` usage error: argument `format` must be character(1L).");
   int stop_int;
 
   if(
     (TYPEOF(stop) != LGLSXP && XLENGTH(stop) != 1) ||
     ((stop_int = asInteger(stop)) == NA_INTEGER)
   )
-    error("`vet` usage error: argument `stop` must be TRUE or FALSE");
+    error("`vet` usage error: argument `stop` must be TRUE or FALSE.");
 
+  if(TYPEOF(rho) != ENVSXP)
+    error(
+      "`vet` usage error: argument `env` must be an environment (is %s).",
+      type2char(TYPEOF(rho))
+    );
+
+  struct VALC_settings set = VALC_settings_vet(settings, rho);
+  res = PROTECT(
+    VALC_evaluate(
+      target, cur_sub,
+      TYPEOF(cur_sub) == SYMSXP ? cur_sub : VALC_SYM_current,
+      current, par_call, set
+    )
+  );
+  if(!xlength(res)) {
+    UNPROTECT(1);
+    return(ScalarLogical(1));
+  }
   const char * ret_mode_chr = CHAR(asChar(ret_mode_sxp));
   int ret_mode;
 
@@ -350,7 +414,7 @@ SEXP VALC_validate_args(
     SEXP val_res = PROTECT(
       VALC_evaluate(val_tok, fun_tok, arg_tag, fun_val, val_call, set)
     );
-    if(!IS_TRUE(val_res)) {
+    if(xlength(val_res)) {
       // fail, produce error message: NOTE - might change if we try to use full
       // expression instead of just arg name
       VALC_process_error(val_res, arg_tag, fun_call, 1, 1, set);

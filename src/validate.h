@@ -30,6 +30,53 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 #ifndef _VETR_H
 #define _VETR_H
 
+  // Our result holds the C and R data in separate structures mostly because it
+  // would be slow to translate the C stuff into R so we defer that until we're
+  // actually positive we have to make the conversion (i.e. all branches of OR
+  // statements fail).  We are quite wastefull of space here, but it is easier
+  // this way and there shouldn't be that many objects
+
+  struct VALC_res_dat {
+    struct ALIKEC_res_dat tpl_dat;   // Data from template token
+
+    // The SEXP data, which can either be:
+    //
+    // * wrap data from template token, or:
+    // * Standard token result, a 2 long VECSXP with the standard token 
+    //   language in position 0, and the result of evaluating it in position 1
+
+    SEXP sxp_dat;
+  };
+  // Holds all the template or standard token data
+
+  struct VALC_res {
+    struct VALC_res_dat dat;
+    int tpl;          // template or standard token res?
+    int success;
+  };
+  // Holds all the template or standard token data, except for the SEXP data
+  // which is kept separately.  This is intended explicitly as a member of the
+  // VALC_res_list array.
+
+  struct VALC_res_node {
+    struct ALIKEC_res_dat tpl_dat;
+    int tpl;          // template or standard token res?
+    int success;
+  };
+  // Used to track the results of multiple tokens
+
+  struct VALC_res_list {
+    struct VALC_res_node * list_tpl;
+    SEXP list_sxp;      // this is a pairlist
+    SEXP list_sxp_tail; // end of pairlist
+
+    // index of free slot (and count of how many we have), note this means that
+    // the last recorded result is at .list[.idx - 1], not .list[.idx]
+    int idx;
+    int idx_alloc;    // how many we've allocated memory for
+    int idx_alloc_max;// max we are allowed to allocate
+  };
+
   SEXP VALC_SYM_one_dot;
   SEXP VALC_SYM_deparse;
   SEXP VALC_SYM_paren;
@@ -37,6 +84,18 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP VALC_SYM_current;
   SEXP VALC_TRUE;
   SEXP VALC_SYM_errmsg;
+
+  SEXP VALC_test1(SEXP a);
+  SEXP VALC_test2(SEXP a, SEXP b);
+  SEXP VALC_test3(SEXP a, SEXP b, SEXP c);
+
+  SEXP VALC_check_assumptions();
+
+  SEXP VALC_res_init();
+  struct VALC_res_list VALC_res_add(
+    struct VALC_res_list list, struct VALC_res res
+  );
+  struct VALC_res_list VALC_res_list_init(struct VALC_settings set);
 
   SEXP VALC_validate(
     SEXP target, SEXP current, SEXP cur_sub, SEXP par_call, SEXP rho,
@@ -54,15 +113,17 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   int IS_TRUE(SEXP x);
   int IS_LANG(SEXP x);
   SEXP VALC_parse(
-    SEXP lang, SEXP var_name, struct VALC_settings settings
+    SEXP lang, SEXP var_name, struct VALC_settings settings, SEXP arg_tag
   );
   SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho);
   void VALC_parse_recurse(
     SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is,
-    SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash
+    SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash,
+    SEXP arg_tag
   );
   SEXP VALC_sub_symbol(
-    SEXP lang, struct VALC_settings set, struct track_hash * track_hash
+    SEXP lang, struct VALC_settings set, struct track_hash * track_hash,
+    SEXP arg_tag
   );
   SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho);
   void VALC_install_objs();
@@ -76,5 +137,4 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   );
   void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base);
   void psh(const char * lab);
-
 #endif

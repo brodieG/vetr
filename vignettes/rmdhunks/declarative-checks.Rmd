@@ -47,25 +47,24 @@ In this case, `vet(iris[0, ], iris.fake, stop=TRUE)` is equivalent to:
 ```{r}
 stopifnot_iris <- function(x) {
   stopifnot(
-    is.list(x), inherits(x, "data.frame"),
-    length(x) == 5, is.integer(attr(x, 'row.names')),
-    identical(
-      names(x),
-      c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
-    ),
-    all(vapply(x[1:4], is.numeric, logical(1L))),
-    typeof(x$Species) == "integer", is.factor(x$Species),
-    identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
+    is.data.frame(x),
+    is.list(x),
+    length(x) == length(iris),
+    identical(lapply(x, class), lapply(iris, class)),
+    is.integer(attr(x, 'row.names')),
+    identical(names(x), names(iris)),
+    identical(typeof(x$Species), "integer"),
+    identical(levels(x$Species), levels(iris$Species))
   )
 }
 stopifnot_iris(iris.fake)
 ```
 
-`vetr` saved us typing, and the time and thought needed to come up with the
-things that need to be compared.
+`vetr` saved us typing, and the time and thought needed to come up with what
+needs to be compared.
 
 You could just as easily have created templates for nested lists, or data frames
-in lists.  Templates are compared to objects with the `alike`.  For a
+in lists.  Templates are compared to objects with the `alike` function.  For a
 thorough description of templates and how they work see the [`alike`
 vignette][2].  For template examples see `example(alike)`.
 

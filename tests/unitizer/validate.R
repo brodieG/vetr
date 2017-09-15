@@ -65,7 +65,10 @@ unitizer_sect("Custom expressions", {
 
   vet(.(c(TRUE, NA, TRUE)), 1:5)
   vet(.(1:5), 1:5)
-  vet(.(1:5, 1:5), 1:5) # error
+  vet(.(1:5, 1:5), 1:5)      # error
+  vet(.(list(1, 2, 3)), 1:3) # error
+
+  vet(.(c('hello world', 'goodbye moon')), 1:3)
 })
 unitizer_sect("Compound Expressions", {
   vet(INT.1 || NULL, 1)    # Pass
@@ -99,6 +102,10 @@ unitizer_sect("Compound Expressions", {
   exp.b <- quote(is.vector(.))
   
   vet(exp.a && exp.b, -(1:3))
+
+  # Duplicate expressions should get collapsed in error message
+
+  vet(1 || "a" || 1 || "a" || 1 || letters, 1:3)
 })
 
 unitizer_sect("Other Return Modes", {
@@ -136,6 +143,10 @@ unitizer_sect("Multi-line Stuff", {
 
   val.exp <- quote(!anyNA(.))
   vet(val.exp, c(234234131431, 123413413413, NA))
+})
+unitizer_sect("Embedded String Errors", {
+  vet(all_bw(., 0, 1), 0:5)
+  vet(all.equal(., 1:5), 1:6)
 })
 
 unitizer_sect("Language", {
@@ -190,6 +201,9 @@ unitizer_sect("Language", {
   . <- quote(numeric(1L))
   vet(.., 1.5)
 })
+unitizer_sect("Errors", {
+  vet(1, 1, env="hello")
+})
 
 unitizer_sect("Custom tokens", {
   cust.tok.1 <- vet_token(quote(TRUE), "%sshould be logical(1L)")
@@ -210,3 +224,31 @@ unitizer_sect("Custom tokens", {
   vet(cust.tok.2, TRUE)
 })
 
+unitizer_sect("Result Buffer", {
+  # testing that result buffer expands correctly
+
+  set1 <- vetr_settings(result.list.size.init=1)
+
+  vet.exp <- quote(1 || 1:2 || 1:3 || 1:4 || 1:5 || 1:6 || 1:7 || 1:8)
+
+  vet(vet.exp, 1:8, settings=set1)
+  vet(vet.exp, 1:9, settings=set1)
+
+  set2 <- vetr_settings(result.list.size.init=1, result.list.size.max=7)
+
+  vet(vet.exp, 1:8, settings=set2)
+  vet(vet.exp, 1:9, settings=set2)
+
+  set3 <- vetr_settings(result.list.size.init=1, result.list.size.max=8)
+
+  vet(vet.exp, 1:8, settings=set3)
+  vet(vet.exp, 1:9, settings=set3)
+
+  # impossible settings
+
+  set4 <- vetr_settings(result.list.size.init="hello", result.list.size.max=8)
+  set5 <- vetr_settings(result.list.size.init=1, result.list.size.max="hello")
+
+  vet(1, 1, settings=set4)
+  vet(1, 1, settings=set5)
+})

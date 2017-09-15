@@ -1,0 +1,164 @@
+---
+title: "vetR - Trust, but Verify"
+output:
+    rmarkdown::html_vignette:
+        toc: true
+        css: vignettes/styles.css
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(error=TRUE)
+library(vetr)
+```
+
+# Tweets
+
+## Tweet #1
+
+Declarative structural guarantees for #rstats S3 objects via templates with new
+pkg #vetr https://github.com/brodieG/vetr (1/4)
+
+### Like vapply
+
+Declarative checks via templates, much like `vapply`:
+
+```{r}
+vet(numeric(1L), 1:3)
+vet(numeric(1L), "hello")
+vet(numeric(1L), 42)
+```
+
+### Handles Complex Objects
+
+```{r}
+vet(matrix(integer(), ncol=3), matrix(1:12, 4))
+vet(matrix(integer(), ncol=3), matrix(1:12, 3))
+```
+
+Even recursive ones:
+
+```{r}
+iris.template <- abstract(iris)
+levels(iris$Species)[3] <- 'Sibirica' # corrupt iris
+```
+```{r}
+vet(iris.template, iris[1:10,])
+```
+
+Note the useful error messages.
+
+## Tweet #2
+
+We made `vetr` fast to mitigate overhead concerns. There is a
+dedicated mode for fun param vetting (2/4)
+
+### Fast
+
+Comparable in performance to `stopifnot` for simple checks, and faster for
+complex ones:
+
+```{r}
+mx.3.col.num <- matrix(numeric(), ncol=3)
+mx1 <- matrix(1:12, 4)
+
+bench_mark(times=1e4,
+  vet(mx.3.col.num, mx1),
+  stopifnot(is.matrix(mx1), is.numeric(mx1), ncol(mx1) == 3)
+)
+```
+
+### In Functions
+
+`vetr()` streamlines function parameter vetting:
+
+```{r}
+fun <- function(x, y) {
+  vetr(integer(), character(1L) || NULL)
+}
+fun(1, 'hello')
+fun(1, NULL)
+fun(1, 2)
+```
+
+## Tweet #3
+
+Create complex vetting expressions with intuitively programmable
+non-standard-evaluation (3/4)
+
+### Programmable NSE
+
+`vetr` implements programmable NSE via recursive substitution of language
+objects.  This allows you to construct complex vetting expressions from simple
+ones:
+
+```{r}
+a <- quote(integer() && . > 0)
+b <- quote(logical(1L) && !is.na(.))
+```
+```{r}
+vet(a || b, 1:3)
+vet(a || b, -1)
+```
+```{r}
+c <- quote(a || b)  # equivalently
+```
+```{r}
+vet(c, -1)
+```
+
+## Tweet #4
+
+On CRAN, 100% coverage with #covr https://github.com/jimhester/covr
+and #unitizer https://github.com/brodieG/unitizer, but under dev so feedback
+welcome (4/4)
+
+# R Package Announce
+
+Announcing New Package vetr on CRAN
+
+`vetr` implements a declarative template-based approach to verify that objects
+meet structural requirements, and auto-compose error messages when they do not.
+This package is intended to simplify a more formal use of S3 objects.
+
+The template concept is borrowed from `vapply`:
+
+>> vet(numeric(1L), 1:3)
+>  [1] "`1:3` should be length 1 (is 3)"
+>> vet(numeric(1L), "hello")
+>  [1] "`\"hello\"` should be type \"numeric\" (is \"character\")"
+>> vet(numeric(1L), 42)
+>  [1] TRUE
+
+There is no limit on template complexity:
+
+>> vet(matrix(integer(), ncol=3), matrix(1:12, 3))
+>  [1] "`matrix(1:12, 3)` should have 3 columns (has 4)"
+>
+>> iris.template <- abstract(iris)
+>> levels(iris$Species)[3] <- 'sibirica'
+>> vet(iris.template, iris[1:10,])
+>  [1] "`levels((iris[1:10, ])$Species)[3]` should be \"virginica\"
+>  (is \"sibirica\")"
+
+`vetr` implements programmable non-standard evaluation via recursive
+substitution of language objects:
+
+>> a <- quote(integer() && . > 0)
+>> b <- quote(logical(1L) && !is.na(.))
+>> c <- quote(a || b)
+>> vet(c, -1)
+>  [1] "At least one of these should pass:"
+>  [2] "  - `-1 > 0` is not TRUE (FALSE)"
+>  [3] "  - `-1` should be type \"logical\" (is \"double\")"
+
+Performance is comparable to `stopifnot` for simple checks, and is faster for
+complex (template based) ones.  There is a mode that further streamlines
+parameter vetting in functions.
+
+The package is still under development, but the features should be mostly
+stable.  Feedback welcome (https://github.com/brodieG/vetr).
+
+Best regards,
+
+
+Brodie.

@@ -129,3 +129,15 @@ unitizer_sect("Non-equal args and validation exps", {
   fun8(z=1:2)
 
 })
+unitizer_sect("Referencing argument in vet exp error", {
+  fun1 <- function(x, y) vetr(x > 0, . < 3)
+  fun1(1:10, 1:10)
+  fun2 <- function(x, y) vetr(. > 0 && all(y > 0), y < 3)
+  fun2(TRUE, 1:10)
+
+  # also check with vet, although not as important
+
+  x <- 1:10
+  vet(x > 0, x)
+  vet((x + 1) > 0, x + 1)  # this doesn't cause error, but maybe should?
+})

@@ -25,17 +25,15 @@ not alike
 
 call is substituted current, only used when this is called by type_alike directly otherwise doesn't do much
 */
-struct ALIKEC_res_fin ALIKEC_type_alike_internal(
-  SEXP target, SEXP current, SEXP call, struct VALC_settings set
+struct ALIKEC_res ALIKEC_type_alike_internal(
+  SEXP target, SEXP current, struct VALC_settings set
 ) {
   SEXPTYPE tar_type, cur_type, tar_type_raw, cur_type_raw;
   int int_like = 0;
   tar_type_raw = TYPEOF(target);
   cur_type_raw = TYPEOF(current);
 
-  struct ALIKEC_res_fin res = (struct ALIKEC_res_fin) {.target="", .actual=""};
-
-  res.call = "";
+  struct ALIKEC_res res = ALIKEC_res_init();
 
   if(tar_type_raw == cur_type_raw) return res;
 
@@ -69,10 +67,6 @@ struct ALIKEC_res_fin ALIKEC_type_alike_internal(
   ) {
     return res;
   }
-  // This is slow, so we only compute it if we definitely need it (~100us)
-
-  res.call = ALIKEC_pad_or_quote(call, set.width, -1, set);
-
   const char * what;
 
   if(set.type_mode == 0 && int_like) {
@@ -84,29 +78,32 @@ struct ALIKEC_res_fin ALIKEC_type_alike_internal(
   } else {
     what = type2char(tar_type);
   }
-  struct ALIKEC_res_fin res_fin;
-  res_fin.tar_pre = "be";
-  res_fin.target=
-    CSR_smprintf4(set.nchar_max, "type \"%s\"", what, "", "", "");
-  res_fin.act_pre = "is";
-  res_fin.actual = CSR_smprintf4(
-    set.nchar_max, "\"%s\"", type2char(cur_type), "", "", ""
-  );
-  res_fin.call = res.call;
+  struct ALIKEC_res res_fin = res;
+
+  res_fin.success = 0;
+  res_fin.dat.strings.target[0]= "type \"%s\"";
+  res_fin.dat.strings.target[1]= what;
+  res_fin.dat.strings.current[0] = "\"%s\"";
+  res_fin.dat.strings.current[1] = type2char(cur_type);
+  res_fin.wrap = allocVector(VECSXP, 2); // note not PROTECTing b/c return
   return res_fin;
 }
 SEXP ALIKEC_type_alike(
   SEXP target, SEXP current, SEXP call, SEXP settings
 ) {
-  struct ALIKEC_res_fin res;
+  struct ALIKEC_res res;
   struct VALC_settings set = VALC_settings_vet(settings, R_BaseEnv);
 
-  res = ALIKEC_type_alike_internal(target, current, call, set);
-  if(res.target[0]) {
-    return(ALIKEC_string_or_true(res, set));
+  res = ALIKEC_type_alike_internal(target, current, set);
+  PROTECT(res.wrap);
+  SEXP res_sexp;
+  if(!res.success) {
+    res_sexp = PROTECT(ALIKEC_res_as_string(res, call, set));
   } else {
-    return ScalarLogical(1);
+    res_sexp = PROTECT(ScalarLogical(1));
   }
+  UNPROTECT(2);
+  return(res_sexp);
 }
 
 /* - typeof ----------------------------------------------------------------- */
@@ -125,9 +122,13 @@ SEXPTYPE ALIKEC_typeof_internal(SEXP object) {
         fiddling, but at end of day this still wouldn't be fast enough to
         realistically use on a very large vector, so it doesn't really matter
         */
-        for(i = 0; i < obj_len; i++)
-          if(!isnan(obj_real[i]) && obj_real[i] != (int)obj_real[i])
+        for(i = 0; i < obj_len; i++) {
+          if(
+            (isnan(obj_real[i]) || !isfinite(obj_real[i])) ||
+            obj_real[i] != (int)obj_real[i]
+          )
             return REALSXP;
+        }
         return INTSXP;
       }
       break;

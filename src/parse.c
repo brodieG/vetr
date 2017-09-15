@@ -21,7 +21,10 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 /*
-Name replacement, substitutes `.` for argname and multi dots for one dot fewer.  This is specifically for the `.`.  The standard symbol substitution happens via `VALC_symb_sub`.  Note that we skip `VALC_symb_sub` for `.` when it wasn't escaped by this.
+Name replacement, substitutes `.` for argname and multi dots for one dot fewer.
+This is specifically for the `.`.  The standard symbol substitution happens via
+`VALC_symb_sub`.  Note that we skip `VALC_symb_sub` for `.` when it wasn't
+escaped by this.
 */
 SEXP VALC_name_sub(SEXP symb, SEXP arg_name) {
   if(TYPEOF(symb) != SYMSXP){
@@ -124,13 +127,36 @@ If a variable expands to language, sub it in and keep parsing unless the sub its
 See VALC_name_sub too.  We substitute `.` here as well, but logic before this function is called should ensure that we only call it on `.` when it was previously `..`.
 
 Really seems like these two functions should be merged into one so that we don't get out of sync in how we use them.
+
+@param arg_name used primarily for `vetr`, or if in `vet` current is just a
+  single variable name, allows us to verify that we're not accidentally
+  referencing the variable name in a vetting token that is supposed to be a
+  standard token.
 */
 SEXP VALC_sub_symbol(
-  SEXP lang, struct VALC_settings set, struct track_hash * track_hash
+  SEXP lang, struct VALC_settings set, struct track_hash * track_hash,
+  SEXP arg_tag
 ) {
-  size_t protect_i = 0;
+  int check_arg_tag = TYPEOF(arg_tag) == SYMSXP;
   SEXP rho = set.env;
+
+  // Each loop iteration may create a SEXP, but we only care about the last SEXP
+  // generated, so we will repeatedly PROTECT the last SEXP at the location
+  // below
+
+  PROTECT_INDEX ipx;
+  PROTECT_WITH_INDEX(R_NilValue, &ipx);
+
   while(TYPEOF(lang) == SYMSXP && lang != R_MissingArg) {
+    if(check_arg_tag && lang == arg_tag) {
+      error(
+        "vet/vetr usage error: found symbol `%s` %s%s%s",
+        CHAR(PRINTNAME(arg_tag)),
+        "in vetting token for object with the same symbol.  Please use `.` ",
+        "to reference the object being checked by the vetting token (e.g. ",
+        "use `vet(. > 0, x)` instead of `vet(x > 0, x)`)"
+      );
+    }
     const char * symb_chr = CHAR(PRINTNAME(lang));
     int symb_stored = VALC_add_to_track_hash(
       track_hash, symb_chr, "42", set.nchar_max
@@ -148,28 +174,34 @@ SEXP VALC_sub_symbol(
     }
     int var_found_resolves_symbol = 0;
     if(findVar(lang, rho) != R_UnboundValue) {
-      SEXP found_val = eval(lang, rho);
+      SEXP found_val = PROTECT(eval(lang, rho));
       SEXPTYPE found_val_type = TYPEOF(found_val);
       if(found_val_type == LANGSXP || found_val_type == SYMSXP) {
-        lang = PROTECT(duplicate(found_val));
-      } else PROTECT(R_NilValue);  // Balance
+        REPROTECT(lang = duplicate(found_val), ipx);
+      }
       var_found_resolves_symbol = found_val_type == SYMSXP;
-    } else PROTECT(R_NilValue);  // Balance
-    protect_i = CSR_add_szt(protect_i, 1);
+      UNPROTECT(1);
+    }
     if(!var_found_resolves_symbol) break;
   }
-  UNPROTECT(protect_i);
+  UNPROTECT(1);
   return(lang);
 }
 SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
   struct track_hash * track_hash = VALC_create_track_hash(64);
   struct VALC_settings set = VALC_settings_vet(R_NilValue, rho);
-  return VALC_sub_symbol(lang, set, track_hash);
+  return VALC_sub_symbol(lang, set, track_hash, R_NilValue);
 }
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
+/*
+ * @param arg_tag the parameter name being validated, apparently `var_name` is
+ *   the full substituted call, not just the symbol.
+ */
 
-SEXP VALC_parse(SEXP lang, SEXP var_name, struct VALC_settings set) {
+SEXP VALC_parse(
+  SEXP lang, SEXP var_name, struct VALC_settings set, SEXP arg_tag
+) {
   SEXP lang_cpy, res, res_vec, rem_res;
   int mode;
 
@@ -196,8 +228,10 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, struct VALC_settings set) {
   // be substituted with `name_sub`.
 
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
-  lang_cpy = VALC_name_sub(lang_cpy, var_name);
-  if(mode != 2) lang_cpy = VALC_sub_symbol(lang_cpy, set, track_hash);
+  lang_cpy = PROTECT(VALC_name_sub(lang_cpy, var_name));
+  if(mode != 2) {
+    lang_cpy = PROTECT(VALC_sub_symbol(lang_cpy, set, track_hash, arg_tag));
+  } else PROTECT(R_NilValue);
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
@@ -205,25 +239,26 @@ SEXP VALC_parse(SEXP lang, SEXP var_name, struct VALC_settings set) {
     res = PROTECT(allocList(length(lang_cpy)));
     // lang_cpy, res, are modified internally
     VALC_parse_recurse(
-      lang_cpy, res, var_name, mode, R_NilValue, set, track_hash
+      lang_cpy, res, var_name, mode, R_NilValue, set, track_hash, arg_tag
     );
   }
   res_vec = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
   SET_VECTOR_ELT(res_vec, 1, res);
-  UNPROTECT(4);
+  UNPROTECT(6);
   return(res_vec);
 }
 SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
   struct VALC_settings set = VALC_settings_vet(R_NilValue, rho);
-  return VALC_parse(lang, var_name, set);
+  return VALC_parse(lang, var_name, set, R_NilValue);
 }
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 
 void VALC_parse_recurse(
   SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is,
-  SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash
+  SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash,
+  SEXP arg_tag
 ) {
   /*
   If the object is not a language list, then return it, as part of an R vector
@@ -300,7 +335,17 @@ void VALC_parse_recurse(
 
     int is_one_dot = (lang_car == VALC_SYM_one_dot);
     lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
-    if(!is_one_dot) lang_car = VALC_sub_symbol(lang_car, set, track_hash);
+
+    // each time we switch parse tree elements we should reset the hash so that
+    // we don't mistakenly tag symbol collisions that occur on different
+    // branches of the parse tree, so start by recording the sub level so we can
+    // reset later
+
+    size_t substitute_level = track_hash->idx;
+
+    if(!is_one_dot) {
+      lang_car = VALC_sub_symbol(lang_car, set, track_hash, arg_tag);
+    }
     UNPROTECT(1);
     SETCAR(lang, lang_car);
     UNPROTECT(1);
@@ -309,16 +354,10 @@ void VALC_parse_recurse(
       SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
 
-      // each time we exit from a recursion, we should reset the hash so that we
-      // don't mistakenly tag symbol collisions that occur on different branches
-      // of the parse tree
-
-      size_t substitute_level = track_hash->idx;
       VALC_parse_recurse(
         lang_car, CAR(lang_track), var_name, eval_as_is_internal,
-        first_fun, set, track_hash
+        first_fun, set, track_hash, arg_tag
       );
-      VALC_reset_track_hash(track_hash, substitute_level);
     } else {
       int new_call_type = call_type;
       if(is_one_dot || eval_as_is_internal) {
@@ -328,6 +367,9 @@ void VALC_parse_recurse(
       }
       SETCAR(lang_track, ScalarInteger(new_call_type));
     }
+    // Now reset the track hash to avoid spurious collision warnings
+
+    VALC_reset_track_hash(track_hash, substitute_level);
     lang = CDR(lang);
     lang_track = CDR(lang_track);
   }

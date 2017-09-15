@@ -14,7 +14,7 @@ type_alike(target, current, settings = NULL)
 \item{settings}{NULL, or a list as produced by \code{\link[=vetr_settings]{vetr_settings()}}}
 }
 \description{
-By default, checks \code{\link{type_of}} objects and two objects are
+By default, checks \code{\link[=type_of]{type_of()}} objects and two objects are
 considered \code{type_alike} if they have the same type.  There is special
 handling for integers, numerics, and functions.
 }

@@ -3,7 +3,6 @@
 \name{vet}
 \alias{vet}
 \alias{tev}
-\alias{tev}
 \title{Verify Objects Meet Structural Requirements}
 \usage{
 vet(target, current, env = parent.frame(), format = "text", stop = FALSE,
@@ -31,7 +30,7 @@ with none of the formatting or surrounding verbiage
 }}
 
 \item{stop}{TRUE or FALSE whether to call \code{\link[=stop]{stop()}} on failure
-(default) or not}
+or not (default)}
 
 \item{settings}{a settings list as produced by \code{\link[=vetr_settings]{vetr_settings()}}, or NULL to
 use the default settings}
@@ -44,23 +43,14 @@ chosen with parameter \code{stop}
 Use vetting expressions to enforce structural requirements for objects.
 \code{tev} is a version of \code{vet} compatible with \code{magrittr} pipes.
 }
-\details{
-\code{tev} just reverses the \code{target} and \code{current} arguments for better
-integration with \code{magrittr}.  There are two major caveats:
-\itemize{
-\item error messages will be less useful since you will get \code{.} instead
-of the deparsed call
-\item \code{x \\\%>\\\% tev(y)} is much slower than \code{vet(y, x)} (or even \code{tev(x, y)})
-}
-}
 \section{Vetting Expressions}{
 
 
-Vetting expressions can be template tokens, custom tokens, or any
-combination of template and custom tokens combined with \code{&&} and/or \code{||}.
-Template tokens are R objects that define the required structure, much like
-the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Custom tokens are tokens that
-contain the \code{.} symbol and are used to vet values.
+Vetting expressions can be template tokens, standard tokens, or any
+combination of template and standard tokens combined with \code{&&} and/or
+\code{||}.  Template tokens are R objects that define the required structure,
+much like the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Standard tokens are tokens
+that contain the \code{.} symbol and are used to vet values.
 
 See \code{vignette('vetr', package='vetr')} and examples for details on how
 to craft vetting expressions.
@@ -108,11 +98,11 @@ vet(tpl, val.2)
 
 ## See `example(alike)` for more template examples
 
-## Custom tokens allow you to check values
+## Standard tokens allow you to check values
 vet(. > 0, runif(10))
 vet(. > 0, -runif(10))
 
-## You can combine templates and custom tokens with
+## You can combine templates and standard tokens with
 ## `&&` and/or `||`
 vet(numeric(2L) && . > 0, runif(2))
 vet(numeric(2L) && . > 0, runif(10))

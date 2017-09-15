@@ -4,59 +4,32 @@
 \name{vet_token}
 \alias{vet_token}
 \alias{NO.NA}
-\alias{vet_token}
 \alias{NO.INF}
-\alias{vet_token}
 \alias{GTE.0}
-\alias{vet_token}
 \alias{LTE.0}
-\alias{vet_token}
 \alias{GT.0}
-\alias{vet_token}
 \alias{LT.0}
-\alias{vet_token}
 \alias{INT.1}
-\alias{vet_token}
 \alias{INT.1.POS}
-\alias{vet_token}
 \alias{INT.1.NEG}
-\alias{vet_token}
 \alias{INT.1.POS.STR}
-\alias{vet_token}
 \alias{INT.1.NEG.STR}
-\alias{vet_token}
 \alias{INT}
-\alias{vet_token}
 \alias{INT.POS}
-\alias{vet_token}
 \alias{INT.NEG}
-\alias{vet_token}
 \alias{INT.POS.STR}
-\alias{vet_token}
 \alias{INT.NEG.STR}
-\alias{vet_token}
 \alias{NUM.1}
-\alias{vet_token}
 \alias{NUM.1.POS}
-\alias{vet_token}
 \alias{NUM.1.NEG}
-\alias{vet_token}
 \alias{NUM}
-\alias{vet_token}
 \alias{NUM.POS}
-\alias{vet_token}
 \alias{NUM.NEG}
-\alias{vet_token}
 \alias{CHR.1}
-\alias{vet_token}
 \alias{CHR}
-\alias{vet_token}
 \alias{CPX}
-\alias{vet_token}
 \alias{CPX.1}
-\alias{vet_token}
 \alias{LGL}
-\alias{vet_token}
 \alias{LGL.1}
 \title{Vetting Tokens With Custom Error Messages}
 \format{An object of class \code{call} of length 2.}
@@ -162,7 +135,7 @@ to allow NAs or infinite values just use a template object (e.g.
 \code{integer(1L)}).
 }
 \note{
-\strong{This will only work with custom expressions containing \code{.}}.  Anything
+\strong{This will only work with standard tokens containing \code{.}}.  Anything
 else will be interpreted as a template token.
 }
 \examples{

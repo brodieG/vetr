@@ -33,11 +33,11 @@ checked (you may omit arguments that should not be evaluate from
 \section{Vetting Expressions}{
 
 
-Vetting expressions can be template tokens, custom tokens, or any
-combination of template and custom tokens combined with \code{&&} and/or \code{||}.
-Template tokens are R objects that define the required structure, much like
-the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Custom tokens are tokens that
-contain the \code{.} symbol and are used to vet values.
+Vetting expressions can be template tokens, standard tokens, or any
+combination of template and standard tokens combined with \code{&&} and/or
+\code{||}.  Template tokens are R objects that define the required structure,
+much like the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Standard tokens are tokens
+that contain the \code{.} symbol and are used to vet values.
 
 See \code{vignette('vetr', package='vetr')} and examples for details on how
 to craft vetting expressions.
