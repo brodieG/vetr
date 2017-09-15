@@ -184,7 +184,7 @@ vet(vet.exp, "baz")
 
 ```r
 vet(all_bw(., 0, 1), runif(5) + 1)
-## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.022418` at index 1 not in `[0,1]`\")"
+## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.969598` at index 1 not in `[0,1]`\")"
 ```
 
 There are a number of predefined vetting tokens you can use in your
@@ -345,4 +345,4 @@ Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 [2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/alike.html
 [3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#non-standard-evaluation
 [4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#in-functions
-[5]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/extra/compare.html
+[5]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/extra/compare.html

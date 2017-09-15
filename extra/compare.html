@@ -389,36 +389,36 @@ rect.mx &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class
 <pre><code>Unit: microseconds, neval:   100
 
                      expr        lq    median        uq      mean
-5  simple_checkmate(nums)       5.0       7.1       9.4      22.7
-1  simple_stopifnot(nums)       9.8      12.2      13.7      38.7
-2       simple_vetr(nums)      18.1      23.2      28.3      48.4
-4 simple_assertthat(nums)      42.5      51.3      60.0      83.1
-3  simple_assertive(nums)   1,078.6   1,184.9   1,340.1   1,286.8</code></pre>
+5  simple_checkmate(nums)       6.3      10.2      15.6      22.1
+1  simple_stopifnot(nums)      10.2      14.0      17.7      40.9
+2       simple_vetr(nums)      19.6      27.6      37.0      52.2
+4 simple_assertthat(nums)      45.6      61.1      71.7      93.5
+3  simple_assertive(nums)   1,313.6   1,389.7   1,532.8   1,461.8</code></pre>
 <p><code>stopifnot</code> and <code>checkmate</code> lead the way, with <code>vetr</code> not too far behind.</p>
 <p>For complex objects <code>vetr</code> takes the lead:</p>
 <pre><code>Unit: microseconds, neval:   100
 
                       expr        lq    median        uq      mean
-5       complex_vetr(iris)      31.4      43.1      50.6      55.8
-4  complex_stopifnot(iris)      77.9      90.1     115.9     196.5
-2 complex_assertthat(iris)     177.6     204.0     234.7     312.2
-3  complex_checkmate(iris)     262.5     322.9     373.4     408.3
-1  complex_assertive(iris)   4,223.3   4,607.9   5,228.8   4,992.4</code></pre>
+5       complex_vetr(iris)      29.5      38.3      48.0      51.7
+4  complex_stopifnot(iris)      71.3      79.4      89.5     201.5
+2 complex_assertthat(iris)     164.2     184.5     214.8     291.2
+3  complex_checkmate(iris)     261.9     297.3     358.5     367.7
+1  complex_assertive(iris)   4,177.0   4,434.2   4,793.7   4,659.4</code></pre>
 <p><code>vetr</code> is the fastest option for checking that values in a long vector are in range:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">str.pos.vec &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="fl">5e5</span>) +<span class="st"> </span><span class="dv">1</span>  <span class="co"># test with a 500K long vector</span></code></pre></div>
 <pre><code>Unit: microseconds, neval:   100
 
                             expr        lq    median        uq      mean
-4       vector_vetr(str.pos.vec)     428.5     461.0     489.8     504.1
-2  vector_checkmate(str.pos.vec)   1,690.0   1,761.1   1,893.9   1,833.4
-3  vector_stopifnot(str.pos.vec)   2,794.9   3,256.1   3,719.9   4,502.2
-1 vector_assertthat(str.pos.vec)   2,928.5   3,326.7   3,608.2   3,596.1</code></pre>
+4       vector_vetr(str.pos.vec)     434.6     462.8     515.8     521.3
+2  vector_checkmate(str.pos.vec)   1,721.7   1,806.2   1,970.8   1,953.3
+3  vector_stopifnot(str.pos.vec)   2,862.7   3,264.8   3,783.0   4,553.3
+1 vector_assertthat(str.pos.vec)   2,909.1   3,348.5   3,793.1   3,592.3</code></pre>
 <p>This is primarily because we use <code>vetr::all_bw</code> instead of the semantically similar <code>isTRUE(all(. &gt; 0))</code> expression. <code>all_bw</code> is implemented in C and avoids the intermediate vectors required to evaluate the standard R version. <code>checkmate</code> does the same with <code>qassert</code>.</p>
 <p><code>assertive</code> is substantially slower so we benchmark it separately:</p>
 <pre><code>Unit: milliseconds, neval:   5
 
-                           expr      lq  median    uq    mean
-1 vector_assertive(str.pos.vec)   749.9   759.4   768   780.6</code></pre>
+                           expr      lq  median      uq    mean
+1 vector_assertive(str.pos.vec)   728.9   731.8   737.6   756.8</code></pre>
 <p>If your functions will never be run thousands of times then you probably do not need to worry about the differences shown here. However, general purpose parameter check functions should be compatible with functions that are, and in those cases microseconds matter.</p>
 </div>
 <div id="making-vetr-faster" class="section level3">
@@ -437,10 +437,10 @@ rect.mx &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class
 <pre><code>Unit: microseconds, neval:   10,000
 
                     expr     lq median     uq   mean
-3 simple_checkmate(nums)    4.3    4.8    6.4    5.6
-4     simple_alike(nums)    4.5    4.9    6.7    6.2
-1       simple_vet(nums)    9.0    9.8   14.0   17.5
-2      simple_vetr(nums)   16.4   17.6   25.0   24.1</code></pre>
+3 simple_checkmate(nums)    4.0    4.4    4.9    5.0
+4     simple_alike(nums)    4.2    4.5    5.0    5.4
+1       simple_vet(nums)    8.6    9.1    9.8   12.5
+2      simple_vetr(nums)   15.6   16.4   17.7   22.2</code></pre>
 </div>
 </div>
 <div id="conclusions" class="section level2">
@@ -601,8 +601,8 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] assertthat_0.2.0    assertive_0.3-5     checkmate_1.8.3    
-[4] vetr_0.2.0          rhub_1.0.1          unitizer_1.4.2.9003
+[1] vetr_0.2.0          assertthat_0.2.0    assertive_0.3-5    
+[4] checkmate_1.8.3     rhub_1.0.1          unitizer_1.4.2.9003
 [7] inline_0.3.14      
 
 loaded via a namespace (and not attached):

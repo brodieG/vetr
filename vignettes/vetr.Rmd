@@ -281,4 +281,4 @@ following in our [parameter validation functions][4] review:
 [1]: ./vetr.html
 [2]: ./alike.html
 [3]: #non-standard-evaluation
-[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/extra/compare.html
+[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/extra/compare.html

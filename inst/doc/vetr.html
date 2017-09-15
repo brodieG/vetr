@@ -204,7 +204,7 @@ vet.exp &lt;-<span class="st"> </span><span class="kw">quote</span>(scalar.num.p
 [3] &quot;  - `\&quot;baz\&quot;` should be type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
 <p><code>all_bw</code> is available for value range checks (~10x faster than <code>isTRUE(all(. &gt;= x &amp; . &lt;= y))</code> for large vectors):</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">all_bw</span>(., <span class="dv">0</span>, <span class="dv">1</span>), <span class="kw">runif</span>(<span class="dv">5</span>) +<span class="st"> </span><span class="dv">1</span>)</code></pre></div>
-<pre><code>[1] &quot;`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \&quot;`1.123188` at index 1 not in `[0,1]`\&quot;)&quot;</code></pre>
+<pre><code>[1] &quot;`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \&quot;`1.407691` at index 1 not in `[0,1]`\&quot;)&quot;</code></pre>
 <p>There are a number of predefined vetting tokens you can use in your vetting expressions such as:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(NUM.POS, -<span class="kw">runif</span>(<span class="dv">5</span>))    <span class="co"># positive numeric; see `?vet_token` for others</span></code></pre></div>
 <pre><code>[1] &quot;`-runif(5)` should contain only positive values, but has negatives&quot;</code></pre>
@@ -316,9 +316,9 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
   <span class="kw">stopifnot_iris</span>(iris)   <span class="co"># defined in &quot;Templates&quot; section</span>
 )</code></pre></div>
 <pre><code>Mean eval time from 10000 iterations, in microseconds:
-  vet(tpl.iris, iris)   ~  20.5
-  vetr_iris(iris)       ~  31.1
-  stopifnot_iris(iris)  ~  79.4</code></pre>
+  vet(tpl.iris, iris)   ~  41.25
+  vetr_iris(iris)       ~  28.75
+  stopifnot_iris(iris)  ~  78.75</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -327,7 +327,7 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
 <pre><code>Mean eval time from 1000 iterations, in microseconds:
-  data.frame(a = numeric())  ~  120</code></pre>
+  data.frame(a = numeric())  ~  125.5</code></pre>
 <p>In this case the <code>data.frame</code> call alone take over 100us. In your package code you could use:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>())
 
@@ -340,7 +340,7 @@ my_fun &lt;-<span class="st"> </span>function(x) {
 </div>
 <div id="alternatives" class="section level2">
 <h2>Alternatives</h2>
-<p>There are many alternatives available to <code>vetr</code>. We do a survey of the following in our <a href="http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/development/extra/compare.html">parameter validation functions</a> review:</p>
+<p>There are many alternatives available to <code>vetr</code>. We do a survey of the following in our <a href="http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/extra/compare.html">parameter validation functions</a> review:</p>
 <ul>
 <li><code>stopifnot</code> by R Core</li>
 <li><a href="https://github.com/brodieG/vetr"><code>vetr</code></a> by Yours Truly</li>
