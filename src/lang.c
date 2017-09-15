@@ -326,7 +326,7 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
       }
       SEXP tar_sub, cur_sub, cur_sub_tag, tar_sub_tag,
         prev_tag = R_UnboundValue;
-      R_xlen_t arg_num, arg_num_prev;
+      R_xlen_t arg_num;
 
       for(
         tar_sub = CDR(target), cur_sub = CDR(current), arg_num = 0;
@@ -403,7 +403,6 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
           }
           break;
         }
-        arg_num_prev = arg_num;
       }
       if(res.success) {
         // Make sure that we compared all items; missing R_NilValue here means
