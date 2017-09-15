@@ -178,13 +178,13 @@ vet(vet.exp, "baz")
 ## [3] "  - `\"baz\"` should be type \"numeric\" (is \"character\")"
 ```
 
-`all_bw` is available for value range checks (~10x faster than `!anyNA(.) &&
-all(. >= x & . <= y)` for large vectors):
+`all_bw` is available for value range checks (~10x faster than
+`isTRUE(all(. >= x & . <= y))` for large vectors):
 
 
 ```r
 vet(all_bw(., 0, 1), runif(5) + 1)
-## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.990844` at index 1 not in `[0,1]`\")"
+## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.022418` at index 1 not in `[0,1]`\")"
 ```
 
 There are a number of predefined vetting tokens you can use in your
@@ -265,7 +265,7 @@ following in our [parameter validation functions][5] review:
 * [`vetr`](https://github.com/brodieG/vetr) by Yours Truly
 * [`asserthat`](https://github.com/hadley/assertthat) by Hadley Wickham
 * [`assertive`](https://www.r-pkg.org/pkg/assertive) by Richie Cotton
-* [`checkmate`](https://github.com/mllg/checkmate) by Michael Lang
+* [`checkmate`](https://github.com/mllg/checkmate) by Michel Lang
 
 The following packages also perform related tasks, although we do not review
 them:

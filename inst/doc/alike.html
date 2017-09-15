@@ -249,9 +249,9 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h4>Functions</h4>
 <p>Functions are <code>alike</code> if the signature of the <code>current</code> function can reasonably be interpreted as a valid method for the <code>target</code> function.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(print, print.default)   <span class="co"># print can be the generic for print.default</span></code></pre></div>
-<pre><code>[1] TRUE</code></pre>
+<pre><code>[1] &quot;`print.default` should be S4&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">alike</span>(print.default, print)   <span class="co"># but not vice versa</span></code></pre></div>
-<pre><code>[1] &quot;`print` should have argument `digits` after argument `x`&quot;</code></pre>
+<pre><code>[1] &quot;`print` should not be S4&quot;</code></pre>
 <p>A method of a generic must have all arguments present in the generic, with the same default values if those are defined. If the generic contains <code>...</code> then the method may have additional arguments, but must also contain <code>...</code>.</p>
 <p>Potential changes / improvements for function comparison are being considered in <a href="https://github.com/brodieG/vetr/issues/35">#35</a>.</p>
 </div>
@@ -423,17 +423,17 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
   <span class="kw">type_and_len</span>(rivers, rivers)
 )</code></pre></div>
 <pre><code>Mean eval time from 10000 iterations, in microseconds:
-  identical(rivers, rivers)     ~  0.8
-  alike(rivers, rivers)         ~  3.4
-  type_and_len(rivers, rivers)  ~  1.8</code></pre>
+  identical(rivers, rivers)     ~  1.05
+  alike(rivers, rivers)         ~  3.65
+  type_and_len(rivers, rivers)  ~  2.65</code></pre>
 <p>While <code>alike</code> is slower than <code>identical</code> and the comparable bare bones R function, it is competitive with a bare bones R function that checks types and length. As objects grow more complex, <code>identical</code> will obviously pull ahead, though <code>alike</code> should be sufficiently fast for most applications:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(<span class="dt">times=</span><span class="fl">1e4</span>,
   <span class="kw">identical</span>(mtcars, mtcars),
   <span class="kw">alike</span>(mtcars, mtcars)
 )</code></pre></div>
 <pre><code>Mean eval time from 10000 iterations, in microseconds:
-  identical(mtcars, mtcars)  ~   0.65
-  alike(mtcars, mtcars)      ~  13.85</code></pre>
+  identical(mtcars, mtcars)  ~   1
+  alike(mtcars, mtcars)      ~  18</code></pre>
 <p>In the above example, we are comparing the data frames, their attributes, and the 11 columns individually.</p>
 <p>Keep in mind that the complexity of the <code>alike</code> comparison is driven by the complexity of the template, not the object we are checking, so we can always manage the expense of the <code>alike</code> evaluation.</p>
 <p>Comparisons that succeed will be substantially faster than comparisons that fail as the construction of error messages is non-trivial and we have prioritized optimization in the success case.</p>
@@ -449,8 +449,8 @@ mdl.tpl &lt;-<span class="st"> </span><span class="kw">abstract</span>(<span cla
 )</code></pre></div>
 <pre><code>Mean eval time from 1000 iterations, in microseconds:
   alike(mdl.tpl, mdl.tpl)      ~   176
-  all.equal(mdl.tpl, mdl.tpl)  ~  1856
-  identical(mdl.tpl, mdl.tpl)  ~     2</code></pre>
+  all.equal(mdl.tpl, mdl.tpl)  ~  1666
+  identical(mdl.tpl, mdl.tpl)  ~     3</code></pre>
 <p>Even with template as large as <code>lm</code> results (check <code>str(mdl.tpl)</code>) we can evaluate <code>alike</code> thousands of times before the overhead becomes noticeable.</p>
 </div>
 <div id="pre-defining-templates" class="section level3">
@@ -464,8 +464,8 @@ df.cur &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span cl
   <span class="kw">alike</span>(<span class="kw">data.frame</span>(<span class="kw">integer</span>(), <span class="kw">numeric</span>()), df.cur)
 )</code></pre></div>
 <pre><code>Mean eval time from 1000 iterations, in microseconds:
-  alike(df.tpl, df.cur)                     ~    8
-  alike(data.frame(integer(), numeric())..  ~  395</code></pre>
+  alike(df.tpl, df.cur)                     ~   11
+  alike(data.frame(integer(), numeric())..  ~  348</code></pre>
 <p><code>data.frame</code> is a particularly slow constructor, but in general you are best served by defining your templates (including calls to <code>abstract</code>) outside of your function so they are created on package load rather than every time your function is called.</p>
 </div>
 </div>

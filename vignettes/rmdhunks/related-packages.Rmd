@@ -3,7 +3,7 @@
 * [`vetr`](https://github.com/brodieG/vetr) by Yours Truly
 * [`asserthat`](https://github.com/hadley/assertthat) by Hadley Wickham
 * [`assertive`](https://www.r-pkg.org/pkg/assertive) by Richie Cotton
-* [`checkmate`](https://github.com/mllg/checkmate) by Michael Lang
+* [`checkmate`](https://github.com/mllg/checkmate) by Michel Lang
 
 The following packages also perform related tasks, although we do not review
 them:

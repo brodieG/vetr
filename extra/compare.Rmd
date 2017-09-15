@@ -141,7 +141,7 @@ Parameter checks should add minimal overhead.
 * `assertthat` is comparable but adds some overhead.
 * `assertive` is substantially slower.
 * `checkmate` is fastest for simple checks, and faster for vectors.
-* `vetr` is fastest for vectors and complex objects.
+* `vetr` is fastest for long vectors and complex objects.
 
 We base our conclusions on the tests we ran.  It is entirely possible different
 tests could lead to different results.  See [benchmarks](#benchmarks).
@@ -474,7 +474,7 @@ mb(
 ```
 
 This is primarily because we use `vetr::all_bw` instead of the semantically
-equivalent `!anyNA(.) && all(. > 0)` expression.  `all_bw` is implemented in C
+similar `isTRUE(all(. > 0))` expression.  `all_bw` is implemented in C
 and avoids the intermediate vectors required to evaluate the standard R version.
 `checkmate` does the same with `qassert`.
 
