@@ -102,6 +102,10 @@ vet(tpl, val.2)
 vet(. > 0, runif(10))
 vet(. > 0, -runif(10))
 
+## `all_bw` is like `isTRUE(all(. >= x & . <= y))`, but
+## ~10x faster for long vectors:
+vet(all_bw(., 0, 1), runif(1e6) + .1)
+
 ## You can combine templates and standard tokens with
 ## `&&` and/or `||`
 vet(numeric(2L) && . > 0, runif(2))
@@ -117,7 +121,6 @@ vet(INT.1 && . \%in\% 0:1 || LGL.1, NA)
 
 ## Vetting expressions can be assembled from previously
 ## defined tokens
-
 scalar.num.pos <- quote(numeric(1L) && . > 0)
 foo.or.bar <- quote(character(1L) && . \%in\% c('foo', 'bar'))
 vet.exp <- quote(scalar.num.pos || foo.or.bar)
@@ -131,5 +134,5 @@ vet(vet.exp, "baz")
 \code{\link[=vetr]{vetr()}} for a version optimized to vet function arguments,
 \code{\link[=alike]{alike()}} for how templates are used, \code{\link[=vet_token]{vet_token()}} for how to specify
 custom error messages and also for predefined validation tokens for common
-use cases.
+use cases, \code{\link[=all_bw]{all_bw()}} for fast bounds checks.
 }
