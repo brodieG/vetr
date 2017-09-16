@@ -36,9 +36,9 @@ TRUE if all values in \code{x} conform to the specified bounds, a string
 describing the first position that fails otherwise
 }
 \description{
-Equivalent to \code{!anyNA(x) && all(x >= lo & x <= hi, na.rm=TRUE)} with
-default settings, except that it is substantially faster and returns a string
-describing why not all values are in range instead of FALSE on failure.
+Similar to \code{isTRUE(all(x >= lo & x <= hi))} with default settings,
+except that it is substantially faster and returns a string describing the
+first encountered violation rather than FALSE on failure.
 }
 \details{
 You can modify the comparison to be strictly greater/less than via the
