@@ -5,12 +5,13 @@ unitizer_sect("Basic Tests", {
   vetr:::len_chr_len(1000L)
   vetr:::len_chr_len(1L)
   vetr:::len_chr_len(1234567890L)
-  vetr:::len_chr_len(1234567890000000000000000)
+  len0 <- 1234567890000000000000000
+  vetr:::len_chr_len(len0)
 
   vetr:::len_as_chr(1000L)
   vetr:::len_as_chr(1L)
   vetr:::len_as_chr(1234567890L)
-  vetr:::len_as_chr(1234567890000000000000000)
+  vetr:::len_as_chr(len0)
 
   identical(vetr:::strmlen(lorem), nchar(lorem))
   vetr:::strmlen(lorem, 100L)
@@ -43,26 +44,33 @@ unitizer_sect("Basic Tests", {
   vetr:::collapse(character())
 })
 unitizer_sect("numbers as character", {
-  vetr:::num_as_chr(100);
-  vetr:::num_as_chr(100.01);
+  vetr:::num_as_chr(100)
+  vetr:::num_as_chr(100.01)
 
   # switch ot scientific
 
-  vetr:::num_as_chr(1e9 + 0.1);
-  vetr:::num_as_chr(-1e9 - 0.1);
+  num0 <- 1e9 + 0.1
+  num1 <- -1e9 - 0.1
 
-  vetr:::num_as_chr(1e9 + 0.1, as.int=TRUE);
-  vetr:::num_as_chr(-(1e9 + 0.1), as.int=TRUE);
+  vetr:::num_as_chr(num0)
+  vetr:::num_as_chr(num1)
 
-  vetr:::num_as_chr(1e9 - 0.1);
-  vetr:::num_as_chr(-(1e9 - 0.1));
+
+  vetr:::num_as_chr(num0, as.int=TRUE)
+  vetr:::num_as_chr(num1, as.int=TRUE)
+
+  num2 <- 1e9 - 0.1
+  num3 <- -(1e9 - 0.1)
+
+  vetr:::num_as_chr(num2)
+  vetr:::num_as_chr(num3)
 
   # corner cases
 
-  vetr:::num_as_chr(NA);
-  vetr:::num_as_chr(NaN);
-  vetr:::num_as_chr(Inf);
-  vetr:::num_as_chr(-Inf);
+  vetr:::num_as_chr(NA)
+  vetr:::num_as_chr(NaN)
+  vetr:::num_as_chr(Inf)
+  vetr:::num_as_chr(-Inf)
 })
 unitizer_sect("smprintf6", {
   vetr:::smprintf6(
@@ -141,7 +149,9 @@ unitizer_sect("char_offsets", {
   vetr:::char_offsets(c("a", "ab", "abc"))
 })
 unitizer_sect("UTF8 corner cases, in UTF-8", {
-  old.locale <- Sys.setlocale('LC_CTYPE', 'en_US.UTF-8')
+  # Originally we tried using `Sys.setlocale` but that isn't guaranteed to work
+  # e.g. failed on windows
+
   utf8.kuhn <- readLines('unitizer/helper/UTF-8-test.txt', encoding='UTF-8');
   test.start <- grep("^Here come the tests:", utf8.kuhn)
   test.start
@@ -211,14 +221,22 @@ unitizer_sect("UTF8 corner cases, in UTF-8", {
   # )
   # Other examples from the Unicode 10.0 docs
 
-  vetr:::nchar_u("\xC2\x41\x41")
-  vetr:::nchar_u("\x61\xF1\x80\x80")
-  vetr:::nchar_u("\x61\xF1\x80\x80\xE1\x80")
-  vetr:::nchar_u("\x61\xF1\x80\x80\xE1\x80\xC2\x62\x80\x63\x80\xBF\x64")
+  unicode.10 <- c(
+    "\xC2\x41\x41",
+    "\x61\xF1\x80\x80",
+    "\x61\xF1\x80\x80\xE1\x80",
+    "\x61\xF1\x80\x80\xE1\x80\xC2\x62\x80\x63\x80\xBF\x64"
+  )
+  Encoding(unicode.10) <- "UTF-8"
+
+  vetr:::nchar_u(unicode.10[1])
+  vetr:::nchar_u(unicode.10[2])
+  vetr:::nchar_u(unicode.10[3])
+  vetr:::nchar_u(unicode.10[4])
 
   # Confirm offsets are what they should be
 
-  vetr:::char_offsets("\x61\xF1\x80\x80\xE1\x80\xC2\x62\x80\x63\x80\xBF\x64")
+  vetr:::char_offsets(unicode.10[4])
 
   # Well-Formed UTF-8 Byte Sequences
   # Code Points        | Byte 1 | Byte 2 | Byte 3 | Byte 4
@@ -306,7 +324,6 @@ unitizer_sect("UTF8 corner cases, in UTF-8", {
   Map(vetr:::char_offsets, crit.2)
   Map(vetr:::char_offsets, crit.3)
   Map(vetr:::char_offsets, crit.4)
-  invisible(Sys.setlocale('LC_CTYPE', old.locale))
 })
 unitizer_sect("UTF-8 corner cases - other encodings", {
   # Some latin-1 codes

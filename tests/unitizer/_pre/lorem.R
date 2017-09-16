@@ -31,7 +31,9 @@ lorem.tr.phrases <- unlist(strsplit(lorem.tr, "[.,]\\K ", perl=TRUE))
 
 lorem.cn <- "中華人民共和國是單一制的多民族國家。全國劃分為23個省（其中台灣省并沒有實際管辖）、5個自治區、4個直轄市和2個根據一國兩制設立的特別行政區，均直屬於中央人民政府。中华人民共和国跨越五个地理时区，但全国均使用北京时间（UTC+8，东八区）作为标准时间。中華人民共和國官方認定的民族現有56個，其中最大民族汉族佔總人口的91.59%，其餘55族統稱為少数民族，所有民族統稱為中華民族；除回族外，其他54個少数民族如壮族、维吾尔族、滿族、蒙古族、藏族、朝鲜族等也多使用自己的語言與文字。主要宗教有佛教、道教、基督教（多指新教）、天主教和伊斯兰教等，但過半人口無特定宗教信仰。中华人民共和国的通用语言是汉语普通話，當中在中國大陸通行的漢字為簡體字，而在港澳台地區通行的漢字則為繁體字。"
 Encoding(lorem.cn) <- "UTF-8"
-lorem.cn.phrases <- unlist(strsplit(lorem.cn, "[、。]\\K", perl=TRUE))
+cn.split <-  "[、。]\\K"
+Encoding(cn.split) <- "UTF-8"
+lorem.cn.phrases <- unlist(strsplit(lorem.cn, cn.split, perl=TRUE))
 
 # Emoji from Unicode Site <http://unicode.org/emoji/charts/full-emoji-list.html>
 
