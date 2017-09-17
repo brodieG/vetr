@@ -517,3 +517,12 @@ unitizer_sect("Errors", {
   alike(NULL, NULL, settings=vetr_settings(width=letters))
   alike(NULL, NULL, settings=vetr_settings(env.depth.max=-1L))
 })
+unitizer_sect("Attributes", {
+  # There are implicit and explicit attribute checks elsewhere, this
+  # is just for a corner case that showed up in coverage
+
+  obj.tpl <- structure(integer(), a=integer())
+  obj.obj <- structure(1:10, a=1:3)
+
+  alike(obj.tpl, obj.obj)
+})
