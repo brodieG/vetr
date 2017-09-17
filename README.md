@@ -184,7 +184,7 @@ vet(vet.exp, "baz")
 
 ```r
 vet(all_bw(., 0, 1), runif(5) + 1)
-## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.969598` at index 1 not in `[0,1]`\")"
+## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.114960` at index 1 not in `[0,1]`\")"
 ```
 
 There are a number of predefined vetting tokens you can use in your
@@ -296,7 +296,7 @@ Thank you to:
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
   the repository, and Uwe Ligges in particular for maintaining
   [Winbuilder](http://win-builder.r-project.org/).
-* Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) and rcsnt, to help
+* Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) and rcnst to help
   detect errors in compiled code, and in particular for his infinite patience in
   helping me resolve the issues he identified for me.
 * [Jim Hester](https://github.com/jimhester) because

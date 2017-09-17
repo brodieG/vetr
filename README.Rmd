@@ -91,7 +91,7 @@ Thank you to:
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
   the repository, and Uwe Ligges in particular for maintaining
   [Winbuilder](http://win-builder.r-project.org/).
-* Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) and rcsnt, to help
+* Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) and rcnst to help
   detect errors in compiled code, and in particular for his infinite patience in
   helping me resolve the issues he identified for me.
 * [Jim Hester](https://github.com/jimhester) because
