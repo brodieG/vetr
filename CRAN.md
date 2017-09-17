@@ -11,7 +11,10 @@
 
 ## Submission Notes:
 
-This is a new package submission.
+This is an update to an existing package
+that fixes valgrind, rchck, rcnst, and other
+similar issues.  Some new features and
+improvements are included too.
 
 ## R CMD check --as-cran
 
@@ -34,6 +37,6 @@ environments:
 * Winbuilder
     * R devel (2017-07-05 r72891): https://win-builder.r-project.org/A467DXNN6hxP
 * Locally on Mac OS 10.12.5
-    * R version 3.4.0 (2017-04-21)
+    * R version 3.4.1 (2017-06-30)
 
 

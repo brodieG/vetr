@@ -903,7 +903,13 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal_simple(
         res.wrap, 0,
         lang2(ALIKEC_SYM_length, VECTOR_ELT(res.wrap, 0))
       );
-    } else PROTECT(R_NilValue);
+    } else
+      // nocov start
+      error(
+        "Internal Error: %s",
+        "tae_val_len == 0 already checked above; contact maintainer."
+      );
+      // nocov end
   } else {
     res = ALIKEC_alike_attr(target, current, attr_sym, set);
     PROTECT(res.wrap);
