@@ -542,7 +542,8 @@ SEXP ALIKEC_res_as_string(
         strings_pasted.target,  ""
       );
     }
-  } else error("Internal Error: res_as_string only works with failing res.");
+  } else
+    error("Internal Error: res_as_string only works with fail res."); // nocov
   return(mkString(res_str));
 }
 /*
@@ -566,7 +567,8 @@ SEXP ALIKEC_res_as_strsxp(
     SET_STRING_ELT(res_fin, 3, mkChar(res.dat.strings.cur_pre));
     SET_STRING_ELT(res_fin, 4, mkChar(strings_pasted.current));
     UNPROTECT(2);
-  } else error("Internal Error: res_as_strsxp only works with failing res.");
+  } else
+    error("Internal Error: res_as_strsxp only works with fail res."); // nocov
   return(res_fin);
 }
 /*
