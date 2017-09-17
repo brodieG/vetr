@@ -8,7 +8,8 @@ vetr_settings(type.mode = 0L, attr.mode = 0L, lang.mode = 0L,
   fun.mode = 0L, rec.mode = 0L, suppress.warnings = FALSE,
   fuzzy.int.max.len = 100L, width = -1L, env.depth.max = 65535L,
   symb.sub.depth.max = 65535L, symb.size.max = 15000L, nchar.max = 65535L,
-  track.hash.content.size = 63L, env = NULL)
+  track.hash.content.size = 63L, env = NULL, result.list.size.init = 64L,
+  result.list.size.max = 1024L)
 }
 \arguments{
 \item{type.mode}{integer(1L) in 0:2, defaults to 0, determines how object
@@ -83,6 +84,17 @@ grown by 2x.  This parameter is exposed mostly for developer use.}
 expressions, although typically you would specify this with the \code{env}
 argument to \code{vet}; if NULL will use the calling frame to
 \code{vet/vetr/alike}.}
+
+\item{result.list.size.init}{initial value for token tracking.   This will be
+grown by a factor of two each time it fills up until we reach
+\code{result.list.size.max}.}
+
+\item{result.list.size.max}{maximum number of tokens we keep track of,
+intended mostly as a safeguard in case a logic error causes us to keep
+allocating memory.  Set to 1024 as a default value since it should be
+exceedingly rare to have vetting expressions with such a large number of
+tokens, enough so that if we reach that number it is more likely something
+went wrong.}
 }
 \value{
 list with all the setting values

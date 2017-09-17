@@ -1,10 +1,27 @@
-  <li><a href='https://github.com/smbache/ensurer'>ensurer</a> by Stefan M Bache
-  allows you to specify contracts for data validation and has an experimental
-  implementation of type-safe functions.
-  <li><a href='https://github.com/data-cleaning/validate'>validate</a> by Mark van
-  der Loo and Edwin de Jonge provides tools for checking data
-  <li><a href='https://github.com/jimhester/types'>types</a> by Jim Hester
-  provides a mechanism for defining what types arguments should be, though it does
-  not directly enforce them
-  <li><a href='https://github.com/gaborcsardi/argufy'>argufy</a> by Gábor Csárdi
-  adds parameter checks via Roxygen (not published to CRAN)
+
+* `stopifnot` by R Core
+* [`vetr`](https://github.com/brodieG/vetr) by Yours Truly
+* [`asserthat`](https://github.com/hadley/assertthat) by Hadley Wickham
+* [`assertive`](https://www.r-pkg.org/pkg/assertive) by Richie Cotton
+* [`checkmate`](https://github.com/mllg/checkmate) by Michel Lang
+
+The following packages also perform related tasks, although we do not review
+them:
+
+* [`valaddin`](https://github.com/egnha/valaddin) v0.1.0 by Eugene Ha, a
+  framework for augmenting existing functions with validation contracts.
+  Currently the package is undergoing a major overhaul so we will add it to the
+  comparison once the new release (v0.3.0) is out.
+* [`ensurer`](https://github.com/smbache/ensurer) v1.1 by Stefan M. Bache, a
+  framework for flexibly creating and combining validation contracts.  The
+  development version adds an experimental method for creating type safe
+  functions, but it is not published to CRAN so we do not test it here.
+* [`validate`](https://github.com/data-cleaning/validate) by Mark van
+  der Loo and Edwin de Jonge, with a primary focus on validating data in data
+  frames and similar data structures.
+* [`assertr`](https://github.com/ropensci/assertr) by Tony Fischetti, also
+  focused on data validation in data frames and similar structures.
+* [`types`](https://github.com/jimhester/types) by Jim Hester, which implements
+  but does not enforce type hinting.
+* [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi, which
+  implements parameter validation via roxygen tags (not released to CRAN).

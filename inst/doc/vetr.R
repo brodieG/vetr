@@ -1,5 +1,5 @@
 ## ----global_options, echo=FALSE------------------------------------------
-knitr::opts_chunk$set(error=TRUE)
+knitr::opts_chunk$set(error=TRUE, comment=NA)
 library(vetr)
 
 ## ------------------------------------------------------------------------
@@ -30,15 +30,14 @@ vet(tpl.iris, iris.fake)
 ## ------------------------------------------------------------------------
 stopifnot_iris <- function(x) {
   stopifnot(
-    is.list(x), inherits(x, "data.frame"),
-    length(x) == 5, is.integer(attr(x, 'row.names')),
-    identical(
-      names(x),
-      c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
-    ),
-    all(vapply(x[1:4], is.numeric, logical(1L))),
-    typeof(x$Species) == "integer", is.factor(x$Species),
-    identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
+    is.data.frame(x),
+    is.list(x),
+    length(x) == length(iris),
+    identical(lapply(x, class), lapply(iris, class)),
+    is.integer(attr(x, 'row.names')),
+    identical(names(x), names(iris)),
+    identical(typeof(x$Species), "integer"),
+    identical(levels(x$Species), levels(iris$Species))
   )
 }
 stopifnot_iris(iris.fake)
@@ -65,8 +64,10 @@ vet(vet.exp, "foo")
 vet(vet.exp, "baz")
 
 ## ------------------------------------------------------------------------
-vet(NUM.POS, -runif(5))    # positive numeric
-vet(LGL.1, NA)             # TRUE or FALSE
+vet(all_bw(., 0, 1), runif(5) + 1)
+
+## ------------------------------------------------------------------------
+vet(NUM.POS, -runif(5))    # positive numeric; see `?vet_token` for others
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  vet(. > 0, 1:3)

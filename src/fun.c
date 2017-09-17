@@ -40,7 +40,7 @@ fun(a, b, e, f, ..., g, c, e)
 
 */
 
-struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
+struct ALIKEC_res ALIKEC_fun_alike_internal(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
   if(!isFunction(target) || !isFunction(current))
@@ -48,7 +48,7 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
 
   SEXP tar_form, cur_form, args;
   SEXPTYPE tar_type = TYPEOF(target), cur_type = TYPEOF(current);
-  struct ALIKEC_res_strings res = {"", "", "", ""};
+  struct ALIKEC_res res = ALIKEC_res_init();
 
   // Translate specials and builtins to formals, if possible
 
@@ -87,11 +87,10 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
     if(!dots_cur && cur_tag == R_DotsSymbol) dots_cur = 1;
     if(tar_tag == cur_tag) {
       if(CAR(tar_form) != R_MissingArg && CAR(cur_form) == R_MissingArg) {
-        res.tar_pre = "have";
-        res.target = CSR_smprintf4(
-          set.nchar_max, "a default value for argument `%s`",
-          CHAR(PRINTNAME(tar_tag)), "", "", ""
-        );
+        res.success = 0;
+        res.dat.strings.tar_pre = "have";
+        res.dat.strings.target[0] = "a default value for argument `%s`%s%s%s";
+        res.dat.strings.target[1] = CHAR(PRINTNAME(tar_tag));
         break;
       }
       last_match = tar_tag;
@@ -110,7 +109,7 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
             cur_form = cur_next;
             break;
       } } }
-      if(!tag_match) break;
+      if(!tag_match) break;     // err msg produced below
     }
     // Need to know loop right after tar_form is dots
     if(dots_reset) dots_last = 0;
@@ -118,17 +117,20 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
   // We have a mismatch; produce error message
 
   int cur_mismatch = cur_form != R_NilValue && last_match != R_DotsSymbol;
-  if(res.target && (tar_form != R_NilValue || !tag_match || cur_mismatch)) {
+
+  if(tar_form != R_NilValue || !tag_match || cur_mismatch) {
+    res.success = 0;
+
     if(dots && !dots_cur) {
-      res.tar_pre = "have";
-      res.target = "a `...` argument";
+      res.dat.strings.tar_pre = "have";
+      res.dat.strings.target[1] = "a `...` argument";
     } else if (!tar_args && tar_form == R_NilValue) {
-      res.tar_pre = "not have";
-      res.target = "any arguments";
+      res.dat.strings.tar_pre = "not have";
+      res.dat.strings.target[1] = "any arguments";
     } else {
       const char * arg_type = "as first argument";
       const char * arg_name;
-      const char * arg_mod = "";
+      int arg_neg = 0;
       if(last_match != R_NilValue) {
         arg_type = (const char *) CSR_smprintf4(
           set.nchar_max, "after argument `%s`",
@@ -137,7 +139,7 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
       if(tar_form != R_NilValue || !tag_match){
         arg_name = CHAR(PRINTNAME(TAG(tar_form)));
       } else if(cur_mismatch) {
-        arg_mod = "not ";
+        arg_neg = 1;
         arg_name = CHAR(PRINTNAME(TAG(cur_form)));
       } else {
         // nocov start
@@ -146,20 +148,20 @@ struct ALIKEC_res_strings ALIKEC_fun_alike_internal(
         );
         // nocov end
       }
-      res.tar_pre =
-        CSR_smprintf4(set.nchar_max, "%shave", arg_mod, "", "", "");
-      res.target =  CSR_smprintf4(
-        set.nchar_max, "argument `%s` %s", arg_name, arg_type, "", ""
-  );} }
-  // Success
-
+      res.dat.strings.tar_pre = arg_neg ? "not have" : "have";
+      res.dat.strings.target[0] = "argument `%s` %s%s%s";
+      res.dat.strings.target[1] = arg_name;
+      res.dat.strings.target[2] = arg_type;
+    }
+  }
   UNPROTECT(3);
+  if(!res.success) res.wrap = allocVector(VECSXP, 2);
   return res;
 }
 SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current) {
   struct VALC_settings set = VALC_settings_init();
-  struct ALIKEC_res_strings res =
+  struct ALIKEC_res res =
     ALIKEC_fun_alike_internal(target, current, set);
-  if(res.target[0]) return ALIKEC_res_strings_to_SEXP(res);
+  if(!res.success) return ALIKEC_res_strings_to_SEXP(res.dat.strings);
   return(ScalarLogical(1));
 }

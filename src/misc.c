@@ -18,11 +18,20 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 #include "validate.h"
 
+/* testing funs
+SEXP VALC_test1(SEXP a) {
+  return ScalarReal(REAL(a)[0] + REAL(a)[0] + REAL(a)[0]);
+}
+SEXP VALC_test2(SEXP a, SEXP b) {
+  return ScalarReal(REAL(a)[0] + REAL(b)[0] + REAL(a)[0]);
+}
+SEXP VALC_test3(SEXP a, SEXP b, SEXP c) {
+  return ScalarReal(REAL(a)[0] + REAL(b)[0] + REAL(b)[0]);
+}
+*/
+
 // - Helper Functions ----------------------------------------------------------
 
-int IS_TRUE(SEXP x) {
-  return(TYPEOF(x) == LGLSXP && XLENGTH(x) == 1 && asLogical(x));
-}
 int IS_LANG(SEXP x) {
   return(
     TYPEOF(x) == LANGSXP || TYPEOF(x) == SYMSXP ||
@@ -76,10 +85,12 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
 /*
 return 2 if isTRUE, 1 if every element is TRUE, 0 if there is at least one
 FALSE, -1 if identical to FALSE, -2 if not logical, -3 if NA, -4 if length
-zero
+zero, -6 if the result is a string and has at least one element,
+5 if it is zero length
 */
 
 int VALC_all(SEXP vec) {
+  if(TYPEOF(vec) == STRSXP && xlength(vec)) return -6;
   if(TYPEOF(vec) != LGLSXP) return -2;
   int * vec_c = LOGICAL(vec);
   R_xlen_t i, i_end = XLENGTH(vec);

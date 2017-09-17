@@ -2,7 +2,7 @@
 
 
 
-# vetr - Trust, but Verify
+# vetr
 
 [![](https://travis-ci.org/brodieG/vetr.svg?branch=master)](https://travis-ci.org/brodieG/vetr)
 [![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://codecov.io/github/brodieG/vetr?branch=master)
@@ -18,7 +18,7 @@ When you write functions that operate on  S3 or unclassed objects you can either
 trust that your inputs will be structured as expected, or tediously check that
 they are.
 
-`vetr` takes the tedium out of structure verification, so that you can trust,
+`vetr` takes the tedium out of structure verification so that you can trust,
 but verify.  It lets you express structural requirements declaratively with
 templates, and it auto-generates human-friendly error messages as needed.
 
@@ -41,7 +41,7 @@ the rest:
 library(vetr)
 tpl <- numeric(1L)
 vet(tpl, 1:3)
-## [1] "`1:3` should be length 1 (is 3)"
+## [1] "`length(1:3)` should be 1 (is 3)"
 vet(tpl, "hello")
 ## [1] "`\"hello\"` should be type \"numeric\" (is \"character\")"
 vet(tpl, 42)
@@ -92,26 +92,25 @@ In this case, `vet(iris[0, ], iris.fake, stop=TRUE)` is equivalent to:
 ```r
 stopifnot_iris <- function(x) {
   stopifnot(
-    is.list(x), inherits(x, "data.frame"),
-    length(x) == 5, is.integer(attr(x, 'row.names')),
-    identical(
-      names(x),
-      c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
-    ),
-    all(vapply(x[1:4], is.numeric, logical(1L))),
-    typeof(x$Species) == "integer", is.factor(x$Species),
-    identical(levels(x$Species), c("setosa", "versicolor", "virginica"))
+    is.data.frame(x),
+    is.list(x),
+    length(x) == length(iris),
+    identical(lapply(x, class), lapply(iris, class)),
+    is.integer(attr(x, 'row.names')),
+    identical(names(x), names(iris)),
+    identical(typeof(x$Species), "integer"),
+    identical(levels(x$Species), levels(iris$Species))
   )
 }
 stopifnot_iris(iris.fake)
-## Error: identical(levels(x$Species), c("setosa", "versicolor", "virginica")) is not TRUE
+## Error: identical(levels(x$Species), levels(iris$Species)) is not TRUE
 ```
 
-`vetr` saved us typing, and the time and thought needed to come up with the
-things that need to be compared.
+`vetr` saved us typing, and the time and thought needed to come up with what
+needs to be compared.
 
 You could just as easily have created templates for nested lists, or data frames
-in lists.  Templates are compared to objects with the `alike`.  For a
+in lists.  Templates are compared to objects with the `alike` function.  For a
 thorough description of templates and how they work see the [`alike`
 vignette][2].  For template examples see `example(alike)`.
 
@@ -147,7 +146,7 @@ vet(numeric(1L) || NULL, NULL)
 vet(numeric(1L) || NULL, 42)
 ## [1] TRUE
 vet(numeric(1L) || NULL, "foo")
-## [1] "`\"foo\"` should be \"NULL\", or type \"numeric\" (is \"character\")"
+## [1] "`\"foo\"` should be `NULL`, or type \"numeric\" (is \"character\")"
 ```
 
 Templates only check structure.  When you need to check values use `.` to
@@ -175,23 +174,27 @@ vet(vet.exp, "foo")
 ## [1] TRUE
 vet(vet.exp, "baz")
 ## [1] "At least one of these should pass:"                         
-## [2] "  - `\"baz\"` should be type \"numeric\" (is \"character\")"
-## [3] "  - `\"baz\" %in% c(\"foo\", \"bar\")` is not TRUE (FALSE)"
+## [2] "  - `\"baz\" %in% c(\"foo\", \"bar\")` is not TRUE (FALSE)" 
+## [3] "  - `\"baz\"` should be type \"numeric\" (is \"character\")"
 ```
 
-There are a number of predefined vetting tokens you can use in your
-vetting expressions:
+`all_bw` is available for value range checks (~10x faster than
+`isTRUE(all(. >= x & . <= y))` for large vectors):
 
 
 ```r
-vet(NUM.POS, -runif(5))    # positive numeric
-## [1] "`-runif(5)` should contain only positive values, but has negatives"
-vet(LGL.1, NA)             # TRUE or FALSE
-## [1] "`NA` should not contain NAs, but does"
+vet(all_bw(., 0, 1), runif(5) + 1)
+## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.114960` at index 1 not in `[0,1]`\")"
 ```
 
-See `?vet_token` for a full listing, and for instructions on how to define your
-own tokens with custom error messages.
+There are a number of predefined vetting tokens you can use in your
+vetting expressions such as:
+
+
+```r
+vet(NUM.POS, -runif(5))    # positive numeric; see `?vet_token` for others
+## [1] "`-runif(5)` should contain only positive values, but has negatives"
+```
 
 Vetting expressions are designed to be intuitive to use, but their
 implementation is complex.  We recommend you look at `example(vet)` for usage
@@ -211,7 +214,7 @@ fun <- function(x, y) {
   TRUE   # do work...
 }
 fun(1:2, "foo")
-## Error in fun(x = 1:2, y = "foo"): For argument `x`, `1:2` should be length 1 (is 2)
+## Error in fun(x = 1:2, y = "foo"): For argument `x`, `length(1:2)` should be 1 (is 2)
 fun(1, "foo")
 ## Error in fun(x = 1, y = "foo"): For argument `y`, `"foo"` should be type "logical" (is "character")
 ```
@@ -219,13 +222,14 @@ fun(1, "foo")
 `vetr` automatically matches the vetting expressions to the corresponding
 arguments and fetches the argument values from the function environment.
 
-See [vignette][1] for additional details on how the `vetr` function works.
+See [vignette][4] for additional details on how the `vetr` function works.
 
 ## Additional Documentation
 
-* [`vetr` vignette][1], `?vet`, `?vetr`, `example(vet)`, `example(vetr)`
+* [`vetr` vignette][1], `?vet`, `?vetr`, `example(vet)`, `example(vetr)`.
 * [`alike` vignette][2], `?alike`, and `example(alike)` for discussion of
-  templates
+  templates.
+* A survey of [parameter validation functions][5].
 
 ## Development Status
 
@@ -250,25 +254,39 @@ Or for the development version:
 devtools::install_github('brodieg/vetr@development')
 ```
 
-## Related Packages
+## Alternatives
 
-<ul>
-  <li><a href='https://github.com/egnha/valaddin'>valaddin</a> by Eugene Ha (see
-  <a
-  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#valaddin'>vignette</a>
-  for a more detailed comparison) has very similar objectives to `vetr`
+There are many alternatives available to `vetr`.  We do a survey of the
+following in our [parameter validation functions][5] review:
 
-  <li><a href='https://github.com/smbache/ensurer'>ensurer</a> by Stefan M Bache
-  allows you to specify contracts for data validation and has an experimental
-  implementation of type-safe functions.
-  <li><a href='https://github.com/data-cleaning/validate'>validate</a> by Mark van
-  der Loo and Edwin de Jonge provides tools for checking data
-  <li><a href='https://github.com/jimhester/types'>types</a> by Jim Hester
-  provides a mechanism for defining what types arguments should be, though it does
-  not directly enforce them
-  <li><a href='https://github.com/gaborcsardi/argufy'>argufy</a> by Gábor Csárdi
-  adds parameter checks via Roxygen (not published to CRAN)
-</ul>
+
+
+* `stopifnot` by R Core
+* [`vetr`](https://github.com/brodieG/vetr) by Yours Truly
+* [`asserthat`](https://github.com/hadley/assertthat) by Hadley Wickham
+* [`assertive`](https://www.r-pkg.org/pkg/assertive) by Richie Cotton
+* [`checkmate`](https://github.com/mllg/checkmate) by Michel Lang
+
+The following packages also perform related tasks, although we do not review
+them:
+
+* [`valaddin`](https://github.com/egnha/valaddin) v0.1.0 by Eugene Ha, a
+  framework for augmenting existing functions with validation contracts.
+  Currently the package is undergoing a major overhaul so we will add it to the
+  comparison once the new release (v0.3.0) is out.
+* [`ensurer`](https://github.com/smbache/ensurer) v1.1 by Stefan M. Bache, a
+  framework for flexibly creating and combining validation contracts.  The
+  development version adds an experimental method for creating type safe
+  functions, but it is not published to CRAN so we do not test it here.
+* [`validate`](https://github.com/data-cleaning/validate) by Mark van
+  der Loo and Edwin de Jonge, with a primary focus on validating data in data
+  frames and similar data structures.
+* [`assertr`](https://github.com/ropensci/assertr) by Tony Fischetti, also
+  focused on data validation in data frames and similar structures.
+* [`types`](https://github.com/jimhester/types) by Jim Hester, which implements
+  but does not enforce type hinting.
+* [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi, which
+  implements parameter validation via roxygen tags (not released to CRAN).
 
 ## Acknowledgments
 
@@ -278,25 +296,37 @@ Thank you to:
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
   the repository, and Uwe Ligges in particular for maintaining
   [Winbuilder](http://win-builder.r-project.org/).
+* Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) and rcnst to help
+  detect errors in compiled code, and in particular for his infinite patience in
+  helping me resolve the issues he identified for me.
 * [Jim Hester](https://github.com/jimhester) because
   [covr](https://cran.r-project.org/package=covr) rocks.
 * [Dirk Eddelbuettel](https://github.com/eddelbuettel) and [Carl
   Boettiger](https://github.com/cboettig) for the
   [rocker](https://github.com/rocker-org/rocker) project, and [Gábor
-  Csárdi](https://github.com/gaborcsardi) and the R-consortium for
-  [Rhub](https://github.com/r-hub/rhub), without which testing bugs on R-devel
-  and other platforms would be a nightmare.
+  Csárdi](https://github.com/gaborcsardi) and the
+  [R-consortium](https://www.r-consortium.org/) for
+  [Rhub](https://github.com/r-hub), without which testing bugs on R-devel and
+  other platforms would be a nightmare.
+* Hadley Wickham for [devtools](https://cran.r-project.org/package=devtools) and
+  [roxygen2](https://cran.r-project.org/package=roxygen2).
 * [Yihui Xie](https://github.com/yihui) for
   [knitr](https://cran.r-project.org/package=knitr) and  [J.J.
   Allaire](https://github.com/jjallaire) etal for
   [rmarkdown](https://cran.r-project.org/package=rmarkdown), and by extension
   John MacFarlane for [pandoc](http://pandoc.org/).
+* Olaf Mersmann for
+  [microbenchmark](https://cran.r-project.org/package=microbenchmark), because
+  microsecond matter.
+* [Michel Lang](https://github.com/mllg) for pushing me to implement `all_bw` to
+  compete with his own package [`checkmate`](https://cran.r-project.org/package=checkmate).
+* [Eugene Ha](https://github.com/egnha) for pointing me to several other
+  relevant packages, which in turn led to the [survey of related packages][5].
+* [Markus Kuhn](http://www.cl.cam.ac.uk/~mgk25/) for [UTF-8 stress test
+  data](http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt).
 * Stefan M. Bache for the idea of having a function for testing objects directly
   (originally `vetr` only worked with function arguments), which I took from
   ensurer.
-* Hadley Wickham for [devtools](https://cran.r-project.org/package=devtools),
-  and for pointing me to Stefan M. Bache's ensurer package.
-* Olaf Mersmann for [microbenchmark](https://cran.r-project.org/package=microbenchmark), because microsecond matter.
 * All open source developers out there that make their work freely available
   for others to use.
 * [Github](https://github.com/), [Travis-CI](https://travis-ci.org/),
@@ -315,3 +345,4 @@ Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 [2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/alike.html
 [3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#non-standard-evaluation
 [4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#in-functions
+[5]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/extra/compare.html

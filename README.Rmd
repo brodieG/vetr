@@ -4,12 +4,13 @@
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "##",
-  fig.path = "README-"
+  fig.path = "README-",
+  error = TRUE
 )
 library(vetr)
 ```
 
-# vetr - Trust, but Verify
+# vetr
 
 [![](https://travis-ci.org/brodieG/vetr.svg?branch=master)](https://travis-ci.org/brodieG/vetr)
 [![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://codecov.io/github/brodieG/vetr?branch=master)
@@ -44,13 +45,14 @@ fun(1, "foo")
 `vetr` automatically matches the vetting expressions to the corresponding
 arguments and fetches the argument values from the function environment.
 
-See [vignette][1] for additional details on how the `vetr` function works.
+See [vignette][4] for additional details on how the `vetr` function works.
 
 ## Additional Documentation
 
-* [`vetr` vignette][1], `?vet`, `?vetr`, `example(vet)`, `example(vetr)`
+* [`vetr` vignette][1], `?vet`, `?vetr`, `example(vet)`, `example(vetr)`.
 * [`alike` vignette][2], `?alike`, and `example(alike)` for discussion of
-  templates
+  templates.
+* A survey of [parameter validation functions][5].
 
 ## Development Status
 
@@ -73,16 +75,13 @@ Or for the development version:
 devtools::install_github('brodieg/vetr@development')
 ```
 
-## Related Packages
+## Alternatives
 
-<ul>
-  <li><a href='https://github.com/egnha/valaddin'>valaddin</a> by Eugene Ha (see
-  <a
-  href='http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#valaddin'>vignette</a>
-  for a more detailed comparison) has very similar objectives to `vetr`
+There are many alternatives available to `vetr`.  We do a survey of the
+following in our [parameter validation functions][5] review:
+
 ```{r child='vignettes/rmdhunks/related-packages.Rmd'}
 ```
-</ul>
 
 ## Acknowledgments
 
@@ -92,25 +91,37 @@ Thank you to:
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
   the repository, and Uwe Ligges in particular for maintaining
   [Winbuilder](http://win-builder.r-project.org/).
+* Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) and rcnst to help
+  detect errors in compiled code, and in particular for his infinite patience in
+  helping me resolve the issues he identified for me.
 * [Jim Hester](https://github.com/jimhester) because
   [covr](https://cran.r-project.org/package=covr) rocks.
 * [Dirk Eddelbuettel](https://github.com/eddelbuettel) and [Carl
   Boettiger](https://github.com/cboettig) for the
   [rocker](https://github.com/rocker-org/rocker) project, and [Gábor
-  Csárdi](https://github.com/gaborcsardi) and the R-consortium for
-  [Rhub](https://github.com/r-hub/rhub), without which testing bugs on R-devel
-  and other platforms would be a nightmare.
+  Csárdi](https://github.com/gaborcsardi) and the
+  [R-consortium](https://www.r-consortium.org/) for
+  [Rhub](https://github.com/r-hub), without which testing bugs on R-devel and
+  other platforms would be a nightmare.
+* Hadley Wickham for [devtools](https://cran.r-project.org/package=devtools) and
+  [roxygen2](https://cran.r-project.org/package=roxygen2).
 * [Yihui Xie](https://github.com/yihui) for
   [knitr](https://cran.r-project.org/package=knitr) and  [J.J.
   Allaire](https://github.com/jjallaire) etal for
   [rmarkdown](https://cran.r-project.org/package=rmarkdown), and by extension
   John MacFarlane for [pandoc](http://pandoc.org/).
+* Olaf Mersmann for
+  [microbenchmark](https://cran.r-project.org/package=microbenchmark), because
+  microsecond matter.
+* [Michel Lang](https://github.com/mllg) for pushing me to implement `all_bw` to
+  compete with his own package [`checkmate`](https://cran.r-project.org/package=checkmate).
+* [Eugene Ha](https://github.com/egnha) for pointing me to several other
+  relevant packages, which in turn led to the [survey of related packages][5].
+* [Markus Kuhn](http://www.cl.cam.ac.uk/~mgk25/) for [UTF-8 stress test
+  data](http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt).
 * Stefan M. Bache for the idea of having a function for testing objects directly
   (originally `vetr` only worked with function arguments), which I took from
   ensurer.
-* Hadley Wickham for [devtools](https://cran.r-project.org/package=devtools),
-  and for pointing me to Stefan M. Bache's ensurer package.
-* Olaf Mersmann for [microbenchmark](https://cran.r-project.org/package=microbenchmark), because microsecond matter.
 * All open source developers out there that make their work freely available
   for others to use.
 * [Github](https://github.com/), [Travis-CI](https://travis-ci.org/),
@@ -129,3 +140,4 @@ Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 [2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/alike.html
 [3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#non-standard-evaluation
 [4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#in-functions
+[5]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/extra/compare.html

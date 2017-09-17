@@ -340,7 +340,10 @@ int ALIKEC_syntactic_names(SEXP lang) {
       if(!syntactic) break;
     }
   } else if (TYPEOF(lang) == SYMSXP) {
-    syntactic = ALIKEC_is_valid_name(CHAR(PRINTNAME(lang)));
+    const char * lang_chr = CHAR(PRINTNAME(lang));
+    syntactic =
+      (lang == R_MissingArg) ||
+      ALIKEC_is_keyword(lang_chr) || ALIKEC_is_valid_name(lang_chr);
   }
   return syntactic;
 }
@@ -399,7 +402,8 @@ const char * ALIKEC_pad_or_quote(
     call_post = "";
   } else {
     // In case there are non syntactic names in the call, use braces instead of
-    // backticks to avoid possible confusion
+    // backticks to avoid possible confusion; maybe it would better to just scan
+    // the deparsed string for backticks?
 
     if(syntactic) {
       call_pre = "`";
@@ -482,43 +486,90 @@ SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho) {
   if(res == R_UnboundValue) return R_NilValue;
   return res;
 }
-
+/*
+ * Convert the target and current component strings into one long string
+ *
+ * Only exists because this operation is expensive and we want to defer carrying
+ * out until we're absolutely sure that we need to carry it out.
+ */
+struct ALIKEC_tar_cur_strings ALIKEC_get_res_strings(
+  struct ALIKEC_res_strings strings, struct VALC_settings set
+) {
+  const char * tar_str = CSR_smprintf4(
+    set.nchar_max, strings.target[0], strings.target[1],
+    strings.target[2], strings.target[3], strings.target[4]
+  );
+  const char * cur_str = CSR_smprintf4(
+    set.nchar_max, strings.current[0], strings.current[1],
+    strings.current[2], strings.current[3], strings.current[4]
+  );
+  return (struct ALIKEC_tar_cur_strings) {.target=tar_str, .current=cur_str};
+}
 /*
 Convert convention of zero length string == TRUE to SEXP
 */
 
-SEXP ALIKEC_string_or_true(struct ALIKEC_res_fin res, struct VALC_settings set) {
-  if(res.actual[0] && res.target[0]) {
-    const char * res_str = CSR_smprintf6(
-      set.nchar_max,
-      "%sshould %s %s (%s %s)",
-      res.call, res.tar_pre, res.target, res.act_pre, res.actual, ""
-    );
-    return(mkString(res_str));
-  } else if (res.target[0]) {
-    const char * res_str = CSR_smprintf4(
-      set.nchar_max, "%sshould %s %s", res.call, res.tar_pre, res.target,  ""
-    );
-    return(mkString(res_str));
-  }
-  return(ScalarLogical(1));
+SEXP ALIKEC_res_as_string(
+  struct ALIKEC_res res, SEXP call, struct VALC_settings set
+) {
+  const char * res_str = "<UNINITSTRING>";
+  if(!res.success) {
+    struct ALIKEC_tar_cur_strings strings_pasted =
+      ALIKEC_get_res_strings(res.dat.strings, set);
+
+    if(TYPEOF(res.wrap) != VECSXP || xlength(res.wrap) != 2) {
+      // nocov start
+      error(
+        "%s%s", "Internal Error: unexpected structure for wrap member; ",
+        "contact maintainer."
+      );
+      // nocov end
+    }
+    SEXP call_inj = PROTECT(ALIKEC_inject_call(res, call));
+    const char * call_chr = ALIKEC_pad_or_quote(call_inj, set.width, -1, set);
+    UNPROTECT(1);
+
+    if(strings_pasted.target[0] && strings_pasted.current[0]) {
+      res_str = CSR_smprintf6(
+        set.nchar_max,
+        "%sshould %s %s (%s %s)",
+        call_chr, res.dat.strings.tar_pre, strings_pasted.target,
+        res.dat.strings.cur_pre, strings_pasted.current, ""
+      );
+    } else if (res.dat.strings.target[0]) {
+      res_str = CSR_smprintf4(
+        set.nchar_max, "%sshould %s %s", call_chr, res.dat.strings.tar_pre,
+        strings_pasted.target,  ""
+      );
+    }
+  } else
+    error("Internal Error: res_as_string only works with fail res."); // nocov
+  return(mkString(res_str));
 }
 /*
- * variation on ALIKEC_string_or_true that returns the full vector so we can use
+ * variation on ALIKEC_res_as_string that returns the full vector so we can use
  * it with ALIKEC_merge_msg
  */
 
-SEXP ALIKEC_strsxp_or_true(struct ALIKEC_res_fin res) {
-  if(res.target[0]) {
-    SEXP res_fin = PROTECT(allocVector(STRSXP, 5));
-    SET_STRING_ELT(res_fin, 0, mkChar(res.call));
-    SET_STRING_ELT(res_fin, 1, mkChar(res.tar_pre));
-    SET_STRING_ELT(res_fin, 2, mkChar(res.target));
-    SET_STRING_ELT(res_fin, 3, mkChar(res.act_pre));
-    SET_STRING_ELT(res_fin, 4, mkChar(res.actual));
-    UNPROTECT(1);
-    return(res_fin);
-  } else return(ScalarLogical(1));
+SEXP ALIKEC_res_as_strsxp(
+  struct ALIKEC_res res, SEXP call, struct VALC_settings set
+) {
+  SEXP res_fin;
+  if(!res.success) {
+    struct ALIKEC_tar_cur_strings strings_pasted =
+      ALIKEC_get_res_strings(res.dat.strings, set);
+    SEXP call_inj = PROTECT(ALIKEC_inject_call(res, call));
+    const char * call_chr = ALIKEC_pad_or_quote(call_inj, set.width, -1, set);
+    res_fin = PROTECT(allocVector(STRSXP, 5));
+    SET_STRING_ELT(res_fin, 0, mkChar(call_chr));
+    SET_STRING_ELT(res_fin, 1, mkChar(res.dat.strings.tar_pre));
+    SET_STRING_ELT(res_fin, 2, mkChar(strings_pasted.target));
+    SET_STRING_ELT(res_fin, 3, mkChar(res.dat.strings.cur_pre));
+    SET_STRING_ELT(res_fin, 4, mkChar(strings_pasted.current));
+    UNPROTECT(2);
+  } else
+    error("Internal Error: res_as_strsxp only works with fail res."); // nocov
+  return(res_fin);
 }
 /*
 Basic checks that `obj` could be a data frame; does not check class, only that

@@ -403,6 +403,9 @@ unitizer_sect("syntactic", {
 unitizer_sect("Pad or Quote", {
   vetr:::pad_or_quote(quote(1 + 1))
   vetr:::pad_or_quote(quote(!anyNA(1 + 1)))
+
+  vetr:::pad_or_quote(quote(1 + 1), syntactic=0L)
+  vetr:::pad_or_quote(quote(1 + 1), syntactic=1L)
 })
 unitizer_sect("Merge messages", {
   vetr:::msg_sort(list(letters[5:1], letters[1:5]))

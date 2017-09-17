@@ -3,7 +3,7 @@ Title: Trust, but Verify
 Description: Declarative template-based framework for verifying that objects
   meet structural requirements, and auto-composing error messages when they do
   not.
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
     person("Brodie", "Gaslam", email="brodie.gaslam@yahoo.com",
     role=c("aut", "cre")),
@@ -14,7 +14,7 @@ Authors@R: c(
     comment="Used/adapted several code snippets from R sources, see src/misc-alike.c and src/valname.c"
     ))
 Depends:
-    R (>= 3.2.2)
+    R (>= 3.3.3)
 License: GPL (>=2)
 LazyData: true
 URL: https://github.com/brodieG/vetr

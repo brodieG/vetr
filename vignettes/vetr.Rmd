@@ -13,7 +13,7 @@ vignette: >
 ---
 
 ```{r global_options, echo=FALSE}
-knitr::opts_chunk$set(error=TRUE)
+knitr::opts_chunk$set(error=TRUE, comment=NA)
 library(vetr)
 ```
 
@@ -107,11 +107,11 @@ token is just one token not because of the parentheses around it but because it
 is a call to `&` as opposed to `&&`.  Here we use the parentheses to remove
 parsing ambiguity caused by `&` and `&&` having the same operator precedence.
 
-After the tokens have been identified they are classified as custom tokens or
-template tokens.  Custom tokens are those that contain the `.` symbol.  Every
+After the tokens have been identified they are classified as standard tokens or
+template tokens.  Standard tokens are those that contain the `.` symbol.  Every
 other token is considered a template token.
 
-Custom tokens are further processed by substituting any `.` with the value
+Standard tokens are further processed by substituting any `.` with the value
 of the object being vetted.  These tokens are then evaluated and if those
 evaluations produce `TRUE` or logical vectors containing only `TRUE`, the tokens
 pass, otherwise they fail.  With:
@@ -151,10 +151,10 @@ vet(logical(1) || (numeric(1) && (. > 0 & . < 1)), 42)
 
 If you need to reference a literal dot (`.`) in a token, you can escape it by
 adding another dot so that `.` becomes `..`.  If you want to reference `...`
-you'll need to use `....`.  If you have a custom token that does not
+you'll need to use `....`.  If you have a standard token that does not
 reference the vetting object (i.e. does not use `.`) you can mark it as a
-custom token by wrapping it in `.()` (if you want to use a literal `.()` you can
-use `..()`).
+standard token by wrapping it in `.()` (if you want to use a literal `.()` you
+can use `..()`).
 
 If you need `&&` or `||` to be interpreted literally you can wrap the call in
 `I` to tell `vet` to treat the entire call as a single token:
@@ -174,7 +174,7 @@ results.  For example:
 I(logical(1L) && my_special_fun(.))
 ```
 
-will always fail because `logical(1L)` is part of a custom token and is
+will always fail because `logical(1L)` is part of a standard token and is
 evaluated as `FALSE` rather than used a template token for a scalar logical.
 
 ## In Functions
@@ -269,46 +269,11 @@ function is called.
 
 ## Alternatives
 
-### `stopifnot`
+There are many alternatives available to `vetr`.  We do a survey of the
+following in our [parameter validation functions][4] review:
 
-`stopifnot` is a fine solution in many cases, but the error messages that result
-from it can be cryptic, and it can take a fair bit of effort to set-up
-comprehensive tests for complex objects.  Additionally, it is slower except
-perhaps for the simplest of checks.
-
-### S4 Classes
-
-The natural solution to enforcing structural requirements in R objects is to use
-S4 classes.  Unfortunately S3 objects are so prevalent in R that a "backwards
-compatible" mechanism for enforcing structure requirement is warranted.
-
-### Valaddin
-
-[valaddin](https://github.com/egnha/valaddin) is a great package by [Eugene
-Ha](https://github.com/egnha).  Both `valaddin` and `vetr` are primarily
-intended for function input vetting.
-
-`valaddin` works by modifying function objects, which makes it easy to add
-validation to existing functions in the workspace or functions from packages you
-do not control.  The interface is very flexible and allows you to specify pretty
-much any vetting requirement you wish.
-
-`vetr` requires you to modify the source of a function or to explicitly wrap a
-function in another.  `vetr` does have some advantages though:
-
-* Declarative template based vetting
-* Auto-composition of helpful error messages
-* Written in C so it is [substantially faster](https://gist.github.com/brodieG/01bdb9b664c39cd892e9cd755be0e449) (e.g. ~ order of magnitude in simple checks)
-
-[valaddin](https://github.com/egnha/valaddin) definitely has its own advantages
-though, so you should review its vignette to decide what works best for you.
-
-### Other Third Party Packages
-
-<ul>
 ```{r child='./rmdhunks/related-packages.Rmd'}
 ```
-</ul>
 
 ----
 <sup>1</sup>We take some liberties in this example for clarity.  For instance, `alike` returns a character vector on failure, not `FALSE`, so really what `vet` is doing is `isTRUE(alike(...))`.
@@ -316,3 +281,4 @@ though, so you should review its vignette to decide what works best for you.
 [1]: ./vetr.html
 [2]: ./alike.html
 [3]: #non-standard-evaluation
+[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/extra/compare.html

@@ -22,10 +22,10 @@
 #' are also documented here.
 #'
 #' Allows you to supply error messages for vetting to use for each error
-#' token.  Your token should not contain top level `&&` or `||`.  If
+#' token.  Your token should not contain top level \code{&&} or \code{||}.  If
 #' it does your error message will not be reported because `vetr` looks for
 #' error messages attached to atomic tokens.  If your token must involve
-#' top level `&&` or `||`, use `I(x && y)` to ensure that
+#' top level \code{&&} or `||`, use \code{I(x && y)} to ensure that
 #' your error message is used by `vet`, but beware than in doing so you do
 #' not use templates within the `I` call as everything therein will be
 #' interpreted as a vetting expression rather than a template.
@@ -46,7 +46,7 @@
 #' to allow NAs or infinite values just use a template object (e.g.
 #' `integer(1L)`).
 #'
-#' @note **This will only work with custom expressions containing `.`**.  Anything
+#' @note **This will only work with standard tokens containing `.`**.  Anything
 #' else will be interpreted as a template token.
 #'
 #' @export

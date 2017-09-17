@@ -33,10 +33,12 @@
 #' @export
 #' @param ... expressions to benchmark, are captured unevaluated
 #' @param times how many times to loop, defaults to 1000
+#' @param deparse.width how many characters to deparse for labels
 #' @return NULL, invisibly, reports timings as a side effect as screen output
-#' bench_mark(runif(1000), Sys.sleep(0.1))
+#' @examples
+#' bench_mark(runif(1000), Sys.sleep(0.001), times=10)
 
-bench_mark <- function(..., times=1000L) {
+bench_mark <- function(..., times=1000L, deparse.width=40) {
   stopifnot(
     is.integer(times) || is.numeric(times), length(times) == 1, times > 0
   )
@@ -75,7 +77,11 @@ bench_mark <- function(..., times=1000L) {
   )
   overhead.act <- median(overhead)
   timings.fin <- (timings - overhead.act) / times
-  exps <- vapply(dots, function(x) deparse(x)[[1]], character(1L))
+  exps <- vapply(
+    dots,
+    function(x) dep_oneline(x, max.chars=deparse.width),
+    character(1L)
+  )
   timings.clean <- timings.fin[timings.fin >= 0]
 
   unit <- "seconds"

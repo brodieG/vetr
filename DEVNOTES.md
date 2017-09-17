@@ -1,4 +1,133 @@
-## Notes for the next day
+
+## Notes from 8/29
+
+Dig into the syntactic names issue:
+
+```
+unitizer> vetr:::syntactic_names(quote(mtcars[1:10, ]))
+[1] FALSE
+```
+
+## Notes from 8/22
+
+Most of the alike side of things is dealt with, now we need to figure out how we
+want to store stuff in lists.  Used to be that we would just use LISTSXPs, but
+now we need a growing collection of `VALC_res` objects?  It should contain:
+
+* An array of `ALIKEC_res` objects
+* The last inserted index
+* The current allocated size
+* By extension, a value in settings that has the default initial allocated size
+
+We will need a mechanism to grow the array each time we hit the size limit.
+
+Need to remember that we will have protected as many times as there are elements
+in that array.
+
+Also, need to figure out what functions need the added argument so we can pass
+around our array pointer.
+
+## Notes from 8/21
+
+So main thing to do is cleanly separate the "message" SEXP into the message
+character values as part of the `ALIKEC_res_interim` object or some such, and
+just the wrap object.
+
+So we need to restructure the `ALIKEC_res` and `ALIKEC_res_sub` objects to
+contain all the string structure.  Additionally, it seems like the interim
+object really doesn't need the call object?  I guess it can be there explicitly
+as a call object to distinguish it from the `wrap` object?  The only real use
+case is that after we've wrapped the call and are ready to return it to `vetr`
+we need to put it someplace.
+
+So we need objects that:
+
+* Track the strings
+* Track the strings + recursion index + wrap lang
+* Track the strings + wrap lang + attr type
+* Track the strings + final call
+
+Also need to track success status, df status, attr level
+
+* `ALIKEC_res_strings`: just the strings
+* `ALIKEC_res_min`: strings + success
+* `ALIKEC_res_wrap`: strings + success + wrap + [rec index] + [df] + [attr]
+* `ALIKEC_res`: strings + success + call
+
+One thing left to do: figure out what `ALIKEC_wrap` should be returning.
+
+## Notes from 8/20
+
+Currently working through trying to delay the construction of error messages to
+the very last minute.
+
+Seems like the main issue is that that in VALC_evaluate, we need to change from
+a simple LISTSXP to some homegrown object containing all the errors.  The major
+issue we're going to have here is that we need to make sure that the protection
+stack works out since as we've heading right now the VALC_res needs to be
+protected explicitly since it contains non-SEXP crap in it.  Most likely we'll
+need to change that to be a SEXP that contains the vector messages in component
+pieces plus the ancillary stuff.
+
+All this is to delay having to call `pad_or_quote` or `smprintf` business.  Have
+to wonder if we truly optimized those, maybe we could just skip worrying about
+these?  Seems like no matter what we'll have to create some CHARSXPS...
+
+We'll need to figure out how to update `VALC_process_error` to deal with the new
+format.
+
+Looks like creating a 5 long character vector with new strings (i.e. requiring
+new CHARSXPs) takes about 4 microseconds, which seems way too long.  So maybe an
+alternative solution is to pass around a results object that contains the result
+data as C objects, and one `LISTSXP` with all the SEXP objects.  This means that
+every function that returns an `ALIKEC_res_fin` or `VALC_res` object needs to be
+modified to accept the result object as an input.
+
+Actually, not quite, we just need the `VALC_res` ones.  We can just harvest and
+copy over the `ALIKEC_res_fin` separately.
+
+There are two types of SEXPs we need to handle:
+
+1. The call info from `alike` that has all the `names(x)[1]` stuff
+2. The result of evaluating standard tokens
+
+For the non-SEXP stuff, which is most likely to be the alike strings, do we want
+to implement a pair list type structure, or a resizing array?  Probably pair
+list.  For standard tokens seems like recording the value of the `eval_c`
+variable might be sufficient.
+
+## ALIKE structs
+
+### `ALIKEC_res_interim`
+
+#### Inputs
+
+* `ALIKEC_res_strings_to_SEXP` doesnt use object slot
+* `ALIKEC_res_interim_as_strings` doesn't use object slot
+
+For the next two, while used, call could just as easily be passed separately
+
+* `ALIKEC_strsxp_or_true` deparses object into call
+* `ALIKEC_string_or_true` deparses object into call
+
+#### Output
+
+* `ALIKEC_alike_wrap` generates the final call object that can then be deparsed,
+  so can be saved as a simple call
+* `ALIKEC_type_alike_internal` doesn't even use the object
+* `ALIKEC_fun_alike_internal` doesn't even use the object
+
+### `ALIKEC_res`
+
+#### Inputs
+
+* `ALIKEC_wrap`
+
+#### Output
+
+* `ALIKEC_alike_obj`
+* `ALIKEC_alike_rec`
+* `ALIKEC_alike_internal`
 
 ## NSE?
 
@@ -112,6 +241,149 @@ It seems like there are no stack imbalance problems when the script finishes wit
 `eval` in C will cause a promise to be evaluated, even though `findVar` will keep returning a promise and `PRSEEN` will still return 0.  We tested this by accessing a slow evaluating argument more than once.
 
 ## Optimization
+
+### `all_in`
+
+Rather than try to do a full on optimization right now, try a simple
+implementation that is faster than the simple `all(x %in% y)`:
+
+```
+source('tests/unitizer/_pre/lorem.R')
+lorem.words <- unlist(strsplit(lorem, "\\W"))
+lorem.unique <- unique(lorem.words)
+x <- sample(lorem.unique, 1e4, rep=TRUE)
+
+library(microbenchmark)
+microbenchmark(times=10,
+  all(unique(x) %in% lorem.unique),
+  all(x %in% lorem.unique),
+  !anyNA(match(unique(x), lorem.unique))
+)
+## Unit: microseconds
+##                                    expr     min      lq     mean   median
+##        all(unique(x) %in% lorem.unique) 173.327 175.111 221.3290 216.5445
+##                all(x %in% lorem.unique) 223.698 225.259 228.5640 225.8155
+##  !anyNA(match(unique(x), lorem.unique)) 188.009 189.564 231.6546 221.5680
+##       uq     max neval
+##  264.897 277.004    10
+##  232.412 240.201    10
+##  258.627 329.226    10
+```
+
+Short of it is that it doesn't seem worth it.
+
+### Vs. `checkmate`
+
+```
+xx <- runif(1e4)
+xx[1] <- 1
+xx[2] <- 0
+microbenchmark(
+  assertNumeric(xx, any.missing = FALSE, lower = 0, upper = 1),
+  vet(numeric() && all_bw(., 0, 1), xx),
+  assertNumeric(xx, any.missing = FALSE, lower = 0),
+  vet(numeric() && all_bw(., 0, Inf), xx),
+  vet(numeric() && all(. > 0), xx)
+)
+microbenchmark(
+  all_bw(xx, 0, 1),
+  all(xx >= 0 & xx <= 1)
+)
+## Unit: microseconds
+##                                                          expr    min       lq
+##  assertNumeric(xx, any.missing = FALSE, lower = 0, upper = 1) 26.627  29.9290
+##                         vet(numeric() && all_bw(., 0, 1), xx) 20.198  22.6825
+##             assertNumeric(xx, any.missing = FALSE, lower = 0) 19.055  20.7130
+##                       vet(numeric() && all_bw(., 0, Inf), xx) 14.885  16.8890
+##                              vet(numeric() && all(. > 0), xx) 73.076 119.4560
+##       mean  median       uq     max neval
+##   42.24239  36.187  55.2480  88.824   100
+##   30.46707  25.055  40.4240  86.059   100
+##   27.72199  23.029  36.6965  54.854   100
+##   23.69168  18.597  30.5225  54.603   100
+##  149.69694 133.635 169.2880 301.521   100
+
+ss <- do.call(paste0, expand.grid(letters, letters, letters))
+microbenchmark(
+  all_bw(ss, "a", "zzz"),
+  all(xx >= "a" & xx <= "zzz")
+)
+## Unit: microseconds
+##                          expr       min        lq       mean    median
+##        all_bw(ss, "a", "zzz")   336.112   410.057   463.3804   458.985
+##  all(xx >= "a" & xx <= "zzz") 23731.092 24235.388 26356.3079 24951.518
+##          uq       max neval
+##    502.3695   904.064   100
+##  27598.0535 34451.201   100
+```
+Not entirely sure what's going on here, shouldn't be that much faster.
+
+### Loop unswitching
+
+Trusting that gcc does comparable stuff?
+
+```
+xx <- runif(1e4)
+microbenchmark(
+  all_bw(xx, 0, 1),
+  all_bw2(xx, 0, 1),
+  all(xx >= 0 & xx <= 1)
+)
+## Unit: microseconds
+##                    expr    min      lq      mean   median       uq      max
+##        all_bw(xx, 0, 1) 23.117 23.3210  24.65532  23.6515  24.1765   98.217
+##       all_bw2(xx, 0, 1) 13.665 13.8910  14.62394  14.2865  14.5635   37.207
+##  all(xx >= 0 & xx <= 1) 82.325 92.8285 139.04823 141.6830 149.6355 1164.560
+```
+Switching to 03
+```
+> microbenchmark(
++   all_bw(xx, 0, 1),
++   all_bw2(xx, 0, 1),
++   all(xx >= 0 & xx <= 1)
++ )
+Unit: microseconds
+                   expr    min     lq      mean  median       uq      max neval
+       all_bw(xx, 0, 1) 13.659 14.002  15.74092  14.434  14.9120   47.561   100
+      all_bw2(xx, 0, 1) 18.759 19.114  21.21446  19.823  20.5100   55.189   100
+ all(xx >= 0 & xx <= 1) 82.436 91.505 145.77960 116.293 146.3375 2128.326   100
+```
+Tried seeing if there were some ways to force more loop unswitching as compiler
+really should be able to do it, but didn't find obvious setting which suggests
+higher probability that different compilers may work differently as well.
+
+Compare to integer:
+```
+xx <- runif(1e4)
+yy <- sample(seq.int(1e4))
+microbenchmark(
+  all_bw(xx, 0, 1),
+  all_bw(yy, 0, 1e4),
+  all_bw(yy, 0, 9e3),  # fail
+  all(xx >= 0 & xx <= 1)
+)
+## Unit: microseconds
+##                    expr    min      lq      mean   median       uq     max
+##        all_bw(xx, 0, 1) 12.609 13.2120  13.54127  13.3295  13.6290  23.172
+##    all_bw(yy, 0, 10000)  8.209  8.6555   8.94603   8.7505   9.1845  11.299
+##     all_bw(yy, 0, 9000)  4.067  4.3385   5.44750   4.6980   5.2350  55.264
+##  all(xx >= 0 & xx <= 1) 82.532 89.7550 127.70684 126.4315 148.0600 905.974
+```
+
+### New Notes (7/14/17)
+
+It seems overall `.Call` has gotten a bit faster, although perhaps this is the
+new machine being faster:
+```
+> microbenchmark(test1(1), test2(1,2), test3(1,2,3))
+Unit: nanoseconds
+           expr min    lq   mean median  uq   max neval
+       test1(1) 488 506.0 953.77  517.5 585 40254   100
+    test2(1, 2) 592 632.0 724.22  664.5 745  3332   100
+ test3(1, 2, 3) 699 748.5 853.18  809.0 881  2741   100
+```
+These all do trivial work, trying to measure overhead from parameters.  Looks
+like 150ns per parameter.  Probably not enough to worry about too much.
 
 ### `.Call` vs. `.External`:
 
@@ -369,6 +641,10 @@ on via ALIKEC_lang_alike_internal() (actually, that's probably not going away
 any time soon as there are additional complexities therein).
 
 ### Random output
+
+`all_bw(zzz, 0, 1)` is not TRUE (is "character" instead of a "logical")
+
+`all_bw(zzz, 0, 1)` is not TRUE (string: "contains values outside of  only values in range `[0,1]` (2.783366 at index 3)")
 
     Error in fun2a(x = letters[1:3]) :
       For argument `x` at least one of these should pass:

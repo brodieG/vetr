@@ -31,7 +31,7 @@ with none of the formatting or surrounding verbiage
 }}
 
 \item{stop}{TRUE or FALSE whether to call \code{\link[=stop]{stop()}} on failure
-(default) or not}
+or not (default)}
 
 \item{settings}{a settings list as produced by \code{\link[=vetr_settings]{vetr_settings()}}, or NULL to
 use the default settings}
@@ -56,11 +56,11 @@ of the deparsed call
 \section{Vetting Expressions}{
 
 
-Vetting expressions can be template tokens, custom tokens, or any
-combination of template and custom tokens combined with \code{&&} and/or \code{||}.
-Template tokens are R objects that define the required structure, much like
-the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Custom tokens are tokens that
-contain the \code{.} symbol and are used to vet values.
+Vetting expressions can be template tokens, standard tokens, or any
+combination of template and standard tokens combined with \code{&&} and/or
+\code{||}.  Template tokens are R objects that define the required structure,
+much like the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Standard tokens are tokens
+that contain the \code{.} symbol and are used to vet values.
 
 See \code{vignette('vetr', package='vetr')} and examples for details on how
 to craft vetting expressions.
@@ -108,11 +108,15 @@ vet(tpl, val.2)
 
 ## See `example(alike)` for more template examples
 
-## Custom tokens allow you to check values
+## Standard tokens allow you to check values
 vet(. > 0, runif(10))
 vet(. > 0, -runif(10))
 
-## You can combine templates and custom tokens with
+## `all_bw` is like `isTRUE(all(. >= x & . <= y))`, but
+## ~10x faster for long vectors:
+vet(all_bw(., 0, 1), runif(1e6) + .1)
+
+## You can combine templates and standard tokens with
 ## `&&` and/or `||`
 vet(numeric(2L) && . > 0, runif(2))
 vet(numeric(2L) && . > 0, runif(10))
@@ -127,7 +131,6 @@ vet(INT.1 && . \%in\% 0:1 || LGL.1, NA)
 
 ## Vetting expressions can be assembled from previously
 ## defined tokens
-
 scalar.num.pos <- quote(numeric(1L) && . > 0)
 foo.or.bar <- quote(character(1L) && . \%in\% c('foo', 'bar'))
 vet.exp <- quote(scalar.num.pos || foo.or.bar)
@@ -141,5 +144,5 @@ vet(vet.exp, "baz")
 \code{\link[=vetr]{vetr()}} for a version optimized to vet function arguments,
 \code{\link[=alike]{alike()}} for how templates are used, \code{\link[=vet_token]{vet_token()}} for how to specify
 custom error messages and also for predefined validation tokens for common
-use cases.
+use cases, \code{\link[=all_bw]{all_bw()}} for fast bounds checks.
 }

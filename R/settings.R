@@ -89,6 +89,15 @@
 #'   expressions, although typically you would specify this with the `env`
 #'   argument to `vet`; if NULL will use the calling frame to
 #'   \code{vet/vetr/alike}.
+#' @param result.list.size.init initial value for token tracking.   This will be
+#'   grown by a factor of two each time it fills up until we reach
+#'   `result.list.size.max`.
+#' @param result.list.size.max maximum number of tokens we keep track of,
+#'   intended mostly as a safeguard in case a logic error causes us to keep
+#'   allocating memory.  Set to 1024 as a default value since it should be
+#'   exceedingly rare to have vetting expressions with such a large number of
+#'   tokens, enough so that if we reach that number it is more likely something
+#'   went wrong.
 #' @return list with all the setting values
 #' @examples
 #' type_alike(1L, 1.0, settings=vetr_settings(type.mode=2))
@@ -101,7 +110,7 @@ vetr_settings <- function(
   suppress.warnings=FALSE, fuzzy.int.max.len=100L,
   width=-1L, env.depth.max=65535L, symb.sub.depth.max=65535L,
   symb.size.max=15000L, nchar.max=65535L, track.hash.content.size=63L,
-  env=NULL
+  env=NULL, result.list.size.init=64L, result.list.size.max=1024L
 ) {
   # we just use the function to match parameters
   as.list(environment())

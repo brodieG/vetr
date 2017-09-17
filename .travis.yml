@@ -16,3 +16,6 @@ branches:
 
 after_success:
   - Rscript covr.R
+
+after_failure:
+  - find . -name run*.Rout* | xargs cat

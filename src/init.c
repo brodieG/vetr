@@ -17,6 +17,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 
 #include "validate.h"
+#include "all-bw.h"
 #include <R_ext/Rdynload.h>
 
 static const
@@ -31,7 +32,14 @@ R_CallMethodDef callMethods[] = {
   {"all", (DL_FUNC) &VALC_all_ext, 1},
   {"track_hash", (DL_FUNC) &VALC_track_hash_test, 2},
   {"default_hash_fun", (DL_FUNC) &VALC_default_hash_fun, 1},
+  {"all_bw", (DL_FUNC) &VALC_all_bw, 5},
+  {"check_assumptions", (DL_FUNC) &VALC_check_assumptions, 0},
 
+/*
+  {"test1", (DL_FUNC) &VALC_test1, 1},
+  {"test2", (DL_FUNC) &VALC_test2, 2},
+  {"test3", (DL_FUNC) &VALC_test3, 3},
+*/
   {"alike_ext", (DL_FUNC) &ALIKEC_alike_ext, 5},
   {"typeof", (DL_FUNC) &ALIKEC_typeof, 1},
   {"mode", (DL_FUNC) &ALIKEC_mode, 1},
@@ -64,10 +72,14 @@ R_CallMethodDef callMethods[] = {
 
   {"len_chr_len_ext", (DL_FUNC) &CSR_len_chr_len_ext, 1},
   {"len_as_chr_ext", (DL_FUNC) &CSR_len_as_chr_ext, 1},
+  {"num_as_chr", (DL_FUNC) &CSR_num_as_chr_ext, 2},
   {"strmlen_ext", (DL_FUNC) &CSR_strmlen_ext, 2},
   {"strmcpy_ext", (DL_FUNC) &CSR_strmcpy_ext, 2},
   {"collapse_ext", (DL_FUNC) &CSR_collapse_ext, 3},
   {"bullet_ext", (DL_FUNC) &CSR_bullet_ext, 4},
+  {"strsub", (DL_FUNC) &CSR_strsub, 3},
+  {"nchar_u", (DL_FUNC) &CSR_nchar_u, 1},
+  {"char_offsets", (DL_FUNC) &CSR_char_offsets, 1},
   {"smprintf2_ext", (DL_FUNC) &CSR_smprintf2_ext, 4},
   {"smprintf6_ext", (DL_FUNC) &CSR_smprintf6_ext, 8},
   {"ucfirst_ext", (DL_FUNC) &CSR_ucfirst_ext, 2},

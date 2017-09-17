@@ -26,16 +26,19 @@ vet(vet.exp, "foo")
 vet(vet.exp, "baz")
 ```
 
-There are a number of predefined vetting tokens you can use in your
-vetting expressions:
+`all_bw` is available for value range checks (~10x faster than
+`isTRUE(all(. >= x & . <= y))` for large vectors):
 
 ```{r}
-vet(NUM.POS, -runif(5))    # positive numeric
-vet(LGL.1, NA)             # TRUE or FALSE
+vet(all_bw(., 0, 1), runif(5) + 1)
 ```
 
-See `?vet_token` for a full listing, and for instructions on how to define your
-own tokens with custom error messages.
+There are a number of predefined vetting tokens you can use in your
+vetting expressions such as:
+
+```{r}
+vet(NUM.POS, -runif(5))    # positive numeric; see `?vet_token` for others
+```
 
 Vetting expressions are designed to be intuitive to use, but their
 implementation is complex.  We recommend you look at `example(vet)` for usage

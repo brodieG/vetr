@@ -4,16 +4,17 @@
 \alias{bench_mark}
 \title{Lightweight Benchmarking Function}
 \usage{
-bench_mark(..., times = 1000L)
+bench_mark(..., times = 1000L, deparse.width = 40)
 }
 \arguments{
 \item{...}{expressions to benchmark, are captured unevaluated}
 
 \item{times}{how many times to loop, defaults to 1000}
+
+\item{deparse.width}{how many characters to deparse for labels}
 }
 \value{
 NULL, invisibly, reports timings as a side effect as screen output
-bench_mark(runif(1000), Sys.sleep(0.1))
 }
 \description{
 Evaluates provided expression in a loop and reports mean evaluation time.
@@ -29,4 +30,7 @@ running a loop that evaluates \code{NULL} the \code{times} times.
 Unfortunately because this computes the average of all iterations it is very
 susceptible to outliers in small sample runs, particularly with fast running
 code.  For that reason the default number of iterations is one thousand.
+}
+\examples{
+bench_mark(runif(1000), Sys.sleep(0.001), times=10)
 }

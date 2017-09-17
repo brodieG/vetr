@@ -303,15 +303,13 @@ unitizer_sect("Calls / Formulas", {
   # attributes
 
   c0 <- quote(fun(a, b, a, 25))
-  c0.1 <- c0.2 <- c0.3 <- c0
+  c0.1 <- c0.2 <- c0
   attr(c0.1, "blah") <- "hello"
   attr(c0.2, "blah") <- 1:3
-  attr(c0.3[[1L]], "blah") <- "hello"
 
   alike(c0, c0.1)     # TRUE
   alike(c0.1, c0)     # Missing attribute
   alike(c0.1, c0.2)   # Attribute mismatch
-  alike(c0.3, c0)     # TRUE, sub-attr shouldn't cause problem
 
   # Formulas
 
@@ -412,8 +410,8 @@ unitizer_sect("settings", {
 
   alike(1, 2, settings=letters)
   alike(1, 2, settings=list())
-  alike(1, 2, settings=setNames(vector("list", 14), letters[1:14]))
-  alike(1, 2, settings=vector("list", 14))
+  alike(1, 2, settings=setNames(vector("list", 16), letters[1:16]))
+  alike(1, 2, settings=vector("list", 16))
 } )
 # These are also part of the examples, but here as well so that issues are
 # detected during development and not the last minute package checks
@@ -518,4 +516,13 @@ unitizer_sect("Errors", {
   alike(NULL, NULL, settings=vetr_settings(env=letters))
   alike(NULL, NULL, settings=vetr_settings(width=letters))
   alike(NULL, NULL, settings=vetr_settings(env.depth.max=-1L))
+})
+unitizer_sect("Attributes", {
+  # There are implicit and explicit attribute checks elsewhere, this
+  # is just for a corner case that showed up in coverage
+
+  obj.tpl <- structure(integer(), a=integer())
+  obj.obj <- structure(1:10, a=1:3)
+
+  alike(obj.tpl, obj.obj)
 })
