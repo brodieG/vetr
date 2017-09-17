@@ -52,9 +52,11 @@ unitizer_sect("numbers as character", {
   num0 <- 1e9 + 0.1
   num1 <- -1e9 - 0.1
 
-  vetr:::num_as_chr(num0)
-  vetr:::num_as_chr(num1)
-
+  # need to sub leading zeros before 'e' due to different display in
+  # windows vs nix
+  #
+  sub("e[+-]?\\K0*", "", vetr:::num_as_chr(num0), perl=TRUE)
+  sub("e[+-]?\\K0*", "", vetr:::num_as_chr(num1), perl=TRUE)
 
   vetr:::num_as_chr(num0, as.int=TRUE)
   vetr:::num_as_chr(num1, as.int=TRUE)
