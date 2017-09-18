@@ -290,10 +290,11 @@ static SEXP VALC_error_standard(
 
     int alloc_size = 0;
     int str_sizes[4] = {0, 0, 0, 0};
-    str_sizes[0] = strnlen(err_call, INT_MAX);
-    str_sizes[1] = strnlen(err_base, INT_MAX);
-    str_sizes[2] = strnlen(err_extra, INT_MAX);
-    str_sizes[3] = strnlen(err_tok, INT_MAX);
+
+    str_sizes[0] = strlen(err_call);
+    str_sizes[1] = strlen(err_base);
+    str_sizes[2] = strlen(err_extra);
+    str_sizes[3] = strlen(err_tok);
 
     for(int i = 0; i < 4; ++i) {
       if(INT_MAX - str_sizes[i] < alloc_size)

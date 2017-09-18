@@ -10,14 +10,14 @@
 
 ## Submission Notes:
 
-This is an update to an existing package
-that fixes valgrind, rchck, rcnst, and other
-similar issues.  Additionally, the test that
-set attributes on a symbol has been removed
-which fixes the newly failing tests on CRAN.
+This is an update to an existing package that:
 
-Some new features and improvements are
-included too.
+* Fixes CRAN errors caused by the no-attrs
+  on symbols change
+* Fixes valgrind, rchck, rcnst, ubsan, and
+  other similar issues as reported by CRAN
+  and Tomas Kalibera.
+* Adds a few minor features and improvements
 
 ## R CMD check --as-cran
 
@@ -33,8 +33,10 @@ environments:
     * R version 3.4.1 (2017-06-30)
     * R version 3.3.3 (2017-01-27)
 * Winbuilder
-    * R devel (2017-07-05 r72891):
-      https://win-builder.r-project.org/
+    * R devel (2017-09-12 r73242):
+      https://win-builder.r-project.org/Jd0G7Argtsd1
+    * R version 3.4.1 (2017-06-30)
+      https://win-builder.r-project.org/3lBvbbRk1DCJ
 * Locally on Mac OS 10.12.5
     * R version 3.4.1 (2017-06-30)
     * With --use-valgrind

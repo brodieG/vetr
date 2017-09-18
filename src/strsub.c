@@ -49,9 +49,11 @@ static int is_utf8_enc(cetype_t type) {
 
   const char * loc_string = CHAR(asChar(eval_tmp));
 
-  int loc_len = strnlen(loc_string, INT_MAX);
+  // If eval_tmp produces a non-null terminated string we're screwed here...
 
-  if(loc_len == INT_MAX)
+  size_t loc_len = strlen(loc_string);
+
+  if(loc_len >= INT_MAX)
     // nocov start
     error(
       "%s%s",
