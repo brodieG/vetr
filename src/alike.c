@@ -203,7 +203,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
         res.dat.strings.current[2] = CHAR(asChar(klass_cur_attrib));
         UNPROTECT(3);
       }
-      UNPROTECT(3);
+      UNPROTECT(1);
     }
     PROTECT(PROTECT(R_NilValue)); // stack balance with next `else if`
   } else if(target != R_NilValue) {  // Nil objects match anything when nested
