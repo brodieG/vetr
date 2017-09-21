@@ -207,7 +207,7 @@ static SEXP VALC_error_standard(
 
   // If message attribute defined, this is easy:
 
-  err_attrib = getAttrib(lang, VALC_SYM_errmsg);
+  err_attrib = PROTECT(getAttrib(lang, VALC_SYM_errmsg));
   if(err_attrib != R_NilValue) {
     if(TYPEOF(err_attrib) != STRSXP || XLENGTH(err_attrib) != 1) {
       VALC_arg_error(
@@ -320,6 +320,7 @@ static SEXP VALC_error_standard(
       // nocov end
     }
   }
+  UNPROTECT(1);
   return mkString(err_str);
 }
 static SEXP VALC_error_template(

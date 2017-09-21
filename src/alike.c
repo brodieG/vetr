@@ -132,7 +132,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
     } else {
       SEXP klass, klass_cur, klass_attrib, klass_cur_attrib;
 
-      klass = getAttrib(target, R_ClassSymbol);
+      klass = PROTECT(getAttrib(target, R_ClassSymbol));
       if(xlength(klass) != 1 || TYPEOF(klass) != STRSXP) {
         // nocov start
         error(
@@ -163,7 +163,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
         res.success = 0;
         res.dat.strings.tar_pre = "inherit from";
 
-        klass_attrib = getAttrib(klass, ALIKEC_SYM_package);
+        klass_attrib = PROTECT(getAttrib(klass, ALIKEC_SYM_package));
         if(xlength(klass_attrib) != 1 || TYPEOF(klass_attrib) != STRSXP) {
           // nocov start
           error(
@@ -176,7 +176,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
         res.dat.strings.target[1] = klass_c;
         res.dat.strings.target[2] = CHAR(asChar(klass_attrib));
 
-        klass_cur = getAttrib(current, R_ClassSymbol);
+        klass_cur = PROTECT(getAttrib(current, R_ClassSymbol));
         if(xlength(klass_cur) != 1 || TYPEOF(klass_cur) != STRSXP) {
           // nocov start
           error(
@@ -186,7 +186,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
           );
           // nocov end
         }
-        klass_cur_attrib = getAttrib(klass_cur, ALIKEC_SYM_package);
+        klass_cur_attrib = PROTECT(getAttrib(klass_cur, ALIKEC_SYM_package));
         if(
           xlength(klass_cur_attrib) != 1 || TYPEOF(klass_cur_attrib) != STRSXP
         ) {
@@ -201,7 +201,9 @@ struct ALIKEC_res ALIKEC_alike_obj(
         res.dat.strings.current[0] = "\"%s\" from pkg:%s%s%s";
         res.dat.strings.current[1] = klass_cur_c;
         res.dat.strings.current[2] = CHAR(asChar(klass_cur_attrib));
+        UNPROTECT(3);
       }
+      UNPROTECT(1);
     }
     PROTECT(PROTECT(R_NilValue)); // stack balance with next `else if`
   } else if(target != R_NilValue) {  // Nil objects match anything when nested
