@@ -1,3 +1,9 @@
+## 0.2.1
+
+* Fix solaris compilation issue
+* Fix new rcheck warnings
+* Change R dependency to 3.3.2 to avoid problems with CRAN osx R-devel build
+
 ## 0.2.0
 
 * [#48](https://github.com/brodieG/vetr/issues/48): Implement `all_bw`, a
