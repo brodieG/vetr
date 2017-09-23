@@ -10,8 +10,9 @@
 
 ## Submission Notes:
 
-This is a resubmission of v0.2.0 to
-fix CRAN farm failures:
+This is a resubmission fix CRAN check farm
+failures on current version 0.2.0.  I
+apologize for resubmitting so soon.
 
 * Fixes compilation failure on Solaris, we
   hope (removed `strnlen` fun, set
@@ -28,7 +29,7 @@ fix CRAN farm failures:
 
 Status: 1 NOTE
 
-    Days since last update: 4
+    Days since last update: 5
 
 ### Test Environments
 
@@ -42,9 +43,9 @@ against the following environments:
     * R version 3.3.3 (2017-01-27)
 * Winbuilder
     * R devel (2017-09-12 r73242):
-      https://win-builder.r-project.org/Rm3eF0bZPfRI
+      https://win-builder.r-project.org/ahP9elX0NRy1
     * R version 3.4.1 (2017-06-30)
-      https://win-builder.r-project.org/eGej4A88Yq4U
+      https://win-builder.r-project.org/Z7xyqK9kXy7k
 * Locally on Mac OS 10.12.5
     * R version 3.4.1 (2017-06-30)
 * Locally on a Ubuntu 14.04.5 LTS VM
