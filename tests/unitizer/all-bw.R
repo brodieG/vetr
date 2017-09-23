@@ -52,72 +52,82 @@ unitizer_sect('corner cases - real', {
   all_bw(numeric(), 0, 0, bounds="()")  # pass?
 })
 unitizer_sect('Infinity - real', {
-  z <- runif(100, -1e100, 1e100)
-  z[1] <- -1e100
-  z[2] <- 1e100
+
+  n1e100 <- 1e100
+  n_1e100 <- -1e100
+  n2e100 <- 2e100
+  n_2e100 <- -2e100
+  n11e100 <- 1.1e100
+  n_11e100 <- -1.1e100
+  n1e200 <- 1e200
+  n_1e200 <- -1e200
+
+  z <- runif(100, n_1e100, n1e100)
+  z[1] <- n_1e100
+  z[2] <- n1e100
 
   r <- w <- v <- u <- x <- z
 
   # Infinitiy in bounds
 
-  all_bw(z, -Inf, 1e100) # pass
-  all_bw(z, -Inf, 1e100, bounds="[)") # fail
-  all_bw(z, -Inf, 1e100, bounds="()") # fail
-  all_bw(z, -Inf, 1e100, bounds="(]") # pass
-  all_bw(c(z, 2e100), -Inf, 1e100, bounds="(]") # fail
+  all_bw(z, -Inf, n1e100) # pass
+  all_bw(z, -Inf, n1e100, bounds="[)") # fail
+  all_bw(z, -Inf, n1e100, bounds="()") # fail
+  all_bw(z, -Inf, n1e100, bounds="(]") # pass
+  all_bw(c(z, n2e100), -Inf, n1e100, bounds="(]") # fail
 
-  all_bw(z, -Inf, 1.1e100, bounds="[)") # pass
-  all_bw(z, -Inf, 1.1e100, bounds="()") # pass
+  all_bw(z, -Inf, n11e100, bounds="[)") # pass
+  all_bw(z, -Inf, n11e100, bounds="()") # pass
 
-  all_bw(z, -1e100, Inf) # pass
-  all_bw(z, -1e100, Inf, bounds="(]") # fail
-  all_bw(z, -1e100, Inf, bounds="()") # fail
-  all_bw(z, -1e100, Inf, bounds="[)") # pass
-  all_bw(c(z, -2e100), -1e100, Inf, bounds="[)") # fail
+  all_bw(z, n_1e100, Inf) # pass
+  all_bw(z, n_1e100, Inf, bounds="(]") # fail
+  all_bw(z, n_1e100, Inf, bounds="()") # fail
+  all_bw(z, n_1e100, Inf, bounds="[)") # pass
+  all_bw(c(z, n_2e100), n_1e100, Inf, bounds="[)") # fail
 
-  all_bw(z, -1.1e100, Inf, bounds="(]") # pass
-  all_bw(z, -1.1e100, Inf, bounds="()") # pass
+  all_bw(z, n_11e100, Inf, bounds="(]") # pass
+  all_bw(z, n_11e100, Inf, bounds="()") # pass
 
   # Infinity + NA
 
   r[50] <- NA_real_
 
-  all_bw(r, -Inf, 1e100)
-  all_bw(r, -Inf, 1e100, bounds="[)")
-  all_bw(r, -Inf, 1e100, bounds="()")
-  all_bw(r, -Inf, 1e100, bounds="(]")
+  all_bw(r, -Inf, n1e100)                # fail
+  all_bw(r, -Inf, n1e100, bounds="[)")   # fail
+  all_bw(r, -Inf, n1e100, bounds="()")   # fail
+  all_bw(r, -Inf, n1e100, bounds="(]")   # fail
 
-  all_bw(r, -Inf, 1.1e100, bounds="[)")
-  all_bw(r, -Inf, 1.1e100, bounds="()")
+  all_bw(r, -Inf, n11e100, bounds="[)")  # fail
+  all_bw(r, -Inf, n11e100, bounds="()")  # fail
 
-  all_bw(r, -1e100, Inf)
-  all_bw(r, -1e100, Inf, bounds="(]")
-  all_bw(r, -1e100, Inf, bounds="()")
-  all_bw(r, -1e100, Inf, bounds="[)")
+  all_bw(r, n_1e100, Inf)  # fail
+  all_bw(r, n_1e100, Inf, bounds="(]")  # fail
+  all_bw(r, n_1e100, Inf, bounds="()")  # fail
+  all_bw(r, n_1e100, Inf, bounds="[)")  # fail
 
-  all_bw(r, -1.1e100, Inf, bounds="(]")
-  all_bw(r, -1.1e100, Inf, bounds="()")
+  all_bw(r, n_11e100, Inf, bounds="(]")  # fail
+  all_bw(r, n_11e100, Inf, bounds="()")  # fail
 
-  all_bw(r, -Inf, 1e100, na.rm=TRUE)
-  all_bw(r, -Inf, 1e100, bounds="[)", na.rm=TRUE)
-  all_bw(r, -Inf, 1e100, bounds="()", na.rm=TRUE)
-  all_bw(r, -Inf, 1e100, bounds="(]", na.rm=TRUE)
+  all_bw(r, -Inf, n1e100, na.rm=TRUE)  # pass
+  all_bw(r, -Inf, n1e100, bounds="[)", na.rm=TRUE)  # fail
+  all_bw(r, -Inf, n1e100, bounds="()", na.rm=TRUE)  # fail
+  all_bw(r, -Inf, n1e100, bounds="(]", na.rm=TRUE)  # pass
 
-  all_bw(r, -Inf, 1.1e100, bounds="[)", na.rm=TRUE)
-  all_bw(r, -Inf, 1.1e100, bounds="()", na.rm=TRUE)
+  all_bw(r, -Inf, n11e100, bounds="[)", na.rm=TRUE) # pass
+  all_bw(r, -Inf, n11e100, bounds="()", na.rm=TRUE) # pass
 
-  all_bw(r, -1e100, Inf, na.rm=TRUE)
-  all_bw(r, -1e100, Inf, bounds="(]", na.rm=TRUE)
-  all_bw(r, -1e100, Inf, bounds="()", na.rm=TRUE)
-  all_bw(r, -1e100, Inf, bounds="[)", na.rm=TRUE)
+  all_bw(r, n_1e100, Inf, na.rm=TRUE) # pass
+  all_bw(r, n_1e100, Inf, bounds="(]", na.rm=TRUE)  # fail
+  all_bw(r, n_1e100, Inf, bounds="()", na.rm=TRUE)  # fail
+  all_bw(r, n_1e100, Inf, bounds="[)", na.rm=TRUE)  # pass
 
-  all_bw(r, -1.1e100, Inf, bounds="(]", na.rm=TRUE)
-  all_bw(r, -1.1e100, Inf, bounds="()", na.rm=TRUE)
+  all_bw(r, n_11e100, Inf, bounds="(]", na.rm=TRUE) # pass
+  all_bw(r, n_11e100, Inf, bounds="()", na.rm=TRUE) # pass
 
   # special loop case
 
-  all_bw(c(r, 2e100), -Inf, 1e100, na.rm=TRUE)  # fail
-  all_bw(c(r, -2e100), -1e100, Inf, na.rm=TRUE) # fail
+  all_bw(c(r, n2e100), -Inf, n1e100, na.rm=TRUE)  # fail
+  all_bw(c(r, n_2e100), n_1e100, Inf, na.rm=TRUE) # fail
 
   # Infinity in values
 
@@ -125,11 +135,11 @@ unitizer_sect('Infinity - real', {
 
   u[50] <- -Inf
 
-  all_bw(u, -1e200, 1e200)    # fail
+  all_bw(u, n_1e200, n1e200)    # fail
 
   v[50] <- Inf
 
-  all_bw(v, -1e200, 1e200)    # fail
+  all_bw(v, n_1e200, n1e200)    # fail
 
   w[50] <- -Inf
   w[51] <- Inf

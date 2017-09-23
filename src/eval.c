@@ -207,7 +207,7 @@ static SEXP VALC_error_standard(
 
   // If message attribute defined, this is easy:
 
-  err_attrib = getAttrib(lang, VALC_SYM_errmsg);
+  err_attrib = PROTECT(getAttrib(lang, VALC_SYM_errmsg));
   if(err_attrib != R_NilValue) {
     if(TYPEOF(err_attrib) != STRSXP || XLENGTH(err_attrib) != 1) {
       VALC_arg_error(
@@ -290,10 +290,11 @@ static SEXP VALC_error_standard(
 
     int alloc_size = 0;
     int str_sizes[4] = {0, 0, 0, 0};
-    str_sizes[0] = strnlen(err_call, INT_MAX);
-    str_sizes[1] = strnlen(err_base, INT_MAX);
-    str_sizes[2] = strnlen(err_extra, INT_MAX);
-    str_sizes[3] = strnlen(err_tok, INT_MAX);
+
+    str_sizes[0] = strlen(err_call);
+    str_sizes[1] = strlen(err_base);
+    str_sizes[2] = strlen(err_extra);
+    str_sizes[3] = strlen(err_tok);
 
     for(int i = 0; i < 4; ++i) {
       if(INT_MAX - str_sizes[i] < alloc_size)
@@ -319,6 +320,7 @@ static SEXP VALC_error_standard(
       // nocov end
     }
   }
+  UNPROTECT(1);
   return mkString(err_str);
 }
 static SEXP VALC_error_template(
