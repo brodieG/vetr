@@ -1,3 +1,7 @@
+## 0.2.2
+
+* Test errors on Solaris.
+
 ## 0.2.1
 
 * Fix Solaris compilation issue.
