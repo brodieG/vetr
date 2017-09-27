@@ -10,35 +10,32 @@
 
 ## Submission Notes:
 
-This is a resubmission to fix the failing 
-Solaris CRAN farm check.  I apologize for 
+This is a resubmission to fix the failing
+Solaris CRAN farm check.  I apologize for
 resubmitting so soon.  This time I tested
-on rhub Solaris.
-
+on rhub Solaris, except for the vignettes
+which cannot work on rhub (but worked on
+CRAN last time).
 
 ## R CMD check --as-cran
 
 Status: 1 NOTE
 
-    Days since last update
+    Days since last update: 5
 
 ### Test Environments
-
-Much to my delight I discovered `rhub` has
-a Solaris test environment.  I have tested
-this package on the following:
 
 * rhub i386-pc-solaris2.10 (32-bit):
     * R version 3.4.1 Patched (2017-07-15 r72924)
 * Travis Ubuntu 14.04.5 LTS
-    * R devel (2017-09-22 r73336)
+    * R devel (2017-09-26 r73350)
     * R version 3.4.1 (2017-06-30)
     * R version 3.3.3 (2017-01-27)
 * Winbuilder
     * R devel (2017-09-12 r73242):
-      https://win-builder.r-project.org/ahP9elX0NRy1
+      https://win-builder.r-project.org/IX68mR9nYpRF
     * R version 3.4.1 (2017-06-30)
-      https://win-builder.r-project.org/sShYVv2BduzF/
+      https://win-builder.r-project.org/ltgA9DVlKMNO
 * Locally on Mac OS 10.12.5
     * R version 3.4.1 (2017-06-30)
 
