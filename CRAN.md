@@ -10,20 +10,12 @@
 
 ## Submission Notes:
 
-This is a resubmission fix CRAN check farm
-failures on current version 0.2.0.  I
-apologize for resubmitting so soon.
-
-* Fixes compilation failure on Solaris, we
-  hope (removed `strnlen` fun, set
-  `-D_POSIX_C_SOURCE=200112L` compilation flag
-  in addition to `-std=c99 -pedantic` in our
-  local checks).
-* Set dependency to be R >= 3.3.2 to avoid
-  failure on the CRAN osx old-rel machine
-  that is still using that version of R
-* Fixes some addition `rchck` errors that we
-  somehow missed on the first pass.
+This is a resubmission to fix the failing
+Solaris CRAN farm check.  I apologize for
+resubmitting so soon.  This time I tested
+on rhub Solaris, except for the vignettes
+which cannot work on rhub (but worked on
+CRAN last time).
 
 ## R CMD check --as-cran
 
@@ -33,27 +25,29 @@ Status: 1 NOTE
 
 ### Test Environments
 
-Unfortunately I do not have access to a Solaris
-test environment.  I have tested this package
-against the following environments:
-
+* rhub i386-pc-solaris2.10 (32-bit):
+    * R version 3.4.1 Patched (2017-07-15 r72924)
 * Travis Ubuntu 14.04.5 LTS
-    * R devel (2017-09-21 r73329)
+    * R devel (2017-09-26 r73350)
     * R version 3.4.1 (2017-06-30)
     * R version 3.3.3 (2017-01-27)
 * Winbuilder
     * R devel (2017-09-12 r73242):
-      https://win-builder.r-project.org/ahP9elX0NRy1
+      https://win-builder.r-project.org/IX68mR9nYpRF
     * R version 3.4.1 (2017-06-30)
-      https://win-builder.r-project.org/Z7xyqK9kXy7k
+      https://win-builder.r-project.org/ltgA9DVlKMNO
 * Locally on Mac OS 10.12.5
     * R version 3.4.1 (2017-06-30)
+
+The previous version was also checked against
+the following, but since changes are minor I did
+not re-run these:
+
 * Locally on a Ubuntu 14.04.5 LTS VM
     * R-devel (2017-09-13 r73255) with
       `--use-valgrind`
 * Locally on a Ubuntu 16.04.2 LTS VM
     * Using the Kalibera rchck image on vagrant
     * `rchk` with R-devel (2017-09-21 r73329)
-
     * With env vars set for rcnst checks
 

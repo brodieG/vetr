@@ -161,7 +161,7 @@ unitizer_sect("UTF8 corner cases, in UTF-8", {
   test.start
 
   utf8.test <- tail(utf8.kuhn, -test.start)
-  utf8.test
+  # suppressWarnings(utf8.test)  # Solaris problems
 
   nchar.base <- nchar(utf8.test, allowNA=TRUE)
   untranslatable <- is.na(nchar.base)
