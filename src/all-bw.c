@@ -257,7 +257,7 @@ SEXP VALC_all_bw(
                 success = 0;
                 break;
           } } }
-        } else error(log_err, "q34");
+        } else error(log_err, "q34");  // nocov
       } else if (lo_unbound && hi_unbound) {
         if(na_rm_int) success = 1;
         else {
@@ -289,7 +289,7 @@ SEXP VALC_all_bw(
               if(!(data[i] <= hi_num)) {
                 success = 0; break;
           } } }
-        }  else error(log_err, "q243oij");
+        }  else error(log_err, "q243oij");  // nocov
       } else if (hi_unbound) {
         if(!inc_lo) {
           if(na_rm_int) {
@@ -313,8 +313,8 @@ SEXP VALC_all_bw(
               if(!(data[i] >= lo_num)) {
                 success = 0; break;
           } } }
-        }  else error(log_err, "2945asdf");
-      } else error(log_err, "hfg89");
+        }  else error(log_err, "2945asdf");  // nocov
+      } else error(log_err, "hfg89");  // nocov
 
     } else if(x_type == INTSXP || x_type == LGLSXP) {
       // - Integer -------------------------------------------------------------
@@ -432,7 +432,7 @@ SEXP VALC_all_bw(
                 success = 0;
                 break;
           } } }
-        } else error(log_err, "intq34");
+        } else error(log_err, "intq34");  // nocov
       } else if (lo_unbound && hi_unbound) {
         if(na_rm_int) success = 1;
         else {
@@ -464,7 +464,7 @@ SEXP VALC_all_bw(
               if(!(data[i] <= hi_num && data[i] != NA_INTEGER)) {
                 success = 0; break;
           } } }
-        }  else error(log_err, "intq243oij");
+        }  else error(log_err, "intq243oij");  // nocov
       } else if (hi_unbound) {
         if(!inc_lo) {
           if(na_rm_int) {
@@ -488,8 +488,8 @@ SEXP VALC_all_bw(
               if(!(data[i] >= lo_num)) {
                 success = 0; break;
           } } }
-        }  else error(log_err, "int2945asdf");
-      } else error(log_err, "inthfg89");
+        }  else error(log_err, "int2945asdf");  // nocov
+      } else error(log_err, "inthfg89");  // nocov
     }
   } else if(x_type == STRSXP) {
   // - Strings ---------------------------------------------------------------
@@ -639,7 +639,7 @@ SEXP VALC_all_bw(
               success = 0;
               break;
         } } }
-      } else error(log_err, "stringq34");
+      } else error(log_err, "stringq34");  // nocov
     } else if (lo_unbound && hi_unbound) {
       if(na_rm_int) success = 1;
       else {
@@ -688,7 +688,7 @@ SEXP VALC_all_bw(
             ) {
               success = 0; break;
         } } }
-      }  else error(log_err, "stringq243oij");
+      }  else error(log_err, "stringq243oij");  // nocov
     } else if (hi_unbound) {
       if(!inc_lo) {
         if(na_rm_int) {
@@ -732,8 +732,8 @@ SEXP VALC_all_bw(
             ) {
               success = 0; break;
         } } }
-      }  else error(log_err, "string2945asdf");
-    } else error(log_err, "stringhfg89");
+      }  else error(log_err, "string2945asdf");  // nocov
+    } else error(log_err, "stringhfg89");  // nocov
   } else {
     error(
       "Argument `x` must be numeric-like or character (is %s).",

@@ -26,8 +26,8 @@ vet(vet.exp, "foo")
 vet(vet.exp, "baz")
 ```
 
-`all_bw` is available for value range checks (~10x faster than `!anyNA(.) &&
-all(. >= x & . <= y)` for large vectors):
+`all_bw` is available for value range checks (~10x faster than
+`isTRUE(all(. >= x & . <= y))` for large vectors):
 
 ```{r}
 vet(all_bw(., 0, 1), runif(5) + 1)

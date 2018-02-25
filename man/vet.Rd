@@ -3,6 +3,7 @@
 \name{vet}
 \alias{vet}
 \alias{tev}
+\alias{tev}
 \title{Verify Objects Meet Structural Requirements}
 \usage{
 vet(target, current, env = parent.frame(), format = "text", stop = FALSE,
@@ -42,6 +43,15 @@ chosen with parameter \code{stop}
 \description{
 Use vetting expressions to enforce structural requirements for objects.
 \code{tev} is a version of \code{vet} compatible with \code{magrittr} pipes.
+}
+\details{
+\code{tev} just reverses the \code{target} and \code{current} arguments for better
+integration with \code{magrittr}.  There are two major caveats:
+\itemize{
+\item error messages will be less useful since you will get \code{.} instead
+of the deparsed call
+\item \code{x \\\%>\\\% tev(y)} is much slower than \code{vet(y, x)} (or even \code{tev(x, y)})
+}
 }
 \section{Vetting Expressions}{
 

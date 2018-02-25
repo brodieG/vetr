@@ -1,3 +1,13 @@
+## 0.2.2
+
+* Test errors on Solaris.
+
+## 0.2.1
+
+* Fix Solaris compilation issue.
+* Fix new `rcheck` warnings.
+* Change R dependency to 3.3.2 to avoid problems with CRAN osx R-devel build.
+
 ## 0.2.0
 
 * [#48](https://github.com/brodieG/vetr/issues/48): Implement `all_bw`, a
@@ -29,8 +39,6 @@
 * [#81](https://github.com/brodieG/vetr/issues/81): Remove test that attached
   attribute to symbol (illegal in R-devel now).
 * [#59](https://github.com/brodieG/vetr/issues/59): Add a `CONTRIBUTING.md`
-* Custom tokens that return character vectors see the first element of that
-  vector incorporated in the error message
 * Assorted typos (@franknarf1, @DasonK)
 
 ## 0.1.0
@@ -43,10 +51,10 @@ Finalizing initial release.
 
 * [#40](https://github.com/brodieG/vetr/issues/40): Removed `suggests`
   dependencies to ggplot, microbenchmark, and valaddin to improve travis build
-  time
+  time.
 * Internal: formatting strings longer than `nchar.max` no longer allowed
 * [#39](https://github.com/brodieG/vetr/issues/39): `type_alike` return
-  values structured like `alike`, doc fixes
+  values structured like `alike`, doc fixes.
 * [#38](https://github.com/brodieG/vetr/issues/38): Run with valgrind
 * [#36](https://github.com/brodieG/vetr/issues/36): Fix INTEGER C bug
 * [#34](https://github.com/brodieG/vetr/issues/34): allow substitution of
@@ -54,12 +62,12 @@ Finalizing initial release.
 * [#33](https://github.com/brodieG/vetr/issues/33): prevent infinite
   recursion with recursive symbol substitution
 * [#30](https://github.com/brodieG/vetr/issues/30): allow specification of
-  substitution / matching / evaluation environment
+  substitution / matching / evaluation environment.
 * [#28](https://github.com/brodieG/vetr/issues/28): expose alike and vetr
-  setting control
+  setting control.
 * [#24](https://github.com/brodieG/vetr/issues/24): clarify use of
-  `vet_token`
+  `vet_token`.
 * [#18](https://github.com/brodieG/vetr/issues/18): better documentation for
-  NSE
+  NSE.
 * [#11](https://github.com/brodieG/vetr/issues/11): segfault when validating
-  language objects
+  language objects.

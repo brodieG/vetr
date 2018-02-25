@@ -36,7 +36,7 @@
 #' @param deparse.width how many characters to deparse for labels
 #' @return NULL, invisibly, reports timings as a side effect as screen output
 #' @examples
-#' bench_mark(runif(1000), Sys.sleep(0.001))
+#' bench_mark(runif(1000), Sys.sleep(0.001), times=10)
 
 bench_mark <- function(..., times=1000L, deparse.width=40) {
   stopifnot(

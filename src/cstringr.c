@@ -497,7 +497,6 @@ char * CSR_collapse(SEXP str, const char * sep, size_t max_len) {
     *str_cpy = '\0';
     return str_new;
   }
-  error("Internal error: should never get here 2123; contact maintainer.");
 }
 SEXP CSR_collapse_ext(SEXP str, SEXP sep, SEXP max_len) {
   return mkString(CSR_collapse(str, CHAR(asChar(sep)), INTEGER(max_len)[0]));

@@ -32,5 +32,5 @@ susceptible to outliers in small sample runs, particularly with fast running
 code.  For that reason the default number of iterations is one thousand.
 }
 \examples{
-bench_mark(runif(1000), Sys.sleep(0.001))
+bench_mark(runif(1000), Sys.sleep(0.001), times=10)
 }
