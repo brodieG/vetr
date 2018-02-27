@@ -374,14 +374,18 @@ SEXP VALC_evaluate(
   if(!IS_LANG(arg_lang))
     error("Internal Error: argument `arg_lang` must be language.");  // nocov
 
+  Rprintf("about to parse\n");
   SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, set, arg_tag));
+  Rprintf("done parsing to parse\n");
   struct VALC_res_list res_list, res_init = VALC_res_list_init(set);
   PROTECT(res_init.list_sxp);
 
+  Rprintf("about to eval rec\n");
   res_list = VALC_evaluate_recurse(
     VECTOR_ELT(lang_parsed, 0), VECTOR_ELT(lang_parsed, 1),
     arg_value, arg_lang, arg_tag, lang_full, set, res_init
   );
+  Rprintf("done eval rec\n");
   if(res_list.idx == INT_MAX)
     // nocov start
     error("Internal Error: cannot have INT_MAX results, contact maintainer.");

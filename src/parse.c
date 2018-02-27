@@ -207,12 +207,17 @@ SEXP VALC_parse(
 
   // Must copy since we're going to modify this
 
+  Rprintf("duplicate languages\n");
   lang_cpy = PROTECT(duplicate(lang));
-  lang2_cpy = PROTECT(duplicate(lang));
 
   rem_res = PROTECT(VALC_remove_parens(lang_cpy));
   lang_cpy = VECTOR_ELT(rem_res, 0);
   mode = asInteger(VECTOR_ELT(rem_res, 1));
+
+  lang2_cpy = PROTECT(duplicate(lang_cpy));
+
+  PrintValue(lang_cpy);
+  PrintValue(lang2_cpy);
 
   // Hash table to track symbols to make sure  we don't end up in an infinite
   // recursion substituting symbols
@@ -229,10 +234,12 @@ SEXP VALC_parse(
   // an actualy dot that we shouldn't substitute recursively, instead it should
   // be substituted with `name_sub`.
 
+  Rprintf("sub names\n");
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
   lang_cpy = PROTECT(VALC_name_sub(lang_cpy, arg_tag));
   lang2_cpy = PROTECT(VALC_name_sub(lang2_cpy, var_name));
 
+  Rprintf("sub symbols\n");
   if(mode != 2) {
     lang_cpy = PROTECT(VALC_sub_symbol(lang_cpy, set, track_hash, arg_tag));
     lang2_cpy = PROTECT(VALC_sub_symbol(lang2_cpy, set, track_hash, arg_tag));
@@ -243,10 +250,12 @@ SEXP VALC_parse(
   } else {
     res = PROTECT(allocList(length(lang_cpy)));
     // lang_cpy, res, are modified internally
+    Rprintf("recurse\n");
     VALC_parse_recurse(
       lang_cpy, lang2_cpy, res, var_name, mode, R_NilValue, set, track_hash,
       arg_tag
     );
+    Rprintf("done parse recurse\n");
   }
   res_vec = PROTECT(allocVector(VECSXP, 3));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
@@ -283,6 +292,10 @@ void VALC_parse_recurse(
   SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash,
   SEXP arg_tag
 ) {
+  Rprintf("PARSE RECURSE START\n");
+  PrintValue(lang);
+  PrintValue(lang2);
+  Rprintf("Equal? %d", lang==lang2);
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
@@ -331,6 +344,7 @@ void VALC_parse_recurse(
     first_fun = lang_track;
   }
   lang = CDR(lang);
+  lang2 = CDR(lang2);
   lang_track = CDR(lang_track);
   call_type = 999; // Reset for sub-elements
 
@@ -346,8 +360,13 @@ void VALC_parse_recurse(
     // evaled as is.  This is distinct to encountering a `.` which would only
     // affect that element.
 
+    Rprintf("  remove parens 1\n");
+    PrintValue(CAR(lang));
     SEXP rem_parens = PROTECT(VALC_remove_parens(CAR(lang)));
+    Rprintf("  remove parens 2\n");
+    PrintValue(CAR(lang2));
     SEXP rem2_parens = PROTECT(VALC_remove_parens(CAR(lang2)));
+
     if(asInteger(VECTOR_ELT(rem_parens, 1)) || eval_as_is_internal) {
       eval_as_is_internal = 1;
     } else {
@@ -359,6 +378,7 @@ void VALC_parse_recurse(
     // Replace any variables to language objects with language
 
     int is_one_dot = (lang_car == VALC_SYM_one_dot);
+    Rprintf("  name sub\n");
     lang_car = PROTECT(VALC_name_sub(lang_car, arg_tag));
     lang2_car = PROTECT(VALC_name_sub(lang2_car, var_name));
 
@@ -370,6 +390,7 @@ void VALC_parse_recurse(
     size_t substitute_level = track_hash->idx;
 
     if(!is_one_dot) {
+      Rprintf("  sub symbol\n");
       lang_car = VALC_sub_symbol(lang_car, set, track_hash, arg_tag);
       lang2_car = VALC_sub_symbol(lang2_car, set, track_hash, arg_tag);
     }
@@ -382,10 +403,12 @@ void VALC_parse_recurse(
       SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
 
+      Rprintf("    recurse again\n");
       VALC_parse_recurse(
         lang_car, lang2_car, CAR(lang_track), var_name, eval_as_is_internal,
         first_fun, set, track_hash, arg_tag
       );
+      Rprintf("    done recurse again\n");
     } else {
       int new_call_type = call_type;
       if(is_one_dot || eval_as_is_internal) {
