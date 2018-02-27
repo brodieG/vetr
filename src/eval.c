@@ -28,6 +28,9 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  * until we process the error in `VALC_evaluate`, so this function introduces a
  * stack balance issue that `VALC_evaluate` needs to rectify with the
  * information embedded in `res_list`.
+ *
+ * ^^ update, this might be dated from back when we allowed function calls that
+ * produced unbalanced PROTECT stacks
  */
 
 struct VALC_res_list VALC_evaluate_recurse(
@@ -151,10 +154,7 @@ struct VALC_res_list VALC_evaluate_recurse(
     SET_VECTOR_ELT(eval_dat, 1, eval_tmp);
     UNPROTECT(1);
 
-    Rprintf("hello\n");
     if(* err_point) {
-      PrintValue(set.env);
-      PrintValue(lang);
       VALC_arg_error(
         arg_tag, lang_full,
         "Validation expression for argument `%s` produced an error (see previous error)."
@@ -388,7 +388,7 @@ SEXP VALC_evaluate(
     // nocov end
 
   // Now determine if we passed or failed, if idx is not zero means we had at
-  // least on error.  There should be one error in AND mode, and possibly many
+  // least one error.  There should be one error in AND mode, and possibly many
   // in OR mode.  Different rendering logic for template vs standard tokens.  In
   // all cases if the last recorded item is a success or there are no recorded
   // items, then we pass.
