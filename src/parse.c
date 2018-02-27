@@ -261,7 +261,7 @@ SEXP VALC_parse(
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
   SET_VECTOR_ELT(res_vec, 1, res);
   SET_VECTOR_ELT(res_vec, 2, lang2_cpy);
-  UNPROTECT(8);
+  UNPROTECT(9);
   return(res_vec);
 }
 SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
