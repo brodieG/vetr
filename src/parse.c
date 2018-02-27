@@ -122,11 +122,15 @@ SEXP VALC_remove_parens(SEXP lang) {
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 /*
-If a variable expands to language, sub it in and keep parsing unless the sub itself is to symbol then keep subbing until it doesn't
+If a variable expands to language, sub it in and keep parsing unless the sub
+itself is to symbol then keep subbing until it doesn't
 
-See VALC_name_sub too.  We substitute `.` here as well, but logic before this function is called should ensure that we only call it on `.` when it was previously `..`.
+See VALC_name_sub too.  We substitute `.` here as well, but logic before this
+function is called should ensure that we only call it on `.` when it was
+previously `..`.
 
-Really seems like these two functions should be merged into one so that we don't get out of sync in how we use them.
+Really seems like these two functions should be merged into one so that we don't
+get out of sync in how we use them.
 
 @param arg_name used primarily for `vetr`, or if in `vet` current is just a
   single variable name, allows us to verify that we're not accidentally
@@ -207,7 +211,6 @@ SEXP VALC_parse(
 
   // Must copy since we're going to modify this
 
-  Rprintf("duplicate languages\n");
   lang_cpy = PROTECT(duplicate(lang));
 
   rem_res = PROTECT(VALC_remove_parens(lang_cpy));
@@ -216,13 +219,16 @@ SEXP VALC_parse(
 
   lang2_cpy = PROTECT(duplicate(lang_cpy));
 
-  PrintValue(lang_cpy);
-  PrintValue(lang2_cpy);
-
   // Hash table to track symbols to make sure  we don't end up in an infinite
   // recursion substituting symbols
 
+  // Note that the lang/lang2 business is really sub-optimal because we are
+  // duplicating a lot of stuff.  Unfortunately alternatives are probably a bit
+  // more complicated.
+
   struct track_hash * track_hash =
+    VALC_create_track_hash(set.track_hash_content_size);
+  struct track_hash * track_hash2 =
     VALC_create_track_hash(set.track_hash_content_size);
 
   // Replace any variables to language objects with language, though first check
@@ -234,15 +240,13 @@ SEXP VALC_parse(
   // an actualy dot that we shouldn't substitute recursively, instead it should
   // be substituted with `name_sub`.
 
-  Rprintf("sub names\n");
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
   lang_cpy = PROTECT(VALC_name_sub(lang_cpy, arg_tag));
   lang2_cpy = PROTECT(VALC_name_sub(lang2_cpy, var_name));
 
-  Rprintf("sub symbols\n");
   if(mode != 2) {
     lang_cpy = PROTECT(VALC_sub_symbol(lang_cpy, set, track_hash, arg_tag));
-    lang2_cpy = PROTECT(VALC_sub_symbol(lang2_cpy, set, track_hash, arg_tag));
+    lang2_cpy = PROTECT(VALC_sub_symbol(lang2_cpy, set, track_hash2, arg_tag));
   } else PROTECT(PROTECT(R_NilValue));
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
@@ -250,12 +254,10 @@ SEXP VALC_parse(
   } else {
     res = PROTECT(allocList(length(lang_cpy)));
     // lang_cpy, res, are modified internally
-    Rprintf("recurse\n");
     VALC_parse_recurse(
       lang_cpy, lang2_cpy, res, var_name, mode, R_NilValue, set, track_hash,
-      arg_tag
+      track_hash2, arg_tag
     );
-    Rprintf("done parse recurse\n");
   }
   res_vec = PROTECT(allocVector(VECSXP, 3));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
@@ -289,13 +291,10 @@ SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
 
 void VALC_parse_recurse(
   SEXP lang, SEXP lang2, SEXP lang_track, SEXP var_name, int eval_as_is,
-  SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash,
+  SEXP first_fun, struct VALC_settings set, 
+  struct track_hash * track_hash, struct track_hash * track_hash2,
   SEXP arg_tag
 ) {
-  Rprintf("PARSE RECURSE START\n");
-  PrintValue(lang);
-  PrintValue(lang2);
-  Rprintf("Equal? %d", lang==lang2);
   /*
   If the object is not a language list, then return it, as part of an R vector
   list.  Otherwise, in a loop, recurse with this function on each element of the
@@ -360,11 +359,7 @@ void VALC_parse_recurse(
     // evaled as is.  This is distinct to encountering a `.` which would only
     // affect that element.
 
-    Rprintf("  remove parens 1\n");
-    PrintValue(CAR(lang));
     SEXP rem_parens = PROTECT(VALC_remove_parens(CAR(lang)));
-    Rprintf("  remove parens 2\n");
-    PrintValue(CAR(lang2));
     SEXP rem2_parens = PROTECT(VALC_remove_parens(CAR(lang2)));
 
     if(asInteger(VECTOR_ELT(rem_parens, 1)) || eval_as_is_internal) {
@@ -378,7 +373,6 @@ void VALC_parse_recurse(
     // Replace any variables to language objects with language
 
     int is_one_dot = (lang_car == VALC_SYM_one_dot);
-    Rprintf("  name sub\n");
     lang_car = PROTECT(VALC_name_sub(lang_car, arg_tag));
     lang2_car = PROTECT(VALC_name_sub(lang2_car, var_name));
 
@@ -388,11 +382,11 @@ void VALC_parse_recurse(
     // reset later
 
     size_t substitute_level = track_hash->idx;
+    size_t substitute_level2 = track_hash2->idx;
 
     if(!is_one_dot) {
-      Rprintf("  sub symbol\n");
       lang_car = VALC_sub_symbol(lang_car, set, track_hash, arg_tag);
-      lang2_car = VALC_sub_symbol(lang2_car, set, track_hash, arg_tag);
+      lang2_car = VALC_sub_symbol(lang2_car, set, track_hash2, arg_tag);
     }
     UNPROTECT(2);
     SETCAR(lang, lang_car);
@@ -403,12 +397,10 @@ void VALC_parse_recurse(
       SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
 
-      Rprintf("    recurse again\n");
       VALC_parse_recurse(
         lang_car, lang2_car, CAR(lang_track), var_name, eval_as_is_internal,
-        first_fun, set, track_hash, arg_tag
+        first_fun, set, track_hash, track_hash2, arg_tag
       );
-      Rprintf("    done recurse again\n");
     } else {
       int new_call_type = call_type;
       if(is_one_dot || eval_as_is_internal) {
@@ -421,6 +413,7 @@ void VALC_parse_recurse(
     // Now reset the track hash to avoid spurious collision warnings
 
     VALC_reset_track_hash(track_hash, substitute_level);
+    VALC_reset_track_hash(track_hash2, substitute_level2);
     lang = CDR(lang);
     lang2 = CDR(lang2);
     lang_track = CDR(lang_track);
