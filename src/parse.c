@@ -228,7 +228,9 @@ SEXP VALC_parse(
   // be substituted with `name_sub`.
 
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
-  lang_cpy = PROTECT(VALC_name_sub(lang_cpy, var_name));
+  lang_cpy = PROTECT(VALC_name_sub(lang_cpy, arg_tag));
+  // lang_cpy = PROTECT(VALC_name_sub(lang_cpy, var_name));
+
   if(mode != 2) {
     lang_cpy = PROTECT(VALC_sub_symbol(lang_cpy, set, track_hash, arg_tag));
   } else PROTECT(R_NilValue);
@@ -334,7 +336,8 @@ void VALC_parse_recurse(
     // Replace any variables to language objects with language
 
     int is_one_dot = (lang_car == VALC_SYM_one_dot);
-    lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
+    lang_car = PROTECT(VALC_name_sub(lang_car, arg_tag));
+    // lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
 
     // each time we switch parse tree elements we should reset the hash so that
     // we don't mistakenly tag symbol collisions that occur on different
@@ -346,6 +349,7 @@ void VALC_parse_recurse(
     if(!is_one_dot) {
       lang_car = VALC_sub_symbol(lang_car, set, track_hash, arg_tag);
     }
+    PrintValue(lang_car);
     UNPROTECT(1);
     SETCAR(lang, lang_car);
     UNPROTECT(1);

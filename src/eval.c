@@ -151,7 +151,10 @@ struct VALC_res_list VALC_evaluate_recurse(
     SET_VECTOR_ELT(eval_dat, 1, eval_tmp);
     UNPROTECT(1);
 
+    Rprintf("hello\n");
     if(* err_point) {
+      PrintValue(set.env);
+      PrintValue(lang);
       VALC_arg_error(
         arg_tag, lang_full,
         "Validation expression for argument `%s` produced an error (see previous error)."
