@@ -311,6 +311,11 @@ SEXP VALC_validate_args(
 ) {
   // For now just use default settings
 
+  Rprintf("----hello\n");
+  PrintValue(fun_call);
+  PrintValue(val_call);
+  Rprintf("----hello\n");
+
   struct VALC_settings set = VALC_settings_vet(settings, fun_frame);
   set.env = fun_frame;
 
