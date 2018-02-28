@@ -31,11 +31,14 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  *
  * ^^ update, this might be dated from back when we allowed function calls that
  * produced unbalanced PROTECT stacks
+ *
+  * See VALC_parse_recurse for details about distinction between lang/lang2
  */
 
 struct VALC_res_list VALC_evaluate_recurse(
-  SEXP lang, SEXP act_codes, SEXP arg_value, SEXP arg_lang, SEXP arg_tag,
-  SEXP lang_full, struct VALC_settings set, struct VALC_res_list res_list
+  SEXP lang, SEXP act_codes, SEXP lang2, SEXP arg_value, SEXP arg_lang,
+  SEXP arg_tag, SEXP lang_full, struct VALC_settings set,
+  struct VALC_res_list res_list
 ) {
   /*
   check act_codes:
@@ -59,7 +62,10 @@ struct VALC_res_list VALC_evaluate_recurse(
   int mode;
 
   if(TYPEOF(act_codes) == LISTSXP) {
-    if(TYPEOF(lang) != LANGSXP && TYPEOF(lang) != LISTSXP) {
+    if(
+      (TYPEOF(lang) != LANGSXP && TYPEOF(lang) != LISTSXP) ||
+      (TYPEOF(lang2) != LANGSXP && TYPEOF(lang2) != LISTSXP)
+    ) {
       // nocov start
       error("%s%s"
         "Internal Error: mismatched language and eval type tracking 1; contact ",
@@ -78,7 +84,7 @@ struct VALC_res_list VALC_evaluate_recurse(
       mode=asInteger(CAR(act_codes));
     }
   } else {
-    if(TYPEOF(lang) == LANGSXP || TYPEOF(lang) == LISTSXP) {
+    if(TYPEOF(lang) == LANGSXP || TYPEOF(lang2) == LISTSXP) {
       // nocov start
       error("%s%s",
         "Internal Error: mismatched language and eval type tracking 2; contact ",
@@ -94,12 +100,13 @@ struct VALC_res_list VALC_evaluate_recurse(
     if(TYPEOF(lang) == LANGSXP) {
       int parse_count = 0;
       lang = CDR(lang);
+      lang2 = CDR(lang2);
       act_codes = CDR(act_codes);
 
       while(lang != R_NilValue) {
         res_list = VALC_evaluate_recurse(
-          CAR(lang), CAR(act_codes), arg_value, arg_lang, arg_tag, lang_full,
-          set, res_list
+          CAR(lang), CAR(act_codes), CAR(lang2), arg_value, arg_lang, arg_tag,
+          lang_full, set, res_list
         );
         // recall res_list.idx points to next available slot, not last result
         struct VALC_res_node res_val = res_list.list_tpl[res_list.idx - 1];
@@ -111,6 +118,7 @@ struct VALC_res_list VALC_evaluate_recurse(
           return(res_list);
         }
         lang = CDR(lang);
+        lang = CDR(lang2);
         act_codes = CDR(act_codes);
         parse_count++;
       }
@@ -150,7 +158,7 @@ struct VALC_res_list VALC_evaluate_recurse(
     int * err_point = &err_val;
     eval_tmp = PROTECT(R_tryEval(lang, set.env, err_point));
 
-    SET_VECTOR_ELT(eval_dat, 0, lang);
+    SET_VECTOR_ELT(eval_dat, 0, lang2);
     SET_VECTOR_ELT(eval_dat, 1, eval_tmp);
     UNPROTECT(1);
 
@@ -380,6 +388,7 @@ SEXP VALC_evaluate(
 
   res_list = VALC_evaluate_recurse(
     VECTOR_ELT(lang_parsed, 0), VECTOR_ELT(lang_parsed, 1),
+    VECTOR_ELT(lang_parsed, 2),
     arg_value, arg_lang, arg_tag, lang_full, set, res_init
   );
   if(res_list.idx == INT_MAX)
