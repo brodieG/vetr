@@ -118,7 +118,7 @@ struct VALC_res_list VALC_evaluate_recurse(
           return(res_list);
         }
         lang = CDR(lang);
-        lang = CDR(lang2);
+        lang2 = CDR(lang2);
         act_codes = CDR(act_codes);
         parse_count++;
       }
@@ -383,6 +383,7 @@ SEXP VALC_evaluate(
     error("Internal Error: argument `arg_lang` must be language.");  // nocov
 
   SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, set, arg_tag));
+  PrintValue(lang_parsed);
   struct VALC_res_list res_list, res_init = VALC_res_list_init(set);
   PROTECT(res_init.list_sxp);
 
