@@ -263,7 +263,6 @@ SEXP VALC_parse(
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
   SET_VECTOR_ELT(res_vec, 1, res);
   SET_VECTOR_ELT(res_vec, 2, lang2_cpy);
-  PrintValue(lang2_cpy);
   UNPROTECT(9);
   return(res_vec);
 }
