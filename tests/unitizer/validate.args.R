@@ -103,6 +103,14 @@ unitizer_sect("Args evaled in correct env?", {
     b <- character()
     fun(b)
   })
+  # make sure we can access variables that are not in fun lexical scope
+
+  fun8b <- function(x) vetr(x=length(.) > 0 && integer())
+  get("zfqwefkj")  # should fail
+  local({
+    zfqwefkj <- 200L
+    fun8b(zfqwefkj)
+  })
 })
 unitizer_sect("Compound Expression Scope Issues", {
   a <- quote(!anyNA(.))
