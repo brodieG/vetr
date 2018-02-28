@@ -282,6 +282,10 @@ SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
  * we evalute `lang2` in parent.frame(2), then we will also evaluate it when we
  * force the promise).
  *
+ * Even worse, turns out that we only need the `lang2` business for `vetr`,
+ * `vet`/`tev` are fine with the original logic, so now we have the entire
+ * duplicated version of teh `lang2` logic that we throw away for `vet`/`tev`.
+ *
  * @param lang the original call that where we will substitute `.` with the
  *   corresponding parameter
  * @param lang2 the original call that where we will substitute `.` with the

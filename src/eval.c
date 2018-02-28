@@ -374,22 +374,31 @@ static SEXP VALC_error_extract(
 @param arg_value the value being validated
 @param lang_full solely so that we can produce error message with original call
 @param set the settings
+@param use_lang_raw whether to use the raw language in evaluations, should be
+  TRUE for `vet`/`tev`, but FALSE for `vetr` as for the latter we have to
+  evaluate the version of the vetting token inside the function `vetr` is called
+  in
 */
 SEXP VALC_evaluate(
   SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
-  struct VALC_settings set
+  struct VALC_settings set, int use_lang_raw
 ) {
   if(!IS_LANG(arg_lang))
     error("Internal Error: argument `arg_lang` must be language.");  // nocov
 
   SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, set, arg_tag));
-  PrintValue(lang_parsed);
   struct VALC_res_list res_list, res_init = VALC_res_list_init(set);
   PROTECT(res_init.list_sxp);
 
+  // Super wasteful, but if we are in vet/tev mode we don't actually need the
+  // substituted language to evaluate and to show in error messages
+
+  SEXP lang_eval =
+    use_lang_raw ? VECTOR_ELT(lang_parsed, 2) : VECTOR_ELT(lang_parsed, 0);
+  SEXP lang_msg = VECTOR_ELT(lang_parsed, 2);
+
   res_list = VALC_evaluate_recurse(
-    VECTOR_ELT(lang_parsed, 0), VECTOR_ELT(lang_parsed, 1),
-    VECTOR_ELT(lang_parsed, 2),
+    lang_eval, VECTOR_ELT(lang_parsed, 1), lang_msg,
     arg_value, arg_lang, arg_tag, lang_full, set, res_init
   );
   if(res_list.idx == INT_MAX)
@@ -447,5 +456,5 @@ SEXP VALC_evaluate_ext(
   SEXP rho
 ) {
   struct VALC_settings set = VALC_settings_vet(R_NilValue, rho);
-  return VALC_evaluate(lang, arg_lang, arg_tag, arg_value, lang_full, set);
+  return VALC_evaluate(lang, arg_lang, arg_tag, arg_value, lang_full, set, 0);
 }

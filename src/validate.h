@@ -130,7 +130,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   void VALC_install_objs();
   SEXP VALC_evaluate(
     SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
-    struct VALC_settings set
+    struct VALC_settings set, int use_lang_raw
   );
   SEXP VALC_evaluate_ext(
     SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,

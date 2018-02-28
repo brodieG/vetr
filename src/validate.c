@@ -273,7 +273,7 @@ SEXP VALC_validate(
     VALC_evaluate(
       target, cur_sub,
       TYPEOF(cur_sub) == SYMSXP ? cur_sub : VALC_SYM_current,
-      current, par_call, set
+      current, par_call, set, 1
     )
   );
   if(!xlength(res)) {
@@ -412,7 +412,7 @@ SEXP VALC_validate_args(
     // Evaluate the validation expression
 
     SEXP val_res = PROTECT(
-      VALC_evaluate(val_tok, fun_tok, arg_tag, fun_val, val_call, set)
+      VALC_evaluate(val_tok, fun_tok, arg_tag, fun_val, val_call, set, 0)
     );
     if(xlength(val_res)) {
       // fail, produce error message: NOTE - might change if we try to use full
