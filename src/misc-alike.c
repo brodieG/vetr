@@ -407,10 +407,10 @@ const char * ALIKEC_pad_or_quote(
 
     if(syntactic) {
       call_pre = "`";
-      call_post = "` ";
+      call_post = "`";
     } else {
       call_pre = "{";
-      call_post = "} ";
+      call_post = "}";
     }
     call_char = dep_chr;
   }
