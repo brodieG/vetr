@@ -12,7 +12,7 @@
 
 <meta name="author" content="Brodie Gaslam" />
 
-<meta name="date" content="2017-09-15" />
+<meta name="date" content="2018-02-28" />
 
 <title>Parameter Validation Mechanisms in R</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Parameter Validation Mechanisms in R</h1>
 <h4 class="author"><em>Brodie Gaslam</em></h4>
-<h4 class="date"><em>2017-09-15</em></h4>
+<h4 class="date"><em>2018-02-28</em></h4>
 
 
 <div id="TOC">
@@ -388,37 +388,37 @@ rect.mx &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class
 <p>Starting with the simple checks on <code>nums &lt;- runif(2)</code>:</p>
 <pre><code>Unit: microseconds, neval:   100
 
-                     expr        lq    median        uq      mean
-5  simple_checkmate(nums)       6.3      10.2      15.6      22.1
-1  simple_stopifnot(nums)      10.2      14.0      17.7      40.9
-2       simple_vetr(nums)      19.6      27.6      37.0      52.2
-4 simple_assertthat(nums)      45.6      61.1      71.7      93.5
-3  simple_assertive(nums)   1,313.6   1,389.7   1,532.8   1,461.8</code></pre>
+                     expr      lq  median      uq    mean
+5  simple_checkmate(nums)     7.2     8.3    10.0    19.0
+1  simple_stopifnot(nums)    14.1    15.4    18.5    60.8
+2       simple_vetr(nums)    27.5    30.3    35.2    53.7
+4 simple_assertthat(nums)    53.9    58.9    72.1   103.2
+3  simple_assertive(nums)   719.1   800.7   851.0   890.9</code></pre>
 <p><code>stopifnot</code> and <code>checkmate</code> lead the way, with <code>vetr</code> not too far behind.</p>
 <p>For complex objects <code>vetr</code> takes the lead:</p>
 <pre><code>Unit: microseconds, neval:   100
 
                       expr        lq    median        uq      mean
-5       complex_vetr(iris)      29.5      38.3      48.0      51.7
-4  complex_stopifnot(iris)      71.3      79.4      89.5     201.5
-2 complex_assertthat(iris)     164.2     184.5     214.8     291.2
-3  complex_checkmate(iris)     261.9     297.3     358.5     367.7
-1  complex_assertive(iris)   4,177.0   4,434.2   4,793.7   4,659.4</code></pre>
+5       complex_vetr(iris)      33.1      37.2      42.3      48.0
+4  complex_stopifnot(iris)      73.2      77.2      84.4     167.9
+2 complex_assertthat(iris)     174.4     180.9     191.2     275.6
+3  complex_checkmate(iris)     262.9     280.1     312.6     355.0
+1  complex_assertive(iris)   2,495.1   2,536.3   2,638.4   2,798.2</code></pre>
 <p><code>vetr</code> is the fastest option for checking that values in a long vector are in range:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">str.pos.vec &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="fl">5e5</span>) +<span class="st"> </span><span class="dv">1</span>  <span class="co"># test with a 500K long vector</span></code></pre></div>
 <pre><code>Unit: microseconds, neval:   100
 
                             expr        lq    median        uq      mean
-4       vector_vetr(str.pos.vec)     434.6     462.8     515.8     521.3
-2  vector_checkmate(str.pos.vec)   1,721.7   1,806.2   1,970.8   1,953.3
-3  vector_stopifnot(str.pos.vec)   2,862.7   3,264.8   3,783.0   4,553.3
-1 vector_assertthat(str.pos.vec)   2,909.1   3,348.5   3,793.1   3,592.3</code></pre>
+4       vector_vetr(str.pos.vec)     433.8     446.3     456.7     503.2
+2  vector_checkmate(str.pos.vec)   1,514.7   1,536.2   1,554.9   1,613.2
+1 vector_assertthat(str.pos.vec)   2,611.7   2,682.0   3,957.3   3,459.7
+3  vector_stopifnot(str.pos.vec)   2,512.1   2,790.8   3,474.3   3,344.6</code></pre>
 <p>This is primarily because we use <code>vetr::all_bw</code> instead of the semantically similar <code>isTRUE(all(. &gt; 0))</code> expression. <code>all_bw</code> is implemented in C and avoids the intermediate vectors required to evaluate the standard R version. <code>checkmate</code> does the same with <code>qassert</code>.</p>
 <p><code>assertive</code> is substantially slower so we benchmark it separately:</p>
 <pre><code>Unit: milliseconds, neval:   5
 
-                           expr      lq  median      uq    mean
-1 vector_assertive(str.pos.vec)   728.9   731.8   737.6   756.8</code></pre>
+                           expr      lq  median    uq  mean
+1 vector_assertive(str.pos.vec)   699.5   703.1   829   873</code></pre>
 <p>If your functions will never be run thousands of times then you probably do not need to worry about the differences shown here. However, general purpose parameter check functions should be compatible with functions that are, and in those cases microseconds matter.</p>
 </div>
 <div id="making-vetr-faster" class="section level3">
@@ -437,10 +437,10 @@ rect.mx &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class
 <pre><code>Unit: microseconds, neval:   10,000
 
                     expr     lq median     uq   mean
-3 simple_checkmate(nums)    4.0    4.4    4.9    5.0
-4     simple_alike(nums)    4.2    4.5    5.0    5.4
-1       simple_vet(nums)    8.6    9.1    9.8   12.5
-2      simple_vetr(nums)   15.6   16.4   17.7   22.2</code></pre>
+3 simple_checkmate(nums)    4.8    5.5    6.1    5.7
+4     simple_alike(nums)    5.1    5.6    6.1    6.4
+1       simple_vet(nums)   12.1   12.8   14.7   19.6
+2      simple_vetr(nums)   20.5   21.5   24.1   26.2</code></pre>
 </div>
 </div>
 <div id="conclusions" class="section level2">
@@ -586,7 +586,7 @@ complex_assertthat &lt;-<span class="st"> </span>function(x) {
 <div id="session-info" class="section level3">
 <h3>Session Info</h3>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sessionInfo</span>()</code></pre></div>
-<pre><code>R version 3.4.0 (2017-04-21)
+<pre><code>R version 3.4.1 (2017-06-30)
 Platform: x86_64-apple-darwin15.6.0 (64-bit)
 Running under: macOS Sierra 10.12.6
 
@@ -601,45 +601,31 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] vetr_0.2.0          assertthat_0.2.0    assertive_0.3-5    
-[4] checkmate_1.8.3     rhub_1.0.1          unitizer_1.4.2.9003
-[7] inline_0.3.14      
+[1] checkmate_1.8.3  assertthat_0.2.0 assertive_0.3-5  vetr_0.2.2      
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.12               whoami_1.1.1              
- [3] prettyunits_1.0.2          assertive.properties_0.0-4
- [5] assertive.types_0.0-3      assertive.data.us_0.0-1   
- [7] clisymbols_1.2.0           rprojroot_1.2             
- [9] digest_0.6.12              mime_0.5                  
-[11] R6_2.2.2                   plyr_1.8.4                
-[13] backports_1.1.0            evaluate_0.10             
-[15] assertive.code_0.0-1       httr_1.3.1                
-[17] ggplot2_2.2.1              assertive.strings_0.0-3   
-[19] rlang_0.1.2                rematch_1.0.1             
-[21] lazyeval_0.2.0             curl_2.8.1                
-[23] callr_1.0.0                DT_0.2                    
-[25] assertive.data_0.0-1       rmarkdown_1.5             
-[27] desc_1.1.1                 devtools_1.12.0           
-[29] stringr_1.2.0              htmlwidgets_0.8           
-[31] munsell_0.4.3              shiny_1.0.4               
-[33] compiler_3.4.0             httpuv_1.3.5              
-[35] microbenchmark_1.4-2.1     htmltools_0.3.6           
-[37] tibble_1.3.3               assertive.sets_0.0-3      
-[39] codetools_0.2-15           crayon_1.3.2              
-[41] withr_2.0.0                rappdirs_0.3.1            
-[43] grid_3.4.0                 jsonlite_1.5              
-[45] xtable_1.8-2               assertive.base_0.0-7      
-[47] gtable_0.2.0               git2r_0.18.0              
-[49] magrittr_1.5               covr_2.2.2                
-[51] assertive.models_0.0-1     scales_0.4.1              
-[53] stringi_1.1.5              diffobj_0.1.6.9002        
-[55] assertive.matrices_0.0-1   rex_1.1.1                 
-[57] parsedate_1.1.3            assertive.reflection_0.0-4
-[59] assertive.datetimes_0.0-2  tools_3.4.0               
-[61] rcmdcheck_1.2.1            assertive.numbers_0.0-2   
-[63] yaml_2.1.14                colorspace_1.3-2          
-[65] assertive.files_0.0-2      assertive.data.uk_0.0-1   
-[67] memoise_1.1.0              knitr_1.15.1              </code></pre>
+ [1] Rcpp_0.12.14               assertive.data_0.0-1      
+ [3] compiler_3.4.1             plyr_1.8.4                
+ [5] assertive.files_0.0-2      tools_3.4.1               
+ [7] assertive.properties_0.0-4 assertive.data.us_0.0-1   
+ [9] digest_0.6.12              evaluate_0.10             
+[11] memoise_1.1.0              tibble_1.3.4              
+[13] assertive.base_0.0-7       gtable_0.2.0              
+[15] rlang_0.1.4                microbenchmark_1.4-2.1    
+[17] yaml_2.1.14                withr_2.1.1               
+[19] stringr_1.2.0              knitr_1.16                
+[21] assertive.sets_0.0-3       assertive.strings_0.0-3   
+[23] assertive.types_0.0-3      assertive.datetimes_0.0-2 
+[25] assertive.matrices_0.0-1   devtools_1.13.2           
+[27] rprojroot_1.2              grid_3.4.1                
+[29] assertive.code_0.0-1       rmarkdown_1.5             
+[31] ggplot2_2.2.1              magrittr_1.5              
+[33] assertive.models_0.0-1     backports_1.1.0           
+[35] scales_0.4.1               assertive.numbers_0.0-2   
+[37] codetools_0.2-15           htmltools_0.3.6           
+[39] colorspace_1.3-2           stringi_1.1.5             
+[41] assertive.data.uk_0.0-1    lazyeval_0.2.1            
+[43] munsell_0.4.3              assertive.reflection_0.0-4</code></pre>
 </div>
 <div id="end-notes" class="section level3">
 <h3>End Notes</h3>
