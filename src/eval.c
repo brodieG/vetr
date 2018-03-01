@@ -278,7 +278,7 @@ static SEXP VALC_error_standard(
       case -1: err_tok = "FALSE"; break;
       case -3: err_tok = "NA"; break;
       case -4: err_tok = "contains NAs"; break;
-      case -5: err_tok = "zero length"; break;
+      // case -5: err_tok = "zero length"; break;
       case 0: err_tok = "contains non-TRUE values"; break;
       default: {
         // nocov start

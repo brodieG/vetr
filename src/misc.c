@@ -83,10 +83,16 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
   error("Internal Error: shouldn't get here 181; contact maintainer.");// nocov
 } // nocov end
 /*
-return 2 if isTRUE, 1 if every element is TRUE, 0 if there is at least one
-FALSE, -1 if identical to FALSE, -2 if not logical, -3 if NA, -4 if length
-zero, -6 if the result is a string and has at least one element,
-5 if it is zero length
+return
+ *  3 if zero length, and hence true in the way all(logical()) is TRUE
+ *  2 if isTRUE,
+ *  1 if every element is TRUE,
+ *  0 if there is at least one FALSE,
+ * -1 if identical to FALSE,
+ * -2 if not logical,
+ * -3 if a single NA,
+ * -4 if contains NAs,
+ * -6 if the result is a string and has at least one element
 */
 
 int VALC_all(SEXP vec) {
@@ -95,7 +101,7 @@ int VALC_all(SEXP vec) {
   int * vec_c = LOGICAL(vec);
   R_xlen_t i, i_end = XLENGTH(vec);
 
-  if(!i_end) return -5;
+  if(!i_end) return 3;
   for(i = 0; i < i_end; i++) {
     if(vec_c[i] == NA_INTEGER)
       return i_end == 1 ? -3 : -4;
