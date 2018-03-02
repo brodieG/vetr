@@ -18,6 +18,7 @@ unitizer_sect("Tokens Pass", {
   vet(NUM, runif(5))
   vet(NUM.POS, runif(5))
   vet(NUM.NEG, -runif(5))
+  vet(CHR, character())
   vet(CHR.1, "hello")
   vet(CHR, letters)
   vet(CPX, 1:10 + .5i)
@@ -100,9 +101,16 @@ unitizer_sect("Compound Expressions", {
 
   exp.a <- quote(all(. > 0))
   exp.b <- quote(is.vector(.))
-  
+
   vet(exp.a && exp.b, -(1:3))
 
+  # some testing of nesting, this could conflict with prior exp.a
+  # if not done properly
+
+  local({
+    exp.a <- quote(all(. < 0))
+    vet(exp.a, -(1:3))
+  })
   # Duplicate expressions should get collapsed in error message
 
   vet(1 || "a" || 1 || "a" || 1 || letters, 1:3)

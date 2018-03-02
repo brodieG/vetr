@@ -13,6 +13,22 @@ library(vetr)
 
 # Tweets
 
+## Tweet #2
+
+Fast #rstats bounds checks with `vetr::all_bw` https://github.com/brodieG/vetr;
+10x improvement over primitives (1/3):
+
+~30% of speedup is avoiding 3x1e6 temp logical vecs, rest is dedicated loops for
+input permutations (num/int/char, nas, infs, etc.) (2/3).
+
+Peeling back abstraction layer is eye-opening.  Massive complexity to implement something seemingly so simple in optimized manner (3/3).
+
+
+~1/3 of speedup is avoiding 3
+logical(1e6) intermediate vectors, rest is stripping inner loops to bare
+minimum:
+
+
 ## Tweet #1
 
 Declarative structural guarantees for #rstats S3 objects via templates with new

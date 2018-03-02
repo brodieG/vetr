@@ -264,7 +264,7 @@ SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set) {
         PROTECT(
           mkString(
             CSR_smprintf6(
-              set.nchar_max, "%sshould %s %s (%s %s)",
+              set.nchar_max, "%s should %s %s (%s %s)",
               CHAR(STRING_ELT(v_elt, 0)), CHAR(STRING_ELT(v_elt, 1)),
               CHAR(STRING_ELT(v_elt, 2)), CHAR(STRING_ELT(v_elt, 3)),
               CHAR(STRING_ELT(v_elt, 4)), ""

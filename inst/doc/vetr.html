@@ -204,7 +204,7 @@ vet.exp &lt;-<span class="st"> </span><span class="kw">quote</span>(scalar.num.p
 [3] &quot;  - `\&quot;baz\&quot;` should be type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
 <p><code>all_bw</code> is available for value range checks (~10x faster than <code>isTRUE(all(. &gt;= x &amp; . &lt;= y))</code> for large vectors):</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">all_bw</span>(., <span class="dv">0</span>, <span class="dv">1</span>), <span class="kw">runif</span>(<span class="dv">5</span>) +<span class="st"> </span><span class="dv">1</span>)</code></pre></div>
-<pre><code>[1] &quot;`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \&quot;`1.348095` at index 1 not in `[0,1]`\&quot;)&quot;</code></pre>
+<pre><code>[1] &quot;`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \&quot;`1.328515` at index 1 not in `[0,1]`\&quot;)&quot;</code></pre>
 <p>There are a number of predefined vetting tokens you can use in your vetting expressions such as:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(NUM.POS, -<span class="kw">runif</span>(<span class="dv">5</span>))    <span class="co"># positive numeric; see `?vet_token` for others</span></code></pre></div>
 <pre><code>[1] &quot;`-runif(5)` should contain only positive values, but has negatives&quot;</code></pre>
@@ -245,7 +245,7 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">logical</span>(<span class="dv">1</span>) ||<span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>(. &gt;<span class="st"> </span><span class="dv">0</span> &amp;<span class="st"> </span>. &lt;<span class="st"> </span><span class="dv">1</span>))</code></pre></div>
 <p>They are <code>logical(1)</code>, <code>numeric(1)</code>, and <code>. &gt; 0 &amp; . &lt; 1</code>. The last token is just one token not because of the parentheses around it but because it is a call to <code>&amp;</code> as opposed to <code>&amp;&amp;</code>. Here we use the parentheses to remove parsing ambiguity caused by <code>&amp;</code> and <code>&amp;&amp;</code> having the same operator precedence.</p>
 <p>After the tokens have been identified they are classified as standard tokens or template tokens. Standard tokens are those that contain the <code>.</code> symbol. Every other token is considered a template token.</p>
-<p>Standard tokens are further processed by substituting any <code>.</code> with the value of the object being vetted. These tokens are then evaluated and if those evaluations produce <code>TRUE</code> or logical vectors containing only <code>TRUE</code>, the tokens pass, otherwise they fail. With:</p>
+<p>Standard tokens are further processed by substituting any <code>.</code> with the value of the object being vetted. These tokens are then evaluated and if <code>all(&lt;result-of-evaluation&gt;)</code> is <code>TRUE</code> then the tokens pass, otherwise they fail. Note <code>all(logical(0L))</code> is TRUE. With:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(. &gt;<span class="st"> </span><span class="dv">0</span>, <span class="dv">1</span>:<span class="dv">3</span>)</code></pre></div>
 <pre><code>[1] TRUE</code></pre>
 <p><code>. &gt; 0</code> becomes <code>1:3 &gt; 0</code>, which evaluates to <code>c(TRUE, TRUE, TRUE)</code> and the token passes.</p>
@@ -316,9 +316,9 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
   <span class="kw">stopifnot_iris</span>(iris)   <span class="co"># defined in &quot;Templates&quot; section</span>
 )</code></pre></div>
 <pre><code>Mean eval time from 10000 iterations, in microseconds:
-  vet(tpl.iris, iris)   ~  21.55
-  vetr_iris(iris)       ~  26.35
-  stopifnot_iris(iris)  ~  70.25</code></pre>
+  vet(tpl.iris, iris)   ~  25.3
+  vetr_iris(iris)       ~  30.8
+  stopifnot_iris(iris)  ~  89.9</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -327,7 +327,7 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
 <pre><code>Mean eval time from 1000 iterations, in microseconds:
-  data.frame(a = numeric())  ~  117</code></pre>
+  data.frame(a = numeric())  ~  153.5</code></pre>
 <p>In this case the <code>data.frame</code> call alone take over 100us. In your package code you could use:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>())
 

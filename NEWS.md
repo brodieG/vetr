@@ -1,3 +1,13 @@
+## 0.2.3
+
+* [#92](https://github.com/brodieG/vetr/issues/92) `vetr` evaluated expressions
+  in wrong environment.
+* [#89](https://github.com/brodieG/vetr/issues/89) Zero length vetting token
+  results pass; this is to align with `all(logical(0))` and consequently
+  `stopifnot`.
+* [#88](https://github.com/brodieG/vetr/issues/88) Extra space in deparsed
+  vetted language.
+
 ## 0.2.2
 
 * Test errors on Solaris.

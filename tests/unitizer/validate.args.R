@@ -103,6 +103,14 @@ unitizer_sect("Args evaled in correct env?", {
     b <- character()
     fun(b)
   })
+  # make sure we can access variables that are not in fun lexical scope
+
+  fun8b <- function(x) vetr(x=length(.) > 0 && integer())
+  get("zfqwefkj")  # should fail
+  local({
+    zfqwefkj <- 200L
+    fun8b(zfqwefkj)
+  })
 })
 unitizer_sect("Compound Expression Scope Issues", {
   a <- quote(!anyNA(.))
@@ -140,4 +148,11 @@ unitizer_sect("Referencing argument in vet exp error", {
   x <- 1:10
   vet(x > 0, x)
   vet((x + 1) > 0, x + 1)  # this doesn't cause error, but maybe should?
+})
+unitizer_sect("Default arg mix-up", {
+  fun10a <- function(x, y=TRUE, z=999) vetr(INT, LGL.1, INT.1)
+  fun10a(1, z=1:3)
+
+  fun10b <- function(x, y=TRUE, z=999) vetr(INT, z=INT.1)
+  fun10b(1, z=1:3)
 })

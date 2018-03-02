@@ -28,11 +28,17 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  * until we process the error in `VALC_evaluate`, so this function introduces a
  * stack balance issue that `VALC_evaluate` needs to rectify with the
  * information embedded in `res_list`.
+ *
+ * ^^ update, this might be dated from back when we allowed function calls that
+ * produced unbalanced PROTECT stacks
+ *
+  * See VALC_parse_recurse for details about distinction between lang/lang2
  */
 
 struct VALC_res_list VALC_evaluate_recurse(
-  SEXP lang, SEXP act_codes, SEXP arg_value, SEXP arg_lang, SEXP arg_tag,
-  SEXP lang_full, struct VALC_settings set, struct VALC_res_list res_list
+  SEXP lang, SEXP act_codes, SEXP lang2, SEXP arg_value, SEXP arg_lang,
+  SEXP arg_tag, SEXP lang_full, struct VALC_settings set,
+  struct VALC_res_list res_list
 ) {
   /*
   check act_codes:
@@ -56,7 +62,10 @@ struct VALC_res_list VALC_evaluate_recurse(
   int mode;
 
   if(TYPEOF(act_codes) == LISTSXP) {
-    if(TYPEOF(lang) != LANGSXP && TYPEOF(lang) != LISTSXP) {
+    if(
+      (TYPEOF(lang) != LANGSXP && TYPEOF(lang) != LISTSXP) ||
+      (TYPEOF(lang2) != LANGSXP && TYPEOF(lang2) != LISTSXP)
+    ) {
       // nocov start
       error("%s%s"
         "Internal Error: mismatched language and eval type tracking 1; contact ",
@@ -75,7 +84,7 @@ struct VALC_res_list VALC_evaluate_recurse(
       mode=asInteger(CAR(act_codes));
     }
   } else {
-    if(TYPEOF(lang) == LANGSXP || TYPEOF(lang) == LISTSXP) {
+    if(TYPEOF(lang) == LANGSXP || TYPEOF(lang2) == LISTSXP) {
       // nocov start
       error("%s%s",
         "Internal Error: mismatched language and eval type tracking 2; contact ",
@@ -91,12 +100,13 @@ struct VALC_res_list VALC_evaluate_recurse(
     if(TYPEOF(lang) == LANGSXP) {
       int parse_count = 0;
       lang = CDR(lang);
+      lang2 = CDR(lang2);
       act_codes = CDR(act_codes);
 
       while(lang != R_NilValue) {
         res_list = VALC_evaluate_recurse(
-          CAR(lang), CAR(act_codes), arg_value, arg_lang, arg_tag, lang_full,
-          set, res_list
+          CAR(lang), CAR(act_codes), CAR(lang2), arg_value, arg_lang, arg_tag,
+          lang_full, set, res_list
         );
         // recall res_list.idx points to next available slot, not last result
         struct VALC_res_node res_val = res_list.list_tpl[res_list.idx - 1];
@@ -108,6 +118,7 @@ struct VALC_res_list VALC_evaluate_recurse(
           return(res_list);
         }
         lang = CDR(lang);
+        lang2 = CDR(lang2);
         act_codes = CDR(act_codes);
         parse_count++;
       }
@@ -147,7 +158,7 @@ struct VALC_res_list VALC_evaluate_recurse(
     int * err_point = &err_val;
     eval_tmp = PROTECT(R_tryEval(lang, set.env, err_point));
 
-    SET_VECTOR_ELT(eval_dat, 0, lang);
+    SET_VECTOR_ELT(eval_dat, 0, lang2);
     SET_VECTOR_ELT(eval_dat, 1, eval_tmp);
     UNPROTECT(1);
 
@@ -202,7 +213,7 @@ static SEXP VALC_error_standard(
   SEXP lang = VECTOR_ELT(sxp_dat, 0);
   SEXP eval_tmp = VECTOR_ELT(sxp_dat, 1);
   SEXP err_attrib;
-  const char * err_call;
+  struct ALIKEC_pad_quote_res err_call;
   char * err_str;
 
   // If message attribute defined, this is easy:
@@ -222,7 +233,7 @@ static SEXP VALC_error_standard(
 
     const char * err_attrib_msg = CHAR(STRING_ELT(err_attrib, 0));
     err_str = CSR_smprintf4(
-      set.nchar_max, err_attrib_msg, err_call, "", "", ""
+      set.nchar_max, err_attrib_msg, err_call.chr, "", "", ""
     );
   } else {
     // message attribute not defined, must construct error message based
@@ -267,7 +278,7 @@ static SEXP VALC_error_standard(
       case -1: err_tok = "FALSE"; break;
       case -3: err_tok = "NA"; break;
       case -4: err_tok = "contains NAs"; break;
-      case -5: err_tok = "zero length"; break;
+      // case -5: err_tok = "zero length"; break;
       case 0: err_tok = "contains non-TRUE values"; break;
       default: {
         // nocov start
@@ -286,15 +297,18 @@ static SEXP VALC_error_standard(
     } else {
       err_extra = err_extra_b;
     }
-    const char * err_base = "%s%s (%s)";
+    const char * err_base = "%s%s%s (%s)";
 
     int alloc_size = 0;
     int str_sizes[4] = {0, 0, 0, 0};
 
-    str_sizes[0] = strlen(err_call);
+    str_sizes[0] = strlen(err_call.chr);
     str_sizes[1] = strlen(err_base);
     str_sizes[2] = strlen(err_extra);
     str_sizes[3] = strlen(err_tok);
+
+    const char * extra_blank = "";
+    if(!err_call.multi_line) extra_blank = " ";
 
     for(int i = 0; i < 4; ++i) {
       if(INT_MAX - str_sizes[i] < alloc_size)
@@ -311,7 +325,11 @@ static SEXP VALC_error_standard(
     err_str = R_alloc(alloc_size, sizeof(char));
 
     // not sure why we're not using cstringr here
-    if(sprintf(err_str, err_base, err_call, err_extra, err_tok) < 0) {
+    if(
+      sprintf(
+        err_str, err_base, err_call.chr, extra_blank, err_extra, err_tok
+      ) < 0
+    ) {
       // nocov start
       error(
         "%s%s", "Internal Error: could not construct error message; ",
@@ -363,10 +381,14 @@ static SEXP VALC_error_extract(
 @param arg_value the value being validated
 @param lang_full solely so that we can produce error message with original call
 @param set the settings
+@param use_lang_raw whether to use the raw language in evaluations, should be
+  TRUE for `vet`/`tev`, but FALSE for `vetr` as for the latter we have to
+  evaluate the version of the vetting token inside the function `vetr` is called
+  in
 */
 SEXP VALC_evaluate(
   SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
-  struct VALC_settings set
+  struct VALC_settings set, int use_lang_raw
 ) {
   if(!IS_LANG(arg_lang))
     error("Internal Error: argument `arg_lang` must be language.");  // nocov
@@ -375,8 +397,15 @@ SEXP VALC_evaluate(
   struct VALC_res_list res_list, res_init = VALC_res_list_init(set);
   PROTECT(res_init.list_sxp);
 
+  // Super wasteful, but if we are in vet/tev mode we don't actually need the
+  // substituted language to evaluate and to show in error messages
+
+  SEXP lang_eval =
+    use_lang_raw ? VECTOR_ELT(lang_parsed, 2) : VECTOR_ELT(lang_parsed, 0);
+  SEXP lang_msg = VECTOR_ELT(lang_parsed, 2);
+
   res_list = VALC_evaluate_recurse(
-    VECTOR_ELT(lang_parsed, 0), VECTOR_ELT(lang_parsed, 1),
+    lang_eval, VECTOR_ELT(lang_parsed, 1), lang_msg,
     arg_value, arg_lang, arg_tag, lang_full, set, res_init
   );
   if(res_list.idx == INT_MAX)
@@ -385,7 +414,7 @@ SEXP VALC_evaluate(
     // nocov end
 
   // Now determine if we passed or failed, if idx is not zero means we had at
-  // least on error.  There should be one error in AND mode, and possibly many
+  // least one error.  There should be one error in AND mode, and possibly many
   // in OR mode.  Different rendering logic for template vs standard tokens.  In
   // all cases if the last recorded item is a success or there are no recorded
   // items, then we pass.
@@ -434,5 +463,5 @@ SEXP VALC_evaluate_ext(
   SEXP rho
 ) {
   struct VALC_settings set = VALC_settings_vet(R_NilValue, rho);
-  return VALC_evaluate(lang, arg_lang, arg_tag, arg_value, lang_full, set);
+  return VALC_evaluate(lang, arg_lang, arg_tag, arg_value, lang_full, set, 0);
 }
