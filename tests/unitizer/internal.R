@@ -420,13 +420,13 @@ unitizer_sect("Merge messages", {
   vetr:::msg_sort(letters)
 
   msgs <- list(
-    c("`my_var` ", "be", "integer", "is", "character"),
-    c("`my_var` ", "have", "3 columns", "has", "1"),
-    c("`length(names(my_var))` ", "be", "2", "is", "4"),
-    c("`my_var` ", "be", "\"NULL\"", "is", "character"),
-    c("`attr(my_var)` ", "be", "\"NULL\"", "is", "list"),
-    c("`my_var` ", "be", "matrix", "is", "character"),
-    c("`length(names(my_var))` ", "be", "3", "is", "4")
+    c("`my_var`", "be", "integer", "is", "character"),
+    c("`my_var`", "have", "3 columns", "has", "1"),
+    c("`length(names(my_var))`", "be", "2", "is", "4"),
+    c("`my_var`", "be", "\"NULL\"", "is", "character"),
+    c("`attr(my_var)`", "be", "\"NULL\"", "is", "list"),
+    c("`my_var`", "be", "matrix", "is", "character"),
+    c("`length(names(my_var))`", "be", "3", "is", "4")
   )
   vetr:::msg_merge(msgs)
   vetr:::msg_merge(msgs[1:3])  # no merging required here

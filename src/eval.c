@@ -213,7 +213,7 @@ static SEXP VALC_error_standard(
   SEXP lang = VECTOR_ELT(sxp_dat, 0);
   SEXP eval_tmp = VECTOR_ELT(sxp_dat, 1);
   SEXP err_attrib;
-  const char * err_call;
+  struct ALIKEC_pad_quote_res err_call;
   char * err_str;
 
   // If message attribute defined, this is easy:
@@ -233,7 +233,7 @@ static SEXP VALC_error_standard(
 
     const char * err_attrib_msg = CHAR(STRING_ELT(err_attrib, 0));
     err_str = CSR_smprintf4(
-      set.nchar_max, err_attrib_msg, err_call, "", "", ""
+      set.nchar_max, err_attrib_msg, err_call.chr, "", "", ""
     );
   } else {
     // message attribute not defined, must construct error message based
@@ -297,15 +297,18 @@ static SEXP VALC_error_standard(
     } else {
       err_extra = err_extra_b;
     }
-    const char * err_base = "%s%s (%s)";
+    const char * err_base = "%s%s%s (%s)";
 
     int alloc_size = 0;
     int str_sizes[4] = {0, 0, 0, 0};
 
-    str_sizes[0] = strlen(err_call);
+    str_sizes[0] = strlen(err_call.chr);
     str_sizes[1] = strlen(err_base);
     str_sizes[2] = strlen(err_extra);
     str_sizes[3] = strlen(err_tok);
+
+    const char * extra_blank = "";
+    if(!err_call.multi_line) extra_blank = " ";
 
     for(int i = 0; i < 4; ++i) {
       if(INT_MAX - str_sizes[i] < alloc_size)
@@ -322,7 +325,11 @@ static SEXP VALC_error_standard(
     err_str = R_alloc(alloc_size, sizeof(char));
 
     // not sure why we're not using cstringr here
-    if(sprintf(err_str, err_base, err_call, err_extra, err_tok) < 0) {
+    if(
+      sprintf(
+        err_str, err_base, err_call.chr, extra_blank, err_extra, err_tok
+      ) < 0
+    ) {
       // nocov start
       error(
         "%s%s", "Internal Error: could not construct error message; ",
