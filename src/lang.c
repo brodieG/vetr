@@ -491,7 +491,7 @@ SEXP ALIKEC_lang_alike_core(
 
   // Determine if it is a formular or not
 
-  SEXP class = getAttrib(target, R_ClassSymbol);
+  SEXP class = PROTECT(getAttrib(target, R_ClassSymbol));
   if(
     class != R_NilValue && TYPEOF(class) == STRSXP &&
     !strcmp("formula", CHAR(STRING_ELT(class, XLENGTH(class) - 1))) &&
@@ -499,6 +499,7 @@ SEXP ALIKEC_lang_alike_core(
   ) {
     formula = 1;
   }
+  UNPROTECT(1);
   // Check if alike; originally we would modify a copy of current, which is
   // why we send curr_cpy_par
 
