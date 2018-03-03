@@ -392,10 +392,9 @@ void VALC_parse_recurse(
       lang_car = VALC_sub_symbol(lang_car, set, track_hash, arg_tag);
       lang2_car = VALC_sub_symbol(lang2_car, set, track_hash2, arg_tag);
     }
-    UNPROTECT(2);
     SETCAR(lang, lang_car);
     SETCAR(lang2, lang2_car);
-    UNPROTECT(2);
+    UNPROTECT(4);
 
     if(TYPEOF(lang_car) == LANGSXP && !is_one_dot) {
       SEXP track_car = allocList(length(lang_car));

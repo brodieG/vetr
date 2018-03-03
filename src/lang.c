@@ -494,7 +494,7 @@ SEXP ALIKEC_lang_alike_core(
   SEXP class = getAttrib(target, R_ClassSymbol);
   if(
     class != R_NilValue && TYPEOF(class) == STRSXP &&
-    !strcmp("formula", CHAR(asChar(STRING_ELT(class, XLENGTH(class) - 1)))) &&
+    !strcmp("formula", CHAR(STRING_ELT(class, XLENGTH(class) - 1))) &&
     CAR(target) == ALIKEC_SYM_tilde
   ) {
     formula = 1;
