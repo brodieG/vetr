@@ -392,6 +392,8 @@ void VALC_parse_recurse(
       lang_car = PROTECT(VALC_sub_symbol(lang_car, set, track_hash, arg_tag));
       lang2_car =
         PROTECT(VALC_sub_symbol(lang2_car, set, track_hash2, arg_tag));
+    } else {
+      PROTECT(PROTECT(R_NilValue));  // stack balance
     }
     SETCAR(lang, lang_car);
     SETCAR(lang2, lang2_car);
