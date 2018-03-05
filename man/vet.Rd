@@ -112,6 +112,10 @@ vet(tpl, val.2)
 vet(. > 0, runif(10))
 vet(. > 0, -runif(10))
 
+## Zero length token results are considered TRUE,
+## as is the case with `all(logical(0))`
+vet(. > 0, numeric())
+
 ## `all_bw` is like `isTRUE(all(. >= x & . <= y))`, but
 ## ~10x faster for long vectors:
 vet(all_bw(., 0, 1), runif(1e6) + .1)

@@ -273,7 +273,7 @@ SEXP VALC_validate(
     VALC_evaluate(
       target, cur_sub,
       TYPEOF(cur_sub) == SYMSXP ? cur_sub : VALC_SYM_current,
-      current, par_call, set
+      current, par_call, set, 1
     )
   );
   if(!xlength(res)) {
@@ -323,26 +323,42 @@ SEXP VALC_validate_args(
   SEXP fun_form = FORMALS(fun);
   // `fun_form` is only the formals so we don't need to skip the first value
   fun_form_cpy = fun_form;
+  int fun_call_match = 0;
+
   for(
     val_call_cpy = CDR(val_call),
     fun_call_cpy = CDR(fun_call);
     fun_form_cpy != R_NilValue;
-    fun_form_cpy = CDR(fun_form_cpy),
+
+    // Only advance the call if we actually matched to the call instead of to a
+    // default value
+
+    fun_call_cpy = fun_call_match ? CDR(fun_call_cpy) : fun_call_cpy,
+
+    // Keep advancing formals and validation, logic in loop keeps the two
+    // aligned by skipping non-validated formals
+
     val_call_cpy = CDR(val_call_cpy),
-    fun_call_cpy = CDR(fun_call_cpy)
+    fun_form_cpy = CDR(fun_form_cpy)
   ) {
     SEXP arg_tag, val_tag, frm_tag;
 
     // It is possible for the function call to have more arguments than the
-    // validation call, but for both the arguments should be in the same order
+    // validation call, but in all cases the argument should follow the same
+    // sequence. It is also possible for validation call to have more args, in
+    // which case we need to match defaults from the formals.  Here we try to
+    // align fun/validation/formals.
 
-    val_tag = TAG(val_call_cpy);
+    val_tag = TAG(val_call_cpy);          // validation call
     while(fun_form_cpy != R_NilValue) {
-      frm_tag = TAG(fun_form_cpy);
-      arg_tag = TAG(fun_call_cpy);
+      frm_tag = TAG(fun_form_cpy);        // formals
+      arg_tag = TAG(fun_call_cpy);        // function call
       if(val_tag != frm_tag) {
+        // validation doesn't match formals, so skip formal as well as
+        // function call value if function call value matches formal
         fun_form_cpy = CDR(fun_form_cpy);
-        if(frm_tag == arg_tag) fun_call_cpy = CDR(fun_call_cpy);
+        if(frm_tag == arg_tag)
+          fun_call_cpy = CDR(fun_call_cpy);
       } else {
         break;
       }
@@ -363,9 +379,19 @@ SEXP VALC_validate_args(
     // reference other arguments, we can't just assume that the default value is
     // completely reasonable, although.
 
+    /*
+    Rprintf(
+      "Checking call: '%s' frm: '%s' val: '%s'\n",
+      TYPEOF(arg_tag) == SYMSXP ? CHAR(PRINTNAME(arg_tag)) : "",
+      TYPEOF(frm_tag) == SYMSXP ? CHAR(PRINTNAME(frm_tag)) : "",
+      TYPEOF(val_tag) == SYMSXP ? CHAR(PRINTNAME(val_tag)) : ""
+    );
+    */
     SEXP val_tok, fun_tok = R_MissingArg;
     if(arg_tag != frm_tag) {
+      fun_call_match = 0;
       if(CAR(fun_form_cpy) != R_MissingArg) {
+        // Default argument
         arg_tag = frm_tag;
         fun_tok = CAR(fun_form_cpy);
       } else {
@@ -374,6 +400,7 @@ SEXP VALC_validate_args(
         );
       }
     } else {
+      fun_call_match = 1;
       fun_tok = CAR(fun_call_cpy);
     }
     val_tok = CAR(val_call_cpy);
@@ -384,7 +411,6 @@ SEXP VALC_validate_args(
       );
       // nocov end
     }
-
     if(fun_tok == R_MissingArg) {
       // this shouldn't really happen now that we're using match.call instead of
       // match_call
@@ -412,7 +438,7 @@ SEXP VALC_validate_args(
     // Evaluate the validation expression
 
     SEXP val_res = PROTECT(
-      VALC_evaluate(val_tok, fun_tok, arg_tag, fun_val, val_call, set)
+      VALC_evaluate(val_tok, fun_tok, arg_tag, fun_val, val_call, set, 0)
     );
     if(xlength(val_res)) {
       // fail, produce error message: NOTE - might change if we try to use full

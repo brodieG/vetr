@@ -364,7 +364,7 @@ SEXP ALIKEC_syntactic_names_exp(SEXP lang) {
  *   Note that this only matters if the language expression deparses to no more
  *   than one line.
  */
-const char * ALIKEC_pad_or_quote(
+struct ALIKEC_pad_quote_res ALIKEC_pad_or_quote(
   SEXP lang, int width, int syntactic, struct VALC_settings set
 ) {
   switch(syntactic) {
@@ -407,17 +407,20 @@ const char * ALIKEC_pad_or_quote(
 
     if(syntactic) {
       call_pre = "`";
-      call_post = "` ";
+      call_post = "`";
     } else {
       call_pre = "{";
-      call_post = "} ";
+      call_post = "}";
     }
     call_char = dep_chr;
   }
   UNPROTECT(1);
-  return CSR_smprintf4(
+  const char * res = CSR_smprintf4(
     set.nchar_max, "%s%s%s%s", call_pre, call_char, call_post, ""
   );
+  return (struct ALIKEC_pad_quote_res) {
+    .chr=res, .multi_line=multi_line
+  };
 }
 /*
  * external version for testing
@@ -425,10 +428,10 @@ const char * ALIKEC_pad_or_quote(
 SEXP ALIKEC_pad_or_quote_ext(SEXP lang, SEXP width, SEXP syntactic) {
   struct VALC_settings set = VALC_settings_init();
   set.width = INTEGER(width)[0];
-  const char * padded = ALIKEC_pad_or_quote(
+  struct ALIKEC_pad_quote_res res = ALIKEC_pad_or_quote(
     lang, INTEGER(width)[0], INTEGER(syntactic)[0], set
   );
-  return mkString(padded);
+  return mkString(res.chr);
 }
 
 /*
@@ -526,20 +529,24 @@ SEXP ALIKEC_res_as_string(
       // nocov end
     }
     SEXP call_inj = PROTECT(ALIKEC_inject_call(res, call));
-    const char * call_chr = ALIKEC_pad_or_quote(call_inj, set.width, -1, set);
+    struct ALIKEC_pad_quote_res call_res =
+      ALIKEC_pad_or_quote(call_inj, set.width, -1, set);
+    const char * call_chr = call_res.chr;
     UNPROTECT(1);
 
+    const char * extra_blank = "";
+    if(!call_res.multi_line) extra_blank = " ";
     if(strings_pasted.target[0] && strings_pasted.current[0]) {
       res_str = CSR_smprintf6(
         set.nchar_max,
-        "%sshould %s %s (%s %s)",
-        call_chr, res.dat.strings.tar_pre, strings_pasted.target,
-        res.dat.strings.cur_pre, strings_pasted.current, ""
+        "%s%sshould %s %s (%s %s)",
+        call_chr, extra_blank, res.dat.strings.tar_pre, strings_pasted.target,
+        res.dat.strings.cur_pre, strings_pasted.current
       );
     } else if (res.dat.strings.target[0]) {
       res_str = CSR_smprintf4(
-        set.nchar_max, "%sshould %s %s", call_chr, res.dat.strings.tar_pre,
-        strings_pasted.target,  ""
+        set.nchar_max, "%s%sshould %s %s", call_chr, extra_blank,
+        res.dat.strings.tar_pre, strings_pasted.target
       );
     }
   } else
@@ -559,7 +566,10 @@ SEXP ALIKEC_res_as_strsxp(
     struct ALIKEC_tar_cur_strings strings_pasted =
       ALIKEC_get_res_strings(res.dat.strings, set);
     SEXP call_inj = PROTECT(ALIKEC_inject_call(res, call));
-    const char * call_chr = ALIKEC_pad_or_quote(call_inj, set.width, -1, set);
+    struct ALIKEC_pad_quote_res call_res =
+      ALIKEC_pad_or_quote(call_inj, set.width, -1, set);
+    const char * call_chr = call_res.chr;
+
     res_fin = PROTECT(allocVector(STRSXP, 5));
     SET_STRING_ELT(res_fin, 0, mkChar(call_chr));
     SET_STRING_ELT(res_fin, 1, mkChar(res.dat.strings.tar_pre));

@@ -112,9 +112,9 @@ template tokens.  Standard tokens are those that contain the `.` symbol.  Every
 other token is considered a template token.
 
 Standard tokens are further processed by substituting any `.` with the value
-of the object being vetted.  These tokens are then evaluated and if those
-evaluations produce `TRUE` or logical vectors containing only `TRUE`, the tokens
-pass, otherwise they fail.  With:
+of the object being vetted.  These tokens are then evaluated and if
+`all(<result-of-evaluation>)` is `TRUE` then the tokens pass, otherwise they
+fail. Note `all(logical(0L))` is TRUE.  With:
 
 ```{r}
 vet(. > 0, 1:3)

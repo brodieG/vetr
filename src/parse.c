@@ -122,11 +122,15 @@ SEXP VALC_remove_parens(SEXP lang) {
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 /*
-If a variable expands to language, sub it in and keep parsing unless the sub itself is to symbol then keep subbing until it doesn't
+If a variable expands to language, sub it in and keep parsing unless the sub
+itself is to symbol then keep subbing until it doesn't
 
-See VALC_name_sub too.  We substitute `.` here as well, but logic before this function is called should ensure that we only call it on `.` when it was previously `..`.
+See VALC_name_sub too.  We substitute `.` here as well, but logic before this
+function is called should ensure that we only call it on `.` when it was
+previously `..`.
 
-Really seems like these two functions should be merged into one so that we don't get out of sync in how we use them.
+Really seems like these two functions should be merged into one so that we don't
+get out of sync in how we use them.
 
 @param arg_name used primarily for `vetr`, or if in `vet` current is just a
   single variable name, allows us to verify that we're not accidentally
@@ -202,20 +206,29 @@ SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
 SEXP VALC_parse(
   SEXP lang, SEXP var_name, struct VALC_settings set, SEXP arg_tag
 ) {
-  SEXP lang_cpy, res, res_vec, rem_res;
+  SEXP lang_cpy, lang2_cpy, res, res_vec, rem_res;
   int mode;
 
   // Must copy since we're going to modify this
+
   lang_cpy = PROTECT(duplicate(lang));
 
   rem_res = PROTECT(VALC_remove_parens(lang_cpy));
   lang_cpy = VECTOR_ELT(rem_res, 0);
   mode = asInteger(VECTOR_ELT(rem_res, 1));
 
+  lang2_cpy = PROTECT(duplicate(lang_cpy));
+
   // Hash table to track symbols to make sure  we don't end up in an infinite
   // recursion substituting symbols
 
+  // Note that the lang/lang2 business is really sub-optimal because we are
+  // duplicating a lot of stuff.  Unfortunately alternatives are probably a bit
+  // more complicated.
+
   struct track_hash * track_hash =
+    VALC_create_track_hash(set.track_hash_content_size);
+  struct track_hash * track_hash2 =
     VALC_create_track_hash(set.track_hash_content_size);
 
   // Replace any variables to language objects with language, though first check
@@ -228,10 +241,13 @@ SEXP VALC_parse(
   // be substituted with `name_sub`.
 
   if(lang_cpy == VALC_SYM_one_dot) mode = 2;
-  lang_cpy = PROTECT(VALC_name_sub(lang_cpy, var_name));
+  lang_cpy = PROTECT(VALC_name_sub(lang_cpy, arg_tag));
+  lang2_cpy = PROTECT(VALC_name_sub(lang2_cpy, var_name));
+
   if(mode != 2) {
     lang_cpy = PROTECT(VALC_sub_symbol(lang_cpy, set, track_hash, arg_tag));
-  } else PROTECT(R_NilValue);
+    lang2_cpy = PROTECT(VALC_sub_symbol(lang2_cpy, set, track_hash2, arg_tag));
+  } else PROTECT(PROTECT(R_NilValue));
 
   if(TYPEOF(lang_cpy) != LANGSXP) {
     res = PROTECT(ScalarInteger(mode ? 10 : 999));
@@ -239,13 +255,15 @@ SEXP VALC_parse(
     res = PROTECT(allocList(length(lang_cpy)));
     // lang_cpy, res, are modified internally
     VALC_parse_recurse(
-      lang_cpy, res, var_name, mode, R_NilValue, set, track_hash, arg_tag
+      lang_cpy, lang2_cpy, res, var_name, mode, R_NilValue, set, track_hash,
+      track_hash2, arg_tag
     );
   }
-  res_vec = PROTECT(allocVector(VECSXP, 2));
+  res_vec = PROTECT(allocVector(VECSXP, 3));
   SET_VECTOR_ELT(res_vec, 0, lang_cpy);
   SET_VECTOR_ELT(res_vec, 1, res);
-  UNPROTECT(6);
+  SET_VECTOR_ELT(res_vec, 2, lang2_cpy);
+  UNPROTECT(9);
   return(res_vec);
 }
 SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
@@ -255,9 +273,30 @@ SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 
+/*
+ * A bit wasteful that we have both `lang` and `lang2`, but we realized we need
+ * them because `lang` is the langauge that gets evaluaed, and `lang2` the one
+ * that we use for error reporting.  We need them to be different because they
+ * need to be evaluated in different envs to make sense, and only by evaluating
+ * `lang` in the function frame do we avoid a potential duplicate evaluation (if
+ * we evalute `lang2` in parent.frame(2), then we will also evaluate it when we
+ * force the promise).
+ *
+ * Even worse, turns out that we only need the `lang2` business for `vetr`,
+ * `vet`/`tev` are fine with the original logic, so now we have the entire
+ * duplicated version of teh `lang2` logic that we throw away for `vet`/`tev`.
+ *
+ * @param lang the original call that where we will substitute `.` with the
+ *   corresponding parameter
+ * @param lang2 the original call that where we will substitute `.` with the
+ *   corresponding substituted language used for the corresponding parameter;
+ *   this is used to produce more descriptive errors.
+ */
+
 void VALC_parse_recurse(
-  SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is,
-  SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash,
+  SEXP lang, SEXP lang2, SEXP lang_track, SEXP var_name, int eval_as_is,
+  SEXP first_fun, struct VALC_settings set,
+  struct track_hash * track_hash, struct track_hash * track_hash2,
   SEXP arg_tag
 ) {
   /*
@@ -308,6 +347,7 @@ void VALC_parse_recurse(
     first_fun = lang_track;
   }
   lang = CDR(lang);
+  lang2 = CDR(lang2);
   lang_track = CDR(lang_track);
   call_type = 999; // Reset for sub-elements
 
@@ -324,17 +364,21 @@ void VALC_parse_recurse(
     // affect that element.
 
     SEXP rem_parens = PROTECT(VALC_remove_parens(CAR(lang)));
+    SEXP rem2_parens = PROTECT(VALC_remove_parens(CAR(lang2)));
+
     if(asInteger(VECTOR_ELT(rem_parens, 1)) || eval_as_is_internal) {
       eval_as_is_internal = 1;
     } else {
       eval_as_is_internal = 0;
     }
     SEXP lang_car = VECTOR_ELT(rem_parens, 0);
+    SEXP lang2_car = VECTOR_ELT(rem2_parens, 0);
 
     // Replace any variables to language objects with language
 
     int is_one_dot = (lang_car == VALC_SYM_one_dot);
-    lang_car = PROTECT(VALC_name_sub(lang_car, var_name));
+    lang_car = PROTECT(VALC_name_sub(lang_car, arg_tag));
+    lang2_car = PROTECT(VALC_name_sub(lang2_car, var_name));
 
     // each time we switch parse tree elements we should reset the hash so that
     // we don't mistakenly tag symbol collisions that occur on different
@@ -342,21 +386,26 @@ void VALC_parse_recurse(
     // reset later
 
     size_t substitute_level = track_hash->idx;
+    size_t substitute_level2 = track_hash2->idx;
 
     if(!is_one_dot) {
-      lang_car = VALC_sub_symbol(lang_car, set, track_hash, arg_tag);
+      lang_car = PROTECT(VALC_sub_symbol(lang_car, set, track_hash, arg_tag));
+      lang2_car =
+        PROTECT(VALC_sub_symbol(lang2_car, set, track_hash2, arg_tag));
+    } else {
+      PROTECT(PROTECT(R_NilValue));  // stack balance
     }
-    UNPROTECT(1);
     SETCAR(lang, lang_car);
-    UNPROTECT(1);
+    SETCAR(lang2, lang2_car);
+    UNPROTECT(6);
 
     if(TYPEOF(lang_car) == LANGSXP && !is_one_dot) {
       SEXP track_car = allocList(length(lang_car));
       SETCAR(lang_track, track_car);
 
       VALC_parse_recurse(
-        lang_car, CAR(lang_track), var_name, eval_as_is_internal,
-        first_fun, set, track_hash, arg_tag
+        lang_car, lang2_car, CAR(lang_track), var_name, eval_as_is_internal,
+        first_fun, set, track_hash, track_hash2, arg_tag
       );
     } else {
       int new_call_type = call_type;
@@ -370,10 +419,12 @@ void VALC_parse_recurse(
     // Now reset the track hash to avoid spurious collision warnings
 
     VALC_reset_track_hash(track_hash, substitute_level);
+    VALC_reset_track_hash(track_hash2, substitute_level2);
     lang = CDR(lang);
+    lang2 = CDR(lang2);
     lang_track = CDR(lang_track);
   }
-  if(lang == R_NilValue && lang_track != R_NilValue) {
+  if(lang == R_NilValue && (lang_track != R_NilValue || lang2 != R_NilValue)) {
     // nocov start
     error(
       "Internal Error: %s",

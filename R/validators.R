@@ -30,7 +30,7 @@
 #' not use templates within the `I` call as everything therein will be
 #' interpreted as a vetting expression rather than a template.
 #'
-#' Error messages are typically of the form \dQuote{\%sshould be XXX}.
+#' Error messages are typically of the form \dQuote{\%s should be XXX}.
 #'
 #' This package ships with many predefined tokens for common use cases. They
 #' are listed in the \dQuote{Usage} section of this documentation.  The tokens
@@ -54,7 +54,7 @@
 #' @param exp an expression which will be captured but not evaluated
 #' @param err.msg character(1L) a message that tells the user what the
 #'   expected value should be, should contain a \dQuote{\%s} for `sprintf`
-#'   to use (e.g. \dQuote{\%sshould be greater than 2})
+#'   to use (e.g. \dQuote{\%s should be greater than 2})
 #' @return a quoted expressions with `err.msg` attribute set
 #' @examples
 #' ## Predefined tokens:
@@ -64,7 +64,7 @@
 #'
 #' ## Check squareness
 #' mx <- matrix(1:3)
-#' SQR <- vet_token(nrow(.) == ncol(.), "%sshould be square")
+#' SQR <- vet_token(nrow(.) == ncol(.), "%s should be square")
 #' vet(SQR, mx)
 #'
 #' ## Let `vetr` make up error message; note `quote` vs `vet_token`
@@ -74,16 +74,16 @@
 #'
 #' ## Combine some tokens, notice how we use `quote` at the combining
 #' ## step:
-#' NUM.MX <- vet_token(matrix(numeric(), 0, 0), "%sshould be numeric matrix")
+#' NUM.MX <- vet_token(matrix(numeric(), 0, 0), "%s should be numeric matrix")
 #' SQR.NUM.MX <- quote(NUM.MX && SQR)
 #' vet(SQR.NUM.MX, mx)
 #'
 #' ## If instead we used `vet_token` the overall error message
 #' ## is not used; instead it falls back to the error message of
 #' ## the specific sub-token that fails:
-#' NUM.MX <- vet_token(matrix(numeric(), 0, 0), "%sshould be numeric matrix")
+#' NUM.MX <- vet_token(matrix(numeric(), 0, 0), "%s should be numeric matrix")
 #' SQR.NUM.MX.V2 <-
-#'   vet_token(NUM.MX && SQR, "%sshould be a square numeric matrix")
+#'   vet_token(NUM.MX && SQR, "%s should be a square numeric matrix")
 #' vet(SQR.NUM.MX.V2, mx)
 
 vet_token <- function(exp, err.msg="%s") {
@@ -104,26 +104,26 @@ vet_token <- function(exp, err.msg="%s") {
 #' @rdname vet_token
 #' @export
 
-NO.NA <- vet_token(!is.na(.), "%sshould not contain NAs, but does")
+NO.NA <- vet_token(!is.na(.), "%s should not contain NAs, but does")
 
 #' @export
 #' @name vet_token
 
 NO.INF <- vet_token(
-  is.finite(.), "%sshould contain only finite values, but does not"
+  is.finite(.), "%s should contain only finite values, but does not"
 )
 #' @export
 #' @name vet_token
 
 GTE.0 <- vet_token(
-  . >= 0, "%sshould contain only positive values, but has negatives"
+  . >= 0, "%s should contain only positive values, but has negatives"
 )
 
 #' @export
 #' @name vet_token
 
 LTE.0 <- vet_token(
-  . <= 0, "%sshould contain only negative values, but has positives"
+  . <= 0, "%s should contain only negative values, but has positives"
 )
 
 #' @export
@@ -132,7 +132,7 @@ LTE.0 <- vet_token(
 GT.0 <- vet_token(
   . > 0,
   paste0(
-    "%sshould contain only \"strictly positive\" values, but has zeroes or ",
+    "%s should contain only \"strictly positive\" values, but has zeroes or ",
     "negatives"
   )
 )
@@ -143,7 +143,7 @@ GT.0 <- vet_token(
 LT.0 <- vet_token(
   . < 0,
   paste0(
-    "%sshould contain only \"strictly negative\" values, but has zeroes ",
+    "%s should contain only \"strictly negative\" values, but has zeroes ",
     "or positives"
   )
 )

@@ -37,7 +37,10 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     union ALIKEC_index_raw ind;
     int type;               // 0 is numeric, 1 is character
   };
-
+  struct ALIKEC_pad_quote_res {
+    const char * chr;
+    int multi_line;
+  };
   /*
    * Helper struct for re-assembled target and current strings
    */
@@ -203,7 +206,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   );
   int ALIKEC_is_an_op(SEXP lang);
   int ALIKEC_is_an_op_inner(SEXP lang);
-  const char * ALIKEC_pad_or_quote(
+  struct ALIKEC_pad_quote_res ALIKEC_pad_or_quote(
     SEXP lang, int width, int syntactic, struct VALC_settings set
   );
   SEXP ALIKEC_deparse_width(SEXP obj, int width);

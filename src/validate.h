@@ -42,7 +42,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     // The SEXP data, which can either be:
     //
     // * wrap data from template token, or:
-    // * Standard token result, a 2 long VECSXP with the standard token 
+    // * Standard token result, a 2 long VECSXP with the standard token
     //   language in position 0, and the result of evaluating it in position 1
 
     SEXP sxp_dat;
@@ -117,8 +117,9 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   );
   SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho);
   void VALC_parse_recurse(
-    SEXP lang, SEXP lang_track, SEXP var_name, int eval_as_is,
-    SEXP first_fun, struct VALC_settings set, struct track_hash * track_hash,
+    SEXP lang, SEXP lang2, SEXP lang_track, SEXP var_name, int eval_as_is,
+    SEXP first_fun, struct VALC_settings set,
+    struct track_hash * track_hash, struct track_hash * track_hash2,
     SEXP arg_tag
   );
   SEXP VALC_sub_symbol(
@@ -129,7 +130,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   void VALC_install_objs();
   SEXP VALC_evaluate(
     SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
-    struct VALC_settings set
+    struct VALC_settings set, int use_lang_raw
   );
   SEXP VALC_evaluate_ext(
     SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
