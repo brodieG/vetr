@@ -295,7 +295,7 @@ SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
 
 void VALC_parse_recurse(
   SEXP lang, SEXP lang2, SEXP lang_track, SEXP var_name, int eval_as_is,
-  SEXP first_fun, struct VALC_settings set, 
+  SEXP first_fun, struct VALC_settings set,
   struct track_hash * track_hash, struct track_hash * track_hash2,
   SEXP arg_tag
 ) {
@@ -389,13 +389,15 @@ void VALC_parse_recurse(
     size_t substitute_level2 = track_hash2->idx;
 
     if(!is_one_dot) {
-      lang_car = VALC_sub_symbol(lang_car, set, track_hash, arg_tag);
-      lang2_car = VALC_sub_symbol(lang2_car, set, track_hash2, arg_tag);
+      lang_car = PROTECT(VALC_sub_symbol(lang_car, set, track_hash, arg_tag));
+      lang2_car =
+        PROTECT(VALC_sub_symbol(lang2_car, set, track_hash2, arg_tag));
+    } else {
+      PROTECT(PROTECT(R_NilValue));  // stack balance
     }
-    UNPROTECT(2);
     SETCAR(lang, lang_car);
     SETCAR(lang2, lang2_car);
-    UNPROTECT(2);
+    UNPROTECT(6);
 
     if(TYPEOF(lang_car) == LANGSXP && !is_one_dot) {
       SEXP track_car = allocList(length(lang_car));

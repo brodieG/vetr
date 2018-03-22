@@ -209,8 +209,9 @@ SEXP ALIKEC_merge_msg(SEXP msgs, struct VALC_settings set) {
           strcmp(CHAR(STRING_ELT(v_elt, 4)), CHAR(STRING_ELT(v_elt_nxt, 4)));
 
         if(next_diff) {
-          SEXP v_elt_d = duplicate(v_elt);
+          SEXP v_elt_d = PROTECT(duplicate(v_elt));
           SET_VECTOR_ELT(res, k, v_elt_d);
+          UNPROTECT(1);
 
           // append with, "or" if necessary and write
 
