@@ -1008,7 +1008,63 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   in that case we would fail at the first `current` attribute, maybe we should
   simplify...
   */
-  SEXP prim_attr_el, sec_attr_el;
+  /*
+   * New approach is to sort both attribute vectors to ensure that we always get
+   * the same attribute marked as having an error/missing when there are
+   * multiple attributes with errors/missing since attribute order is not
+   * guaranteed (#93).
+   *
+   * Start by allocating vectors
+   */
+
+  SEXP prim_attr_el = prim_attr;
+  SEXP sec_attr_el = sec_attr;
+  R_xlen_t prim_count = 0;
+  R_xlen_t sec_count = 0;
+
+  while(prim_attr_el != R_NilValue) {
+    if(prim_count < R_XLEN_T_MAX) {
+      prim_attr_el = CDR(prim_attr_el);
+      ++prim_count;
+    } else {
+      // nocov start
+      error(
+        "%s%s",
+        "Internal Error: attribute list with R_XLEN_T_MAX elements; ",
+        "contact maintainer."
+      );
+      // nocov end
+    }
+  }
+  while(sec_attr_el != R_NilValue) {
+    if(sec_count < R_XLEN_T_MAX) {
+      sec_attr_el = CDR(sec_attr_el);
+      ++sec_count;
+    } else {
+      // nocov start
+      error(
+        "%s%s",
+        "Internal Error: attribute list with R_XLEN_T_MAX elements; ",
+        "contact maintainer."
+      );
+      // nocov end
+    }
+  }
+  SEXP prim_attr_vec = PROTECT(allocVector(VECSXP, prim_count));
+  SEXP sec_attr_vec = PROTECT(allocVector(VECSXP, sec_count));
+
+  prim_attr_el = prim_attr;
+  sec_attr_el = sec_attr;
+  for(R_xlen_t i = 0; i < prim_count; ++i) {
+    SET_VECTOR_ELT(prim_attr_vec, i, CAR(prim_attr_el));
+    prim_attr_el = CDR(prim_attr_el);
+  }
+  for(R_xlen_t i = 0; i < sec_count; ++i) {
+    SET_VECTOR_ELT(sec_attr_vec, i, CAR(sec_attr_el));
+    sec_attr_el = CDR(sec_attr_el);
+  }
+
+
   size_t sec_attr_counted = 0, sec_attr_count = 0, prim_attr_count = 0;
 
   for(
