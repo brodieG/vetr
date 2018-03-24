@@ -607,4 +607,75 @@ int ALIKEC_is_dfish(SEXP obj) {
 SEXP ALIKEC_is_dfish_ext(SEXP obj) {
   return ScalarLogical(ALIKEC_is_dfish(obj));
 }
+/*
+ * Starts with a pair list, and returns it as a VECSXP sorted by tag
+ *
+ * Not sure if there is a way to sort a SEXP VECSXP in place, but seems pretty
+ * dangerous so we'll settle for the intermediate approach where we sort the
+ * indeces and tag names, and then re-shuffle the elements in target vectors by
+ * using a single element buffer.  This is likely slow, but probably fast enough
+ * for our purposes.
+ */
 
+struct chr_idx {const char * chr; R_xlen_t idx;};
+static int cmpfun (const void * p, const void * q) {
+  struct chr_idx a = *(struct chr_idx *) p;
+  struct chr_idx b = *(struct chr_idx *) q;
+  const char * a_chr = a.chr;
+  const char * b_chr = b.chr;
+  return(strcmp(a_chr, b_chr));
+}
+SEXP ALIKEC_list_as_sorted_vec(SEXP x) {
+  if(x != R_NilValue && TYPEOF(x) != LISTSXP)
+    error("Internal Error: input should be NULL or a LISTSXP"); // nocov
+
+  SEXP res, res_nm;
+
+  if(x == R_NilValue) {
+    res = PROTECT(PROTECT(PROTECT(allocVector(VECSXP, 0))));
+  } else {
+    SEXP x_el = x;
+    R_xlen_t x_len = xlength(x);
+
+    res = PROTECT(allocVector(VECSXP, x_len));
+    res_nm = PROTECT(allocVector(VECSXP, x_len));
+
+    // Fill our sort buffer and transfer everything to VECSXP
+
+    struct chr_idx * sort_buff =
+      (struct chr_idx *) R_alloc((size_t) x_len, sizeof(struct chr_idx));
+
+    for(R_xlen_t i = 0; i < x_len; ++i) {
+      SEXP nm = R_NilValue ? R_BlankString : PRINTNAME(TAG(x_el));
+      *(sort_buff + i) = (struct chr_idx) {.chr = CHAR(nm), .idx = i};
+      SET_VECTOR_ELT(res, i, CAR(x_el));
+      SET_STRING_ELT(res_nm, i, nm);
+      x_el = CDR(x_el);
+    }
+    // Sort the buffer and reorder the vectors
+
+    qsort(sort_buff, (size_t) x_len, sizeof(struct chr_idx), cmpfun);
+
+    // `head` holds the data at the current spot that needs to be overwritten
+
+    SEXP val_buff = PROTECT(list2(R_NilValue, R_NilValue));
+    SEXP nm_buff = CDR(val_buff);
+
+    for(R_xlen_t i = 0; i < x_len; ++i) {
+      struct chr_idx tar = *(sort_buff + i);
+      if(i != tar.idx) {
+        SETCAR(val_buff, VECTOR_ELT(res, tar.idx));
+        SETCAR(nm_buff, STRING_ELT(res_nm, tar.idx));
+
+        SET_VECTOR_ELT(res, tar.idx, VECTOR_ELT(res, i));
+        SET_STRING_ELT(res_nm, tar.idx, STRING_ELT(res_nm, i));
+
+        SET_VECTOR_ELT(res, i, CAR(val_buff));
+        SET_STRING_ELT(res_nm, i, CAR(nm_buff));
+      }
+    }
+    setAttrib(res, R_NamesSymbol, res_nm);
+  }
+  UNPROTECT(3);
+  return res;
+}
