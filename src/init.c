@@ -69,6 +69,7 @@ R_CallMethodDef callMethods[] = {
   {"hash_test", (DL_FUNC) &pfHashTest, 2},
   {"hash_test2", (DL_FUNC) &pfHashTest2, 2},
   {"find_fun", (DL_FUNC) &ALIKEC_findFun_ext, 2},
+  {"list_as_sorted_vec", (DL_FUNC) &ALIKEC_list_as_sorted_vec, 1},
 
   {"len_chr_len_ext", (DL_FUNC) &CSR_len_chr_len_ext, 1},
   {"len_as_chr_ext", (DL_FUNC) &CSR_len_as_chr_ext, 1},
