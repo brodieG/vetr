@@ -991,8 +991,8 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   // what attributes are missing from either list.
 
   while(i < tar_attr_count || j < cur_attr_count) {
-    int i_class_imp, j_class_imp;
-    i_class_imp = j_class_imp = 0;
+    int i_class_imp, j_class_imp, i_dim_imp, j_dim_imp;
+    i_class_imp = j_class_imp = i_dim_imp = j_dim_imp = 0;
 
     int i_over = i >= tar_attr_count;
     int j_over = j >= cur_attr_count;
@@ -1024,9 +1024,17 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     int tar_is_class = !strcmp(tar_tag, "class");
     int cur_is_class = (tar_is_class && !tag_cmp) || !strcmp(cur_tag, "class");
 
-    if(tag_cmp && (tar_is_class || cur_is_class)) {
-      if(tag_cmp < 0) j_class_imp = 1;  else i_class_imp = 1;
-      tag_cmp = 0;
+    int tar_is_dim = !strcmp(tar_tag, "dim");
+    int cur_is_dim = (tar_is_dim && !tag_cmp) || !strcmp(cur_tag, "dim");
+
+    if(tag_cmp) {
+      if(tar_is_class || cur_is_class) {
+        if(tag_cmp < 0) j_class_imp = 1;  else i_class_imp = 1;
+        tag_cmp = 0;
+      } else if (tar_is_dim || cur_is_dim) {
+        if(tag_cmp < 0) j_dim_imp = 1;  else i_dim_imp = 1;
+        tag_cmp = 0;
+      }
     }
     // Handle attribute missing from one or the other
 
@@ -1062,9 +1070,11 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     // we're currently comparing the implicit class)
 
     SEXP tar_attr_el_val =
-      !i_over && !i_class_imp ? VECTOR_ELT(tar_attr_sort, i++) : R_NilValue;
+      !i_over && !i_class_imp && !i_dim_imp ?
+      VECTOR_ELT(tar_attr_sort, i++) : R_NilValue;
     SEXP cur_attr_el_val =
-      !j_over && !j_class_imp ? VECTOR_ELT(cur_attr_sort, j++) : R_NilValue;
+      !j_over && !j_class_imp && !j_dim_imp ?
+      VECTOR_ELT(cur_attr_sort, j++) : R_NilValue;
 
     // = Baseline Check ========================================================
 
@@ -1128,7 +1138,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
         continue;
       // - Dims ----------------------------------------------------------------
 
-      } else if (!strcmp(tar_tag, "dim") && set.attr_mode == 0) {
+      } else if (tar_is_dim && set.attr_mode == 0) {
         int err_ind = 2;
 
         struct ALIKEC_res dim_comp = ALIKEC_compare_dims(
