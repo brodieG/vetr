@@ -610,19 +610,22 @@ SEXP ALIKEC_is_dfish_ext(SEXP obj) {
 /*
  * Starts with a pair list, and returns it as a VECSXP sorted by tag
  *
+ * Note that this uses `qsort` so the sort is not stable on ties.  Our primary
+ * use case is to compare attributes where there should not be duplicate tas in
+ * the attribute LISTSXP, so that should not matter.
+ *
  * Not sure if there is a way to sort a SEXP VECSXP in place, but seems pretty
  * dangerous so we'll settle for the intermediate approach where we sort the
- * indeces and tag names, and then re-shuffle the elements in target vectors by
- * using a single element buffer.  This is likely slow, but probably fast enough
- * for our purposes.
+ * indeces and tag names.
  */
 
-struct chr_idx {const char * chr; R_xlen_t idx;};
+struct chr_idx {SEXP name; SEXP val; R_xlen_t idx;};
+
 static int cmpfun (const void * p, const void * q) {
   struct chr_idx a = *(struct chr_idx *) p;
   struct chr_idx b = *(struct chr_idx *) q;
-  const char * a_chr = a.chr;
-  const char * b_chr = b.chr;
+  const char * a_chr = CHAR(a.name);
+  const char * b_chr = CHAR(b.name);
   return(strcmp(a_chr, b_chr));
 }
 SEXP ALIKEC_list_as_sorted_vec(SEXP x) {
@@ -632,13 +635,10 @@ SEXP ALIKEC_list_as_sorted_vec(SEXP x) {
   SEXP res, res_nm;
 
   if(x == R_NilValue) {
-    res = PROTECT(PROTECT(PROTECT(allocVector(VECSXP, 0))));
+    res = PROTECT(PROTECT(allocVector(VECSXP, 0)));
   } else {
     SEXP x_el = x;
     R_xlen_t x_len = xlength(x);
-
-    res = PROTECT(allocVector(VECSXP, x_len));
-    res_nm = PROTECT(allocVector(VECSXP, x_len));
 
     // Fill our sort buffer and transfer everything to VECSXP
 
@@ -646,10 +646,10 @@ SEXP ALIKEC_list_as_sorted_vec(SEXP x) {
       (struct chr_idx *) R_alloc((size_t) x_len, sizeof(struct chr_idx));
 
     for(R_xlen_t i = 0; i < x_len; ++i) {
-      SEXP nm = R_NilValue ? R_BlankString : PRINTNAME(TAG(x_el));
-      *(sort_buff + i) = (struct chr_idx) {.chr = CHAR(nm), .idx = i};
-      SET_VECTOR_ELT(res, i, CAR(x_el));
-      SET_STRING_ELT(res_nm, i, nm);
+      SEXP nm = TAG(x_el) == R_NilValue ? R_BlankString : PRINTNAME(TAG(x_el));
+      *(sort_buff + i) = (struct chr_idx) {
+        .name = nm, .val = CAR(x_el), .idx = i
+      };
       x_el = CDR(x_el);
     }
     // Sort the buffer and reorder the vectors
@@ -658,24 +658,16 @@ SEXP ALIKEC_list_as_sorted_vec(SEXP x) {
 
     // `head` holds the data at the current spot that needs to be overwritten
 
-    SEXP val_buff = PROTECT(list2(R_NilValue, R_NilValue));
-    SEXP nm_buff = CDR(val_buff);
+    res = PROTECT(allocVector(VECSXP, x_len));
+    res_nm = PROTECT(allocVector(STRSXP, x_len));
 
     for(R_xlen_t i = 0; i < x_len; ++i) {
       struct chr_idx tar = *(sort_buff + i);
-      if(i != tar.idx) {
-        SETCAR(val_buff, VECTOR_ELT(res, tar.idx));
-        SETCAR(nm_buff, STRING_ELT(res_nm, tar.idx));
-
-        SET_VECTOR_ELT(res, tar.idx, VECTOR_ELT(res, i));
-        SET_STRING_ELT(res_nm, tar.idx, STRING_ELT(res_nm, i));
-
-        SET_VECTOR_ELT(res, i, CAR(val_buff));
-        SET_STRING_ELT(res_nm, i, CAR(nm_buff));
-      }
+      SET_VECTOR_ELT(res, i, tar.val);
+      SET_STRING_ELT(res_nm, i, tar.name);
     }
     setAttrib(res, R_NamesSymbol, res_nm);
   }
-  UNPROTECT(3);
+  UNPROTECT(2);
   return res;
 }
