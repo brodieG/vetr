@@ -985,7 +985,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   R_xlen_t cur_attr_count = xlength(cur_attr_sort);
   R_xlen_t i, j;
   i = 0; j = 0;
-  int is_names = FALSE;
+  int is_names = 0;
 
   // A bit of a weird loop, we walk up through both sorted lists depending on
   // what attributes are missing from either list.
@@ -1030,9 +1030,11 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     if(tag_cmp) {
       if(tar_is_class || cur_is_class) {
         if(tag_cmp < 0) j_class_imp = 1;  else i_class_imp = 1;
+        tar_tag = cur_tag = "class";
         tag_cmp = 0;
       } else if (tar_is_dim || cur_is_dim) {
         if(tag_cmp < 0) j_dim_imp = 1;  else i_dim_imp = 1;
+        tar_tag = cur_tag = "dim";
         tag_cmp = 0;
       }
     }
