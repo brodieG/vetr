@@ -178,8 +178,9 @@ Will set tar_is_df to 1 if prim is data frame
 struct ALIKEC_res ALIKEC_compare_class(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
-  if(TYPEOF(current) != STRSXP || TYPEOF(target) != STRSXP)
+  if(TYPEOF(current) != STRSXP || TYPEOF(target) != STRSXP) {
     return ALIKEC_alike_attr(target, current, "class", set);
+  }
 
   int tar_class_len, cur_class_len, len_delta, tar_class_i, cur_class_i,
       is_df = 0, idx_fail = -1;
@@ -1012,16 +1013,17 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     }
     int match = j != cur_attr_count;  // got to end of current without match?
 
-    if(!match && errs[7].success) {
-      errs[7].success = 0;
-      errs[7].dat.strings.tar_pre = "have";
-      errs[7].dat.strings.target[0] = "attribute \"%s\"";
-      errs[7].dat.strings.target[1] = tar_tag;
-    } else if (!match) {
-      continue;
+    if(!match) {
+      if(errs[7].success) {
+        errs[7].success = 0;
+        errs[7].dat.strings.tar_pre = "have";
+        errs[7].dat.strings.target[0] = "attribute \"%s\"";
+        errs[7].dat.strings.target[1] = tar_tag;
+      }
     }
     SEXP tar_attr_el_val = VECTOR_ELT(tar_attr_sort, i);
-    SEXP cur_attr_el_val = VECTOR_ELT(cur_attr_sort, j);
+    SEXP cur_attr_el_val =
+      match ?  VECTOR_ELT(cur_attr_sort, j) : R_NilValue;
 
     // = Baseline Check ========================================================
 
