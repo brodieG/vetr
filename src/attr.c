@@ -991,6 +991,9 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   // what attributes are missing from either list.
 
   while(i < tar_attr_count || j < cur_attr_count) {
+    int i_class_imp, j_class_imp;
+    i_class_imp = j_class_imp = 0;
+
     int i_over = i >= tar_attr_count;
     int j_over = j >= cur_attr_count;
     int is_srcref = !i_over && STRING_ELT(tar_names, i) == srcref_string;
@@ -1015,6 +1018,17 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
 
     int tag_cmp =
       !i_over && !j_over ? strcmp(tar_tag, cur_tag) : (i_over ? 1 : -1);
+
+    // Need to handle implicit classes here
+
+    int tar_is_class = !strcmp(tar_tag, "class");
+    int cur_is_class = (tar_is_class && !tag_cmp) || !strcmp(cur_tag, "class");
+
+    if(tag_cmp && (tar_is_class || cur_is_class)) {
+      if(tag_cmp < 0) j_class_imp = 1;  else i_class_imp = 1;
+      tag_cmp = 0;
+    }
+    // Handle attribute missing from one or the other
 
     if(tag_cmp < 0) {
       // cur is missing something missing tar has; we care unless it is src_ref
@@ -1043,12 +1057,14 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
 
     if(tag_cmp) {if(i_over || j_over) break; else continue;};
 
-    // we have matching tag values, so now compare the attribute values
+    // we have matching tag values, so now compare the attribute values and also
+    // advance (we don't if we've already gone through all the attributes or if
+    // we're currently comparing the implicit class)
 
     SEXP tar_attr_el_val =
-      !i_over ? VECTOR_ELT(tar_attr_sort, i++) : R_NilValue;
+      !i_over && !i_class_imp ? VECTOR_ELT(tar_attr_sort, i++) : R_NilValue;
     SEXP cur_attr_el_val =
-      !j_over ? VECTOR_ELT(cur_attr_sort, j++) : R_NilValue;
+      !j_over && !j_class_imp ? VECTOR_ELT(cur_attr_sort, j++) : R_NilValue;
 
     // = Baseline Check ========================================================
 
@@ -1072,7 +1088,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
       for every other error we have to keep going in case we eventually find a
       class error*/
 
-      if(!strcmp(tar_tag, "class")) {
+      if(tar_is_class) {
         SEXP cur_attr_el_val_tmp =
           PROTECT(ALIKEC_class(current, cur_attr_el_val));
         SEXP tar_attr_el_val_tmp =
