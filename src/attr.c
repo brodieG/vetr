@@ -981,27 +981,54 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   SEXP tar_names = getAttrib(tar_attr_sort, R_NamesSymbol);
   SEXP cur_names = getAttrib(cur_attr_sort, R_NamesSymbol);
 
-  R_xlen_t tar_attr_count = XLENGTH(tar_attr_sort);
-  R_xlen_t cur_attr_count = XLENGTH(cur_attr_sort);
-  R_xlen_t j = 0;
+  R_xlen_t tar_attr_count = xlength(tar_attr_sort);
+  R_xlen_t cur_attr_count = xlength(cur_attr_sort);
+  R_xlen_t i, j;
+  i = 0; j = 0;
   int is_names = FALSE;
 
-  for(R_xlen_t i = 0; i < tar_attr_count; ++i) {
-    int is_srcref = STRING_ELT(tar_names, i) == srcref_string;
-    const char * tar_tag = CHAR(STRING_ELT(tar_names, i));
+  // A bit of a weird loop, we walk up through both sorted lists depending on
+  // what attributes are missing from either list.
 
-    // We skip `srcref` except in default mode
+  while(i < tar_attr_count || j < cur_attr_count) {
+    int i_over = i >= tar_attr_count;
+    int j_over = j >= cur_attr_count;
+    int is_srcref = !i_over && STRING_ELT(tar_names, i) == srcref_string;
 
-    if(is_srcref && set.attr_mode < 1) continue;
+    // unfortunately complexity needs handling because we can advance i/j past
+    // the end of the respective vectors
 
-    // Advance through current until we find a matching tag
+    const char * tar_tag = !i_over ? CHAR(STRING_ELT(tar_names, i)) : "";
+    const char * cur_tag = !j_over ? CHAR(STRING_ELT(cur_names, j)) : "";
 
-    while(
-      j < cur_attr_count &&
-      STRING_ELT(tar_names, i) != STRING_ELT(cur_names, j)
-    ) {
-      // Something in current missing in target, if in mode 2 this is an error,
-      // we record the first one
+    if((*tar_tag == 0 && !i_over) || (*cur_tag == 0 && !j_over))
+      // nocov start
+      error(
+        "%s%s",
+        "Internal Error: encountered attribute with zero length tag. ",
+        "This should not happen; contact maintainer."
+      );
+      // nocov end
+
+    // lists are sorted by tag, so if tar_tag < cur_tag, it means that tar_tag
+    // is missing from current
+
+    int tag_cmp =
+      !i_over && !j_over ? strcmp(tar_tag, cur_tag) : (i_over ? 1 : -1);
+
+    if(tag_cmp < 0) {
+      // cur is missing something missing tar has; we care unless it is src_ref
+      // and in default mode
+
+      if(errs[7].success && (set.attr_mode || !is_srcref)) {
+        errs[7].success = 0;
+        errs[7].dat.strings.tar_pre = "have";
+        errs[7].dat.strings.target[0] = "attribute \"%s\"";
+        errs[7].dat.strings.target[1] = tar_tag;
+      }
+      ++i;
+    } else if(tag_cmp > 0) {
+      // tar has something missing from cur, only matters if in mode == 2
 
       if(errs[7].success && set.attr_mode == 2) {
         errs[7].success = 0;
@@ -1011,19 +1038,17 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
       }
       ++j;
     }
-    int match = j != cur_attr_count;  // got to end of current without match?
+    // At this point, if there was a tag difference we want to loop to next
+    // value or break.
 
-    if(!match) {
-      if(errs[7].success) {
-        errs[7].success = 0;
-        errs[7].dat.strings.tar_pre = "have";
-        errs[7].dat.strings.target[0] = "attribute \"%s\"";
-        errs[7].dat.strings.target[1] = tar_tag;
-      }
-    }
-    SEXP tar_attr_el_val = VECTOR_ELT(tar_attr_sort, i);
+    if(tag_cmp) {if(i_over || j_over) break; else continue;};
+
+    // we have matching tag values, so now compare the attribute values
+
+    SEXP tar_attr_el_val =
+      !i_over ? VECTOR_ELT(tar_attr_sort, i++) : R_NilValue;
     SEXP cur_attr_el_val =
-      match ?  VECTOR_ELT(cur_attr_sort, j) : R_NilValue;
+      !j_over ? VECTOR_ELT(cur_attr_sort, j++) : R_NilValue;
 
     // = Baseline Check ========================================================
 
@@ -1139,17 +1164,6 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
         errs[6] = attr_comp;
       }
   } }
-  // If in strict mode, must have the same number of attributes
-
-  if(set.attr_mode == 2 && tar_attr_count != cur_attr_count) {
-    errs[7].success = 0;
-    errs[7].dat.strings.tar_pre = "have";
-    errs[7].dat.strings.target[0] = "%s attribute%s%s%s";
-    errs[7].dat.strings.target[1] = CSR_len_as_chr(tar_attr_count);
-    errs[7].dat.strings.target[2] = tar_attr_count != 1 ? "s" : "";
-    errs[7].dat.strings.cur_pre = "has";
-    errs[7].dat.strings.current[1] = CSR_len_as_chr(cur_attr_count);
-  }
   // Now determine which error to throw, if any
 
   if(!set.in_attr) {
@@ -1161,8 +1175,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   }
   set.in_attr--;
 
-  int i;
-  for(i = 0; i < 8; i++) {
+  for(int i = 0; i < 8; i++) {
     if(!errs[i].success && (!rev || (rev && set.attr_mode == 2))) {
       res_attr = errs[i];
       res_attr.dat.lvl = i;
