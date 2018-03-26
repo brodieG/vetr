@@ -1088,11 +1088,12 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
 
     if(set.attr_mode && errs[6].success) {
       // this contains returns a SEXP
-      errs[6] = ALIKEC_compare_attributes_internal_simple(
-        tar_attr_el_val, cur_attr_el_val, tar_tag, set
-      );
-      SET_VECTOR_ELT(errs_sexp, 6, errs[6].wrap);
-
+      if(tar_attr_el_val != R_NilValue || set.attr_mode == 2 ) {
+        errs[6] = ALIKEC_compare_attributes_internal_simple(
+          tar_attr_el_val, cur_attr_el_val, tar_tag, set
+        );
+        SET_VECTOR_ELT(errs_sexp, 6, errs[6].wrap);
+      }
     // = Custom Checks =========================================================
 
     /* see alike documentation for explanations of how the special
