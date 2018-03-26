@@ -1018,10 +1018,12 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     // lists are sorted by tag, so if tar_tag < cur_tag, it means that tar_tag
     // is missing from current
 
+    // NEED MORE COMPLEX HANDLING OF IMPLICIT CLASSES; WE ONLY WANT TO GENERATE
+    // IMPLICIT CLASSES WHEN WE'RE SURE THAT THE OTHER ONE CAN'T HAVE IT,
+    // WHEREAS RIGHT NOW WE GENERATE THEM AS SOON AS THERE IS A MISMATCH
+
     int tag_cmp =
       !i_over && !j_over ? strcmp(tar_tag, cur_tag) : (i_over ? 1 : -1);
-
-    // Need to handle implicit classes here
 
     int tar_is_class = !strcmp(tar_tag, "class");
     int cur_is_class = (tar_is_class && !tag_cmp) || !strcmp(cur_tag, "class");
@@ -1029,6 +1031,14 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     int tar_is_dim = !strcmp(tar_tag, "dim");
     int cur_is_dim = (tar_is_dim && !tag_cmp) || !strcmp(cur_tag, "dim");
 
+    // Need to handle implicit classes here, which only need to be checked if
+    // either tar has an explicit class or if we're in attr_mode=2
+
+    Rprintf(
+      "%s %s curcl: %d tarcl: %d curdim: %d tardim: %d attr: %d\n",
+      tar_tag, cur_tag, cur_is_class, tar_is_class, cur_is_dim ,tar_is_dim, 
+      set.attr_mode
+    );
     if(tag_cmp) {
       if(tar_is_class || cur_is_class) {
         if(tag_cmp < 0) j_class_imp = 1;  else i_class_imp = 1;
@@ -1070,6 +1080,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     }
     // At this point, if there was a tag difference we want to loop to next
     // value or break.
+    Rprintf("tag_comp %d i_over %d j_over %d\n", tag_cmp, i_over, j_over);
 
     if(tag_cmp) {if(i_over || j_over) break; else continue;};
 
@@ -1077,13 +1088,21 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     // advance (we don't if we've already gone through all the attributes or if
     // we're currently comparing the implicit class)
 
-    SEXP tar_attr_el_val =
-      !i_over && !i_class_imp && !i_dim_imp ?
-      VECTOR_ELT(tar_attr_sort, i++) : R_NilValue;
-    SEXP cur_attr_el_val =
-      !j_over && !j_class_imp && !j_dim_imp ?
-      VECTOR_ELT(cur_attr_sort, j++) : R_NilValue;
-
+    SEXP tar_attr_el_val, cur_attr_el_val;
+    if(tar_is_class || cur_is_class) {
+      tar_attr_el_val =
+        !i_over && !i_class_imp ?  VECTOR_ELT(tar_attr_sort, i++) : R_NilValue;
+      cur_attr_el_val =
+        !j_over && !j_class_imp ?  VECTOR_ELT(cur_attr_sort, j++) : R_NilValue;
+    } else if (tar_is_dim || cur_is_dim) {
+      tar_attr_el_val =
+        !i_over && !i_dim_imp ?  VECTOR_ELT(tar_attr_sort, i++) : R_NilValue;
+      cur_attr_el_val =
+        !j_over && !j_dim_imp ?  VECTOR_ELT(cur_attr_sort, j++) : R_NilValue;
+    } else {
+      tar_attr_el_val = !i_over ? VECTOR_ELT(tar_attr_sort, i++) : R_NilValue;
+      cur_attr_el_val = !j_over ? VECTOR_ELT(cur_attr_sort, j++) : R_NilValue;
+    }
     // = Baseline Check ========================================================
 
     if(set.attr_mode && errs[6].success) {
@@ -1100,7 +1119,6 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
     attributes in this section are compared */
 
     } else {
-
       // - Class ---------------------------------------------------------------
 
       /* Class errors always trump all others so no need to calculate further;
@@ -1148,12 +1166,18 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
       // - Dims ----------------------------------------------------------------
 
       } else if (tar_is_dim && set.attr_mode == 0) {
+        Rprintf("compare dims\n");
         int err_ind = 2;
+        PrintValue(target);
+        PrintValue(tar_attr_el_val);
+        PrintValue(current);
+        PrintValue(cur_attr_el_val);
 
         struct ALIKEC_res dim_comp = ALIKEC_compare_dims(
           tar_attr_el_val, cur_attr_el_val, target, current, set
         );
         if(dim_comp.dat.lvl) err_ind = 0;
+        Rprintf("compare dim done %d\n", dim_comp.success);
         SET_VECTOR_ELT(errs_sexp, err_ind, dim_comp.wrap);
 
         // implicit class error upgrades to major error
@@ -1197,6 +1221,9 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
           );
         SET_VECTOR_ELT(errs_sexp, 6, attr_comp.wrap);
         errs[6] = attr_comp;
+      }
+      for(int x = 0; x < 8; ++x) {
+        if(!errs[x].success) Rprintf("    error at %d\n", x);
       }
   } }
   // Now determine which error to throw, if any
