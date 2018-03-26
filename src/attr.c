@@ -1162,11 +1162,6 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
 
       } else if (tar_is_dim && set.attr_mode == 0) {
         int err_ind = 2;
-        PrintValue(target);
-        PrintValue(tar_attr_el_val);
-        PrintValue(current);
-        PrintValue(cur_attr_el_val);
-
         struct ALIKEC_res dim_comp = ALIKEC_compare_dims(
           tar_attr_el_val, cur_attr_el_val, target, current, set
         );
