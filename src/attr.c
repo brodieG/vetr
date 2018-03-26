@@ -889,6 +889,8 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal_simple(
     res.dat.strings.tar_pre = tae_type == NILSXP ? "not have" : "have";
     res.dat.strings.target[0] = "attribute \"%s\"";
     res.dat.strings.target[1] = attr_sym;
+    res.dat.strings.cur_pre = "";
+    res.dat.strings.current[0] = "";
     PROTECT(PROTECT(R_NilValue));
   } else if(tae_type != cae_type) {
     res.success = 0;
@@ -1049,6 +1051,8 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
         errs[7].dat.strings.tar_pre = "have";
         errs[7].dat.strings.target[0] = "attribute \"%s\"";
         errs[7].dat.strings.target[1] = tar_tag;
+        errs[7].dat.strings.cur_pre = "";  // need to blank this
+        errs[7].dat.strings.current[0] = "";  // need to blank this
       }
       ++i;
     } else if(tag_cmp > 0) {
@@ -1059,6 +1063,8 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
         errs[7].dat.strings.tar_pre = "not have";
         errs[7].dat.strings.target[0] = "attribute \"%s\"";
         errs[7].dat.strings.target[1] = CHAR(STRING_ELT(cur_names, j));
+        errs[7].dat.strings.cur_pre = "";  // need to blank this
+        errs[7].dat.strings.current[0] = "";  // need to blank this
       }
       ++j;
     }
