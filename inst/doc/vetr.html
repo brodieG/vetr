@@ -19,46 +19,285 @@
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
-div.sourceCode { overflow-x: auto; }
-table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
-  margin: 0; padding: 0; vertical-align: baseline; border: none; }
-table.sourceCode { width: 100%; line-height: 100%; }
-td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
-td.sourceCode { padding-left: 5px; }
-code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code > span.dt { color: #902000; } /* DataType */
-code > span.dv { color: #40a070; } /* DecVal */
-code > span.bn { color: #40a070; } /* BaseN */
-code > span.fl { color: #40a070; } /* Float */
-code > span.ch { color: #4070a0; } /* Char */
-code > span.st { color: #4070a0; } /* String */
-code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code > span.ot { color: #007020; } /* Other */
-code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code > span.fu { color: #06287e; } /* Function */
-code > span.er { color: #ff0000; font-weight: bold; } /* Error */
-code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-code > span.cn { color: #880000; } /* Constant */
-code > span.sc { color: #4070a0; } /* SpecialChar */
-code > span.vs { color: #4070a0; } /* VerbatimString */
-code > span.ss { color: #bb6688; } /* SpecialString */
-code > span.im { } /* Import */
-code > span.va { color: #19177c; } /* Variable */
-code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code > span.op { color: #666666; } /* Operator */
-code > span.bu { } /* BuiltIn */
-code > span.ex { } /* Extension */
-code > span.pp { color: #bc7a00; } /* Preprocessor */
-code > span.at { color: #7d9029; } /* Attribute */
-code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; position: absolute; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; }
+pre.numberSource a.sourceLine:empty
+  { position: absolute; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: absolute; left: -5em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
 
 
-<link href="data:text/css;charset=utf-8,%0Abody%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E5%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0A%0Apadding%3A%204px%3B%0Awidth%3A%20100%25%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%201em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Ah3%2Esubtitle%20%7B%0Amargin%2Dtop%3A%20%2D23px%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23EEE%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%0A%7D%0Acode%20%7Bfont%2Dsize%3A%2085%25%3B%7D%0Apre%20%7B%0Aborder%3A%202px%20solid%20%23EEE%3B%0Aoverflow%3A%20auto%3B%0A%0Amargin%3A%205px%200px%3B%0Apadding%3A%205px%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Acolor%3A%20%23353%3B%0A%0A%7D%0Adiv%2EsourceCode%20pre%2C%20div%2EsourceCode%20code%20%7B%0Abackground%2Dcolor%3A%20%23FAFAFA%3B%0A%7D%0Adiv%2EsourceCode%20pre%7B%0A%0A%7D%0Adiv%2EsourceCode%20%2B%20pre%2C%0Adiv%2EsourceCode%20%2B%20div%2Ediffobj%5Fcontainer%20%7B%0Amargin%2Dtop%3A%20%2D5px%3B%0A%7D%0Adiv%2Ediffobj%5Fcontainer%20pre%7B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%2C%20h1%20%3E%20code%2C%20h2%20%3E%20code%2C%20h3%20%3E%20code%2C%0Ah4%20%3E%20code%2C%20h5%20%3E%20code%2C%20h6%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0Aline%2Dheight%3A%201%3B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Apadding%2Dbottom%3A%203px%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0Aborder%2Dbottom%3A%201px%20solid%20%23999%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23999%3B%0Apadding%2Dtop%3A%205px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Apadding%2Dtop%3A%205px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0A%0Acolor%3A%20%23777%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah4%2Eauthor%20%7Bdisplay%3A%20none%3B%7D%0Ah4%2Edate%20%7Bmargin%2Dtop%3A%20%2D20px%3B%7D%0Ah5%2C%20h6%20%7B%0A%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%232255dd%3B%0Afont%2Dweight%3A%20bold%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23555%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23555%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23555%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+<style type="text/css">
+body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.5;
+}
+#header {
+text-align: center;
+}
+#TOC {
+clear: both;
+
+padding: 4px;
+width: 100%;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 1em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+h3.subtitle {
+margin-top: -23px;
+}
+pre, code {
+background-color: #EEE;
+color: #333;
+white-space: pre-wrap; 
+
+}
+code {font-size: 85%;}
+pre {
+border: 2px solid #EEE;
+overflow: auto;
+
+margin: 5px 0px;
+padding: 5px 10px;
+}
+pre:not([class]) {
+color: #353;
+
+}
+div.sourceCode pre, div.sourceCode code {
+background-color: #FAFAFA;
+}
+div.sourceCode pre{
+
+}
+div.sourceCode + pre,
+div.sourceCode + div.diffobj_container {
+margin-top: -5px;
+}
+div.diffobj_container pre{
+line-height: 1.3;
+}
+
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+}
+p > code, li > code, h1 > code, h2 > code, h3 > code,
+h4 > code, h5 > code, h6 > code {
+padding: 2px 0px;
+line-height: 1;
+font-weight: bold;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+padding-bottom: 3px;
+font-size: 35px;
+line-height: 40px;
+border-bottom: 1px solid #999;
+}
+h2 {
+border-bottom: 1px solid #999;
+padding-top: 5px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+padding-top: 5px;
+font-size: 120%;
+}
+h4 {
+
+color: #777;
+font-size: 105%;
+}
+h4.author {display: none;}
+h4.date {margin-top: -20px;}
+h5, h6 {
+
+font-size: 105%;
+}
+a {
+color: #2255dd;
+font-weight: bold;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #555; } 
+code > span.fl { color: #555; } 
+code > span.ch { color: #555; } 
+code > span.st { color: #40a070; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
 
 </head>
 
@@ -112,49 +351,49 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="templates" class="section level3">
 <h3>Templates</h3>
 <p>Declare a template that an object should conform to, and let <code>vetr</code> take care of the rest:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(vetr)
-tpl &lt;-<span class="st"> </span><span class="kw">numeric</span>(1L)
-<span class="kw">vet</span>(tpl, <span class="dv">1</span>:<span class="dv">3</span>)</code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(vetr)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">tpl &lt;-<span class="st"> </span><span class="kw">numeric</span>(1L)</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">vet</span>(tpl, <span class="dv">1</span><span class="op">:</span><span class="dv">3</span>)</a></code></pre></div>
 <pre><code>[1] &quot;`length(1:3)` should be 1 (is 3)&quot;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl, <span class="st">&quot;hello&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">vet</span>(tpl, <span class="st">&quot;hello&quot;</span>)</a></code></pre></div>
 <pre><code>[1] &quot;`\&quot;hello\&quot;` should be type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl, <span class="dv">42</span>)</code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">vet</span>(tpl, <span class="dv">42</span>)</a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
 <p>Zero length templates match any length:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tpl &lt;-<span class="st"> </span><span class="kw">integer</span>()
-<span class="kw">vet</span>(tpl, 1L:3L)</code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1">tpl &lt;-<span class="st"> </span><span class="kw">integer</span>()</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="kw">vet</span>(tpl, 1L<span class="op">:</span>3L)</a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl, 1L)</code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">vet</span>(tpl, 1L)</a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
 <p>And for convenience short (&lt;= 100 length) integer-like numerics are considered integer:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tpl &lt;-<span class="st"> </span><span class="kw">integer</span>(1L)
-<span class="kw">vet</span>(tpl, <span class="dv">1</span>)       <span class="co"># this is a numeric, not an integer</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1">tpl &lt;-<span class="st"> </span><span class="kw">integer</span>(1L)</a>
+<a class="sourceLine" id="cb11-2" data-line-number="2"><span class="kw">vet</span>(tpl, <span class="dv">1</span>)       <span class="co"># this is a numeric, not an integer</span></a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl, <span class="fl">1.0001</span>)</code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="kw">vet</span>(tpl, <span class="fl">1.0001</span>)</a></code></pre></div>
 <pre><code>[1] &quot;`1.0001` should be type \&quot;integer-like\&quot; (is \&quot;double\&quot;)&quot;</code></pre>
 <p><code>vetr</code> can compare recursive objects such as lists, or data.frames:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tpl.iris &lt;-<span class="st"> </span>iris[<span class="dv">0</span>, ]      <span class="co"># 0 row DF matches any number of rows in object</span>
-iris.fake &lt;-<span class="st"> </span>iris
-<span class="kw">levels</span>(iris.fake$Species)[<span class="dv">3</span>] &lt;-<span class="st"> &quot;sibirica&quot;</span>   <span class="co"># tweak levels</span>
-
-<span class="kw">vet</span>(tpl.iris, iris)</code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1">tpl.iris &lt;-<span class="st"> </span>iris[<span class="dv">0</span>, ]      <span class="co"># 0 row DF matches any number of rows in object</span></a>
+<a class="sourceLine" id="cb15-2" data-line-number="2">iris.fake &lt;-<span class="st"> </span>iris</a>
+<a class="sourceLine" id="cb15-3" data-line-number="3"><span class="kw">levels</span>(iris.fake<span class="op">$</span>Species)[<span class="dv">3</span>] &lt;-<span class="st"> &quot;sibirica&quot;</span>   <span class="co"># tweak levels</span></a>
+<a class="sourceLine" id="cb15-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb15-5" data-line-number="5"><span class="kw">vet</span>(tpl.iris, iris)</a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl.iris, iris.fake)</code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="kw">vet</span>(tpl.iris, iris.fake)</a></code></pre></div>
 <pre><code>[1] &quot;`levels(iris.fake$Species)[3]` should be \&quot;virginica\&quot; (is \&quot;sibirica\&quot;)&quot;</code></pre>
 <p>From our declared template <code>iris[0, ]</code>, <code>vetr</code> infers all the required checks. In this case, <code>vet(iris[0, ], iris.fake, stop=TRUE)</code> is equivalent to:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stopifnot_iris &lt;-<span class="st"> </span>function(x) {
-  <span class="kw">stopifnot</span>(
-    <span class="kw">is.data.frame</span>(x),
-    <span class="kw">is.list</span>(x),
-    <span class="kw">length</span>(x) ==<span class="st"> </span><span class="kw">length</span>(iris),
-    <span class="kw">identical</span>(<span class="kw">lapply</span>(x, class), <span class="kw">lapply</span>(iris, class)),
-    <span class="kw">is.integer</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>)),
-    <span class="kw">identical</span>(<span class="kw">names</span>(x), <span class="kw">names</span>(iris)),
-    <span class="kw">identical</span>(<span class="kw">typeof</span>(x$Species), <span class="st">&quot;integer&quot;</span>),
-    <span class="kw">identical</span>(<span class="kw">levels</span>(x$Species), <span class="kw">levels</span>(iris$Species))
-  )
-}
-<span class="kw">stopifnot_iris</span>(iris.fake)</code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1">stopifnot_iris &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</a>
+<a class="sourceLine" id="cb19-2" data-line-number="2">  <span class="kw">stopifnot</span>(</a>
+<a class="sourceLine" id="cb19-3" data-line-number="3">    <span class="kw">is.data.frame</span>(x),</a>
+<a class="sourceLine" id="cb19-4" data-line-number="4">    <span class="kw">is.list</span>(x),</a>
+<a class="sourceLine" id="cb19-5" data-line-number="5">    <span class="kw">length</span>(x) <span class="op">==</span><span class="st"> </span><span class="kw">length</span>(iris),</a>
+<a class="sourceLine" id="cb19-6" data-line-number="6">    <span class="kw">identical</span>(<span class="kw">lapply</span>(x, class), <span class="kw">lapply</span>(iris, class)),</a>
+<a class="sourceLine" id="cb19-7" data-line-number="7">    <span class="kw">is.integer</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>)),</a>
+<a class="sourceLine" id="cb19-8" data-line-number="8">    <span class="kw">identical</span>(<span class="kw">names</span>(x), <span class="kw">names</span>(iris)),</a>
+<a class="sourceLine" id="cb19-9" data-line-number="9">    <span class="kw">identical</span>(<span class="kw">typeof</span>(x<span class="op">$</span>Species), <span class="st">&quot;integer&quot;</span>),</a>
+<a class="sourceLine" id="cb19-10" data-line-number="10">    <span class="kw">identical</span>(<span class="kw">levels</span>(x<span class="op">$</span>Species), <span class="kw">levels</span>(iris<span class="op">$</span>Species))</a>
+<a class="sourceLine" id="cb19-11" data-line-number="11">  )</a>
+<a class="sourceLine" id="cb19-12" data-line-number="12">}</a>
+<a class="sourceLine" id="cb19-13" data-line-number="13"><span class="kw">stopifnot_iris</span>(iris.fake)</a></code></pre></div>
 <pre><code>Error: identical(levels(x$Species), levels(iris$Species)) is not TRUE</code></pre>
 <p><code>vetr</code> saved us typing, and the time and thought needed to come up with what needs to be compared.</p>
 <p>You could just as easily have created templates for nested lists, or data frames in lists. Templates are compared to objects with the <code>alike</code> function. For a thorough description of templates and how they work see the <a href="./alike.html"><code>alike</code> vignette</a>. For template examples see <code>example(alike)</code>.</p>
@@ -162,7 +401,7 @@ iris.fake &lt;-<span class="st"> </span>iris
 <div id="auto-generated-error-messages" class="section level3">
 <h3>Auto-Generated Error Messages</h3>
 <p>Let’s revisit the error message:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(tpl.iris, iris.fake)</code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" data-line-number="1"><span class="kw">vet</span>(tpl.iris, iris.fake)</a></code></pre></div>
 <pre><code>[1] &quot;`levels(iris.fake$Species)[3]` should be \&quot;virginica\&quot; (is \&quot;sibirica\&quot;)&quot;</code></pre>
 <p>It tells us:</p>
 <ul>
@@ -178,35 +417,35 @@ iris.fake &lt;-<span class="st"> </span>iris
 <div id="introduction" class="section level3">
 <h3>Introduction</h3>
 <p>You can combine templates with <code>&amp;&amp;</code> / <code>||</code>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) ||<span class="st"> </span><span class="ot">NULL</span>, <span class="ot">NULL</span>)</code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" data-line-number="1"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) <span class="op">||</span><span class="st"> </span><span class="ot">NULL</span>, <span class="ot">NULL</span>)</a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) ||<span class="st"> </span><span class="ot">NULL</span>, <span class="dv">42</span>)</code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) <span class="op">||</span><span class="st"> </span><span class="ot">NULL</span>, <span class="dv">42</span>)</a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) ||<span class="st"> </span><span class="ot">NULL</span>, <span class="st">&quot;foo&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) <span class="op">||</span><span class="st"> </span><span class="ot">NULL</span>, <span class="st">&quot;foo&quot;</span>)</a></code></pre></div>
 <pre><code>[1] &quot;`\&quot;foo\&quot;` should be `NULL`, or type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
 <p>Templates only check structure. When you need to check values use <code>.</code> to refer to the object:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) &amp;&amp;<span class="st"> </span>. &gt;<span class="st"> </span><span class="dv">0</span>, -<span class="dv">42</span>)  <span class="co"># strictly positive scalar numeric</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) <span class="op">&amp;&amp;</span><span class="st"> </span>. <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>, <span class="dv">-42</span>)  <span class="co"># strictly positive scalar numeric</span></a></code></pre></div>
 <pre><code>[1] &quot;`-42 &gt; 0` is not TRUE (FALSE)&quot;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) &amp;&amp;<span class="st"> </span>. &gt;<span class="st"> </span><span class="dv">0</span>, <span class="dv">42</span>)</code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" data-line-number="1"><span class="kw">vet</span>(<span class="kw">numeric</span>(1L) <span class="op">&amp;&amp;</span><span class="st"> </span>. <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>, <span class="dv">42</span>)</a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
 <p>You can compose vetting expressions as language objects and combine them:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">scalar.num.pos &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">numeric</span>(1L) &amp;&amp;<span class="st"> </span>. &gt;<span class="st"> </span><span class="dv">0</span>)
-foo.or.bar &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">character</span>(1L) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">'foo'</span>, <span class="st">'bar'</span>))
-vet.exp &lt;-<span class="st"> </span><span class="kw">quote</span>(scalar.num.pos ||<span class="st"> </span>foo.or.bar)
-
-<span class="kw">vet</span>(vet.exp, <span class="dv">42</span>)</code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" data-line-number="1">scalar.num.pos &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">numeric</span>(1L) <span class="op">&amp;&amp;</span><span class="st"> </span>. <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb33-2" data-line-number="2">foo.or.bar &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">character</span>(1L) <span class="op">&amp;&amp;</span><span class="st"> </span>. <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">'foo'</span>, <span class="st">'bar'</span>))</a>
+<a class="sourceLine" id="cb33-3" data-line-number="3">vet.exp &lt;-<span class="st"> </span><span class="kw">quote</span>(scalar.num.pos <span class="op">||</span><span class="st"> </span>foo.or.bar)</a>
+<a class="sourceLine" id="cb33-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb33-5" data-line-number="5"><span class="kw">vet</span>(vet.exp, <span class="dv">42</span>)</a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(vet.exp, <span class="st">&quot;foo&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb35-1" data-line-number="1"><span class="kw">vet</span>(vet.exp, <span class="st">&quot;foo&quot;</span>)</a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(vet.exp, <span class="st">&quot;baz&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb37-1" data-line-number="1"><span class="kw">vet</span>(vet.exp, <span class="st">&quot;baz&quot;</span>)</a></code></pre></div>
 <pre><code>[1] &quot;At least one of these should pass:&quot;                         
 [2] &quot;  - `\&quot;baz\&quot; %in% c(\&quot;foo\&quot;, \&quot;bar\&quot;)` is not TRUE (FALSE)&quot; 
 [3] &quot;  - `\&quot;baz\&quot;` should be type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
 <p><code>all_bw</code> is available for value range checks (~10x faster than <code>isTRUE(all(. &gt;= x &amp; . &lt;= y))</code> for large vectors):</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">all_bw</span>(., <span class="dv">0</span>, <span class="dv">1</span>), <span class="kw">runif</span>(<span class="dv">5</span>) +<span class="st"> </span><span class="dv">1</span>)</code></pre></div>
-<pre><code>[1] &quot;`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \&quot;`1.328515` at index 1 not in `[0,1]`\&quot;)&quot;</code></pre>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb39-1" data-line-number="1"><span class="kw">vet</span>(<span class="kw">all_bw</span>(., <span class="dv">0</span>, <span class="dv">1</span>), <span class="kw">runif</span>(<span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="dv">1</span>)</a></code></pre></div>
+<pre><code>[1] &quot;`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \&quot;`1.174768` at index 1 not in `[0,1]`\&quot;)&quot;</code></pre>
 <p>There are a number of predefined vetting tokens you can use in your vetting expressions such as:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(NUM.POS, -<span class="kw">runif</span>(<span class="dv">5</span>))    <span class="co"># positive numeric; see `?vet_token` for others</span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb41-1" data-line-number="1"><span class="kw">vet</span>(NUM.POS, <span class="op">-</span><span class="kw">runif</span>(<span class="dv">5</span>))    <span class="co"># positive numeric; see `?vet_token` for others</span></a></code></pre></div>
 <pre><code>[1] &quot;`-runif(5)` should contain only positive values, but has negatives&quot;</code></pre>
 <p>Vetting expressions are designed to be intuitive to use, but their implementation is complex. We recommend you look at <code>example(vet)</code> for usage ideas, or at the <a href="#non-standard-evaluation">“Non Standard Evaluation” section of the vignette</a> for the gory details.</p>
 </div>
@@ -215,15 +454,15 @@ vet.exp &lt;-<span class="st"> </span><span class="kw">quote</span>(scalar.num.p
 <div id="vetting-expressions-are-language-objects" class="section level4">
 <h4>Vetting Expressions are Language Objects</h4>
 <p><code>vet</code> captures the first argument unevaluated. For example in:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(. &gt;<span class="st"> </span><span class="dv">0</span>, <span class="dv">1</span>:<span class="dv">3</span>)</code></pre></div>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb43-1" data-line-number="1"><span class="kw">vet</span>(. <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">3</span>)</a></code></pre></div>
 <p><code>. &gt; 0</code> is captured, processed, and evaluated in a special manner. This is a common pattern in R (e.g. as in <code>with</code>, <code>subset</code>, etc.) called Non Standard Evaluation (NSE). One additional wrinkle with <code>vet</code> is that symbols in the captured expression are recursively substituted:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">a &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">integer</span>() &amp;&amp;<span class="st"> </span>. &gt;<span class="st"> </span><span class="dv">0</span>)
-b &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">logical</span>(1L) &amp;&amp;<span class="st"> </span>!<span class="kw">is.na</span>(.))
-c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="st"> </span>b)
-
-<span class="kw">vet</span>(c, <span class="dv">1</span>:<span class="dv">3</span>)</code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb44-1" data-line-number="1">a &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">integer</span>() <span class="op">&amp;&amp;</span><span class="st"> </span>. <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb44-2" data-line-number="2">b &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">logical</span>(1L) <span class="op">&amp;&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">is.na</span>(.))</a>
+<a class="sourceLine" id="cb44-3" data-line-number="3">c &lt;-<span class="st"> </span><span class="kw">quote</span>(a <span class="op">||</span><span class="st"> </span>b)</a>
+<a class="sourceLine" id="cb44-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb44-5" data-line-number="5"><span class="kw">vet</span>(c, <span class="dv">1</span><span class="op">:</span><span class="dv">3</span>)</a></code></pre></div>
 <p>The above is thus equivalent to:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>((<span class="kw">integer</span>() &amp;&amp;<span class="st"> </span>. &gt;<span class="st"> </span><span class="dv">0</span>) ||<span class="st"> </span>(<span class="kw">logical</span>(1L) &amp;&amp;<span class="st"> </span>!<span class="kw">is.na</span>(.)), <span class="dv">1</span>:<span class="dv">3</span>)</code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb45-1" data-line-number="1"><span class="kw">vet</span>((<span class="kw">integer</span>() <span class="op">&amp;&amp;</span><span class="st"> </span>. <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>) <span class="op">||</span><span class="st"> </span>(<span class="kw">logical</span>(1L) <span class="op">&amp;&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">is.na</span>(.)), <span class="dv">1</span><span class="op">:</span><span class="dv">3</span>)</a></code></pre></div>
 <p>The recursive substitution removes the typical limitation on “programming” with NSE, although there are a few things to know:</p>
 <ul>
 <li>Symbols in vetting expressions that evaluate to language objects (calls or symbols) in the parent frame are substituted with the corresponding language object.</li>
@@ -233,33 +472,33 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <li>You must take particular care when constructing vetting expressions for language objects.</li>
 </ul>
 <p>To illustrate the last point, suppose we want to check that an object is a call in the form <code>x + y</code>, then we could use:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">quote</span>(x +<span class="st"> </span>y), my.call)       <span class="co"># notice `quote`</span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb46-1" data-line-number="1"><span class="kw">vet</span>(<span class="kw">quote</span>(x <span class="op">+</span><span class="st"> </span>y), my.call)       <span class="co"># notice `quote`</span></a></code></pre></div>
 <p>Or:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tpl.call &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">quote</span>(x +<span class="st"> </span>y))  <span class="co"># notice `quote(quote(...))`</span>
-<span class="kw">vet</span>(tpl.call, my.call)</code></pre></div>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb47-1" data-line-number="1">tpl.call &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">quote</span>(x <span class="op">+</span><span class="st"> </span>y))  <span class="co"># notice `quote(quote(...))`</span></a>
+<a class="sourceLine" id="cb47-2" data-line-number="2"><span class="kw">vet</span>(tpl.call, my.call)</a></code></pre></div>
 <p>Additionally, you will need to ensure that <code>x</code> and <code>y</code> themselves do not evaluate to language objects in the parent frame.</p>
 </div>
 <div id="parsing-and-evaluation-rules" class="section level4">
 <h4>Parsing and Evaluation Rules</h4>
 <p>Once a vetting expression has been recursively substituted, it is parsed into tokens. Tokens are the parts of the vetting expression bounded by the <code>&amp;&amp;</code> and <code>||</code> operators and optionally enclosed in parentheses. For example, there are three tokens in the following vetting expression:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">logical</span>(<span class="dv">1</span>) ||<span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>(. &gt;<span class="st"> </span><span class="dv">0</span> &amp;<span class="st"> </span>. &lt;<span class="st"> </span><span class="dv">1</span>))</code></pre></div>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb48-1" data-line-number="1"><span class="kw">logical</span>(<span class="dv">1</span>) <span class="op">||</span><span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) <span class="op">&amp;&amp;</span><span class="st"> </span>(. <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span> <span class="op">&amp;</span><span class="st"> </span>. <span class="op">&lt;</span><span class="st"> </span><span class="dv">1</span>))</a></code></pre></div>
 <p>They are <code>logical(1)</code>, <code>numeric(1)</code>, and <code>. &gt; 0 &amp; . &lt; 1</code>. The last token is just one token not because of the parentheses around it but because it is a call to <code>&amp;</code> as opposed to <code>&amp;&amp;</code>. Here we use the parentheses to remove parsing ambiguity caused by <code>&amp;</code> and <code>&amp;&amp;</code> having the same operator precedence.</p>
 <p>After the tokens have been identified they are classified as standard tokens or template tokens. Standard tokens are those that contain the <code>.</code> symbol. Every other token is considered a template token.</p>
 <p>Standard tokens are further processed by substituting any <code>.</code> with the value of the object being vetted. These tokens are then evaluated and if <code>all(&lt;result-of-evaluation&gt;)</code> is <code>TRUE</code> then the tokens pass, otherwise they fail. Note <code>all(logical(0L))</code> is TRUE. With:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(. &gt;<span class="st"> </span><span class="dv">0</span>, <span class="dv">1</span>:<span class="dv">3</span>)</code></pre></div>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb49-1" data-line-number="1"><span class="kw">vet</span>(. <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">3</span>)</a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
 <p><code>. &gt; 0</code> becomes <code>1:3 &gt; 0</code>, which evaluates to <code>c(TRUE, TRUE, TRUE)</code> and the token passes.</p>
 <p>Template tokens, i.e. tokens without a <code>.</code> symbol, are evaluated and the resulting R object is sent along with the object to vet to <code>alike</code> for structural comparison. If <code>alike</code> returns <code>TRUE</code> then the token passes, otherwise it fails.</p>
 <p>Finally, the result of evaluating each token is plugged back into the original expression. So<sup>1</sup>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">logical</span>(<span class="dv">1</span>) ||<span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>(. &gt;<span class="st"> </span><span class="dv">0</span> &amp;<span class="st"> </span>. &lt;<span class="st"> </span><span class="dv">1</span>)), <span class="dv">42</span>)
-<span class="co"># becomes:</span>
-<span class="kw">alike</span>(<span class="kw">logical</span>(1L), <span class="dv">42</span>) ||<span class="st"> </span>(<span class="kw">alike</span>(<span class="kw">numeric</span>(1L), <span class="dv">42</span>) &amp;&amp;<span class="st"> </span><span class="kw">all</span>(<span class="dv">42</span> &gt;<span class="st"> </span><span class="dv">0</span> &amp;<span class="st"> </span><span class="dv">42</span> &lt;<span class="st"> </span><span class="dv">1</span>))
-<span class="co"># becomes:</span>
-<span class="ot">FALSE</span> ||<span class="st"> </span>(<span class="ot">TRUE</span> &amp;&amp;<span class="st"> </span><span class="ot">FALSE</span>)
-<span class="co"># becomes:</span>
-<span class="ot">FALSE</span></code></pre></div>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb51-1" data-line-number="1"><span class="kw">vet</span>(<span class="kw">logical</span>(<span class="dv">1</span>) <span class="op">||</span><span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) <span class="op">&amp;&amp;</span><span class="st"> </span>(. <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span> <span class="op">&amp;</span><span class="st"> </span>. <span class="op">&lt;</span><span class="st"> </span><span class="dv">1</span>)), <span class="dv">42</span>)</a>
+<a class="sourceLine" id="cb51-2" data-line-number="2"><span class="co"># becomes:</span></a>
+<a class="sourceLine" id="cb51-3" data-line-number="3"><span class="kw">alike</span>(<span class="kw">logical</span>(1L), <span class="dv">42</span>) <span class="op">||</span><span class="st"> </span>(<span class="kw">alike</span>(<span class="kw">numeric</span>(1L), <span class="dv">42</span>) <span class="op">&amp;&amp;</span><span class="st"> </span><span class="kw">all</span>(<span class="dv">42</span> <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span> <span class="op">&amp;</span><span class="st"> </span><span class="dv">42</span> <span class="op">&lt;</span><span class="st"> </span><span class="dv">1</span>))</a>
+<a class="sourceLine" id="cb51-4" data-line-number="4"><span class="co"># becomes:</span></a>
+<a class="sourceLine" id="cb51-5" data-line-number="5"><span class="ot">FALSE</span> <span class="op">||</span><span class="st"> </span>(<span class="ot">TRUE</span> <span class="op">&amp;&amp;</span><span class="st"> </span><span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb51-6" data-line-number="6"><span class="co"># becomes:</span></a>
+<a class="sourceLine" id="cb51-7" data-line-number="7"><span class="ot">FALSE</span></a></code></pre></div>
 <p>And the vetting fails:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vet</span>(<span class="kw">logical</span>(<span class="dv">1</span>) ||<span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) &amp;&amp;<span class="st"> </span>(. &gt;<span class="st"> </span><span class="dv">0</span> &amp;<span class="st"> </span>. &lt;<span class="st"> </span><span class="dv">1</span>)), <span class="dv">42</span>)</code></pre></div>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb52-1" data-line-number="1"><span class="kw">vet</span>(<span class="kw">logical</span>(<span class="dv">1</span>) <span class="op">||</span><span class="st"> </span>(<span class="kw">numeric</span>(<span class="dv">1</span>) <span class="op">&amp;&amp;</span><span class="st"> </span>(. <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span> <span class="op">&amp;</span><span class="st"> </span>. <span class="op">&lt;</span><span class="st"> </span><span class="dv">1</span>)), <span class="dv">42</span>)</a></code></pre></div>
 <pre><code>[1] &quot;At least one of these should pass:&quot;                 
 [2] &quot;  - `42 &gt; 0 &amp; 42 &lt; 1` is not TRUE (FALSE)&quot;          
 [3] &quot;  - `42` should be type \&quot;logical\&quot; (is \&quot;double\&quot;)&quot;</code></pre>
@@ -269,37 +508,37 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <h3>Special Cases</h3>
 <p>If you need to reference a literal dot (<code>.</code>) in a token, you can escape it by adding another dot so that <code>.</code> becomes <code>..</code>. If you want to reference <code>...</code> you’ll need to use <code>....</code>. If you have a standard token that does not reference the vetting object (i.e. does not use <code>.</code>) you can mark it as a standard token by wrapping it in <code>.()</code> (if you want to use a literal <code>.()</code> you can use <code>..()</code>).</p>
 <p>If you need <code>&amp;&amp;</code> or <code>||</code> to be interpreted literally you can wrap the call in <code>I</code> to tell <code>vet</code> to treat the entire call as a single token:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">I</span>(<span class="kw">length</span>(a) ==<span class="st"> </span><span class="kw">length</span>(b) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="dv">0</span>:<span class="dv">1</span>)</code></pre></div>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb54-1" data-line-number="1"><span class="kw">I</span>(<span class="kw">length</span>(a) <span class="op">==</span><span class="st"> </span><span class="kw">length</span>(b) <span class="op">&amp;&amp;</span><span class="st"> </span>. <span class="op">%in%</span><span class="st"> </span><span class="dv">0</span><span class="op">:</span><span class="dv">1</span>)</a></code></pre></div>
 <p><code>vet</code> will stop searching for tokens at the first call to a function other than <code>(</code>, <code>&amp;&amp;</code>, and <code>||</code>. The use of <code>I</code> here is just an example of this behavior and convenient since <code>I</code> does not change the meaning of the vetting token. An implication of this is you should not nest template tokens inside functions as <code>vet</code> will not identify them as template tokens and you may get unexpected results. For example:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">I</span>(<span class="kw">logical</span>(1L) &amp;&amp;<span class="st"> </span><span class="kw">my_special_fun</span>(.))</code></pre></div>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb55-1" data-line-number="1"><span class="kw">I</span>(<span class="kw">logical</span>(1L) <span class="op">&amp;&amp;</span><span class="st"> </span><span class="kw">my_special_fun</span>(.))</a></code></pre></div>
 <p>will always fail because <code>logical(1L)</code> is part of a standard token and is evaluated as <code>FALSE</code> rather than used a template token for a scalar logical.</p>
 </div>
 </div>
 <div id="in-functions" class="section level2">
 <h2>In Functions</h2>
 <p>The <code>vetr</code> function streamlines parameter checks in functions. It behaves just like <code>vet</code>, except that you need only specify the vetting expressions. The objects to vet are captured from the function environment:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fun &lt;-<span class="st"> </span>function(x, y, z) {
-  <span class="kw">vetr</span>(
-    <span class="kw">matrix</span>(<span class="kw">numeric</span>(), <span class="dt">ncol=</span><span class="dv">3</span>),
-    <span class="kw">logical</span>(1L),
-    <span class="kw">character</span>(1L) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;foo&quot;</span>, <span class="st">&quot;bar&quot;</span>)
-  )
-  <span class="ot">TRUE</span>  <span class="co"># do work...</span>
-}
-<span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">12</span>, <span class="dv">3</span>), <span class="ot">TRUE</span>, <span class="st">&quot;baz&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb56-1" data-line-number="1">fun &lt;-<span class="st"> </span><span class="cf">function</span>(x, y, z) {</a>
+<a class="sourceLine" id="cb56-2" data-line-number="2">  <span class="kw">vetr</span>(</a>
+<a class="sourceLine" id="cb56-3" data-line-number="3">    <span class="kw">matrix</span>(<span class="kw">numeric</span>(), <span class="dt">ncol=</span><span class="dv">3</span>),</a>
+<a class="sourceLine" id="cb56-4" data-line-number="4">    <span class="kw">logical</span>(1L),</a>
+<a class="sourceLine" id="cb56-5" data-line-number="5">    <span class="kw">character</span>(1L) <span class="op">&amp;&amp;</span><span class="st"> </span>. <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;foo&quot;</span>, <span class="st">&quot;bar&quot;</span>)</a>
+<a class="sourceLine" id="cb56-6" data-line-number="6">  )</a>
+<a class="sourceLine" id="cb56-7" data-line-number="7">  <span class="ot">TRUE</span>  <span class="co"># do work...</span></a>
+<a class="sourceLine" id="cb56-8" data-line-number="8">}</a>
+<a class="sourceLine" id="cb56-9" data-line-number="9"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">12</span>, <span class="dv">3</span>), <span class="ot">TRUE</span>, <span class="st">&quot;baz&quot;</span>)</a></code></pre></div>
 <pre><code>Error in fun(x = matrix(1:12, 3), y = TRUE, z = &quot;baz&quot;): For argument `x`, `matrix(1:12, 3)` should have 3 columns (has 4)</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">12</span>, <span class="dv">4</span>), <span class="ot">TRUE</span>, <span class="st">&quot;baz&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb58-1" data-line-number="1"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">12</span>, <span class="dv">4</span>), <span class="ot">TRUE</span>, <span class="st">&quot;baz&quot;</span>)</a></code></pre></div>
 <pre><code>Error in fun(x = matrix(1:12, 4), y = TRUE, z = &quot;baz&quot;): For argument `z`, `&quot;baz&quot; %in% c(&quot;foo&quot;, &quot;bar&quot;)` is not TRUE (FALSE)</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">12</span>, <span class="dv">4</span>), <span class="ot">TRUE</span>, <span class="st">&quot;foo&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb60-1" data-line-number="1"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">12</span>, <span class="dv">4</span>), <span class="ot">TRUE</span>, <span class="st">&quot;foo&quot;</span>)</a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
 <p>The arguments to <code>vetr</code> are matched to the arguments of the enclosing function in the same way as with <code>match.call</code>. For example, if we wished to vet just the third argument:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fun &lt;-<span class="st"> </span>function(x, y, z) {
-  <span class="kw">vetr</span>(<span class="dt">z=</span><span class="kw">character</span>(1L) &amp;&amp;<span class="st"> </span>. %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;foo&quot;</span>, <span class="st">&quot;bar&quot;</span>))
-  <span class="ot">TRUE</span>  <span class="co"># do work...</span>
-}
-<span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">12</span>, <span class="dv">3</span>), <span class="ot">TRUE</span>, <span class="st">&quot;baz&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb62-1" data-line-number="1">fun &lt;-<span class="st"> </span><span class="cf">function</span>(x, y, z) {</a>
+<a class="sourceLine" id="cb62-2" data-line-number="2">  <span class="kw">vetr</span>(<span class="dt">z=</span><span class="kw">character</span>(1L) <span class="op">&amp;&amp;</span><span class="st"> </span>. <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;foo&quot;</span>, <span class="st">&quot;bar&quot;</span>))</a>
+<a class="sourceLine" id="cb62-3" data-line-number="3">  <span class="ot">TRUE</span>  <span class="co"># do work...</span></a>
+<a class="sourceLine" id="cb62-4" data-line-number="4">}</a>
+<a class="sourceLine" id="cb62-5" data-line-number="5"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">12</span>, <span class="dv">3</span>), <span class="ot">TRUE</span>, <span class="st">&quot;baz&quot;</span>)</a></code></pre></div>
 <pre><code>Error in fun(x = matrix(1:12, 3), y = TRUE, z = &quot;baz&quot;): For argument `z`, `&quot;baz&quot; %in% c(&quot;foo&quot;, &quot;bar&quot;)` is not TRUE (FALSE)</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">12</span>, <span class="dv">4</span>), <span class="ot">TRUE</span>, <span class="st">&quot;bar&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb64-1" data-line-number="1"><span class="kw">fun</span>(<span class="kw">matrix</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">12</span>, <span class="dv">4</span>), <span class="ot">TRUE</span>, <span class="st">&quot;bar&quot;</span>)</a></code></pre></div>
 <pre><code>[1] TRUE</code></pre>
 <p>Vetting expressions work the same way with <code>vetr</code> as they do with <code>vet</code>.</p>
 </div>
@@ -308,33 +547,33 @@ c &lt;-<span class="st"> </span><span class="kw">quote</span>(a ||<span class="s
 <div id="benchmarks" class="section level3">
 <h3>Benchmarks</h3>
 <p><code>vetr</code> is written primarily in C to minimize the performance impact of adding validation checks to your functions. Performance should be faster than using <code>stopifnot</code> except for the most trivial of checks. The <code>vetr</code> function itself carries some additional overhead from matching arguments, but it should still be faster than <code>stopifnot</code> except in the simplest of cases. Here we run our checks on valid iris objects we used to illustrate <a href="#declarative-checks-with-templates">declarative checks</a>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vetr_iris &lt;-<span class="st"> </span>function(x) <span class="kw">vetr</span>(tpl.iris)
-
-<span class="kw">bench_mark</span>(<span class="dt">times=</span><span class="fl">1e4</span>,
-  <span class="kw">vet</span>(tpl.iris, iris),
-  <span class="kw">vetr_iris</span>(iris),
-  <span class="kw">stopifnot_iris</span>(iris)   <span class="co"># defined in &quot;Templates&quot; section</span>
-)</code></pre></div>
+<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb66-1" data-line-number="1">vetr_iris &lt;-<span class="st"> </span><span class="cf">function</span>(x) <span class="kw">vetr</span>(tpl.iris)</a>
+<a class="sourceLine" id="cb66-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb66-3" data-line-number="3"><span class="kw">bench_mark</span>(<span class="dt">times=</span><span class="fl">1e4</span>,</a>
+<a class="sourceLine" id="cb66-4" data-line-number="4">  <span class="kw">vet</span>(tpl.iris, iris),</a>
+<a class="sourceLine" id="cb66-5" data-line-number="5">  <span class="kw">vetr_iris</span>(iris),</a>
+<a class="sourceLine" id="cb66-6" data-line-number="6">  <span class="kw">stopifnot_iris</span>(iris)   <span class="co"># defined in &quot;Templates&quot; section</span></a>
+<a class="sourceLine" id="cb66-7" data-line-number="7">)</a></code></pre></div>
 <pre><code>Mean eval time from 10000 iterations, in microseconds:
-  vet(tpl.iris, iris)   ~  25.3
-  vetr_iris(iris)       ~  30.8
-  stopifnot_iris(iris)  ~  89.9</code></pre>
+  vet(tpl.iris, iris)   ~  22.2
+  vetr_iris(iris)       ~  33.6
+  stopifnot_iris(iris)  ~  79.1</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
 <h3>Templates and Performance</h3>
 <p>Complex templates will be slower to evaluate than simple ones, particularly for lists with lots of nested elements. Note however that the cost of the vetting expression is a function of the complexity of the template, not that of the value being vetted.</p>
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">bench_mark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</code></pre></div>
+<div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb68-1" data-line-number="1"><span class="kw">bench_mark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</a></code></pre></div>
 <pre><code>Mean eval time from 1000 iterations, in microseconds:
-  data.frame(a = numeric())  ~  153.5</code></pre>
+  data.frame(a = numeric())  ~  129</code></pre>
 <p>In this case the <code>data.frame</code> call alone take over 100us. In your package code you could use:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>())
-
-my_fun &lt;-<span class="st"> </span>function(x) {
-  <span class="kw">vetr</span>(<span class="dt">x=</span>df.tpl)
-  <span class="ot">TRUE</span>    <span class="co"># do work</span>
-}</code></pre></div>
+<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb70-1" data-line-number="1">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>())</a>
+<a class="sourceLine" id="cb70-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb70-3" data-line-number="3">my_fun &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</a>
+<a class="sourceLine" id="cb70-4" data-line-number="4">  <span class="kw">vetr</span>(<span class="dt">x=</span>df.tpl)</a>
+<a class="sourceLine" id="cb70-5" data-line-number="5">  <span class="ot">TRUE</span>    <span class="co"># do work</span></a>
+<a class="sourceLine" id="cb70-6" data-line-number="6">}</a></code></pre></div>
 <p>This way the template is created once on package load and re-used each time your function is called.</p>
 </div>
 </div>
