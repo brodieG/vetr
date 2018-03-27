@@ -398,11 +398,17 @@ char * CSR_lcfirst(const char * str, size_t maxlen) {
  */
 
 const char * CSR_bullet(
-  const char * string, const char * bullet, const char * ctd, size_t max_len
+  SEXP string, SEXP bullet, SEXP ctd, size_t max_len
 ) {
+  if(
+    TYPEOF(string) != CHARSXP || TYPEOF(bullet) != CHARSXP ||
+    TYPEOF(ctd) != CHARSXP
+  )
+    error("Internal Error: requires charsxp, contact maintainer."); // nocov
+
   size_t newlines=0;
   size_t chars=0;
-  const char * string_copy = string;
+  const char * string_copy = CHAR(string);
 
   while(*string_copy) {
     if(*string_copy == '\n' && *(string_copy + 1)) ++newlines;
@@ -412,12 +418,12 @@ const char * CSR_bullet(
     if(chars > max_len)
       error("Exceeded `max_len` when trying to bullet `string`");
   }
-  size_t ctd_size = CSR_strmlen(ctd, max_len);
-  size_t bullet_size = CSR_strmlen(bullet, max_len);
+  size_t ctd_size = (size_t) LENGTH(ctd);
+  size_t bullet_size = (size_t) LENGTH(bullet);
 
   // Add all numbers together in a way that checks for overflows
 
-  size_t size_all = CSR_add_szt(string_copy - string, 1);
+  size_t size_all = CSR_add_szt(string_copy - CHAR(string), 1);
   size_all = CSR_add_szt(size_all, bullet_size);
   for(size_t i = 0; i < newlines; ++i)
     size_all = CSR_add_szt(size_all, ctd_size);
@@ -427,25 +433,23 @@ const char * CSR_bullet(
 
   // Now allocate
 
-  char * res = R_alloc(size_all + 1, sizeof(char));
+  char * res = R_alloc(size_all, sizeof(char));
   char * res_cpy  = res;
 
   // Second pass, copy stuff to our result string, start by adding the bullet
 
-  strcpy(res_cpy, bullet);
+  strcpy(res_cpy, CHAR(bullet));
   res_cpy += bullet_size;
 
-  string_copy = string;
+  string_copy = CHAR(string);
   while(*string_copy) {
     int add_ctd = 0;
     *res_cpy = *string_copy;
-    if(*res_cpy == '\n') {
-      add_ctd = 1;
-    }
+    if(*res_cpy == '\n') add_ctd = 1;
     ++res_cpy;
     ++string_copy;
-    if(add_ctd) {
-      strcpy(res_cpy, ctd);
+    if(add_ctd && *(string_copy)) {
+      strcpy(res_cpy, CHAR(ctd));
       res_cpy += ctd_size;
     }
     // *(res_cpy + 1) = '\0';  // so we can Rprintf

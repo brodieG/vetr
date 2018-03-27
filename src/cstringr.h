@@ -83,9 +83,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     size_t maxlen, const char * format, const char * a, const char * b
   );
   char * CSR_smprintf1(size_t maxlen, const char * format, const char * a);
-  const char * CSR_bullet(
-    const char * string, const char * bullet, const char * ctd, size_t max_len
-  );
+  const char * CSR_bullet(SEXP string, SEXP bullet, SEXP ctd, size_t max_len);
+
   char * CSR_ucfirst(const char * str, size_t maxlen);
   char * CSR_lcfirst(const char * str, size_t maxlen);
 
