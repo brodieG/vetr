@@ -264,12 +264,21 @@ SEXP ALIKEC_merge_msg_2(SEXP msgs, struct VALC_settings set) {
         msg_c, i,
         PROTECT(
           mkString(
-            CSR_smprintf6(
-              set.nchar_max, "%s should %s %s (%s %s)",
-              CHAR(STRING_ELT(v_elt, 0)), CHAR(STRING_ELT(v_elt, 1)),
-              CHAR(STRING_ELT(v_elt, 2)), CHAR(STRING_ELT(v_elt, 3)),
-              CHAR(STRING_ELT(v_elt, 4)), ""
-      ) ) ) );
+              LENGTH(STRING_ELT(v_elt, 3)) || LENGTH(STRING_ELT(v_elt, 4))
+            ?
+              CSR_smprintf6(
+                set.nchar_max, "%s should %s %s (%s %s)",
+                CHAR(STRING_ELT(v_elt, 0)), CHAR(STRING_ELT(v_elt, 1)),
+                CHAR(STRING_ELT(v_elt, 2)), CHAR(STRING_ELT(v_elt, 3)),
+                CHAR(STRING_ELT(v_elt, 4)), ""
+              )
+            :
+              CSR_smprintf4(
+                set.nchar_max, "%s should %s %s",
+                CHAR(STRING_ELT(v_elt, 0)), CHAR(STRING_ELT(v_elt, 1)),
+                CHAR(STRING_ELT(v_elt, 2)), ""
+              )
+      ) ) );
       UNPROTECT(1);
     }
   }

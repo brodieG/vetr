@@ -81,6 +81,13 @@ SEXP VALC_check_assumptions() {
       R_NilValue, err_base,
       "SIZE_MAX not sufficiently larger than INT_MAX", ""
     );
+  // Because sometimes we use size_t to hold positive R_LEN_T_MAX values
+
+  if(SIZE_MAX <= R_LEN_T_MAX)
+    warningcall(
+      R_NilValue, err_base,
+      "SIZE_MAX smaller than or equal to R_LEN_T_MAX", ""
+    );
   return ScalarLogical(1);
 }
 // nocov end
