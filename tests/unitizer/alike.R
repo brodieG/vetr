@@ -525,4 +525,58 @@ unitizer_sect("Attributes", {
   obj.obj <- structure(1:10, a=1:3)
 
   alike(obj.tpl, obj.obj)
+
+  # issue93 More corner cases from the transition to sorted attribute checks
+
+  obj.tpl.a <- structure(integer(), class='foo')
+  obj.obj.a <- structure(matrix(1:3))
+
+  alike(obj.tpl.a, obj.obj.a)
+
+  obj.tpl.b <- structure(matrix(integer()), class='foo')
+  obj.obj.b <- structure(matrix(1:3))
+
+  alike(obj.tpl.b, obj.obj.b)
+
+  obj.tpl.c <- structure(matrix(integer()), class='foo')
+  obj.obj.c <- structure(matrix(1:3), class='foo')
+
+  alike(obj.tpl.c, obj.obj.c)
+
+  obj.tpl.d <- structure(integer(), class='foo')
+  obj.obj.d <- structure(matrix(1:3), class='foo')
+
+  alike(obj.tpl.d, obj.obj.d)
+
+  obj.tpl.e <- structure(integer())
+  obj.obj.e <- structure(matrix(1:3), class='foo')
+
+  alike(obj.tpl.e, obj.obj.e)
+
+  obj.tpl.f <- structure(integer(), a=integer())
+  obj.obj.f <- structure(matrix(1:3), z=integer(), class='foo')
+
+  alike(obj.tpl.f, obj.obj.f)
+
+  obj.tpl.g <- structure(integer(), a=integer())
+  obj.obj.g <- structure(matrix(1:3), z=integer(), class='foo')
+
+  alike(obj.tpl.g, obj.obj.g)
+
+  obj.tpl.h <- structure(matrix(integer()))
+  obj.obj.h <- structure(1:3, a=integer())
+
+  alike(obj.tpl.h, obj.obj.h)
+  alike(obj.tpl.h, obj.obj.h, settings=vetr_settings(attr.mode=2))
+
+  obj.tpl.i <- structure(character(), a=integer(), class='boo')
+  obj.obj.i <- structure(matrix(1:3))
+
+  alike(obj.tpl.i, obj.obj.i)
+
+  obj.tpl.k <- integer()
+  obj.obj.k <- matrix(1:3)
+
+  alike(obj.tpl.k, obj.obj.k)
+  alike(obj.tpl.k, obj.obj.k, settings=vetr_settings(attr.mode=2))
 })

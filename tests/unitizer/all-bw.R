@@ -1,5 +1,6 @@
 library(vetr)
 
+set.seed(42)
 x <- runif(100)
 x[1] <- 1
 x[2] <- 0
