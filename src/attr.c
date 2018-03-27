@@ -828,20 +828,20 @@ SEXP ALIKEC_compare_ts_ext(SEXP target, SEXP current) {
 struct ALIKEC_res ALIKEC_compare_levels(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
-  if(TYPEOF(target) == STRSXP && TYPEOF(current) == STRSXP) {
-    struct ALIKEC_res res = ALIKEC_compare_special_char_attrs_internal(
-      target, current, set, 0
-    );
-    PROTECT(res.wrap);
-    if(!res.success) {
-      SEXP lang_lvl = PROTECT(lang2(R_LevelsSymbol, R_NilValue));
-      ALIKEC_wrap_around(res.wrap, lang_lvl);
-      UNPROTECT(1);
-    }
+  if(TYPEOF(target) != STRSXP || TYPEOF(current) != STRSXP)
+    error("Internal Error: non-string levels; contact maintainer."); // nocov
+
+  struct ALIKEC_res res = ALIKEC_compare_special_char_attrs_internal(
+    target, current, set, 0
+  );
+  PROTECT(res.wrap);
+  if(!res.success) {
+    SEXP lang_lvl = PROTECT(lang2(R_LevelsSymbol, R_NilValue));
+    ALIKEC_wrap_around(res.wrap, lang_lvl);
     UNPROTECT(1);
-    return res;
   }
-  return ALIKEC_alike_attr(target, current, "levels", set);
+  UNPROTECT(1);
+  return res;
 }
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
