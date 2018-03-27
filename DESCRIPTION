@@ -23,7 +23,6 @@ VignetteBuilder: knitr
 Suggests:
     knitr,
     rmarkdown,
-    unitizer,
-    covr
+    unitizer
 RoxygenNote: 6.0.1
 Roxygen: list(markdown = TRUE)
