@@ -497,10 +497,12 @@ struct ALIKEC_res ALIKEC_alike_rec(
               res.dat.strings.target[0] = "variable `%s`";
               res.dat.strings.target[1] = var_name_chr;
             } else {
+              SEXP var_in_frame = PROTECT(findVarInFrame(target, var_name));
               res = ALIKEC_alike_rec(
-                findVarInFrame(target, var_name), var_cur_val, res.dat.rec, set
+                var_in_frame, var_cur_val, res.dat.rec, set
               );
               REPROTECT(res.wrap, ipx);
+              UNPROTECT(1);
               if(!res.success) {
                 res.dat.rec = ALIKEC_rec_ind_chr(res.dat.rec, var_name_chr);
             } }

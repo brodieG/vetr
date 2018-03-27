@@ -194,6 +194,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   struct ALIKEC_rec_track ALIKEC_rec_ind_num(
     struct ALIKEC_rec_track res, R_xlen_t ind
   );
+  const char * ALIKEC_mode_int(SEXP obj);
   SEXP ALIKEC_mode(SEXP obj);
   SEXP ALIKEC_test(SEXP obj);
   SEXP ALIKEC_test2(

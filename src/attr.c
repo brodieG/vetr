@@ -306,7 +306,7 @@ struct ALIKEC_res ALIKEC_compare_dims(
   if(target_len_cap > 1 && isVectorAtomic(tar_obj)) {
     if(current == R_NilValue) {  // current should be matrix/array
       class_err_target = target_len_cap > 2 ? "array" : "matrix";
-      class_err_actual = CHAR(asChar(ALIKEC_mode(cur_obj)));
+      class_err_actual = ALIKEC_mode_int(cur_obj);
     } else if(isVectorAtomic(cur_obj) && current_len_cap != target_len_cap) {
       // target is matrix/array
       class_err_target = target_len_cap > 2 ? "array" : "matrix";
@@ -316,16 +316,16 @@ struct ALIKEC_res ALIKEC_compare_dims(
       // In this case, target is atomic, but current is not, would normally be
       // caught by earlier type comparisons so shouldn't get here unless testing
       // explicitly
-      class_err_target = CHAR(asChar(ALIKEC_mode(tar_obj)));
+      class_err_target = ALIKEC_mode_int(tar_obj);
       class_err_actual = type2char(TYPEOF(cur_obj));
     }
   } else if (current_len_cap > 1 && isVectorAtomic(cur_obj)) {
     if(isVectorAtomic(tar_obj)) {
-      class_err_target = CHAR(asChar(ALIKEC_mode(tar_obj)));
+      class_err_target = ALIKEC_mode_int(tar_obj);
       class_err_actual = current_len_cap == 2 ? "matrix" : "array";
     } else {
-      class_err_target = CHAR(asChar(ALIKEC_mode(tar_obj)));
-      class_err_actual = CHAR(asChar(ALIKEC_mode(cur_obj)));
+      class_err_target = ALIKEC_mode_int(tar_obj);
+      class_err_actual = ALIKEC_mode_int(cur_obj);
     }
   }
   if(class_err_target[0]) {
@@ -980,8 +980,10 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
 
   SEXP tar_attr_sort = PROTECT(ALIKEC_list_as_sorted_vec(tar_attr));
   SEXP cur_attr_sort = PROTECT(ALIKEC_list_as_sorted_vec(cur_attr));
-  SEXP tar_names = getAttrib(tar_attr_sort, R_NamesSymbol);
-  SEXP cur_names = getAttrib(cur_attr_sort, R_NamesSymbol);
+  SEXP tar_names = PROTECT(getAttrib(tar_attr_sort, R_NamesSymbol));
+  SEXP cur_names = PROTECT(getAttrib(cur_attr_sort, R_NamesSymbol));
+  if(TYPEOF(tar_names) != STRSXP && TYPEOF(cur_names) != STRSXP)
+    error("Internal Error: attr data w/o names; contact maintainer."); // nocov
 
   R_xlen_t tar_attr_count = xlength(tar_attr_sort);
   R_xlen_t cur_attr_count = xlength(cur_attr_sort);
@@ -1229,7 +1231,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
       break;
   } }
   res_attr.dat.df = is_df;
-  UNPROTECT(4);
+  UNPROTECT(6);
   return res_attr;
 }
 /*-----------------------------------------------------------------------------\
