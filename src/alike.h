@@ -72,7 +72,6 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     SEXP * env_stack;
     int stack_size;
     int stack_ind;
-    int stack_mult;
     int stack_size_init;
     int no_rec;       // prevent further recursion into environments
     int debug;
