@@ -12,7 +12,7 @@
 
 <meta name="author" content="Brodie Gaslam" />
 
-<meta name="date" content="2018-02-28" />
+<meta name="date" content="2018-03-27" />
 
 <title>Parameter Validation Mechanisms in R</title>
 
@@ -20,46 +20,285 @@
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
-div.sourceCode { overflow-x: auto; }
-table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
-  margin: 0; padding: 0; vertical-align: baseline; border: none; }
-table.sourceCode { width: 100%; line-height: 100%; }
-td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
-td.sourceCode { padding-left: 5px; }
-code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code > span.dt { color: #902000; } /* DataType */
-code > span.dv { color: #40a070; } /* DecVal */
-code > span.bn { color: #40a070; } /* BaseN */
-code > span.fl { color: #40a070; } /* Float */
-code > span.ch { color: #4070a0; } /* Char */
-code > span.st { color: #4070a0; } /* String */
-code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code > span.ot { color: #007020; } /* Other */
-code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code > span.fu { color: #06287e; } /* Function */
-code > span.er { color: #ff0000; font-weight: bold; } /* Error */
-code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-code > span.cn { color: #880000; } /* Constant */
-code > span.sc { color: #4070a0; } /* SpecialChar */
-code > span.vs { color: #4070a0; } /* VerbatimString */
-code > span.ss { color: #bb6688; } /* SpecialString */
-code > span.im { } /* Import */
-code > span.va { color: #19177c; } /* Variable */
-code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code > span.op { color: #666666; } /* Operator */
-code > span.bu { } /* BuiltIn */
-code > span.ex { } /* Extension */
-code > span.pp { color: #bc7a00; } /* Preprocessor */
-code > span.at { color: #7d9029; } /* Attribute */
-code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; position: absolute; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; }
+pre.numberSource a.sourceLine:empty
+  { position: absolute; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: absolute; left: -5em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
 
 
-<link href="data:text/css;charset=utf-8,%0Abody%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E5%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0A%0Apadding%3A%204px%3B%0Awidth%3A%20100%25%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%201em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Ah3%2Esubtitle%20%7B%0Amargin%2Dtop%3A%20%2D23px%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23EEE%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%0A%7D%0Acode%20%7Bfont%2Dsize%3A%2085%25%3B%7D%0Apre%20%7B%0Aborder%3A%202px%20solid%20%23EEE%3B%0Aoverflow%3A%20auto%3B%0A%0Amargin%3A%205px%200px%3B%0Apadding%3A%205px%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Acolor%3A%20%23353%3B%0A%0A%7D%0Adiv%2EsourceCode%20pre%2C%20div%2EsourceCode%20code%20%7B%0Abackground%2Dcolor%3A%20%23FAFAFA%3B%0A%7D%0Adiv%2EsourceCode%20pre%7B%0A%0A%7D%0Adiv%2EsourceCode%20%2B%20pre%2C%0Adiv%2EsourceCode%20%2B%20div%2Ediffobj%5Fcontainer%20%7B%0Amargin%2Dtop%3A%20%2D5px%3B%0A%7D%0Adiv%2Ediffobj%5Fcontainer%20pre%7B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%2C%20h1%20%3E%20code%2C%20h2%20%3E%20code%2C%20h3%20%3E%20code%2C%0Ah4%20%3E%20code%2C%20h5%20%3E%20code%2C%20h6%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0Aline%2Dheight%3A%201%3B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Apadding%2Dbottom%3A%203px%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0Aborder%2Dbottom%3A%201px%20solid%20%23999%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23999%3B%0Apadding%2Dtop%3A%205px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Apadding%2Dtop%3A%205px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0A%0Acolor%3A%20%23777%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah4%2Eauthor%20%7Bdisplay%3A%20none%3B%7D%0Ah4%2Edate%20%7Bmargin%2Dtop%3A%20%2D20px%3B%7D%0Ah5%2C%20h6%20%7B%0A%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%232255dd%3B%0Afont%2Dweight%3A%20bold%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23555%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23555%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23555%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+<style type="text/css">
+body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.5;
+}
+#header {
+text-align: center;
+}
+#TOC {
+clear: both;
+
+padding: 4px;
+width: 100%;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 1em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+h3.subtitle {
+margin-top: -23px;
+}
+pre, code {
+background-color: #EEE;
+color: #333;
+white-space: pre-wrap; 
+
+}
+code {font-size: 85%;}
+pre {
+border: 2px solid #EEE;
+overflow: auto;
+
+margin: 5px 0px;
+padding: 5px 10px;
+}
+pre:not([class]) {
+color: #353;
+
+}
+div.sourceCode pre, div.sourceCode code {
+background-color: #FAFAFA;
+}
+div.sourceCode pre{
+
+}
+div.sourceCode + pre,
+div.sourceCode + div.diffobj_container {
+margin-top: -5px;
+}
+div.diffobj_container pre{
+line-height: 1.3;
+}
+
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+}
+p > code, li > code, h1 > code, h2 > code, h3 > code,
+h4 > code, h5 > code, h6 > code {
+padding: 2px 0px;
+line-height: 1;
+font-weight: bold;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+padding-bottom: 3px;
+font-size: 35px;
+line-height: 40px;
+border-bottom: 1px solid #999;
+}
+h2 {
+border-bottom: 1px solid #999;
+padding-top: 5px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+padding-top: 5px;
+font-size: 120%;
+}
+h4 {
+
+color: #777;
+font-size: 105%;
+}
+h4.author {display: none;}
+h4.date {margin-top: -20px;}
+h5, h6 {
+
+font-size: 105%;
+}
+a {
+color: #2255dd;
+font-weight: bold;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #555; } 
+code > span.fl { color: #555; } 
+code > span.ch { color: #555; } 
+code > span.st { color: #40a070; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
 
 </head>
 
@@ -70,7 +309,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Parameter Validation Mechanisms in R</h1>
 <h4 class="author"><em>Brodie Gaslam</em></h4>
-<h4 class="date"><em>2018-02-28</em></h4>
+<h4 class="date"><em>2018-03-27</em></h4>
 
 
 <div id="TOC">
@@ -108,7 +347,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="overview" class="section level2">
 <h2>Overview</h2>
 <div style="font-size: .8em; margin-top: -12px;">
-<p>| <a href="#top">Top</a> | <a href="#overview">Overview</a> | <a href="#details">Details</a> | <a href="#benchmarks">Benchmarks</a> | <a href="#appendix">Appendix</a> |</p>
+<div class="line-block"><a href="#top">Top</a> | <a href="#overview">Overview</a> | <a href="#details">Details</a> | <a href="#benchmarks">Benchmarks</a> | <a href="#appendix">Appendix</a></div>
 </div>
 <div id="introduction" class="section level3">
 <h3>Introduction</h3>
@@ -244,115 +483,115 @@ Fast
 <div id="comparison-details" class="section level2">
 <h2>Comparison Details</h2>
 <div style="font-size: .8em; margin-top: -12px;">
-<p>| <a href="#top">Top</a> | <a href="#overview">Overview</a> | <a href="#details">Details</a> | <a href="#benchmarks">Benchmarks</a> | <a href="#appendix">Appendix</a> |</p>
+<div class="line-block"><a href="#top">Top</a> | <a href="#overview">Overview</a> | <a href="#details">Details</a> | <a href="#benchmarks">Benchmarks</a> | <a href="#appendix">Appendix</a></div>
 </div>
 <div id="simple-parameters" class="section level3">
 <h3>Simple Parameters</h3>
 <p>We want to write a functions that accept a length two numeric vector with no missing values. To illustrate we use functions that enforce that requirement and do nothing else, starting with <code>stopifnot</code>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">simple_stopifnot &lt;-<span class="st"> </span>function(x)
-  <span class="kw">stopifnot</span>(<span class="kw">is.numeric</span>(x), <span class="kw">length</span>(x) ==<span class="st"> </span><span class="dv">2</span>, !<span class="kw">is.na</span>(x))</code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1">simple_stopifnot &lt;-<span class="st"> </span><span class="cf">function</span>(x)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">  <span class="kw">stopifnot</span>(<span class="kw">is.numeric</span>(x), <span class="kw">length</span>(x) <span class="op">==</span><span class="st"> </span><span class="dv">2</span>, <span class="op">!</span><span class="kw">is.na</span>(x))</a></code></pre></div>
 <p><code>vetr</code> looks similar on the surface:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">simple_vetr_a &lt;-<span class="st"> </span>function(x)
-  <span class="kw">vetr</span>(<span class="kw">is.numeric</span>(.) &amp;&amp;<span class="st"> </span><span class="kw">length</span>(.) ==<span class="st"> </span><span class="dv">2</span> &amp;&amp;<span class="st"> </span>!<span class="kw">is.na</span>(.))</code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">simple_vetr_a &lt;-<span class="st"> </span><span class="cf">function</span>(x)</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">  <span class="kw">vetr</span>(<span class="kw">is.numeric</span>(.) <span class="op">&amp;&amp;</span><span class="st"> </span><span class="kw">length</span>(.) <span class="op">==</span><span class="st"> </span><span class="dv">2</span> <span class="op">&amp;&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">is.na</span>(.))</a></code></pre></div>
 <p>The <code>vetr</code> arguments are matched to those of the enclosing function. As a result we reference <code>x</code> with <code>.</code>, and we must use <code>&amp;&amp;</code> instead of <code>,</code> to delimit our checks.</p>
 <p>Additionally, <code>vetr</code> introduces templates, so we can rewrite <code>simple_vetr_a</code> as:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">simple_vetr &lt;-<span class="st"> </span>function(x)
-  <span class="kw">vetr</span>(<span class="kw">numeric</span>(2L) &amp;&amp;<span class="st"> </span>!<span class="kw">is.na</span>(.))</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">simple_vetr &lt;-<span class="st"> </span><span class="cf">function</span>(x)</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">  <span class="kw">vetr</span>(<span class="kw">numeric</span>(2L) <span class="op">&amp;&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">is.na</span>(.))</a></code></pre></div>
 <p><code>numeric(2L) &amp;&amp; !is.na(.)</code> is a <a href="#vetting-expression">Vetting Expression</a> that contains the <a href="#templated-token">Template Token</a> <code>numeric(2L)</code>, and the <a href="#standard-token">Standard Token</a> <code>!is.na(.)</code>. <a href="#templated-token">Template Tokens</a> require that parameters match their structure (i.e. length, type, and attributes). <a href="#standard-token">Standard Tokens</a>, marked by the presence of the <code>.</code> symbol, are evaluated as they would be by <code>stopifnot</code>.</p>
 <p>Templates should be familiar to <code>vapply</code> users, but there are some wrinkles. For example zero-length templates like <code>numeric()</code> match any length objects. See <code>?vetr::alike</code> and <code>vignette('alike', 'vetr')</code> for details.</p>
 <p><code>asserthat</code> is like <code>stopifnot</code>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">simple_assertthat &lt;-<span class="st"> </span>function(x)
-  <span class="kw">assert_that</span>(<span class="kw">is.numeric</span>(x), <span class="kw">length</span>(x) ==<span class="st"> </span><span class="dv">2</span>, !<span class="kw">anyNA</span>(x))</code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1">simple_assertthat &lt;-<span class="st"> </span><span class="cf">function</span>(x)</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">  <span class="kw">assert_that</span>(<span class="kw">is.numeric</span>(x), <span class="kw">length</span>(x) <span class="op">==</span><span class="st"> </span><span class="dv">2</span>, <span class="op">!</span><span class="kw">anyNA</span>(x))</a></code></pre></div>
 <p><code>assertive</code> and <code>checkmate</code> rely on the <a href="#predicate-function">Predicate Functions</a> and the accompanying assertions they implement:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># assertive: 200+ simple Predicate Functions</span>
-simple_assertive &lt;-<span class="st"> </span>function(x) {
-  <span class="kw">assert_is_numeric</span>(x)
-  <span class="kw">assert_is_of_length</span>(x, <span class="dv">2</span>)
-  <span class="kw">assert_all_are_not_na</span>(x)
-}
-<span class="co"># checkmate: 40+ flexible/complex Predicate Functions</span>
-simple_checkmate &lt;-<span class="st"> </span>function(x)
-  <span class="kw">assertNumeric</span>(x, <span class="dt">any.missing=</span><span class="ot">FALSE</span>, <span class="dt">len=</span><span class="dv">2</span>)</code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co"># assertive: 200+ simple Predicate Functions</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">simple_assertive &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">  <span class="kw">assert_is_numeric</span>(x)</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">  <span class="kw">assert_is_of_length</span>(x, <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">  <span class="kw">assert_all_are_not_na</span>(x)</a>
+<a class="sourceLine" id="cb5-6" data-line-number="6">}</a>
+<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="co"># checkmate: 40+ flexible/complex Predicate Functions</span></a>
+<a class="sourceLine" id="cb5-8" data-line-number="8">simple_checkmate &lt;-<span class="st"> </span><span class="cf">function</span>(x)</a>
+<a class="sourceLine" id="cb5-9" data-line-number="9">  <span class="kw">assertNumeric</span>(x, <span class="dt">any.missing=</span><span class="ot">FALSE</span>, <span class="dt">len=</span><span class="dv">2</span>)</a></code></pre></div>
 <p>For this type of check the improvements from the third party packages seem marginal until we look at the result with an illegal parameter:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">simple_stopifnot</span>(pi)</code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">simple_stopifnot</span>(pi)</a></code></pre></div>
 <pre><code>Error: length(x) == 2 is not TRUE</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">simple_vetr</span>(pi)</code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="kw">simple_vetr</span>(pi)</a></code></pre></div>
 <pre><code>Error in simple_vetr(x = pi): For argument `x`, `length(pi)` should be 2 (is 1)</code></pre>
 <p>In addition to what our parameter is not, <code>vetr</code> tells you what it is, gives you the original call of the function, and gives you the input as it appears in the calling frame (i.e. <code>length(pi)</code> instead of <code>length(x)</code>).</p>
 <p><code>assertthat</code> makes the error message friendlier, but does not add information:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">simple_assertthat</span>(pi)</code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="kw">simple_assertthat</span>(pi)</a></code></pre></div>
 <pre><code>Error: length(x) not equal to 2</code></pre>
 <p>The other packages improve on the error message, in particular by telling you what the object is in addition to what it is not:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">simple_assertive</span>(pi)</code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="kw">simple_assertive</span>(pi)</a></code></pre></div>
 <pre><code>Error in simple_assertive(pi): is_of_length : x has length 1, not 2.</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">simple_checkmate</span>(pi)</code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="kw">simple_checkmate</span>(pi)</a></code></pre></div>
 <pre><code>Error in rmarkdown::render(&quot;extra/compare.Rmd&quot;): Assertion on 'x' failed: Must have length 2, but has length 1.</code></pre>
 </div>
 <div id="complex-objects" class="section level3">
 <h3>Complex Objects</h3>
 <p>Here we wish to verify that an input conforms to the structure of the <code>iris</code> built-in data set.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># make a bad version of iris</span>
-iris.fake &lt;-<span class="st"> </span>iris
-<span class="kw">levels</span>(iris.fake$Species)[<span class="dv">3</span>] &lt;-<span class="st"> &quot;sibirica&quot;</span>   <span class="co"># tweak levels</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="co"># make a bad version of iris</span></a>
+<a class="sourceLine" id="cb16-2" data-line-number="2">iris.fake &lt;-<span class="st"> </span>iris</a>
+<a class="sourceLine" id="cb16-3" data-line-number="3"><span class="kw">levels</span>(iris.fake<span class="op">$</span>Species)[<span class="dv">3</span>] &lt;-<span class="st"> &quot;sibirica&quot;</span>   <span class="co"># tweak levels</span></a></code></pre></div>
 <p>Then, with <code>stopifnot</code>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">iris.col.classes &lt;-<span class="st"> </span><span class="kw">lapply</span>(iris, class)
-
-complex_stopifnot &lt;-<span class="st"> </span>function(x) {
-  <span class="kw">stopifnot</span>(
-    <span class="kw">is.data.frame</span>(x),                     <span class="co"># this only checks class</span>
-    <span class="kw">is.list</span>(x),
-    <span class="kw">length</span>(x) ==<span class="st"> </span><span class="kw">length</span>(iris),
-    <span class="kw">identical</span>(<span class="kw">lapply</span>(x, class), iris.col.classes),
-    <span class="kw">is.integer</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>)),
-    <span class="kw">identical</span>(<span class="kw">names</span>(x), <span class="kw">names</span>(iris)),
-    <span class="kw">identical</span>(<span class="kw">typeof</span>(x$Species), <span class="st">&quot;integer&quot;</span>),
-    <span class="kw">identical</span>(<span class="kw">levels</span>(x$Species), <span class="kw">levels</span>(iris$Species))
-) }
-<span class="kw">complex_stopifnot</span>(iris.fake)</code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1">iris.col.classes &lt;-<span class="st"> </span><span class="kw">lapply</span>(iris, class)</a>
+<a class="sourceLine" id="cb17-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb17-3" data-line-number="3">complex_stopifnot &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</a>
+<a class="sourceLine" id="cb17-4" data-line-number="4">  <span class="kw">stopifnot</span>(</a>
+<a class="sourceLine" id="cb17-5" data-line-number="5">    <span class="kw">is.data.frame</span>(x),                     <span class="co"># this only checks class</span></a>
+<a class="sourceLine" id="cb17-6" data-line-number="6">    <span class="kw">is.list</span>(x),</a>
+<a class="sourceLine" id="cb17-7" data-line-number="7">    <span class="kw">length</span>(x) <span class="op">==</span><span class="st"> </span><span class="kw">length</span>(iris),</a>
+<a class="sourceLine" id="cb17-8" data-line-number="8">    <span class="kw">identical</span>(<span class="kw">lapply</span>(x, class), iris.col.classes),</a>
+<a class="sourceLine" id="cb17-9" data-line-number="9">    <span class="kw">is.integer</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>)),</a>
+<a class="sourceLine" id="cb17-10" data-line-number="10">    <span class="kw">identical</span>(<span class="kw">names</span>(x), <span class="kw">names</span>(iris)),</a>
+<a class="sourceLine" id="cb17-11" data-line-number="11">    <span class="kw">identical</span>(<span class="kw">typeof</span>(x<span class="op">$</span>Species), <span class="st">&quot;integer&quot;</span>),</a>
+<a class="sourceLine" id="cb17-12" data-line-number="12">    <span class="kw">identical</span>(<span class="kw">levels</span>(x<span class="op">$</span>Species), <span class="kw">levels</span>(iris<span class="op">$</span>Species))</a>
+<a class="sourceLine" id="cb17-13" data-line-number="13">) }</a>
+<a class="sourceLine" id="cb17-14" data-line-number="14"><span class="kw">complex_stopifnot</span>(iris.fake)</a></code></pre></div>
 <pre><code>Error: identical(levels(x$Species), levels(iris$Species)) is not TRUE</code></pre>
 <p>While some of these checks may seem over-the-top, R’s informality with respect to S3 classes make them necessary. For example, nothing guarantees that an object with class “data.frame” has type “list” as it should.</p>
 <p><code>vetr</code> carries out all those checks and more by inferring them from a template:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># zero row DF contains structure info only, and matches any # of rows</span>
-iris.template &lt;-<span class="st"> </span>iris[<span class="dv">0</span>,]
-
-complex_vetr &lt;-<span class="st"> </span>function(x) <span class="kw">vetr</span>(iris.template)
-<span class="kw">complex_vetr</span>(iris.fake)</code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="co"># zero row DF contains structure info only, and matches any # of rows</span></a>
+<a class="sourceLine" id="cb19-2" data-line-number="2">iris.template &lt;-<span class="st"> </span>iris[<span class="dv">0</span>,]</a>
+<a class="sourceLine" id="cb19-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb19-4" data-line-number="4">complex_vetr &lt;-<span class="st"> </span><span class="cf">function</span>(x) <span class="kw">vetr</span>(iris.template)</a>
+<a class="sourceLine" id="cb19-5" data-line-number="5"><span class="kw">complex_vetr</span>(iris.fake)</a></code></pre></div>
 <pre><code>Error in complex_vetr(x = iris.fake): For argument `x`, `levels(iris.fake$Species)[3]` should be &quot;virginica&quot; (is &quot;sibirica&quot;)</code></pre>
 <p><code>vetr</code> recursively traverses the template and the function parameter in parallel and checks each sub element of the latter against the former. The error messages are also better. Notice how you can copy all of or part of <code>levels(iris.fake$Species)[3]</code> from the message into the R prompt for further examination.</p>
 <p><code>checkmate</code> is reasonably succinct:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">complex_checkmate &lt;-<span class="st"> </span>function(x) {
-  <span class="kw">assertDataFrame</span>(x, <span class="dt">types=</span><span class="kw">unlist</span>(iris.col.classes), <span class="dt">ncols=</span><span class="dv">5</span>)
-  <span class="kw">assertTRUE</span>(<span class="kw">is.list</span>(x))
-  <span class="kw">assertInteger</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>))
-  <span class="kw">assertNames</span>(<span class="kw">names</span>(x), <span class="dt">identical.to=</span><span class="kw">names</span>(iris))
-  <span class="kw">assertFactor</span>(x$Species, <span class="dt">levels=</span><span class="kw">levels</span>(iris$Species))
-}
-<span class="kw">complex_checkmate</span>(iris.fake)</code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" data-line-number="1">complex_checkmate &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</a>
+<a class="sourceLine" id="cb21-2" data-line-number="2">  <span class="kw">assertDataFrame</span>(x, <span class="dt">types=</span><span class="kw">unlist</span>(iris.col.classes), <span class="dt">ncols=</span><span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb21-3" data-line-number="3">  <span class="kw">assertTRUE</span>(<span class="kw">is.list</span>(x))</a>
+<a class="sourceLine" id="cb21-4" data-line-number="4">  <span class="kw">assertInteger</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>))</a>
+<a class="sourceLine" id="cb21-5" data-line-number="5">  <span class="kw">assertNames</span>(<span class="kw">names</span>(x), <span class="dt">identical.to=</span><span class="kw">names</span>(iris))</a>
+<a class="sourceLine" id="cb21-6" data-line-number="6">  <span class="kw">assertFactor</span>(x<span class="op">$</span>Species, <span class="dt">levels=</span><span class="kw">levels</span>(iris<span class="op">$</span>Species))</a>
+<a class="sourceLine" id="cb21-7" data-line-number="7">}</a>
+<a class="sourceLine" id="cb21-8" data-line-number="8"><span class="kw">complex_checkmate</span>(iris.fake)</a></code></pre></div>
 <pre><code>Error in rmarkdown::render(&quot;extra/compare.Rmd&quot;): Assertion on 'x$Species' failed: Must have levels: setosa,versicolor,virginica.</code></pre>
 <p><code>assertive</code>, and <code>assertthat</code> end up with the same number of explicit checks as <code>stopifnot</code>, and with similar error messages so we omit them here. See the code appendix for those implementations.</p>
 </div>
 <div id="vector-values" class="section level3">
 <h3>Vector Values</h3>
 <p>Suppose we wish to ensure our input is a strictly positive numeric vector with no missing values. With <code>vec &lt;- -1:1</code> and <code>stopifnot</code> we would use:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vector_stopifnot &lt;-<span class="st"> </span>function(x) <span class="kw">stopifnot</span>(<span class="kw">is.numeric</span>(x), !<span class="kw">anyNA</span>(x), <span class="kw">all</span>(x &gt;<span class="st"> </span><span class="dv">0</span>))
-<span class="kw">vector_stopifnot</span>(vec)</code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" data-line-number="1">vector_stopifnot &lt;-<span class="st"> </span><span class="cf">function</span>(x) <span class="kw">stopifnot</span>(<span class="kw">is.numeric</span>(x), <span class="op">!</span><span class="kw">anyNA</span>(x), <span class="kw">all</span>(x <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>))</a>
+<a class="sourceLine" id="cb23-2" data-line-number="2"><span class="kw">vector_stopifnot</span>(vec)</a></code></pre></div>
 <pre><code>Error: all(x &gt; 0) is not TRUE</code></pre>
 <p><code>vetr</code> implements the <code>all_bw</code> function primarily for speed, but it also generates more useful error messages:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vector_vetr &lt;-<span class="st"> </span>function(x) <span class="kw">vetr</span>(<span class="kw">numeric</span>() &amp;&amp;<span class="st"> </span><span class="kw">all_bw</span>(., <span class="dt">lo=</span><span class="dv">0</span>, <span class="dt">bounds=</span><span class="st">&quot;(]&quot;</span>))
-<span class="kw">vector_vetr</span>(vec)</code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1">vector_vetr &lt;-<span class="st"> </span><span class="cf">function</span>(x) <span class="kw">vetr</span>(<span class="kw">numeric</span>() <span class="op">&amp;&amp;</span><span class="st"> </span><span class="kw">all_bw</span>(., <span class="dt">lo=</span><span class="dv">0</span>, <span class="dt">bounds=</span><span class="st">&quot;(]&quot;</span>))</a>
+<a class="sourceLine" id="cb25-2" data-line-number="2"><span class="kw">vector_vetr</span>(vec)</a></code></pre></div>
 <pre><code>Error in vector_vetr(x = vec): For argument `x`, `all_bw(vec, lo = 0, bounds = &quot;(]&quot;)` is not TRUE (is chr: &quot;`-1` at index 1 not in `(0,Inf]`&quot;)</code></pre>
 <p><code>asserthat</code> is like <code>stopifnot</code>, with a better error message:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vector_assertthat &lt;-<span class="st"> </span>function(x)
-  <span class="kw">assert_that</span>(<span class="kw">is.numeric</span>(x), !<span class="kw">anyNA</span>(x), <span class="kw">all</span>(x &gt;<span class="st"> </span><span class="dv">0</span>))
-<span class="kw">vector_assertthat</span>(vec)</code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1">vector_assertthat &lt;-<span class="st"> </span><span class="cf">function</span>(x)</a>
+<a class="sourceLine" id="cb27-2" data-line-number="2">  <span class="kw">assert_that</span>(<span class="kw">is.numeric</span>(x), <span class="op">!</span><span class="kw">anyNA</span>(x), <span class="kw">all</span>(x <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>))</a>
+<a class="sourceLine" id="cb27-3" data-line-number="3"><span class="kw">vector_assertthat</span>(vec)</a></code></pre></div>
 <pre><code>Error: Elements 1, 2 of x &gt; 0 are not true</code></pre>
 <p><code>checkmate</code> implements a powerful notation for checking vectors:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vector_checkmate &lt;-<span class="st"> </span>function(x) <span class="kw">qassert</span>(x, <span class="st">&quot;N*(0,]&quot;</span>)
-<span class="kw">vector_checkmate</span>(vec)</code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1">vector_checkmate &lt;-<span class="st"> </span><span class="cf">function</span>(x) <span class="kw">qassert</span>(x, <span class="st">&quot;N*(0,]&quot;</span>)</a>
+<a class="sourceLine" id="cb29-2" data-line-number="2"><span class="kw">vector_checkmate</span>(vec)</a></code></pre></div>
 <pre><code>Error in rmarkdown::render(&quot;extra/compare.Rmd&quot;): Assertion on 'x' failed. All elements must be &gt; 0.</code></pre>
 <p><code>assertive</code> has a custom function for the job, with a particularly helpful error message:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vector_assertive &lt;-<span class="st"> </span>function(x) <span class="kw">assert_all_are_positive</span>(x)
-<span class="kw">vector_assertive</span>(vec)</code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" data-line-number="1">vector_assertive &lt;-<span class="st"> </span><span class="cf">function</span>(x) <span class="kw">assert_all_are_positive</span>(x)</a>
+<a class="sourceLine" id="cb31-2" data-line-number="2"><span class="kw">vector_assertive</span>(vec)</a></code></pre></div>
 <pre><code>Error in vector_assertive(vec): is_positive : x contains non-positive values.
 There were 2 failures:
   Position Value   Cause
@@ -362,15 +601,15 @@ There were 2 failures:
 <div id="compound-checks" class="section level3">
 <h3>Compound Checks</h3>
 <p>If you wish to build re-usable complex checks with <code>stopifnot</code>, <code>asserthat</code>, <code>assertive</code>, and <code>checkmate</code> you do so by writing new functions. <code>vetr</code> implements a special type of programmable <a href="#nse">Non Standard Evaluation</a>. Here we write a <a href="#vetting-expression">Vetting Expression</a> that accepts either a square numeric matrix, or a scalar numeric:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sqr.mx &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">ncol</span>(.) ==<span class="st"> </span><span class="kw">nrow</span>(.))
-num.mx &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">numeric</span>(), <span class="dv">0</span>, <span class="dv">0</span>)       <span class="co"># 0 x 0 matrix, matches any matrix</span>
-sqr.num.mx &lt;-<span class="st"> </span><span class="kw">quote</span>(sqr.mx &amp;&amp;<span class="st"> </span>num.mx)
-sqr.num.mx.or.sclr.num &lt;-<span class="st"> </span><span class="kw">quote</span>(sqr.num.mx ||<span class="st"> </span><span class="kw">numeric</span>(1L))
-
-compound_vetr &lt;-<span class="st"> </span>function(x) <span class="kw">vetr</span>(sqr.num.mx.or.sclr.num)
-
-rect.mx &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span>:<span class="dv">12</span>, <span class="dv">3</span>)
-<span class="kw">compound_vetr</span>(rect.mx)</code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" data-line-number="1">sqr.mx &lt;-<span class="st"> </span><span class="kw">quote</span>(<span class="kw">ncol</span>(.) <span class="op">==</span><span class="st"> </span><span class="kw">nrow</span>(.))</a>
+<a class="sourceLine" id="cb33-2" data-line-number="2">num.mx &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">numeric</span>(), <span class="dv">0</span>, <span class="dv">0</span>)       <span class="co"># 0 x 0 matrix, matches any matrix</span></a>
+<a class="sourceLine" id="cb33-3" data-line-number="3">sqr.num.mx &lt;-<span class="st"> </span><span class="kw">quote</span>(sqr.mx <span class="op">&amp;&amp;</span><span class="st"> </span>num.mx)</a>
+<a class="sourceLine" id="cb33-4" data-line-number="4">sqr.num.mx.or.sclr.num &lt;-<span class="st"> </span><span class="kw">quote</span>(sqr.num.mx <span class="op">||</span><span class="st"> </span><span class="kw">numeric</span>(1L))</a>
+<a class="sourceLine" id="cb33-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb33-6" data-line-number="6">compound_vetr &lt;-<span class="st"> </span><span class="cf">function</span>(x) <span class="kw">vetr</span>(sqr.num.mx.or.sclr.num)</a>
+<a class="sourceLine" id="cb33-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb33-8" data-line-number="8">rect.mx &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">12</span>, <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb33-9" data-line-number="9"><span class="kw">compound_vetr</span>(rect.mx)</a></code></pre></div>
 <pre><code>Error in compound_vetr(x = rect.mx): For argument `x` at least one of these should pass:
   - `length(rect.mx)` should be 1 (is 12)
   - `ncol(rect.mx) == nrow(rect.mx)` is not TRUE (FALSE)</code></pre>
@@ -380,7 +619,7 @@ rect.mx &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class
 <div id="benchmarks" class="section level2">
 <h2>Benchmarks</h2>
 <div style="font-size: .8em; margin-top: -12px;">
-<p>| <a href="#top">Top</a> | <a href="#overview">Overview</a> | <a href="#details">Details</a> | <a href="#benchmarks">Benchmarks</a> | <a href="#appendix">Appendix</a> |</p>
+<div class="line-block"><a href="#top">Top</a> | <a href="#overview">Overview</a> | <a href="#details">Details</a> | <a href="#benchmarks">Benchmarks</a> | <a href="#appendix">Appendix</a></div>
 </div>
 <div id="detail-benchmarks" class="section level3">
 <h3>Detail Benchmarks</h3>
@@ -389,64 +628,64 @@ rect.mx &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class
 <pre><code>Unit: microseconds, neval:   100
 
                      expr      lq  median      uq    mean
-5  simple_checkmate(nums)     7.2     8.3    10.0    19.0
-1  simple_stopifnot(nums)    14.1    15.4    18.5    60.8
-2       simple_vetr(nums)    27.5    30.3    35.2    53.7
-4 simple_assertthat(nums)    53.9    58.9    72.1   103.2
-3  simple_assertive(nums)   719.1   800.7   851.0   890.9</code></pre>
+5  simple_checkmate(nums)     5.4     8.2    10.3    20.0
+1  simple_stopifnot(nums)    12.2    15.2    18.5    40.4
+2       simple_vetr(nums)    23.1    29.3    32.3    49.0
+4 simple_assertthat(nums)    48.0    56.3    67.2    93.1
+3  simple_assertive(nums)   709.1   738.8   825.5   816.8</code></pre>
 <p><code>stopifnot</code> and <code>checkmate</code> lead the way, with <code>vetr</code> not too far behind.</p>
 <p>For complex objects <code>vetr</code> takes the lead:</p>
 <pre><code>Unit: microseconds, neval:   100
 
                       expr        lq    median        uq      mean
-5       complex_vetr(iris)      33.1      37.2      42.3      48.0
-4  complex_stopifnot(iris)      73.2      77.2      84.4     167.9
-2 complex_assertthat(iris)     174.4     180.9     191.2     275.6
-3  complex_checkmate(iris)     262.9     280.1     312.6     355.0
-1  complex_assertive(iris)   2,495.1   2,536.3   2,638.4   2,798.2</code></pre>
+5       complex_vetr(iris)      34.2      45.3      54.0      57.6
+4  complex_stopifnot(iris)      73.9      85.1      99.5     193.2
+2 complex_assertthat(iris)     174.2     196.2     225.0     309.9
+3  complex_checkmate(iris)     265.1     313.3     352.3     395.9
+1  complex_assertive(iris)   2,644.5   2,873.1   3,129.5   3,151.3</code></pre>
 <p><code>vetr</code> is the fastest option for checking that values in a long vector are in range:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">str.pos.vec &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="fl">5e5</span>) +<span class="st"> </span><span class="dv">1</span>  <span class="co"># test with a 500K long vector</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb37-1" data-line-number="1">str.pos.vec &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="fl">5e5</span>) <span class="op">+</span><span class="st"> </span><span class="dv">1</span>  <span class="co"># test with a 500K long vector</span></a></code></pre></div>
 <pre><code>Unit: microseconds, neval:   100
 
                             expr        lq    median        uq      mean
-4       vector_vetr(str.pos.vec)     433.8     446.3     456.7     503.2
-2  vector_checkmate(str.pos.vec)   1,514.7   1,536.2   1,554.9   1,613.2
-1 vector_assertthat(str.pos.vec)   2,611.7   2,682.0   3,957.3   3,459.7
-3  vector_stopifnot(str.pos.vec)   2,512.1   2,790.8   3,474.3   3,344.6</code></pre>
+4       vector_vetr(str.pos.vec)     458.0     476.8     502.1     515.6
+2  vector_checkmate(str.pos.vec)   1,722.2   1,770.8   1,865.0   1,821.5
+3  vector_stopifnot(str.pos.vec)   2,702.1   2,986.2   3,837.1   3,703.9
+1 vector_assertthat(str.pos.vec)   2,852.8   3,408.0   3,937.9   3,897.2</code></pre>
 <p>This is primarily because we use <code>vetr::all_bw</code> instead of the semantically similar <code>isTRUE(all(. &gt; 0))</code> expression. <code>all_bw</code> is implemented in C and avoids the intermediate vectors required to evaluate the standard R version. <code>checkmate</code> does the same with <code>qassert</code>.</p>
 <p><code>assertive</code> is substantially slower so we benchmark it separately:</p>
 <pre><code>Unit: milliseconds, neval:   5
 
-                           expr      lq  median    uq  mean
-1 vector_assertive(str.pos.vec)   699.5   703.1   829   873</code></pre>
+                           expr      lq  median      uq    mean
+1 vector_assertive(str.pos.vec)   790.2   812.1   878.3   845.6</code></pre>
 <p>If your functions will never be run thousands of times then you probably do not need to worry about the differences shown here. However, general purpose parameter check functions should be compatible with functions that are, and in those cases microseconds matter.</p>
 </div>
 <div id="making-vetr-faster" class="section level3">
 <h3>Making <code>vetr</code> Faster</h3>
 <p>We made a design choice with <code>vetr</code> that the overhead associated with running two <code>match.call</code> calls was worth the features it allowed us to implement. In some cases even those ~10 microseconds are too much. For those you can use <code>vet</code> which is a general purpose object checker that uses <a href="#vetting-expression">Vetting Expressions</a> just like <code>vetr</code>, or go even further and call <code>vetr::alike</code> directly to do template comparisons:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">simple_vet &lt;-<span class="st"> </span>function(x) <span class="kw">vet</span>(<span class="kw">numeric</span>(2L) &amp;&amp;<span class="st"> </span>!<span class="kw">anyNA</span>(.), x, <span class="dt">stop=</span><span class="ot">TRUE</span>)
-<span class="kw">simple_vet</span>(pi)</code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb40-1" data-line-number="1">simple_vet &lt;-<span class="st"> </span><span class="cf">function</span>(x) <span class="kw">vet</span>(<span class="kw">numeric</span>(2L) <span class="op">&amp;&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">anyNA</span>(.), x, <span class="dt">stop=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb40-2" data-line-number="2"><span class="kw">simple_vet</span>(pi)</a></code></pre></div>
 <pre><code>Error in vet(numeric(2L) &amp;&amp; !anyNA(.), x, stop = TRUE): `length(x)` should be 2 (is 1)</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">simple_alike &lt;-<span class="st"> </span>function(x) {
-  if(!<span class="kw">isTRUE</span>(msg &lt;-<span class="st"> </span><span class="kw">alike</span>(<span class="kw">numeric</span>(2L), x))) <span class="kw">stop</span>(<span class="st">&quot;Argument `x` invalid: &quot;</span>, msg)
-  if(<span class="kw">anyNA</span>(x)) <span class="kw">stop</span>(<span class="st">&quot;Argument `x` contains NAs&quot;</span>)
-}
-<span class="kw">simple_alike</span>(pi)</code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb42-1" data-line-number="1">simple_alike &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</a>
+<a class="sourceLine" id="cb42-2" data-line-number="2">  <span class="cf">if</span>(<span class="op">!</span><span class="kw">isTRUE</span>(msg &lt;-<span class="st"> </span><span class="kw">alike</span>(<span class="kw">numeric</span>(2L), x))) <span class="kw">stop</span>(<span class="st">&quot;Argument `x` invalid: &quot;</span>, msg)</a>
+<a class="sourceLine" id="cb42-3" data-line-number="3">  <span class="cf">if</span>(<span class="kw">anyNA</span>(x)) <span class="kw">stop</span>(<span class="st">&quot;Argument `x` contains NAs&quot;</span>)</a>
+<a class="sourceLine" id="cb42-4" data-line-number="4">}</a>
+<a class="sourceLine" id="cb42-5" data-line-number="5"><span class="kw">simple_alike</span>(pi)</a></code></pre></div>
 <pre><code>Error in simple_alike(pi): Argument `x` invalid: `length(x)` should be 2 (is 1)</code></pre>
 <p>The error messages / ease of use degrade, but we do improve our timings (again, with <code>nums &lt;- runif(2)</code>):</p>
 <pre><code>Unit: microseconds, neval:   10,000
 
                     expr     lq median     uq   mean
-3 simple_checkmate(nums)    4.8    5.5    6.1    5.7
-4     simple_alike(nums)    5.1    5.6    6.1    6.4
-1       simple_vet(nums)   12.1   12.8   14.7   19.6
-2      simple_vetr(nums)   20.5   21.5   24.1   26.2</code></pre>
+3 simple_checkmate(nums)    4.3    4.7    5.5    5.6
+4     simple_alike(nums)    4.3    4.7    5.5    5.9
+1       simple_vet(nums)   10.9   11.6   13.2   16.9
+2      simple_vetr(nums)   18.5   19.5   21.9   27.4</code></pre>
 </div>
 </div>
 <div id="conclusions" class="section level2">
 <h2>Conclusions</h2>
 <div style="font-size: .8em; margin-top: -12px;">
-<p>| <a href="#top">Top</a> | <a href="#overview">Overview</a> | <a href="#details">Details</a> | <a href="#benchmarks">Benchmarks</a> | <a href="#appendix">Appendix</a> |</p>
+<div class="line-block"><a href="#top">Top</a> | <a href="#overview">Overview</a> | <a href="#details">Details</a> | <a href="#benchmarks">Benchmarks</a> | <a href="#appendix">Appendix</a></div>
 </div>
 <p>Take these with a grain of salt, as they are written by the <code>vetr</code> author:</p>
 <p>In favor of <code>vetr</code>:</p>
@@ -464,7 +703,7 @@ rect.mx &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class
 <div id="appendix" class="section level2">
 <h2>Appendix</h2>
 <div style="font-size: .8em; margin-top: -12px;">
-<p>| <a href="#top">Top</a> | <a href="#overview">Overview</a> | <a href="#details">Details</a> | <a href="#benchmarks">Benchmarks</a> | <a href="#appendix">Appendix</a> |</p>
+<div class="line-block"><a href="#top">Top</a> | <a href="#overview">Overview</a> | <a href="#details">Details</a> | <a href="#benchmarks">Benchmarks</a> | <a href="#appendix">Appendix</a></div>
 </div>
 <div id="definitions" class="section level3">
 <h3>Definitions</h3>
@@ -534,61 +773,61 @@ Component piece of <a href="#vetting-expression">Vetting Expressions</a>. May be
 <div id="benchmarking-function" class="section level4">
 <h4>Benchmarking Function</h4>
 <p>We use a thin wrapper around <code>microbenchmark</code>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mb &lt;-<span class="st"> </span>function(...) {
-  mb.call &lt;-<span class="st"> </span><span class="kw">match.call</span>()
-  mb.call[[<span class="dv">1</span>]] &lt;-<span class="st"> </span><span class="kw">quote</span>(microbenchmark::microbenchmark)
-  <span class="kw">gc</span>()
-  mb.dat &lt;-<span class="st"> </span><span class="kw">eval</span>(mb.call, <span class="dt">envir=</span><span class="kw">parent.frame</span>())
-  mb.res &lt;-<span class="st"> </span><span class="kw">summary</span>(mb.dat)
-  mb.res &lt;-<span class="st"> </span>mb.res[<span class="kw">order</span>(mb.res$median), ]
-  mb.res[, -<span class="dv">1</span>] &lt;-<span class="st"> </span><span class="kw">lapply</span>(
-    mb.res[, -<span class="dv">1</span>], function(x) <span class="kw">sprintf</span>(<span class="st">&quot;  %s&quot;</span>, <span class="kw">format</span>(<span class="kw">round</span>(x, <span class="dv">1</span>), <span class="dt">big.mark=</span><span class="st">&quot;,&quot;</span>))
-  )
-  <span class="kw">cat</span>(
-    <span class="kw">sprintf</span>(<span class="st">&quot;Unit: %s, neval: %s</span><span class="ch">\n\n</span><span class="st">&quot;</span>, <span class="kw">attr</span>(mb.res, <span class="st">'unit'</span>), mb.res$neval[<span class="dv">1</span>])
-  )
-  <span class="kw">print</span>(mb.res[, <span class="kw">c</span>(<span class="st">'expr'</span>, <span class="st">'lq'</span>, <span class="st">'median'</span>, <span class="st">'uq'</span>, <span class="st">'mean'</span>)], <span class="dt">quote=</span><span class="ot">FALSE</span>)
-}</code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb45-1" data-line-number="1">mb &lt;-<span class="st"> </span><span class="cf">function</span>(...) {</a>
+<a class="sourceLine" id="cb45-2" data-line-number="2">  mb.call &lt;-<span class="st"> </span><span class="kw">match.call</span>()</a>
+<a class="sourceLine" id="cb45-3" data-line-number="3">  mb.call[[<span class="dv">1</span>]] &lt;-<span class="st"> </span><span class="kw">quote</span>(microbenchmark<span class="op">::</span>microbenchmark)</a>
+<a class="sourceLine" id="cb45-4" data-line-number="4">  <span class="kw">gc</span>()</a>
+<a class="sourceLine" id="cb45-5" data-line-number="5">  mb.dat &lt;-<span class="st"> </span><span class="kw">eval</span>(mb.call, <span class="dt">envir=</span><span class="kw">parent.frame</span>())</a>
+<a class="sourceLine" id="cb45-6" data-line-number="6">  mb.res &lt;-<span class="st"> </span><span class="kw">summary</span>(mb.dat)</a>
+<a class="sourceLine" id="cb45-7" data-line-number="7">  mb.res &lt;-<span class="st"> </span>mb.res[<span class="kw">order</span>(mb.res<span class="op">$</span>median), ]</a>
+<a class="sourceLine" id="cb45-8" data-line-number="8">  mb.res[, <span class="dv">-1</span>] &lt;-<span class="st"> </span><span class="kw">lapply</span>(</a>
+<a class="sourceLine" id="cb45-9" data-line-number="9">    mb.res[, <span class="dv">-1</span>], <span class="cf">function</span>(x) <span class="kw">sprintf</span>(<span class="st">&quot;  %s&quot;</span>, <span class="kw">format</span>(<span class="kw">round</span>(x, <span class="dv">1</span>), <span class="dt">big.mark=</span><span class="st">&quot;,&quot;</span>))</a>
+<a class="sourceLine" id="cb45-10" data-line-number="10">  )</a>
+<a class="sourceLine" id="cb45-11" data-line-number="11">  <span class="kw">cat</span>(</a>
+<a class="sourceLine" id="cb45-12" data-line-number="12">    <span class="kw">sprintf</span>(<span class="st">&quot;Unit: %s, neval: %s</span><span class="ch">\n\n</span><span class="st">&quot;</span>, <span class="kw">attr</span>(mb.res, <span class="st">'unit'</span>), mb.res<span class="op">$</span>neval[<span class="dv">1</span>])</a>
+<a class="sourceLine" id="cb45-13" data-line-number="13">  )</a>
+<a class="sourceLine" id="cb45-14" data-line-number="14">  <span class="kw">print</span>(mb.res[, <span class="kw">c</span>(<span class="st">'expr'</span>, <span class="st">'lq'</span>, <span class="st">'median'</span>, <span class="st">'uq'</span>, <span class="st">'mean'</span>)], <span class="dt">quote=</span><span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb45-15" data-line-number="15">}</a></code></pre></div>
 </div>
 <div id="complex-objects-for-other-packages" class="section level4">
 <h4>Complex Objects for Other Packages</h4>
 <p>These are the implementations we omitted from the iris checks in the <a href="#details">details section</a>.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">complex_assertive &lt;-<span class="st"> </span>function(x) {
-  <span class="kw">assert_is_list</span>(x)
-  <span class="kw">assert_all_are_equal_to</span>(<span class="kw">length</span>(x), <span class="dv">5</span>)
-  <span class="kw">assert_is_integer</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>))
-  <span class="kw">assert_is_data.frame</span>(x)
-  <span class="kw">assert_is_identical_to_true</span>(<span class="kw">identical</span>(iris.col.classes, <span class="kw">lapply</span>(x, class)))
-  <span class="kw">assert_is_identical_to_true</span>(<span class="kw">identical</span>(<span class="kw">names</span>(x), <span class="kw">names</span>(iris)))
-  <span class="kw">assert_is_identical_to_true</span>(<span class="kw">identical</span>(<span class="kw">typeof</span>(x$Species), <span class="st">&quot;integer&quot;</span>))
-  <span class="kw">assert_is_factor</span>(x$Species)
-  <span class="kw">assert_is_identical_to_true</span>(
-    <span class="kw">identical</span>(<span class="kw">levels</span>(x$Species), <span class="kw">levels</span>(iris$Species))
-  )
-}
-complex_assertthat &lt;-<span class="st"> </span>function(x) {
-  <span class="kw">assert_that</span>(
-    <span class="kw">is.data.frame</span>(x),                     <span class="co"># this only checks class</span>
-    <span class="kw">is.list</span>(x),
-    <span class="kw">length</span>(x) ==<span class="st"> </span><span class="kw">length</span>(iris),
-    <span class="kw">identical</span>(<span class="kw">lapply</span>(x, class), iris.col.classes),
-    <span class="kw">is.integer</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>)),
-    <span class="kw">identical</span>(<span class="kw">names</span>(x), <span class="kw">names</span>(iris)),
-    <span class="kw">identical</span>(<span class="kw">typeof</span>(x$Species), <span class="st">&quot;integer&quot;</span>),
-    <span class="kw">identical</span>(<span class="kw">levels</span>(x$Species), <span class="kw">levels</span>(iris$Species))
-) }</code></pre></div>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">complex_assertive</span>(iris.fake)</code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb46-1" data-line-number="1">complex_assertive &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</a>
+<a class="sourceLine" id="cb46-2" data-line-number="2">  <span class="kw">assert_is_list</span>(x)</a>
+<a class="sourceLine" id="cb46-3" data-line-number="3">  <span class="kw">assert_all_are_equal_to</span>(<span class="kw">length</span>(x), <span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb46-4" data-line-number="4">  <span class="kw">assert_is_integer</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>))</a>
+<a class="sourceLine" id="cb46-5" data-line-number="5">  <span class="kw">assert_is_data.frame</span>(x)</a>
+<a class="sourceLine" id="cb46-6" data-line-number="6">  <span class="kw">assert_is_identical_to_true</span>(<span class="kw">identical</span>(iris.col.classes, <span class="kw">lapply</span>(x, class)))</a>
+<a class="sourceLine" id="cb46-7" data-line-number="7">  <span class="kw">assert_is_identical_to_true</span>(<span class="kw">identical</span>(<span class="kw">names</span>(x), <span class="kw">names</span>(iris)))</a>
+<a class="sourceLine" id="cb46-8" data-line-number="8">  <span class="kw">assert_is_identical_to_true</span>(<span class="kw">identical</span>(<span class="kw">typeof</span>(x<span class="op">$</span>Species), <span class="st">&quot;integer&quot;</span>))</a>
+<a class="sourceLine" id="cb46-9" data-line-number="9">  <span class="kw">assert_is_factor</span>(x<span class="op">$</span>Species)</a>
+<a class="sourceLine" id="cb46-10" data-line-number="10">  <span class="kw">assert_is_identical_to_true</span>(</a>
+<a class="sourceLine" id="cb46-11" data-line-number="11">    <span class="kw">identical</span>(<span class="kw">levels</span>(x<span class="op">$</span>Species), <span class="kw">levels</span>(iris<span class="op">$</span>Species))</a>
+<a class="sourceLine" id="cb46-12" data-line-number="12">  )</a>
+<a class="sourceLine" id="cb46-13" data-line-number="13">}</a>
+<a class="sourceLine" id="cb46-14" data-line-number="14">complex_assertthat &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</a>
+<a class="sourceLine" id="cb46-15" data-line-number="15">  <span class="kw">assert_that</span>(</a>
+<a class="sourceLine" id="cb46-16" data-line-number="16">    <span class="kw">is.data.frame</span>(x),                     <span class="co"># this only checks class</span></a>
+<a class="sourceLine" id="cb46-17" data-line-number="17">    <span class="kw">is.list</span>(x),</a>
+<a class="sourceLine" id="cb46-18" data-line-number="18">    <span class="kw">length</span>(x) <span class="op">==</span><span class="st"> </span><span class="kw">length</span>(iris),</a>
+<a class="sourceLine" id="cb46-19" data-line-number="19">    <span class="kw">identical</span>(<span class="kw">lapply</span>(x, class), iris.col.classes),</a>
+<a class="sourceLine" id="cb46-20" data-line-number="20">    <span class="kw">is.integer</span>(<span class="kw">attr</span>(x, <span class="st">'row.names'</span>)),</a>
+<a class="sourceLine" id="cb46-21" data-line-number="21">    <span class="kw">identical</span>(<span class="kw">names</span>(x), <span class="kw">names</span>(iris)),</a>
+<a class="sourceLine" id="cb46-22" data-line-number="22">    <span class="kw">identical</span>(<span class="kw">typeof</span>(x<span class="op">$</span>Species), <span class="st">&quot;integer&quot;</span>),</a>
+<a class="sourceLine" id="cb46-23" data-line-number="23">    <span class="kw">identical</span>(<span class="kw">levels</span>(x<span class="op">$</span>Species), <span class="kw">levels</span>(iris<span class="op">$</span>Species))</a>
+<a class="sourceLine" id="cb46-24" data-line-number="24">) }</a></code></pre></div>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb47-1" data-line-number="1"><span class="kw">complex_assertive</span>(iris.fake)</a></code></pre></div>
 <pre><code>Error in complex_assertive(iris.fake): is_identical_to_true : identical(levels(x$Species), levels(iris$Species)) is not identical to TRUE; its value is FALSE.</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">complex_assertthat</span>(iris.fake)</code></pre></div>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb49-1" data-line-number="1"><span class="kw">complex_assertthat</span>(iris.fake)</a></code></pre></div>
 <pre><code>Error: levels(x$Species) not identical to levels(iris$Species)</code></pre>
 </div>
 </div>
 <div id="session-info" class="section level3">
 <h3>Session Info</h3>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sessionInfo</span>()</code></pre></div>
-<pre><code>R version 3.4.1 (2017-06-30)
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb51-1" data-line-number="1"><span class="kw">sessionInfo</span>()</a></code></pre></div>
+<pre><code>R version 3.4.3 (2017-11-30)
 Platform: x86_64-apple-darwin15.6.0 (64-bit)
-Running under: macOS Sierra 10.12.6
+Running under: macOS High Sierra 10.13.3
 
 Matrix products: default
 BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
@@ -601,35 +840,36 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] checkmate_1.8.3  assertthat_0.2.0 assertive_0.3-5  vetr_0.2.2      
+[1] checkmate_1.8.3  assertthat_0.2.0 assertive_0.3-5  vetr_0.2.3.9000 
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.14               assertive.data_0.0-1      
- [3] compiler_3.4.1             plyr_1.8.4                
- [5] assertive.files_0.0-2      tools_3.4.1               
- [7] assertive.properties_0.0-4 assertive.data.us_0.0-1   
- [9] digest_0.6.12              evaluate_0.10             
-[11] memoise_1.1.0              tibble_1.3.4              
-[13] assertive.base_0.0-7       gtable_0.2.0              
-[15] rlang_0.1.4                microbenchmark_1.4-2.1    
-[17] yaml_2.1.14                withr_2.1.1               
-[19] stringr_1.2.0              knitr_1.16                
-[21] assertive.sets_0.0-3       assertive.strings_0.0-3   
+ [1] Rcpp_0.12.13               assertive.data_0.0-1      
+ [3] pillar_1.1.0               compiler_3.4.3            
+ [5] plyr_1.8.4                 assertive.files_0.0-2     
+ [7] assertive.properties_0.0-4 tools_3.4.3               
+ [9] assertive.data.us_0.0-1    digest_0.6.15             
+[11] tibble_1.4.2               evaluate_0.10             
+[13] memoise_1.1.0              assertive.base_0.0-7      
+[15] gtable_0.2.0               rlang_0.1.4               
+[17] microbenchmark_1.4-2.1     yaml_2.1.14               
+[19] withr_2.1.0                stringr_1.2.0             
+[21] knitr_1.20                 assertive.strings_0.0-3   
 [23] assertive.types_0.0-3      assertive.datetimes_0.0-2 
-[25] assertive.matrices_0.0-1   devtools_1.13.2           
-[27] rprojroot_1.2              grid_3.4.1                
-[29] assertive.code_0.0-1       rmarkdown_1.5             
-[31] ggplot2_2.2.1              magrittr_1.5              
-[33] assertive.models_0.0-1     backports_1.1.0           
-[35] scales_0.4.1               assertive.numbers_0.0-2   
+[25] assertive.sets_0.0-3       assertive.matrices_0.0-1  
+[27] devtools_1.13.5            rprojroot_1.2             
+[29] grid_3.4.3                 assertive.code_0.0-1      
+[31] rmarkdown_1.9              ggplot2_2.2.1             
+[33] magrittr_1.5               backports_1.1.0           
+[35] assertive.numbers_0.0-2    scales_0.4.1              
 [37] codetools_0.2-15           htmltools_0.3.6           
-[39] colorspace_1.3-2           stringi_1.1.5             
-[41] assertive.data.uk_0.0-1    lazyeval_0.2.1            
-[43] munsell_0.4.3              assertive.reflection_0.0-4</code></pre>
+[39] assertive.models_0.0-1     colorspace_1.3-2          
+[41] stringi_1.1.5              assertive.data.uk_0.0-1   
+[43] lazyeval_0.2.0             munsell_0.4.3             
+[45] assertive.reflection_0.0-4</code></pre>
 </div>
 <div id="end-notes" class="section level3">
 <h3>End Notes</h3>
-<p><sup>1</sup><a name="fn-1"></a> <code>assertthat</code> requires <a href="#check-expression">Check Expressions</a> to evaluate to TRUE or FALSE, whereas <code>stopifnot</code> accepts anything, with all TRUE vectors considered a success and all else failure. Additionally, <code>assertthat</code> implements a handful of useful <a href="#predicate-function">Predicate Functions</a> for common checks (e.g. scalars, etc.). <br /> <sup>2</sup><a name="fn-2"></a> Our recommendation for <code>checkmate</code> is made solely on the basis of the tests described in this document. We have not used it in any of our packages.</p>
+<p><sup>1</sup><a name="fn-1"></a> <code>assertthat</code> requires <a href="#check-expression">Check Expressions</a> to evaluate to TRUE or FALSE, whereas <code>stopifnot</code> accepts anything, with all TRUE vectors considered a success and all else failure. Additionally, <code>assertthat</code> implements a handful of useful <a href="#predicate-function">Predicate Functions</a> for common checks (e.g. scalars, etc.). <br /> <sup>2</sup><a name="fn-2"></a> Our recommendation for <code>checkmate</code> is made solely on the basis of the tests described in this document. We have not used it in any of our packages.</p>
 </div>
 </div>
 

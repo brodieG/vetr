@@ -607,4 +607,67 @@ int ALIKEC_is_dfish(SEXP obj) {
 SEXP ALIKEC_is_dfish_ext(SEXP obj) {
   return ScalarLogical(ALIKEC_is_dfish(obj));
 }
+/*
+ * Starts with a pair list, and returns it as a VECSXP sorted by tag
+ *
+ * Note that this uses `qsort` so the sort is not stable on ties.  Our primary
+ * use case is to compare attributes where there should not be duplicate tas in
+ * the attribute LISTSXP, so that should not matter.
+ *
+ * Not sure if there is a way to sort a SEXP VECSXP in place, but seems pretty
+ * dangerous so we'll settle for the intermediate approach where we sort the
+ * indeces and tag names.
+ */
 
+struct chr_idx {SEXP name; SEXP val; R_xlen_t idx;};
+
+static int cmpfun (const void * p, const void * q) {
+  struct chr_idx a = *(struct chr_idx *) p;
+  struct chr_idx b = *(struct chr_idx *) q;
+  const char * a_chr = CHAR(a.name);
+  const char * b_chr = CHAR(b.name);
+  return(strcmp(a_chr, b_chr));
+}
+SEXP ALIKEC_list_as_sorted_vec(SEXP x) {
+  if(x != R_NilValue && TYPEOF(x) != LISTSXP)
+    error("Internal Error: input should be NULL or a LISTSXP"); // nocov
+
+  SEXP res, res_nm;
+
+  if(x == R_NilValue) {
+    res = PROTECT(PROTECT(allocVector(VECSXP, 0)));
+  } else {
+    SEXP x_el = x;
+    R_xlen_t x_len = xlength(x);
+
+    // Fill our sort buffer and transfer everything to VECSXP
+
+    struct chr_idx * sort_buff =
+      (struct chr_idx *) R_alloc((size_t) x_len, sizeof(struct chr_idx));
+
+    for(R_xlen_t i = 0; i < x_len; ++i) {
+      SEXP nm = TAG(x_el) == R_NilValue ? R_BlankString : PRINTNAME(TAG(x_el));
+      *(sort_buff + i) = (struct chr_idx) {
+        .name = nm, .val = CAR(x_el), .idx = i
+      };
+      x_el = CDR(x_el);
+    }
+    // Sort the buffer and reorder the vectors
+
+    qsort(sort_buff, (size_t) x_len, sizeof(struct chr_idx), cmpfun);
+
+    // `head` holds the data at the current spot that needs to be overwritten
+
+    res = PROTECT(allocVector(VECSXP, x_len));
+    res_nm = PROTECT(allocVector(STRSXP, x_len));
+
+    for(R_xlen_t i = 0; i < x_len; ++i) {
+      struct chr_idx tar = *(sort_buff + i);
+      SET_VECTOR_ELT(res, i, tar.val);
+      SET_STRING_ELT(res_nm, i, tar.name);
+    }
+    setAttrib(res, R_NamesSymbol, res_nm);
+  }
+  UNPROTECT(2);
+  return res;
+}

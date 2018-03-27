@@ -254,6 +254,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   struct ALIKEC_tar_cur_strings ALIKEC_get_res_strings(
      struct ALIKEC_res_strings strings, struct VALC_settings set
   );
+  SEXP ALIKEC_list_as_sorted_vec(SEXP x);
 
   // - Init and pre-install Symbols -------------------------------------------
 
