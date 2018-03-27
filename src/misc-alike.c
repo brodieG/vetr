@@ -39,7 +39,7 @@ const char * ALIKEC_mode_int(SEXP obj) {
     default: class = type2char(TYPEOF(obj));
   }
   return class;
-};
+}
 SEXP ALIKEC_mode(SEXP obj) {
   return(mkString(ALIKEC_mode_int(obj)));
 }
