@@ -25,7 +25,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 /* equivalent to `mode` in R, note this is a bit approximate and just trying to
 hit the obvious corner cases between `typeof` and `mode`*/
 
-SEXP ALIKEC_mode(SEXP obj) {
+const char * ALIKEC_mode_int(SEXP obj) {
   const char * class;
   switch(TYPEOF(obj)) {
     case NILSXP: class = "NULL"; break;
@@ -38,7 +38,10 @@ SEXP ALIKEC_mode(SEXP obj) {
     case REALSXP: class = "numeric"; break;
     default: class = type2char(TYPEOF(obj));
   }
-  return(mkString(class));
+  return class;
+}
+SEXP ALIKEC_mode(SEXP obj) {
+  return(mkString(ALIKEC_mode_int(obj)));
 }
 /*
 returns specified class, or implicit class if none
@@ -99,7 +102,9 @@ Run deparse command and return character vector with results
 set width_cutoff to be less than zero to use default
 */
 SEXP ALIKEC_deparse_core(SEXP obj, int width_cutoff) {
-  SEXP quot_call = PROTECT(list2(R_QuoteSymbol, obj)), dep_call;
+  SEXP quot_call = PROTECT(list2(R_QuoteSymbol, obj));
+  SEXP dep_call;
+
   SET_TYPEOF(quot_call, LANGSXP);
 
   if(width_cutoff < 0){
@@ -111,9 +116,9 @@ SEXP ALIKEC_deparse_core(SEXP obj, int width_cutoff) {
     SET_TAG(CDDR(dep_call), ALIKEC_SYM_widthcutoff);
   }
   SET_TYPEOF(dep_call, LANGSXP);
-
+  SEXP res = eval(dep_call, R_BaseEnv);
   UNPROTECT(2);
-  return eval(dep_call, R_BaseEnv);
+  return res;
 }
 /*
 Do a one line deparse, optionally replacing characters in excess of `max_chars`
@@ -129,7 +134,11 @@ const char * ALIKEC_deparse_oneline(
   if(keep_at_end > max_chars - 2)
     error("Internal Error: arg `keep_at_end` too large");  // nocov
 
-  const char * res, * dep_line = CHAR(asChar(ALIKEC_deparse_core(obj, 500)));
+  const char * res, * dep_line;
+  SEXP dep_line_sexp = PROTECT(ALIKEC_deparse_core(obj, 500));
+  dep_line = CHAR(STRING_ELT(dep_line_sexp, 0));
+  UNPROTECT(1);
+
   size_t dep_len = CSR_strmlen(dep_line, set.nchar_max);
 
   if(dep_len > max_chars) {
@@ -443,7 +452,10 @@ deparse into character
 const char * ALIKEC_deparse_chr(
   SEXP obj, int width_cutoff, struct VALC_settings set
 ) {
-  return ALIKEC_pad(ALIKEC_deparse_core(obj, width_cutoff), -1, 0, set);
+  SEXP res_dep = PROTECT(ALIKEC_deparse_core(obj, width_cutoff));
+  const char * res = ALIKEC_pad(res_dep, -1, 0, set);
+  UNPROTECT(1);
+  return res;
 }
 
 /*
@@ -607,4 +619,67 @@ int ALIKEC_is_dfish(SEXP obj) {
 SEXP ALIKEC_is_dfish_ext(SEXP obj) {
   return ScalarLogical(ALIKEC_is_dfish(obj));
 }
+/*
+ * Starts with a pair list, and returns it as a VECSXP sorted by tag
+ *
+ * Note that this uses `qsort` so the sort is not stable on ties.  Our primary
+ * use case is to compare attributes where there should not be duplicate tas in
+ * the attribute LISTSXP, so that should not matter.
+ *
+ * Not sure if there is a way to sort a SEXP VECSXP in place, but seems pretty
+ * dangerous so we'll settle for the intermediate approach where we sort the
+ * indeces and tag names.
+ */
 
+struct chr_idx {SEXP name; SEXP val; R_xlen_t idx;};
+
+static int cmpfun (const void * p, const void * q) {
+  struct chr_idx a = *(struct chr_idx *) p;
+  struct chr_idx b = *(struct chr_idx *) q;
+  const char * a_chr = CHAR(a.name);
+  const char * b_chr = CHAR(b.name);
+  return(strcmp(a_chr, b_chr));
+}
+SEXP ALIKEC_list_as_sorted_vec(SEXP x) {
+  if(x != R_NilValue && TYPEOF(x) != LISTSXP)
+    error("Internal Error: input should be NULL or a LISTSXP"); // nocov
+
+  SEXP res, res_nm;
+
+  if(x == R_NilValue) {
+    res = PROTECT(PROTECT(allocVector(VECSXP, 0)));
+  } else {
+    SEXP x_el = x;
+    R_xlen_t x_len = xlength(x);
+
+    // Fill our sort buffer and transfer everything to VECSXP
+
+    struct chr_idx * sort_buff =
+      (struct chr_idx *) R_alloc((size_t) x_len, sizeof(struct chr_idx));
+
+    for(R_xlen_t i = 0; i < x_len; ++i) {
+      SEXP nm = TAG(x_el) == R_NilValue ? R_BlankString : PRINTNAME(TAG(x_el));
+      *(sort_buff + i) = (struct chr_idx) {
+        .name = nm, .val = CAR(x_el), .idx = i
+      };
+      x_el = CDR(x_el);
+    }
+    // Sort the buffer and reorder the vectors
+
+    qsort(sort_buff, (size_t) x_len, sizeof(struct chr_idx), cmpfun);
+
+    // `head` holds the data at the current spot that needs to be overwritten
+
+    res = PROTECT(allocVector(VECSXP, x_len));
+    res_nm = PROTECT(allocVector(STRSXP, x_len));
+
+    for(R_xlen_t i = 0; i < x_len; ++i) {
+      struct chr_idx tar = *(sort_buff + i);
+      SET_VECTOR_ELT(res, i, tar.val);
+      SET_STRING_ELT(res_nm, i, tar.name);
+    }
+    setAttrib(res, R_NamesSymbol, res_nm);
+  }
+  UNPROTECT(2);
+  return res;
+}

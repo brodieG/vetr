@@ -104,6 +104,8 @@ hash_fun <- function(x) .Call(VALC_default_hash_fun, x)
 
 check_assumptions <- function() .Call(VALC_check_assumptions)  # nocov
 
+list_as_sorted_vec <- function(x) .Call(VALC_list_as_sorted_vec, x)
+
 ### Testing C stuff; should be deleted eventually
 ##
 ###' @export

@@ -1,3 +1,14 @@
+## 0.2.4
+
+* As per [#93](https://github.com/brodieG/vetr/issues/93), ensure that attribute
+  comparisons are always done in the same order.  We now sort the attribute
+  lists prior to comparison.  This may result in slightly different output than
+  previously as which attribute is declared incorrect or missing may change as a
+  result of the sort since the first such attribute is reported.  Additionally,
+  there is now more explicit handling of missing attributes so the error
+  reporting for them will be slightly different.
+* Fix memory problems reported by valgrind.
+
 ## 0.2.3
 
 * [#92](https://github.com/brodieG/vetr/issues/92) `vetr` evaluated expressions

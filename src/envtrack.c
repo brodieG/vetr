@@ -27,23 +27,47 @@ Allocated and re-allocate our env stack tracking object
 
 Return 0 for failure, 1 for normal success, 2 for success requiring
 re-allocation, 3 for success requiring re-allocation and copying
+
+We need stack size to be strictly greater than stack_ind as next time we write
+we will write to stack_ind
 */
 
 int ALIKEC_env_stack_alloc(
   struct ALIKEC_env_track * envs, int env_limit
 ) {
   int success = 1;
-  if(envs->stack_size <= envs->stack_ind) {
-    int stack_size_old = envs->stack_size;
-    envs->stack_size = envs->stack_size_init * 1 << envs->stack_mult;
-    if(envs->stack_size > env_limit) return 0;
+  int stack_size = envs->stack_size;
+  if(stack_size <= envs->stack_ind) {
+    int stack_size_old = stack_size;
+    if(stack_size > INT_MAX - stack_size) {
+      // nocov start
+      error(
+        "%s%s",
+        "Internal Error: cannot increase env stack size past INT_MAX; ",
+        "contact maintainer"
+      );
+      // nocov end
+    }
+    stack_size += stack_size ? stack_size : envs->stack_size_init;
 
-    SEXP * env_stack_tmp = (SEXP *) R_alloc(envs->stack_size, sizeof(SEXP));
+    if(stack_size <= envs->stack_ind) {
+      // nocov start
+      error(
+        "%s%s",
+        "Internal Error: env stack size increase is insufficient; ",
+        "contact maintainer"
+      );
+      // nocov end
+    }
+    if(stack_size > env_limit) return 0;
+
+    SEXP * env_stack_tmp = (SEXP *) R_alloc(stack_size, sizeof(SEXP));
+    envs->stack_size = stack_size;
 
     success = 2;
     if(envs->env_stack == 0) {
       envs->env_stack = env_stack_tmp;
-    } else if(envs->stack_mult) {
+    } else if(envs->stack_size > stack_size_old) {
       // Prev allocation happened, need to copy pointers
       for(int i = 0; i < stack_size_old; i++)
         env_stack_tmp[i] = envs->env_stack[i];
@@ -51,7 +75,6 @@ int ALIKEC_env_stack_alloc(
       envs->env_stack = env_stack_tmp;
       success = 3;
     }
-    envs->stack_mult++;
   }
   return success;
 }
@@ -61,7 +84,7 @@ Initialize our stack tracking object
 struct ALIKEC_env_track * ALIKEC_env_set_create(
   int stack_size_init, int env_limit
 ) {
-  if(stack_size_init < 0) {
+  if(stack_size_init < 1) {
     // nocov start
     error(
       "Internal Error: `alike` env stack size init should be greater than zero"
@@ -69,9 +92,8 @@ struct ALIKEC_env_track * ALIKEC_env_set_create(
     // nocov end
   }
   struct ALIKEC_env_track * envs =
-    (struct ALIKEC_env_track *)
-      R_alloc(1, sizeof(struct ALIKEC_env_track));
-  envs->stack_size = envs->stack_ind = envs->stack_mult = 0;
+    (struct ALIKEC_env_track *) R_alloc(1, sizeof(struct ALIKEC_env_track));
+  envs->stack_size = envs->stack_ind = 0;
   envs->env_stack = 0;
   envs->no_rec = 0;
   envs->stack_size_init = stack_size_init;
@@ -109,7 +131,8 @@ int ALIKEC_env_track(
     if(env == envs->env_stack[i]) {
       env_found = 1;
       break;
-  } }
+    }
+  }
   if(env_found) return 0;
   envs->env_stack[envs->stack_ind] = env;
   envs->stack_ind++;

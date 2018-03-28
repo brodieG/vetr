@@ -3,7 +3,7 @@ Title: Trust, but Verify
 Description: Declarative template-based framework for verifying that objects
   meet structural requirements, and auto-composing error messages when they do
   not.
-Version: 0.2.3
+Version: 0.2.4
 Authors@R: c(
     person("Brodie", "Gaslam", email="brodie.gaslam@yahoo.com",
     role=c("aut", "cre")),
@@ -23,7 +23,6 @@ VignetteBuilder: knitr
 Suggests:
     knitr,
     rmarkdown,
-    unitizer,
-    covr
+    unitizer
 RoxygenNote: 6.0.1
 Roxygen: list(markdown = TRUE)

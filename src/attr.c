@@ -148,7 +148,7 @@ case we did do that and end up trying to figure out what happened.
 */
 
 struct ALIKEC_res ALIKEC_alike_attr(
-  SEXP target, SEXP current, SEXP attr_symb, struct VALC_settings set
+  SEXP target, SEXP current, const char * attr_symb, struct VALC_settings set
 ) {
   struct ALIKEC_res res = ALIKEC_alike_internal(target, current, set);
   struct ALIKEC_res res_sub = ALIKEC_res_init();
@@ -158,8 +158,9 @@ struct ALIKEC_res ALIKEC_alike_attr(
     res_sub.dat.strings.tar_pre = "be";
     res_sub.dat.strings.target[1] =
       "`alike` the corresponding element in target";
-    res_sub.wrap = PROTECT(ALIKEC_attr_wrap(attr_symb, R_NilValue));
-    UNPROTECT(1);
+    SEXP attr_symb_sym = PROTECT(install(attr_symb));
+    res_sub.wrap = PROTECT(ALIKEC_attr_wrap(attr_symb_sym, R_NilValue));
+    UNPROTECT(2);
   }
   return res_sub;
 }
@@ -177,8 +178,9 @@ Will set tar_is_df to 1 if prim is data frame
 struct ALIKEC_res ALIKEC_compare_class(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
-  if(TYPEOF(current) != STRSXP || TYPEOF(target) != STRSXP)
-    return ALIKEC_alike_attr(target, current, R_ClassSymbol, set);
+  if(TYPEOF(current) != STRSXP || TYPEOF(target) != STRSXP) {
+    return ALIKEC_alike_attr(target, current, "class", set);
+  }
 
   int tar_class_len, cur_class_len, len_delta, tar_class_i, cur_class_i,
       is_df = 0, idx_fail = -1;
@@ -253,7 +255,7 @@ struct ALIKEC_res ALIKEC_compare_class(
 
   if(res.success) {
     res =
-      ALIKEC_alike_attr(ATTRIB(target), ATTRIB(current), R_ClassSymbol, set);
+      ALIKEC_alike_attr(ATTRIB(target), ATTRIB(current), "class", set);
     PROTECT(res.wrap);
   } else PROTECT(R_NilValue);
   res.dat.df = is_df;
@@ -288,7 +290,7 @@ struct ALIKEC_res ALIKEC_compare_dims(
     (TYPEOF(target) != INTSXP && target != R_NilValue) ||
     (TYPEOF(current) != INTSXP && current != R_NilValue)
   )
-    return ALIKEC_alike_attr(target, current, R_DimSymbol, set);
+    return ALIKEC_alike_attr(target, current, "dim", set);
 
   // Dims -> implicit class
 
@@ -304,7 +306,7 @@ struct ALIKEC_res ALIKEC_compare_dims(
   if(target_len_cap > 1 && isVectorAtomic(tar_obj)) {
     if(current == R_NilValue) {  // current should be matrix/array
       class_err_target = target_len_cap > 2 ? "array" : "matrix";
-      class_err_actual = CHAR(asChar(ALIKEC_mode(cur_obj)));
+      class_err_actual = ALIKEC_mode_int(cur_obj);
     } else if(isVectorAtomic(cur_obj) && current_len_cap != target_len_cap) {
       // target is matrix/array
       class_err_target = target_len_cap > 2 ? "array" : "matrix";
@@ -314,16 +316,16 @@ struct ALIKEC_res ALIKEC_compare_dims(
       // In this case, target is atomic, but current is not, would normally be
       // caught by earlier type comparisons so shouldn't get here unless testing
       // explicitly
-      class_err_target = CHAR(asChar(ALIKEC_mode(tar_obj)));
+      class_err_target = ALIKEC_mode_int(tar_obj);
       class_err_actual = type2char(TYPEOF(cur_obj));
     }
   } else if (current_len_cap > 1 && isVectorAtomic(cur_obj)) {
     if(isVectorAtomic(tar_obj)) {
-      class_err_target = CHAR(asChar(ALIKEC_mode(tar_obj)));
+      class_err_target = ALIKEC_mode_int(tar_obj);
       class_err_actual = current_len_cap == 2 ? "matrix" : "array";
     } else {
-      class_err_target = CHAR(asChar(ALIKEC_mode(tar_obj)));
-      class_err_actual = CHAR(asChar(ALIKEC_mode(cur_obj)));
+      class_err_target = ALIKEC_mode_int(tar_obj);
+      class_err_actual = ALIKEC_mode_int(cur_obj);
     }
   }
   if(class_err_target[0]) {
@@ -397,7 +399,7 @@ struct ALIKEC_res ALIKEC_compare_dims(
       }
       return res;
   } }
-  return ALIKEC_alike_attr(target, current, R_DimSymbol, set);
+  return ALIKEC_alike_attr(target, current, "dim", set);
 }
 SEXP ALIKEC_compare_dim_ext(
   SEXP target, SEXP current, SEXP tar_obj, SEXP cur_obj
@@ -805,7 +807,7 @@ struct ALIKEC_res ALIKEC_compare_ts(
         return res;
     } }
   } else {
-    return ALIKEC_alike_attr(target, current, R_TspSymbol, set);
+    return ALIKEC_alike_attr(target, current, "tsp", set);
   }
   return res;
 }
@@ -826,20 +828,20 @@ SEXP ALIKEC_compare_ts_ext(SEXP target, SEXP current) {
 struct ALIKEC_res ALIKEC_compare_levels(
   SEXP target, SEXP current, struct VALC_settings set
 ) {
-  if(TYPEOF(target) == STRSXP && TYPEOF(current) == STRSXP) {
-    struct ALIKEC_res res = ALIKEC_compare_special_char_attrs_internal(
-      target, current, set, 0
-    );
-    PROTECT(res.wrap);
-    if(!res.success) {
-      SEXP lang_lvl = PROTECT(lang2(R_LevelsSymbol, R_NilValue));
-      ALIKEC_wrap_around(res.wrap, lang_lvl);
-      UNPROTECT(1);
-    }
+  if(TYPEOF(target) != STRSXP || TYPEOF(current) != STRSXP)
+    error("Internal Error: non-string levels; contact maintainer."); // nocov
+
+  struct ALIKEC_res res = ALIKEC_compare_special_char_attrs_internal(
+    target, current, set, 0
+  );
+  PROTECT(res.wrap);
+  if(!res.success) {
+    SEXP lang_lvl = PROTECT(lang2(R_LevelsSymbol, R_NilValue));
+    ALIKEC_wrap_around(res.wrap, lang_lvl);
     UNPROTECT(1);
-    return res;
   }
-  return ALIKEC_alike_attr(target, current, R_LevelsSymbol, set);
+  UNPROTECT(1);
+  return res;
 }
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
@@ -860,7 +862,7 @@ would cause a mismatch seem pretty rare
 */
 
 struct ALIKEC_res ALIKEC_compare_attributes_internal_simple(
-  SEXP target, SEXP current, SEXP attr_sym,
+  SEXP target, SEXP current, const char * attr_sym,
   struct VALC_settings set
 ) {
   R_xlen_t tae_val_len, cae_val_len;
@@ -886,19 +888,23 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal_simple(
     res.success = 0;
     res.dat.strings.tar_pre = tae_type == NILSXP ? "not have" : "have";
     res.dat.strings.target[0] = "attribute \"%s\"";
-    res.dat.strings.target[1] = CHAR(PRINTNAME(attr_sym));
-    PROTECT(R_NilValue);
+    res.dat.strings.target[1] = attr_sym;
+    res.dat.strings.cur_pre = "";
+    res.dat.strings.current[0] = "";
+    PROTECT(PROTECT(R_NilValue));
   } else if(tae_type != cae_type) {
     res.success = 0;
     res.dat.strings.target[1] = type2char(tae_type);
     res.dat.strings.current[1] = type2char(cae_type);
-    res.wrap = PROTECT(ALIKEC_attr_wrap(attr_sym, R_NilValue));
+    SEXP attr_sym_symb = PROTECT(install(attr_sym));
+    res.wrap = PROTECT(ALIKEC_attr_wrap(attr_sym_symb, R_NilValue));
   } else if (tae_val_len != cae_val_len) {
     if(set.attr_mode || tae_val_len) {
       res.success = 0;
       res.dat.strings.target[1] = CSR_len_as_chr(tae_val_len);
       res.dat.strings.current[1] = CSR_len_as_chr(cae_val_len);
-      res.wrap = PROTECT(ALIKEC_attr_wrap(attr_sym, R_NilValue));
+      SEXP attr_sym_symb = PROTECT(install(attr_sym));
+      res.wrap = PROTECT(ALIKEC_attr_wrap(attr_sym_symb, R_NilValue));
       SET_VECTOR_ELT(
         res.wrap, 0,
         lang2(ALIKEC_SYM_length, VECTOR_ELT(res.wrap, 0))
@@ -912,9 +918,9 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal_simple(
       // nocov end
   } else {
     res = ALIKEC_alike_attr(target, current, attr_sym, set);
-    PROTECT(res.wrap);
+    PROTECT(PROTECT(res.wrap));
   }
-  UNPROTECT(1);
+  UNPROTECT(2);
   return res;
 }
 /* Used by alike to compare attributes;
@@ -930,7 +936,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   // Note we don't protect these because target and curent should come in
   // protected so every SEXP under them should also be protected
 
-  SEXP tar_attr, cur_attr, prim_attr, sec_attr;
+  SEXP tar_attr, cur_attr;
   int rev = 0, is_df = 0;
 
   tar_attr = ATTRIB(target);
@@ -956,36 +962,10 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
 
   SEXP errs_sexp = PROTECT(allocVector(VECSXP, 8));
 
-  if(tar_attr == R_NilValue) {
-    rev = 1;
-    prim_attr = cur_attr;
-    sec_attr = tar_attr;
-    if(set.attr_mode == 2) {
-      errs[7].success = 0;
-      errs[7].dat.strings.tar_pre = "have";
-      errs[7].dat.strings.target[1] = "attributes";
-    }
-  } else {
-    prim_attr = tar_attr;
-    sec_attr = cur_attr;
-    if(
-      cur_attr == R_NilValue &&
-      (
-       set.attr_mode ||
-       // if the only attribute in `tar_attr` is srcref then it is okay that
-       // `cur_attr` is NULL
-       !(
-         !strcmp(CHAR(PRINTNAME(TAG(prim_attr))), "srcref") &&
-         CDR(prim_attr) == R_NilValue
-      ) )
-    ) {
-      errs[7].success = 0;
-      errs[7].dat.strings.tar_pre = "have";
-      errs[7].dat.strings.target[1] = "attributes";
-      errs[7].dat.strings.cur_pre = "has";
-      errs[7].dat.strings.current[1] = "none";
-    }
-  }
+  // we'll use this string to check if we're in the srcref attribute
+
+  SEXP srcref_string = PROTECT(mkChar("srcref"));
+
   /*
   Mark that we're in attribute checking so we can handle recursions within
   attributes properly
@@ -993,101 +973,143 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   set.in_attr++;
 
   /*
-  Loop through all attr combinations; maybe could be made faster by reducing the
-  second loop each time a match is found, though this would require duplication
-  of the attributes (likely faster for items with lots of attributes, but slower
-  for those with few; ideally need a way to duplicate the LISTSXP but not the
-  contents - I guess wouldn't be too hard to implement).
+   * We sort the attribute lists so that we can more quickly compare them, but
+   * also so that the failures always happen in the same order irrespective of
+   * the attribute list initial order (#93)
+   */
 
-  Alternate: use hash tables, though likely not worth it unless more than 25
-  attributes, which should be rare
-  */
-  /*
-  Here we need to `rev` so that our double loop works; if we don't rev and
-  `target` has no attributes then we wouldn't check anything.  Since we know
-  in that case we would fail at the first `current` attribute, maybe we should
-  simplify...
-  */
-  SEXP prim_attr_el, sec_attr_el;
-  size_t sec_attr_counted = 0, sec_attr_count = 0, prim_attr_count = 0;
+  SEXP tar_attr_sort = PROTECT(ALIKEC_list_as_sorted_vec(tar_attr));
+  SEXP cur_attr_sort = PROTECT(ALIKEC_list_as_sorted_vec(cur_attr));
+  SEXP tar_names = PROTECT(getAttrib(tar_attr_sort, R_NamesSymbol));
+  SEXP cur_names = PROTECT(getAttrib(cur_attr_sort, R_NamesSymbol));
+  if(TYPEOF(tar_names) != STRSXP && TYPEOF(cur_names) != STRSXP)
+    error("Internal Error: attr data w/o names; contact maintainer."); // nocov
 
-  for(
-    prim_attr_el = prim_attr; prim_attr_el != R_NilValue;
-    prim_attr_el = CDR(prim_attr_el)
-  ) {
-    SEXP prim_tag = TAG(prim_attr_el);
-    const char * tx = CHAR(PRINTNAME(prim_tag));
-    prim_attr_count++;
-    SEXP sec_attr_el_tmp = R_NilValue;
+  R_xlen_t tar_attr_count = xlength(tar_attr_sort);
+  R_xlen_t cur_attr_count = xlength(cur_attr_sort);
+  R_xlen_t i, j;
+  i = 0; j = 0;
+  int is_names = 0;
 
-    for(
-      sec_attr_el = sec_attr; sec_attr_el != R_NilValue;
-      sec_attr_el = CDR(sec_attr_el)
-    ) {
-      if(!sec_attr_counted) sec_attr_count++;
-      if(prim_tag == TAG(sec_attr_el)) {
-        sec_attr_el_tmp = sec_attr_el;
-        // Don't need to do full loop since we did it once already
-        if(sec_attr_counted) break;
-    } }
-    sec_attr_counted = 1;
-    sec_attr_el = sec_attr_el_tmp;
+  // A bit of a weird loop, we walk up through both sorted lists depending on
+  // what attributes are missing from either list.
 
-    if(prim_attr_el == R_NilValue) { // NULL attrs shouldn't be possible
+  while(i < tar_attr_count || j < cur_attr_count) {
+    int i_implicit = 0, j_implicit = 0;
+    int i_over = i >= tar_attr_count;
+    int j_over = j >= cur_attr_count;
+    int is_srcref = !i_over && STRING_ELT(tar_names, i) == srcref_string;
+
+    // unfortunately complexity needs handling because we can advance i/j past
+    // the end of the respective vectors
+
+    const char * tar_tag = !i_over ? CHAR(STRING_ELT(tar_names, i)) : "";
+    const char * cur_tag = !j_over ? CHAR(STRING_ELT(cur_names, j)) : "";
+
+    if((*tar_tag == 0 && !i_over) || (*cur_tag == 0 && !j_over))
       // nocov start
       error(
-        "Internal Error: attribute %s is NULL for `%s`", tx,
-        rev ? "current" : "target"
+        "%s%s",
+        "Internal Error: encountered attribute with zero length tag. ",
+        "This should not happen; contact maintainer."
       );
       // nocov end
-    }
 
-    // Undo reverse now that we've gone through double loop
+    // Get elements to check; we use dummy NULL values if we're at the end of
+    // the vectors to allow for dummy checks
 
-    SEXP tar_attr_el, tar_attr_el_val, cur_attr_el, cur_attr_el_val, tar_tag;
-    if(rev) {
-      tar_attr_el = sec_attr_el;
-      cur_attr_el = prim_attr_el;
-      tar_tag = TAG(sec_attr_el);
-    } else {
-      tar_attr_el = prim_attr_el;
-      cur_attr_el = sec_attr_el;
-      tar_tag = prim_tag;
-    }
-    // No match only matters if target has attrs and is not `srcref`, or in
-    // strict mode
+    SEXP tar_attr_el_val = R_NilValue, cur_attr_el_val = R_NilValue;
+    if(!i_over) tar_attr_el_val = VECTOR_ELT(tar_attr_sort, i);
+    if(!j_over) cur_attr_el_val = VECTOR_ELT(cur_attr_sort, j);
 
-    int is_srcref =
-      tar_tag != R_NilValue && !strcmp(CHAR(PRINTNAME(tar_tag)), "srcref");
-    if(
-      (
-        (tar_attr_el == R_NilValue && set.attr_mode == 2) ||
-        (tar_attr_el == R_NilValue && !is_srcref)
-      ) && errs[7].success
-    ) {
-      errs[7].success = 0;
-      errs[7].dat.strings.tar_pre =
-        cur_attr_el == R_NilValue ? "have" : "not have";
-      errs[7].dat.strings.target[1] = "attributes";
-      errs[7].dat.strings.cur_pre = "has";
-      errs[7].dat.strings.current[0] = "attribute \"%s\"";
-      errs[7].dat.strings.current[1] = tx;
-    } else if (is_srcref && !set.attr_mode) {
-      // Don't check srcref if in default attribute mode
-      continue;
+    // lists are sorted by tag, so if tar_tag < cur_tag, it means that tar_tag
+    // is missing from current
+
+    int tag_cmp =
+      !i_over && !j_over ? strcmp(tar_tag, cur_tag) : (i_over ? 1 : -1);
+
+    // For class and dim, we don't want to report just that the attribute is
+    // missing, we want to provide the richer error message produce by the
+    // corresponding attr comparison funs.  So to allow them through, we tag
+    // them as implicit.  Note we need some extra logic to make sure that the
+    // attribute in question is actually missing from the other object.
+
+    // remember attrs sorted so we will never see class - dim and dim - class
+    // paired up for the same object.
+
+    int tar_is_class = !strcmp(tar_tag, "class");
+    int cur_is_class = (tar_is_class && !tag_cmp) || !strcmp(cur_tag, "class");
+    int tar_is_dim = !strcmp(tar_tag, "dim");
+    int cur_is_dim = (tar_is_dim && !tag_cmp) || !strcmp(cur_tag, "dim");
+
+    if(tar_is_class + cur_is_class == 1) {
+      if(tar_is_class && (tag_cmp < 0 || j_over)) j_implicit = 1;
+      else if(cur_is_class && (tag_cmp > 0 || i_over) && set.attr_mode == 2)
+        i_implicit = 1;
+    } else if(tar_is_dim + cur_is_dim == 1) {
+      if(tar_is_dim && (tag_cmp < 0 || j_over)) j_implicit = 1;
+      else if(cur_is_dim && (tag_cmp > 0 || i_over) && set.attr_mode == 2)
+        i_implicit = 1;
     }
-    cur_attr_el_val = cur_attr_el != R_NilValue ? CAR(cur_attr_el) : R_NilValue;
-    tar_attr_el_val = tar_attr_el != R_NilValue ? CAR(tar_attr_el) : R_NilValue;
+    if(i_implicit || j_implicit) {
+      if(i_implicit) {
+        tar_tag = cur_tag;
+        tar_attr_el_val = R_NilValue;
+      } else {
+        cur_tag = tar_tag;
+        cur_attr_el_val = R_NilValue;
+      }
+      tag_cmp = 0;  // pretend attr available in tar and cur
+    }
+    // Handle attribute missing from one or the other
+
+    if(tag_cmp < 0) {
+      // cur is missing something missing tar has; we care unless it is src_ref
+      // and in default mode
+
+      if(errs[7].success && (set.attr_mode || !is_srcref)) {
+        errs[7].success = 0;
+        errs[7].dat.strings.tar_pre = "have";
+        errs[7].dat.strings.target[0] = "attribute \"%s\"";
+        errs[7].dat.strings.target[1] = tar_tag;
+        errs[7].dat.strings.cur_pre = "";  // need to blank this
+        errs[7].dat.strings.current[0] = "";  // need to blank this
+      }
+      ++i;
+    } else if(tag_cmp > 0) {
+      // tar has something missing from cur, only matters if in mode == 2
+
+      if(errs[7].success && set.attr_mode == 2) {
+        errs[7].success = 0;
+        errs[7].dat.strings.tar_pre = "not have";
+        errs[7].dat.strings.target[0] = "attribute \"%s\"";
+        errs[7].dat.strings.target[1] = CHAR(STRING_ELT(cur_names, j));
+        errs[7].dat.strings.cur_pre = "";  // need to blank this
+        errs[7].dat.strings.current[0] = "";  // need to blank this
+      }
+      ++j;
+    }
+    // At this point, if there was a tag difference we want to loop to next
+    // value or break.
+
+    if(tag_cmp) {if(i_over || j_over) break; else continue;};
+
+    // we have matching tag values, so now compare the attribute values and also
+    // advance counters if appropriate.
+
+    if(!i_over && !i_implicit) ++i;
+    if(!j_over && !j_implicit) ++j;
 
     // = Baseline Check ========================================================
 
-    if(set.attr_mode && cur_attr_el_val != R_NilValue && errs[6].success) {
+    if(set.attr_mode && errs[6].success) {
       // this contains returns a SEXP
-      errs[6] = ALIKEC_compare_attributes_internal_simple(
-        tar_attr_el_val, cur_attr_el_val, prim_tag, set
-      );
-      SET_VECTOR_ELT(errs_sexp, 6, errs[6].wrap);
-
+      if(tar_attr_el_val != R_NilValue || set.attr_mode == 2 ) {
+        errs[6] = ALIKEC_compare_attributes_internal_simple(
+          tar_attr_el_val, cur_attr_el_val, tar_tag, set
+        );
+        SET_VECTOR_ELT(errs_sexp, 6, errs[6].wrap);
+      }
     // = Custom Checks =========================================================
 
     /* see alike documentation for explanations of how the special
@@ -1100,11 +1122,11 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
       for every other error we have to keep going in case we eventually find a
       class error*/
 
-      if(tar_tag == R_ClassSymbol) {
+      if(tar_is_class) {
         SEXP cur_attr_el_val_tmp =
-          PROTECT(ALIKEC_class(rev ? target : current, cur_attr_el_val));
+          PROTECT(ALIKEC_class(current, cur_attr_el_val));
         SEXP tar_attr_el_val_tmp =
-          PROTECT(ALIKEC_class(!rev ? target : current, tar_attr_el_val));
+          PROTECT(ALIKEC_class(target, tar_attr_el_val));
         struct ALIKEC_res class_comp = ALIKEC_compare_class(
           tar_attr_el_val_tmp, cur_attr_el_val_tmp, set
         );
@@ -1116,8 +1138,9 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
 
       // - Names ---------------------------------------------------------------
 
-      } else if (tar_tag == R_NamesSymbol || tar_tag == R_RowNamesSymbol) {
-        int is_names = tar_tag == R_NamesSymbol;
+      } else if (
+        (is_names = !strcmp(tar_tag, "names")) || !strcmp(tar_tag, "row.names")
+      ) {
         int err_ind = is_names ? 3 : 4;
         struct ALIKEC_res name_comp =
           ALIKEC_compare_special_char_attrs_internal(
@@ -1130,16 +1153,17 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
           // wrap original wrap in names/rownames
 
           SEXP wrap_orig = errs[err_ind].wrap;
-          SEXP call = PROTECT(lang2(tar_tag, R_NilValue));
+          SEXP call = PROTECT(
+            lang2(is_names ? R_NamesSymbol : R_RowNamesSymbol, R_NilValue)
+          );
           ALIKEC_wrap_around(wrap_orig, call); // modifies wrap_orig
           UNPROTECT(1);
         }
         continue;
       // - Dims ----------------------------------------------------------------
 
-      } else if (tar_tag == R_DimSymbol && set.attr_mode == 0) {
+      } else if (tar_is_dim && set.attr_mode == 0) {
         int err_ind = 2;
-
         struct ALIKEC_res dim_comp = ALIKEC_compare_dims(
           tar_attr_el_val, cur_attr_el_val, target, current, set
         );
@@ -1152,7 +1176,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
 
       // - dimnames ------------------------------------------------------------
 
-      } else if (tar_tag == R_DimNamesSymbol) {
+      } else if (!strcmp(tar_tag, "dimnames")) {
         struct ALIKEC_res dimname_comp = ALIKEC_compare_dimnames(
           tar_attr_el_val, cur_attr_el_val, set
         );
@@ -1161,7 +1185,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
 
       // - levels --------------------------------------------------------------
 
-      } else if (tar_tag == R_LevelsSymbol) {
+      } else if (!strcmp(tar_tag, "levels")) {
         struct ALIKEC_res levels_comp = ALIKEC_compare_levels(
           tar_attr_el_val, cur_attr_el_val, set
         );
@@ -1170,7 +1194,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
 
       // - tsp -----------------------------------------------------------------
 
-      } else if (tar_tag == R_TspSymbol) {
+      } else if (!strcmp(tar_tag, "tsp")) {
 
         struct ALIKEC_res ts_comp = ALIKEC_compare_ts(
           tar_attr_el_val, cur_attr_el_val, set
@@ -1183,23 +1207,12 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
       } else {
         struct ALIKEC_res attr_comp =
           ALIKEC_compare_attributes_internal_simple(
-            tar_attr_el_val, cur_attr_el_val, prim_tag, set
+            tar_attr_el_val, cur_attr_el_val, tar_tag, set
           );
         SET_VECTOR_ELT(errs_sexp, 6, attr_comp.wrap);
         errs[6] = attr_comp;
       }
   } }
-  // If in strict mode, must have the same number of attributes
-
-  if(set.attr_mode == 2 && prim_attr_count != sec_attr_count) {
-    errs[7].success = 0;
-    errs[7].dat.strings.tar_pre = "have";
-    errs[7].dat.strings.target[0] = "%s attribute%s%s%s";
-    errs[7].dat.strings.target[1] = CSR_len_as_chr(prim_attr_count);
-    errs[7].dat.strings.target[2] = prim_attr_count != 1 ? "s" : "";
-    errs[7].dat.strings.cur_pre = "has";
-    errs[7].dat.strings.current[1] = CSR_len_as_chr(sec_attr_count);
-  }
   // Now determine which error to throw, if any
 
   if(!set.in_attr) {
@@ -1211,15 +1224,14 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   }
   set.in_attr--;
 
-  int i;
-  for(i = 0; i < 8; i++) {
+  for(int i = 0; i < 8; i++) {
     if(!errs[i].success && (!rev || (rev && set.attr_mode == 2))) {
       res_attr = errs[i];
       res_attr.dat.lvl = i;
       break;
   } }
   res_attr.dat.df = is_df;
-  UNPROTECT(1);
+  UNPROTECT(6);
   return res_attr;
 }
 /*-----------------------------------------------------------------------------\
