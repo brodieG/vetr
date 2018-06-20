@@ -78,7 +78,7 @@ table thead, table tr.even {
 }
 
 p {
-  margin: 1em 0;
+  margin: .5em 0;
 }
 
 blockquote {
@@ -145,7 +145,7 @@ div.sourceCode pre{
 }
 div.sourceCode + pre,
 div.sourceCode + div.diffobj_container {
-  margin-top: -5px;
+  margin-top: -14px;
 }
 div.diffobj_container pre{
   line-height: 1.3;

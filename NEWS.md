@@ -1,3 +1,7 @@
+## 0.2.5
+
+* Address CRAN warnings about packages used in tests not in suggests.
+
 ## 0.2.4
 
 * As per [#93](https://github.com/brodieG/vetr/issues/93), ensure that attribute
