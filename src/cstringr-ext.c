@@ -97,15 +97,16 @@ SEXP CSR_bullet_ext(SEXP str, SEXP bullet, SEXP ctd, SEXP maxlen) {
   R_xlen_t i, str_len = XLENGTH(str);
   SEXP res = PROTECT(allocVector(STRSXP, str_len));
 
-  const char * chr_bul = CHAR(STRING_ELT(bullet, 0));
-  const char * chr_ctd = CHAR(STRING_ELT(ctd, 0));
   size_t st_ml = INTEGER(maxlen)[0];
 
   if(str_len) {
     for(i = 0; i < str_len; ++i) {
-      const char * char_orig = CHAR(STRING_ELT(str, i));
-      const char * char_new = CSR_bullet(char_orig, chr_bul, chr_ctd, st_ml);
-
+      const char * char_new = CSR_bullet(
+        STRING_ELT(str, i),
+        STRING_ELT(bullet, 0),
+        STRING_ELT(ctd, 0),
+        st_ml
+      );
       SET_STRING_ELT(res, i, mkChar(char_new));
   } }
   UNPROTECT(1);

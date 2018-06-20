@@ -25,7 +25,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 /* equivalent to `mode` in R, note this is a bit approximate and just trying to
 hit the obvious corner cases between `typeof` and `mode`*/
 
-SEXP ALIKEC_mode(SEXP obj) {
+const char * ALIKEC_mode_int(SEXP obj) {
   const char * class;
   switch(TYPEOF(obj)) {
     case NILSXP: class = "NULL"; break;
@@ -38,7 +38,10 @@ SEXP ALIKEC_mode(SEXP obj) {
     case REALSXP: class = "numeric"; break;
     default: class = type2char(TYPEOF(obj));
   }
-  return(mkString(class));
+  return class;
+}
+SEXP ALIKEC_mode(SEXP obj) {
+  return(mkString(ALIKEC_mode_int(obj)));
 }
 /*
 returns specified class, or implicit class if none
@@ -99,7 +102,9 @@ Run deparse command and return character vector with results
 set width_cutoff to be less than zero to use default
 */
 SEXP ALIKEC_deparse_core(SEXP obj, int width_cutoff) {
-  SEXP quot_call = PROTECT(list2(R_QuoteSymbol, obj)), dep_call;
+  SEXP quot_call = PROTECT(list2(R_QuoteSymbol, obj));
+  SEXP dep_call;
+
   SET_TYPEOF(quot_call, LANGSXP);
 
   if(width_cutoff < 0){
@@ -111,9 +116,9 @@ SEXP ALIKEC_deparse_core(SEXP obj, int width_cutoff) {
     SET_TAG(CDDR(dep_call), ALIKEC_SYM_widthcutoff);
   }
   SET_TYPEOF(dep_call, LANGSXP);
-
+  SEXP res = eval(dep_call, R_BaseEnv);
   UNPROTECT(2);
-  return eval(dep_call, R_BaseEnv);
+  return res;
 }
 /*
 Do a one line deparse, optionally replacing characters in excess of `max_chars`
@@ -129,7 +134,11 @@ const char * ALIKEC_deparse_oneline(
   if(keep_at_end > max_chars - 2)
     error("Internal Error: arg `keep_at_end` too large");  // nocov
 
-  const char * res, * dep_line = CHAR(asChar(ALIKEC_deparse_core(obj, 500)));
+  const char * res, * dep_line;
+  SEXP dep_line_sexp = PROTECT(ALIKEC_deparse_core(obj, 500));
+  dep_line = CHAR(STRING_ELT(dep_line_sexp, 0));
+  UNPROTECT(1);
+
   size_t dep_len = CSR_strmlen(dep_line, set.nchar_max);
 
   if(dep_len > max_chars) {
@@ -443,7 +452,10 @@ deparse into character
 const char * ALIKEC_deparse_chr(
   SEXP obj, int width_cutoff, struct VALC_settings set
 ) {
-  return ALIKEC_pad(ALIKEC_deparse_core(obj, width_cutoff), -1, 0, set);
+  SEXP res_dep = PROTECT(ALIKEC_deparse_core(obj, width_cutoff));
+  const char * res = ALIKEC_pad(res_dep, -1, 0, set);
+  UNPROTECT(1);
+  return res;
 }
 
 /*

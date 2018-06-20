@@ -174,6 +174,9 @@ SEXP VALC_process_error(
   if(has_header) {
     SET_STRING_ELT(err_vec_res, 0, mkChar(""));  // will add header later
   }
+  SEXP bullet = PROTECT(mkChar("  - "));
+  SEXP ctd = PROTECT(mkChar("    "));
+
   for(i = 0; i < err_len; i++) {
     SEXP str = VECTOR_ELT(err_msg_c, i);
     if(TYPEOF(str) != STRSXP || XLENGTH(str) != 1L) {
@@ -189,7 +192,7 @@ SEXP VALC_process_error(
 
     if(err_len > 1 && ret_mode != 2) {
       new_elt = PROTECT(
-        mkChar(CSR_bullet(CHAR(old_elt), "  - ", "    ", set.nchar_max))
+        mkChar(CSR_bullet(old_elt, bullet, ctd, set.nchar_max))
       );
     } else {
       new_elt = PROTECT(old_elt);
@@ -231,7 +234,7 @@ SEXP VALC_process_error(
       SET_STRING_ELT(err_vec_res, 0, mkChar(err_head));
     }
   }
-  UNPROTECT(2);  // unprotects vector result
+  UNPROTECT(4);  // unprotects vector result
   if(!stop) {
     return err_vec_res;
   } else {

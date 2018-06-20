@@ -8,6 +8,9 @@ sudo: false
 
 cache: packages
 
+r_packages:
+  - covr
+
 branches:
   only:
     - master
