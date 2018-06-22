@@ -100,8 +100,11 @@ abstract.array <- function(x, ...) {
   ndims <- length(dim(x))
   length(x) <- 0L
   dim(x) <- rep(0L, ndims)
+  # nocov start previous line should get rid of dimnames already so
+  # there is no way to test this, but leaving it here just in case
   if(!is.null(dimnames(x)))
     dimnames(x) <- replicate(NULL, length(dimnames(x)), simplify=FALSE)
+  # nocov end
   x
 }
 #' @rdname abstract
@@ -216,8 +219,8 @@ nullify.default <- function (obj, index) {
   if(!is.list(obj)) {
     not.list <- TRUE
     class <- class(obj)
-    if(inherits(try(obj <- as.list(obj), silent=TRUE), "try-error"))
-      stop("Could not coerce `obj` to list")
+    if(inherits(try(obj <- as.list(obj)), "try-error"))
+      stop("Could not coerce `obj` to list; see previous error.")
   }
   if(
     !is.character(index) &&
@@ -275,3 +278,8 @@ nullify.default <- function (obj, index) {
     modifyList(attributes(obj), attrs.new) else attributes(obj)
   res
 }
+
+## S4 Object for Tests
+
+setClass("vetrS4abstractTestObj", slots=c(a="integer"))
+
