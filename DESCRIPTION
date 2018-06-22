@@ -14,7 +14,7 @@ Authors@R: c(
     comment="Used/adapted several code snippets from R sources, see src/misc-alike.c and src/valname.c"
     ))
 Depends:
-    R (>= 3.3.0)
+    R (>= 3.2.0)
 License: GPL (>=2)
 LazyData: true
 URL: https://github.com/brodieG/vetr
