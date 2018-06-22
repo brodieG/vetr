@@ -155,7 +155,7 @@ table thead, table tr.even {
 background-color: #f7f7f7;
 }
 p {
-margin: 1em 0;
+margin: .5em 0;
 }
 blockquote {
 background-color: #f6f6f6;
@@ -215,7 +215,7 @@ div.sourceCode pre{
 }
 div.sourceCode + pre,
 div.sourceCode + div.diffobj_container {
-margin-top: -5px;
+margin-top: -14px;
 }
 div.diffobj_container pre{
 line-height: 1.3;
@@ -394,7 +394,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb19-11" data-line-number="11">  )</a>
 <a class="sourceLine" id="cb19-12" data-line-number="12">}</a>
 <a class="sourceLine" id="cb19-13" data-line-number="13"><span class="kw">stopifnot_iris</span>(iris.fake)</a></code></pre></div>
-<pre><code>Error: identical(levels(x$Species), levels(iris$Species)) is not TRUE</code></pre>
+<pre><code>Error in stopifnot_iris(iris.fake): identical(levels(x$Species), levels(iris$Species)) is not TRUE</code></pre>
 <p><code>vetr</code> saved us typing, and the time and thought needed to come up with what needs to be compared.</p>
 <p>You could just as easily have created templates for nested lists, or data frames in lists. Templates are compared to objects with the <code>alike</code> function. For a thorough description of templates and how they work see the <a href="./alike.html"><code>alike</code> vignette</a>. For template examples see <code>example(alike)</code>.</p>
 </div>
@@ -443,7 +443,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 [3] &quot;  - `\&quot;baz\&quot;` should be type \&quot;numeric\&quot; (is \&quot;character\&quot;)&quot;</code></pre>
 <p><code>all_bw</code> is available for value range checks (~10x faster than <code>isTRUE(all(. &gt;= x &amp; . &lt;= y))</code> for large vectors):</p>
 <div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb39-1" data-line-number="1"><span class="kw">vet</span>(<span class="kw">all_bw</span>(., <span class="dv">0</span>, <span class="dv">1</span>), <span class="kw">runif</span>(<span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="dv">1</span>)</a></code></pre></div>
-<pre><code>[1] &quot;`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \&quot;`1.174768` at index 1 not in `[0,1]`\&quot;)&quot;</code></pre>
+<pre><code>[1] &quot;`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \&quot;`1.996789` at index 1 not in `[0,1]`\&quot;)&quot;</code></pre>
 <p>There are a number of predefined vetting tokens you can use in your vetting expressions such as:</p>
 <div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb41-1" data-line-number="1"><span class="kw">vet</span>(NUM.POS, <span class="op">-</span><span class="kw">runif</span>(<span class="dv">5</span>))    <span class="co"># positive numeric; see `?vet_token` for others</span></a></code></pre></div>
 <pre><code>[1] &quot;`-runif(5)` should contain only positive values, but has negatives&quot;</code></pre>
@@ -555,9 +555,9 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb66-6" data-line-number="6">  <span class="kw">stopifnot_iris</span>(iris)   <span class="co"># defined in &quot;Templates&quot; section</span></a>
 <a class="sourceLine" id="cb66-7" data-line-number="7">)</a></code></pre></div>
 <pre><code>Mean eval time from 10000 iterations, in microseconds:
-  vet(tpl.iris, iris)   ~  22.2
-  vetr_iris(iris)       ~  33.6
-  stopifnot_iris(iris)  ~  79.1</code></pre>
+  vet(tpl.iris, iris)   ~   26.4
+  vetr_iris(iris)       ~   35.6
+  stopifnot_iris(iris)  ~  222.8</code></pre>
 <p>Performance is optimized for the success case. Failure cases should still perform reasonably well, but will be slower than most success cases.</p>
 </div>
 <div id="templates-and-performance" class="section level3">
@@ -566,7 +566,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <p>We recommend that you predefine templates in your package and not in the validation expression since some seemingly innocuous template creation expressions carry substantial overhead:</p>
 <div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb68-1" data-line-number="1"><span class="kw">bench_mark</span>(<span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>()))</a></code></pre></div>
 <pre><code>Mean eval time from 1000 iterations, in microseconds:
-  data.frame(a = numeric())  ~  129</code></pre>
+  data.frame(a = numeric())  ~  155</code></pre>
 <p>In this case the <code>data.frame</code> call alone take over 100us. In your package code you could use:</p>
 <div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb70-1" data-line-number="1">df.tpl &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">a=</span><span class="kw">numeric</span>())</a>
 <a class="sourceLine" id="cb70-2" data-line-number="2"></a>
