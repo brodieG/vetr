@@ -279,7 +279,3 @@ nullify.default <- function (obj, index) {
   res
 }
 
-## S4 Object for Tests
-
-setClass("vetrS4abstractTestObj", slots=c(a="integer"))
-
