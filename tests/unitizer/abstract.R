@@ -7,6 +7,13 @@ unitizer_sect("Standard Methods", {
   abstract(
     array(1:8, c(2, 2, 2), dimnames=list(letters[1:2], LETTERS[1:2], NULL))
   )
+  # non atomic
+  list.arr <- replicate(8, list(1), simplify=FALSE)
+  dim(list.arr) <- rep(2, 3)
+  abstract(list.arr)
+  abstract(list(1, NULL))
+
+  # df
   alike(abstract(iris), iris[1:10, ])
   alike(abstract(iris), iris[1:10, 1:3])
   alike(abstract(iris), transform(iris, Species=as.character(Species)))
@@ -27,6 +34,14 @@ unitizer_sect("Time Series", {
   abstract(y, "boom")
   vetr:::abstract.ts(1:12)
 })
+unitizer_sect("s4", {
+  methods::setClass(
+    "vetrS4abstractTestObj", slots=c(a="integer"), where=.GlobalEnv
+  )
+  obj <- new("vetrS4abstractTestObj", a=3L)
+  abstract(obj)
+  nullify(obj, 1)
+})
 unitizer_sect("lm", {
   set.seed(1)
   df1 <- data.frame(x = runif(10), y=runif(10), z=runif(10))
@@ -46,36 +61,6 @@ unitizer_sect("lm", {
   mdl4 <- lm(a ~ b, df2)
 
   alike(abstract(mdl), mdl4)
-})
-unitizer_sect("ggplot", {
-  # Rather experimental; we store the ggplot objects to avoid the suggests
-  df1 <- data.frame(x=runif(20), y=runif(20))
-  df2 <- data.frame(x=runif(20), y=runif(20), z=rep(c("a", "b"), 10))
-  df3 <- data.frame(a=runif(30), b=runif(30))
-
-  if(
-    suppressWarnings(
-      suppressPackageStartupMessages(
-        require(ggplot2, quietly=TRUE)
-  ) ) ) {
-    g1 <- ggplot(df1) + geom_point(aes(x=x, y=y))
-    g2 <- ggplot(df1) + geom_line(aes(x=x, y=y))
-    g3 <- ggplot(df3) + geom_point(aes(x=a, y=b))
-    g4 <- ggplot(df1, aes(x=x, y=y)) + geom_point() + geom_line()
-
-    g.abs <- abstract(g1)
-
-    list(alike(g.abs, g1), alike(g.abs, g2), alike(g.abs, g3))
-  } else {
-    # this is what the result should be so that this works when we skip the
-    # tests for lack of ggplot2
-
-    list(
-      TRUE,
-      "`class(g2$layers[[1]]$geom)[2]` should be \"GeomPoint\" (is \"GeomPath\")",
-      TRUE
-    )
-  }
 })
 unitizer_sect("nullify", {
   nullify(list(1, 2, 3), 2)

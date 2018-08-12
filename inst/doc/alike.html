@@ -155,7 +155,7 @@ table thead, table tr.even {
 background-color: #f7f7f7;
 }
 p {
-margin: 1em 0;
+margin: .5em 0;
 }
 blockquote {
 background-color: #f6f6f6;
@@ -215,7 +215,7 @@ div.sourceCode pre{
 }
 div.sourceCode + pre,
 div.sourceCode + div.diffobj_container {
-margin-top: -5px;
+margin-top: -14px;
 }
 div.diffobj_container pre{
 line-height: 1.3;
@@ -662,17 +662,17 @@ character(0)</code></pre>
 <a class="sourceLine" id="cb101-7" data-line-number="7">  <span class="kw">type_and_len</span>(rivers, rivers)</a>
 <a class="sourceLine" id="cb101-8" data-line-number="8">)</a></code></pre></div>
 <pre><code>Mean eval time from 10000 iterations, in microseconds:
-  identical(rivers, rivers)     ~  0.8
-  alike(rivers, rivers)         ~  3.2
-  type_and_len(rivers, rivers)  ~  2.1</code></pre>
+  identical(rivers, rivers)     ~  0.9
+  alike(rivers, rivers)         ~  3.1
+  type_and_len(rivers, rivers)  ~  2.5</code></pre>
 <p>While <code>alike</code> is slower than <code>identical</code> and the comparable bare bones R function, it is competitive with a bare bones R function that checks types and length. As objects grow more complex, <code>identical</code> will obviously pull ahead, though <code>alike</code> should be sufficiently fast for most applications:</p>
 <div class="sourceCode" id="cb103"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb103-1" data-line-number="1"><span class="kw">bench_mark</span>(<span class="dt">times=</span><span class="fl">1e4</span>,</a>
 <a class="sourceLine" id="cb103-2" data-line-number="2">  <span class="kw">identical</span>(mtcars, mtcars),</a>
 <a class="sourceLine" id="cb103-3" data-line-number="3">  <span class="kw">alike</span>(mtcars, mtcars)</a>
 <a class="sourceLine" id="cb103-4" data-line-number="4">)</a></code></pre></div>
 <pre><code>Mean eval time from 10000 iterations, in microseconds:
-  identical(mtcars, mtcars)  ~   0.9
-  alike(mtcars, mtcars)      ~  14.6</code></pre>
+  identical(mtcars, mtcars)  ~   1.0
+  alike(mtcars, mtcars)      ~  18.3</code></pre>
 <p>In the above example, we are comparing the data frames, their attributes, and the 11 columns individually.</p>
 <p>Keep in mind that the complexity of the <code>alike</code> comparison is driven by the complexity of the template, not the object we are checking, so we can always manage the expense of the <code>alike</code> evaluation.</p>
 <p>Comparisons that succeed will be substantially faster than comparisons that fail as the construction of error messages is non-trivial and we have prioritized optimization in the success case.</p>
@@ -687,8 +687,8 @@ character(0)</code></pre>
 <a class="sourceLine" id="cb105-6" data-line-number="6">  <span class="kw">identical</span>(mdl.tpl, mdl.tpl)</a>
 <a class="sourceLine" id="cb105-7" data-line-number="7">)</a></code></pre></div>
 <pre><code>Mean eval time from 1000 iterations, in microseconds:
-  alike(mdl.tpl, mdl.tpl)      ~   189
-  all.equal(mdl.tpl, mdl.tpl)  ~  1597
+  alike(mdl.tpl, mdl.tpl)      ~   233
+  all.equal(mdl.tpl, mdl.tpl)  ~  2151
   identical(mdl.tpl, mdl.tpl)  ~     1</code></pre>
 <p>Even with template as large as <code>lm</code> results (check <code>str(mdl.tpl)</code>) we can evaluate <code>alike</code> thousands of times before the overhead becomes noticeable.</p>
 </div>
@@ -703,8 +703,8 @@ character(0)</code></pre>
 <a class="sourceLine" id="cb107-6" data-line-number="6">  <span class="kw">alike</span>(<span class="kw">data.frame</span>(<span class="kw">integer</span>(), <span class="kw">numeric</span>()), df.cur)</a>
 <a class="sourceLine" id="cb107-7" data-line-number="7">)</a></code></pre></div>
 <pre><code>Mean eval time from 1000 iterations, in microseconds:
-  alike(df.tpl, df.cur)                     ~   12
-  alike(data.frame(integer(), numeric())..  ~  357</code></pre>
+  alike(df.tpl, df.cur)                     ~   12.5
+  alike(data.frame(integer(), numeric())..  ~  436.5</code></pre>
 <p><code>data.frame</code> is a particularly slow constructor, but in general you are best served by defining your templates (including calls to <code>abstract</code>) outside of your function so they are created on package load rather than every time your function is called.</p>
 </div>
 </div>
