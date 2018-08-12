@@ -7,6 +7,13 @@ unitizer_sect("Standard Methods", {
   abstract(
     array(1:8, c(2, 2, 2), dimnames=list(letters[1:2], LETTERS[1:2], NULL))
   )
+  # non atomic
+  list.arr <- replicate(8, list(1), simplify=FALSE)
+  dim(list.arr) <- rep(2, 3)
+  abstract(list.arr)
+  abstract(list(1, NULL))
+
+  # df
   alike(abstract(iris), iris[1:10, ])
   alike(abstract(iris), iris[1:10, 1:3])
   alike(abstract(iris), transform(iris, Species=as.character(Species)))
@@ -26,6 +33,14 @@ unitizer_sect("Time Series", {
 
   abstract(y, "boom")
   vetr:::abstract.ts(1:12)
+})
+unitizer_sect("s4", {
+  methods::setClass(
+    "vetrS4abstractTestObj", slots=c(a="integer"), where=.GlobalEnv
+  )
+  obj <- new("vetrS4abstractTestObj", a=3L)
+  abstract(obj)
+  nullify(obj, 1)
 })
 unitizer_sect("lm", {
   set.seed(1)
