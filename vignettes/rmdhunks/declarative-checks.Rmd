@@ -13,7 +13,9 @@ vet(tpl, "hello")
 vet(tpl, 42)
 ```
 
-Zero length templates match any length:
+The template concept is based on `vapply`, but generalizes to all S3 objects and
+adds some special features to facilitate comparison.  For example, zero length
+templates match any length:
 
 ```{r}
 tpl <- integer()

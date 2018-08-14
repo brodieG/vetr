@@ -1,9 +1,4 @@
 language: r
-r:
-  - 3.2
-  - oldrel
-  - release
-  - devel
 
 sudo: false
 
@@ -12,14 +7,23 @@ cache: packages
 r_packages:
   - covr
 
+after_success:
+  - Rscript covr.R
+
 branches:
   only:
     - master
     - development
     - rc
+    - issue50
 
-after_success:
-  - Rscript covr.R
-
-after_failure:
-  - find . -name run*.Rout* | xargs cat
+matrix:
+  include:
+    - r: 3.2
+      if: branch = rc
+    - r: 3.3
+      if: branch = rc
+    - r: oldrel
+      if: branch = rc
+    - r: release
+    - r: devel
