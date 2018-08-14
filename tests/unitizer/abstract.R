@@ -72,7 +72,13 @@ unitizer_sect("nullify", {
   nullify(list(1, 2, 3, 4), "hello")
 
   nullify(list(1, 2, 3), 4)
-  nullify(iris[1:10, ], 4)
+
+  ## can't print the data frame because the concomitant warning changes in
+  ## r75024 (see issue#96), and limitations of unitizer (unitizer:issue249)
+
+  iris.null <- nullify(iris[1:10, ], 4)
+  as.list(iris.null)
+  class(iris.null)
 
   nullify(letters, 5)
 
