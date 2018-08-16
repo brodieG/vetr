@@ -1,3 +1,10 @@
+## 0.2.6
+
+* [#96](https://github.com/brodieG/vetr/issues/96) Fix r-devel test failures
+  that started with r75024.
+* [#94](https://github.com/brodieG/vetr/issues/94) Properly credit `vapply` for
+  template concept.
+
 ## 0.2.5
 
 * Address CRAN warnings about packages used in tests not in suggests.

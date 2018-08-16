@@ -35,10 +35,8 @@ unitizer_sect("Time Series", {
   vetr:::abstract.ts(1:12)
 })
 unitizer_sect("s4", {
-  methods::setClass(
-    "vetrS4abstractTestObj", slots=c(a="integer"), where=.GlobalEnv
-  )
-  obj <- new("vetrS4abstractTestObj", a=3L)
+  ## s4 objects are unaffected
+  obj <- new("unitizerGlobalState")
   abstract(obj)
   nullify(obj, 1)
 })
@@ -72,7 +70,13 @@ unitizer_sect("nullify", {
   nullify(list(1, 2, 3, 4), "hello")
 
   nullify(list(1, 2, 3), 4)
-  nullify(iris[1:10, ], 4)
+
+  ## can't print the data frame because the concomitant warning changes in
+  ## r75024 (see issue#96), and limitations of unitizer (unitizer:issue249)
+
+  iris.null <- nullify(iris[1:10, ], 4)
+  as.list(iris.null)
+  class(iris.null)
 
   nullify(letters, 5)
 

@@ -48,7 +48,9 @@ vet(tpl, 42)
 ## [1] TRUE
 ```
 
-Zero length templates match any length:
+The template concept is based on `vapply`, but generalizes to all S3 objects and
+adds some special features to facilitate comparison.  For example, zero length
+templates match any length:
 
 
 ```r
@@ -184,7 +186,7 @@ vet(vet.exp, "baz")
 
 ```r
 vet(all_bw(., 0, 1), runif(5) + 1)
-## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.993120` at index 1 not in `[0,1]`\")"
+## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.465853` at index 1 not in `[0,1]`\")"
 ```
 
 There are a number of predefined vetting tokens you can use in your
