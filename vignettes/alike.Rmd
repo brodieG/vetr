@@ -91,6 +91,8 @@ There are several advantages to template based comparisons:
 * We can produce plainish-english interpretations of structural mismatches since
   we are dealing with a known limited set of comparisons.
 
+The template concept was inspired by `vapply`.
+
 ## Object Comparison
 
 ### Overview

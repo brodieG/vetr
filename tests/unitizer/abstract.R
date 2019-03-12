@@ -35,10 +35,8 @@ unitizer_sect("Time Series", {
   vetr:::abstract.ts(1:12)
 })
 unitizer_sect("s4", {
-  methods::setClass(
-    "vetrS4abstractTestObj", slots=c(a="integer"), where=.GlobalEnv
-  )
-  obj <- new("vetrS4abstractTestObj", a=3L)
+  ## s4 objects are unaffected
+  obj <- new("unitizerGlobalState")
   abstract(obj)
   nullify(obj, 1)
 })
