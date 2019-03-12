@@ -747,11 +747,11 @@ SEXP VALC_all_bw(
       SET_STRING_ELT(string_sub, 0, STRING_ELT(x, i));
       const char * msg_val_sub = CHAR(
         asChar(
-          CSR_strsub(
+          PROTECT(CSR_strsub(
             string_sub, PROTECT(ScalarInteger(20)),
             PROTECT(ScalarLogical(1))
-      ) ) );
-      UNPROTECT(3);
+      ) ) ) );
+      UNPROTECT(4);
       msg_val = CSR_smprintf2(10000, "\"%s\"", msg_val_sub, "");
     } else {
       msg_val = CSR_num_as_chr(
