@@ -1,3 +1,8 @@
+## 0.2.7
+
+* Fix new `rchk` warnings.
+* Set `RNGversion()` due to changes to sampling mechanism.
+
 ## 0.2.6
 
 * [#96](https://github.com/brodieG/vetr/issues/96) Fix r-devel test failures
