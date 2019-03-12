@@ -156,8 +156,8 @@ struct ALIKEC_res ALIKEC_alike_obj(
       SETCAR(t, ALIKEC_SYM_inherits); t = CDR(t);
       SETCAR(t, current); t = CDR(t);
       SETCAR(t, klass);
-      int inherits = asLogical(eval(s, R_BaseEnv));
-      UNPROTECT(1);
+      int inherits = asLogical(PROTECT(eval(s, R_BaseEnv)));
+      UNPROTECT(2);
 
       if(!inherits) {
         res.success = 0;
