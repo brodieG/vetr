@@ -1,5 +1,9 @@
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+<!-- README.md is generated from README.Rmd. Please edit that file 
 
+library(rmarkdown)
+render('README.Rmd', output_format=html_vignette(css='vignettes/styles.css'))
+
+-->
 ```{r, echo = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
