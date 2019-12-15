@@ -93,6 +93,7 @@ R_CallMethodDef callMethods[] = {
 
   {NULL, NULL, 0}
 };
+// Define global symbols (declarations in .h files)
 
 SEXP VALC_SYM_quote;
 SEXP VALC_SYM_deparse;
