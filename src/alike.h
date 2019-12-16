@@ -258,22 +258,22 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
   // - Init and pre-install Symbols -------------------------------------------
 
-  SEXP ALIKEC_SYM_inherits;
-  SEXP ALIKEC_SYM_package;
-  SEXP ALIKEC_SYM_tilde;
-  SEXP ALIKEC_SYM_paren_open;
-  SEXP ALIKEC_SYM_args;
-  SEXP ALIKEC_SYM_deparse;
-  SEXP ALIKEC_SYM_nlines;
-  SEXP ALIKEC_SYM_getOption;
-  SEXP ALIKEC_SYM_matchcall;
-  SEXP ALIKEC_SYM_widthcutoff;
-  SEXP ALIKEC_CALL_matchcall;
-  SEXP ALIKEC_CALL_matchcall_sub;
-  SEXP ALIKEC_SYM_current;
-  SEXP ALIKEC_SYM_attr;
-  SEXP ALIKEC_SYM_attributes;
-  SEXP ALIKEC_SYM_colnames;
-  SEXP ALIKEC_SYM_length;
-  SEXP ALIKEC_SYM_syntacticnames;
+  extern SEXP ALIKEC_SYM_inherits;
+  extern SEXP ALIKEC_SYM_package;
+  extern SEXP ALIKEC_SYM_tilde;
+  extern SEXP ALIKEC_SYM_paren_open;
+  extern SEXP ALIKEC_SYM_args;
+  extern SEXP ALIKEC_SYM_deparse;
+  extern SEXP ALIKEC_SYM_nlines;
+  extern SEXP ALIKEC_SYM_getOption;
+  extern SEXP ALIKEC_SYM_matchcall;
+  extern SEXP ALIKEC_SYM_widthcutoff;
+  extern SEXP ALIKEC_CALL_matchcall;
+  extern SEXP ALIKEC_CALL_matchcall_sub;
+  extern SEXP ALIKEC_SYM_current;
+  extern SEXP ALIKEC_SYM_attr;
+  extern SEXP ALIKEC_SYM_attributes;
+  extern SEXP ALIKEC_SYM_colnames;
+  extern SEXP ALIKEC_SYM_length;
+  extern SEXP ALIKEC_SYM_syntacticnames;
 #endif

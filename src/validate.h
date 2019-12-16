@@ -77,13 +77,13 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     int idx_alloc_max;// max we are allowed to allocate
   };
 
-  SEXP VALC_SYM_one_dot;
-  SEXP VALC_SYM_deparse;
-  SEXP VALC_SYM_paren;
-  SEXP VALC_SYM_quote;
-  SEXP VALC_SYM_current;
-  SEXP VALC_TRUE;
-  SEXP VALC_SYM_errmsg;
+  extern SEXP VALC_SYM_one_dot;
+  extern SEXP VALC_SYM_deparse;
+  extern SEXP VALC_SYM_paren;
+  extern SEXP VALC_SYM_quote;
+  extern SEXP VALC_SYM_current;
+  extern SEXP VALC_TRUE;
+  extern SEXP VALC_SYM_errmsg;
 
   SEXP VALC_test1(SEXP a);
   SEXP VALC_test2(SEXP a, SEXP b);
