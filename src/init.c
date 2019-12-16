@@ -93,6 +93,31 @@ R_CallMethodDef callMethods[] = {
 
   {NULL, NULL, 0}
 };
+// Define global symbols (declarations in .h files)
+
+SEXP VALC_SYM_quote;
+SEXP VALC_SYM_deparse;
+SEXP VALC_SYM_one_dot;
+SEXP VALC_SYM_paren;
+SEXP VALC_SYM_current;
+SEXP VALC_SYM_errmsg;
+SEXP VALC_TRUE;
+SEXP ALIKEC_SYM_package;
+SEXP ALIKEC_SYM_inherits;
+SEXP ALIKEC_SYM_paren_open;
+SEXP ALIKEC_SYM_tilde;
+SEXP ALIKEC_SYM_args;
+SEXP ALIKEC_SYM_deparse;
+SEXP ALIKEC_SYM_nlines;
+SEXP ALIKEC_SYM_widthcutoff;
+SEXP ALIKEC_SYM_getOption;
+SEXP ALIKEC_SYM_matchcall;
+SEXP ALIKEC_SYM_current;
+SEXP ALIKEC_SYM_attributes;
+SEXP ALIKEC_SYM_attr;
+SEXP ALIKEC_SYM_colnames;
+SEXP ALIKEC_SYM_length;
+SEXP ALIKEC_SYM_syntacticnames;
 
 void R_init_vetr(DllInfo *info)
 {

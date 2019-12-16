@@ -1,3 +1,8 @@
+## 0.2.8
+
+* Correctly define/declare global symbols as per WRE 1.6.4.1, (h/t Professor
+  Ripley, Joshua Ulrich for example fixes).
+
 ## 0.2.7
 
 * Fix new `rchk` warnings.
