@@ -1,3 +1,77 @@
+## gcc-10
+
+See [SO issue](https://stackoverflow.com/q/60406042/2725969).
+
+Issues related to compiling under gcc 10.0.1 causing segfaults on BDR machines.
+To reproduce (though this will no longer work when debian:testing moves away
+from from gcc-10.0.1):
+
+```
+docker pull rocker/r-base
+docker run --rm -ti --security-opt seccomp=unconfined \
+  rocker/r-base /bin/bash
+apt-get update
+apt-get install gcc-10 gdb
+gcc-10 --version  # confirm 10.0.1
+# gcc-10 (Debian 10-20200222-1) 10.0.1 20200222 (experimental) 
+# [master revision 01af7e0a0c2:487fe13f218:e99b18cf7101f205bfdd9f0f29ed51caaec52779]
+
+mkdir ~/.R
+touch ~/.R/Makevars
+echo "CC = gcc-10
+CFLAGS = -g -O2 -Wall -pedantic -mtune=native -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong -fstack-clash-protection -fcf-protection
+" >> ~/.R/Makevars
+
+R -d gdb --vanilla
+```
+
+Then in the R console, after typing `run` to get `gdb` to run the program:
+
+```
+f.dl <- tempfile()
+f.uz <- tempfile()
+
+github.url <- 'https://github.com/brodieG/vetr/archive/v0.2.8.zip'
+
+download.file(github.url, f.dl)
+unzip(f.dl, exdir=f.uz)
+install.packages(file.path(f.uz, 'vetr-0.2.8'), repos=NULL, type='source')
+unlink(c(f.dl, f.uz))
+
+# minimal set of commands I could come up that would cause segfault follow
+
+library(vetr)
+alike(pairlist(a=1, b="character"), pairlist(a=1, b=letters))
+alike(pairlist(1, "character"), pairlist(1, letters))
+alike(NULL, 1:3)                  # not a wild card at top level
+alike(list(NULL), list(1:3))      # but yes when nested
+alike(list(NULL, NULL), list(list(list(1, 2, 3)), 1:25))
+alike(list(NULL), list(1, 2))
+alike(list(), list(1, 2))
+alike(matrix(integer(), ncol=7), matrix(1:21, nrow=3))
+alike(matrix(character(), nrow=3), matrix(1:21, nrow=3))
+alike(
+  matrix(integer(), ncol=3, dimnames=list(NULL, c("R", "G", "B"))),
+  matrix(1:21, ncol=3, dimnames=list(NULL, c("R", "G", "B")))
+)
+
+# Adding tests from docs
+
+mx.tpl <- matrix(
+  integer(), ncol=3, dimnames=list(row.id=NULL, c("R", "G", "B"))
+)
+mx.cur <- matrix(
+  sample(0:255, 12), ncol=3, dimnames=list(row.id=1:4, rgb=c("R", "G", "B"))
+)
+mx.cur2 <-
+  matrix(sample(0:255, 12), ncol=3, dimnames=list(1:4, c("R", "G", "B")))
+
+alike(mx.tpl, mx.cur2)
+```
+
+Inspecting in gdb pretty quickly shows (if I understand correctly) that
+`CSR_strmlen_x` is trying to access the string that was not initialized.
+
 
 ## Notes from 8/29
 
