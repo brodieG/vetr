@@ -324,7 +324,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
         res.dat.strings.target[1] = CSR_len_as_chr(tar_first_el_len);
         res.dat.strings.target[2] = tar_first_el_len == (R_xlen_t) 1 ? "" : "s";
         res.dat.strings.cur_pre = "has";
-        res.dat.strings.current[2] = CSR_len_as_chr(cur_first_el_len);
+        res.dat.strings.current[1] = CSR_len_as_chr(cur_first_el_len);
     } }
     // If no normal, errors, use the attribute error
 
