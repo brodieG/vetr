@@ -1,5 +1,7 @@
 library(vetr)
 
+# this file should be excluded via .Rbuildignore
+
 unitizer_sect("ggplot", {
   # Rather experimental; we store the ggplot objects to avoid the suggests
   df1 <- data.frame(x=runif(20), y=runif(20))
