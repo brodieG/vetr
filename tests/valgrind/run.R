@@ -8,5 +8,7 @@ unitizer_sect <- function(
 }
 
 source('unitizer/_pre/lorem.R')
+source('unitizer/alike.R', echo=TRUE)
 source('unitizer/cstringr.R', echo=TRUE)
 source('unitizer/language.R', echo=TRUE)
+source('unitizer/validate.R', echo=TRUE)
