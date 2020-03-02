@@ -2,8 +2,10 @@
 
 * `stringsAsFactors` in tests explicitly set to TRUE due to r-devel change
   to the default.
-* Fix segfaults under gcc-10.0.1.  See discussion on
-  [SO](https://stackoverflow.com/q/60406042/2725969).
+* Addresss segfaults under gcc-10.0.1.  See discussion on
+  [SO](https://stackoverflow.com/q/60406042/2725969).  Special thanks to Nate
+  Eldredge for helping confirm this was indeed a [compiler
+  bug](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=93982).
 
 ## 0.2.8
 
