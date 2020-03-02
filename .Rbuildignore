@@ -7,7 +7,7 @@
 .Rdata
 ^covr\.R
 ^extra$
-^scratch\.R
+^scratch
 ^README\.Rmd
 ^README\.html
 notcran

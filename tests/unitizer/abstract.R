@@ -22,12 +22,12 @@ unitizer_sect("Standard Methods", {
   identical(my.env, abstract(my.env))
 })
 unitizer_sect("Time Series", {
-  y <- ts(runif(12), start=1970, freq=12)
-  attr(abstract(y), "ts")
-  attr(abstract(y, "start"), "ts")
-  attr(abstract(y, "end"), "ts")
-  attr(abstract(y, "frequency"), "ts")
-  attr(abstract(y, c("start", "frequency")), "ts")
+  y <- ts(runif(12), start=1970, frequency=12)
+  attr(abstract(y), "tsp")
+  attr(abstract(y, "start"), "tsp")
+  attr(abstract(y, "end"), "tsp")
+  attr(abstract(y, "frequency"), "tsp")
+  attr(abstract(y, c("start", "frequency")), "tsp")
 
   # Errors
 

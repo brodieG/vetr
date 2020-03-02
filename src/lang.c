@@ -192,6 +192,7 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
         res.dat.strings.tar_pre = "not be";
         res.dat.strings.target[0] = "`%s`";
         res.dat.strings.target[1] = csc_text;
+        res.dat.strings.current[1] = ""; // gcc-10
       } else {
         res.dat.strings.target[0] = "`%s`";
         res.dat.strings.target[1] = rev_symb;
@@ -235,6 +236,7 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
     res.success = 0;
     res.dat.strings.tar_pre = "have";
     res.dat.strings.target[1] =  "identical constant values";
+    res.dat.strings.current[1] = ""; // gcc-10
   } else res.success = 1;
 
   // Deal with index implications of skiping parens, note + 2 because we need

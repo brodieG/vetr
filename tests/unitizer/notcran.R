@@ -1,5 +1,7 @@
 library(vetr)
 
+# this file should be excluded via .Rbuildignore
+
 unitizer_sect("ggplot", {
   # Rather experimental; we store the ggplot objects to avoid the suggests
   df1 <- data.frame(x=runif(20), y=runif(20))
@@ -11,6 +13,12 @@ unitizer_sect("ggplot", {
       suppressPackageStartupMessages(
         require(ggplot2, quietly=TRUE)
   ) ) ) {
+    # one day this will break, but can't figure out right now how to get the
+    # deprecation warnings consistently enough to figure out what to do about
+    # them
+
+    old.opt <- options(lifecycle_verbose_soft_deprecation=FALSE)
+    on.exit(options(old.opt))
     g1 <- ggplot(df1) + geom_point(aes(x=x, y=y))
     g2 <- ggplot(df1) + geom_line(aes(x=x, y=y))
     g3 <- ggplot(df3) + geom_point(aes(x=a, y=b))
