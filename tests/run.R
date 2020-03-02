@@ -2,7 +2,7 @@ cat(getwd(), "\n")
 if(suppressWarnings(require('unitizer'))) {
   local({
     suppressWarnings(RNGversion("3.5.2"));
-    old.opt <- options(stringsAsFactors=FALSE)
+    old.opt <- options(stringsAsFactors=TRUE)
     on.exit({
       RNGversion(as.character(getRversion()))
       options(old.opt)
