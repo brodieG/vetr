@@ -149,8 +149,8 @@ unitizer_sect("Dims", {
   vetr:::dim_compare(dim10, dim1) # fail
 })
 unitizer_sect("Time Series", {
-  ts.1 <- attr(ts(runif(24), 1970, frequency=12), "ts")
-  ts.2 <- attr(ts(runif(24), 1970, frequency=4), "ts")
+  ts.1 <- attr(ts(runif(24), 1970, frequency=12), "tsp")
+  ts.2 <- attr(ts(runif(24), 1970, frequency=4), "tsp")
   ts.3 <- ts.4 <- ts.1
   ts.3[[2L]] <- 0
   ts.4[[3L]] <- 0

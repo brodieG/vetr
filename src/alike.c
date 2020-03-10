@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017  Brodie Gaslam
+Copyright (C) 2020 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -129,6 +129,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
       res.success = 0;
       res.dat.strings.tar_pre = s4_tar ? "be" : "not be";
       res.dat.strings.target[1] = "S4";
+      res.dat.strings.current[1] = "";  // gcc-10
     } else {
       SEXP klass, klass_cur, klass_attrib, klass_cur_attrib;
 
@@ -175,6 +176,8 @@ struct ALIKEC_res ALIKEC_alike_obj(
         res.dat.strings.target[0] = "S4 class \"%s\" from pkg:%s";
         res.dat.strings.target[1] = klass_c;
         res.dat.strings.target[2] = CHAR(asChar(klass_attrib));
+
+        res.dat.strings.current[1] = ""; // gcc-10
 
         klass_cur = PROTECT(getAttrib(current, R_ClassSymbol));
         if(xlength(klass_cur) != 1 || TYPEOF(klass_cur) != STRSXP) {
@@ -324,7 +327,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
         res.dat.strings.target[1] = CSR_len_as_chr(tar_first_el_len);
         res.dat.strings.target[2] = tar_first_el_len == (R_xlen_t) 1 ? "" : "s";
         res.dat.strings.cur_pre = "has";
-        res.dat.strings.current[2] = CSR_len_as_chr(cur_first_el_len);
+        res.dat.strings.current[1] = CSR_len_as_chr(cur_first_el_len);
     } }
     // If no normal, errors, use the attribute error
 
@@ -474,7 +477,8 @@ struct ALIKEC_res ALIKEC_alike_rec(
           REPROTECT(res.wrap = allocVector(VECSXP, 2), ipx);
           res.success = 0;
           res.dat.strings.tar_pre = "be";
-          res.dat.strings.target[1] =  "the global environment";
+          res.dat.strings.target[1] = "the global environment";
+          res.dat.strings.current[1] = ""; // gcc-10
         } else {
           SEXP tar_names = PROTECT(R_lsInternal(target, TRUE));
           R_xlen_t tar_name_len = XLENGTH(tar_names), i;
@@ -496,6 +500,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
               res.dat.strings.tar_pre = "contain";
               res.dat.strings.target[0] = "variable `%s`";
               res.dat.strings.target[1] = var_name_chr;
+              res.dat.strings.current[1] = ""; // gcc-10
             } else {
               SEXP var_in_frame = PROTECT(findVarInFrame(target, var_name));
               res = ALIKEC_alike_rec(

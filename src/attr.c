@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017  Brodie Gaslam
+Copyright (C) 2020 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -158,6 +158,8 @@ struct ALIKEC_res ALIKEC_alike_attr(
     res_sub.dat.strings.tar_pre = "be";
     res_sub.dat.strings.target[1] =
       "`alike` the corresponding element in target";
+    res_sub.dat.strings.current[1] = ""; // gcc-10
+
     SEXP attr_symb_sym = PROTECT(install(attr_symb));
     res_sub.wrap = PROTECT(ALIKEC_attr_wrap(attr_symb_sym, R_NilValue));
     UNPROTECT(2);
@@ -249,6 +251,7 @@ struct ALIKEC_res ALIKEC_compare_class(
       res.dat.strings.tar_pre = "inherit";
       res.dat.strings.target[0] = "from class \"%s\"";
       res.dat.strings.target[1] = CHAR(STRING_ELT(target, tar_class_i));
+      res.dat.strings.current[1] = ""; // gcc-10
     }
   }
   // Make sure class attributes are alike
@@ -345,6 +348,7 @@ struct ALIKEC_res ALIKEC_compare_dims(
     res.success = 0;
     res.dat.strings.tar_pre = "have";
     res.dat.strings.target[1] = "a \"dim\" attribute";
+    res.dat.strings.current[1] = ""; // gcc-10
 
     return res;
   }
@@ -483,6 +487,7 @@ struct ALIKEC_res ALIKEC_compare_special_char_attrs_internal(
       if(!R_compute_identical(target, current, 16)){
         res_sub.success = 0;
         res_sub.dat.strings.target[1] = "identical to target";
+        res_sub.dat.strings.current[1] = ""; // gcc-10
       }
     } else if (tar_type == STRSXP) {
       // Only determine what name is wrong if we know there is a mismatch since
@@ -564,6 +569,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
     res.success = 0;
     res.dat.strings.tar_pre = "have";
     res.dat.strings.target[1] = "a \"dimnames\" attribute";
+    res.dat.strings.current[1] = ""; // gcc-10
     return res;
   }
   // Result will contain a SEXP, so generate a protection index for it to
@@ -658,6 +664,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
       res.success = 0;
       res.dat.strings.tar_pre = "not be";
       res.dat.strings.target[1] = "missing";
+      res.dat.strings.current[1] = ""; // gcc-10
       REPROTECT(res.wrap = ALIKEC_compare_dimnames_wrap(prim_tag), ipx);
     }
     // Compare actual dimnames attr, note that zero length primary attribute
@@ -891,6 +898,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal_simple(
     res.dat.strings.target[1] = attr_sym;
     res.dat.strings.cur_pre = "";
     res.dat.strings.current[0] = "";
+    res.dat.strings.current[1] = ""; // gcc10 crash
     PROTECT(PROTECT(R_NilValue));
   } else if(tae_type != cae_type) {
     res.success = 0;
@@ -1074,6 +1082,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
         errs[7].dat.strings.target[1] = tar_tag;
         errs[7].dat.strings.cur_pre = "";  // need to blank this
         errs[7].dat.strings.current[0] = "";  // need to blank this
+        errs[7].dat.strings.current[1] = "";  // gcc10
       }
       ++i;
     } else if(tag_cmp > 0) {
@@ -1086,6 +1095,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
         errs[7].dat.strings.target[1] = CHAR(STRING_ELT(cur_names, j));
         errs[7].dat.strings.cur_pre = "";  // need to blank this
         errs[7].dat.strings.current[0] = "";  // need to blank this
+        errs[7].dat.strings.current[1] = "";  // gcc10
       }
       ++j;
     }

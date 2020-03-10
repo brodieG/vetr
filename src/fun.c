@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017  Brodie Gaslam
+Copyright (C) 2020 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -91,6 +91,7 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
         res.dat.strings.tar_pre = "have";
         res.dat.strings.target[0] = "a default value for argument `%s`%s%s%s";
         res.dat.strings.target[1] = CHAR(PRINTNAME(tar_tag));
+        res.dat.strings.current[1] = ""; // gcc-10
         break;
       }
       last_match = tar_tag;
@@ -120,6 +121,7 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
 
   if(tar_form != R_NilValue || !tag_match || cur_mismatch) {
     res.success = 0;
+    res.dat.strings.current[1] = ""; // gcc-10
 
     if(dots && !dots_cur) {
       res.dat.strings.tar_pre = "have";
