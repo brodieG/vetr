@@ -2,6 +2,7 @@
 
 library(rmarkdown)
 render('README.Rmd', output_format=html_vignette(css='vignettes/styles.css'))
+render('README.Rmd', output_format=md_document())
 
 -->
 ```{r, echo = FALSE}
@@ -20,6 +21,7 @@ library(vetr)
 [![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://codecov.io/github/brodieG/vetr?branch=master)
 [![](http://www.r-pkg.org/badges/version/vetr)](https://cran.r-project.org/package=vetr)
 [![Project Status: WIP - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip)
+[![Dependencies direct/recursive](https://tinyverse.netlify.com/badge/vetr)](https://tinyverse.netlify.com/)
 
 ```{r child='vignettes/rmdhunks/trust-but-verify.Rmd'}
 ```
@@ -68,16 +70,28 @@ long as every named element in the template exists in the object).
 
 ## Installation
 
-```{r, eval=FALSE}
+This package is available on CRAN:
+
+```{r eval=FALSE}
 install.packages('vetr')
 ```
 
-Or for the development version:
+It has no runtime dependencies.
 
-```{r, eval=FALSE}
-# install.packages('devtools')
-devtools::install_github('brodieg/vetr@development')
+For the development version use
+`remotes::install_github('brodieg/vetr@development')` or:
+
+```{r eval=FALSE}
+f.dl <- tempfile()
+f.uz <- tempfile()
+github.url <- 'https://github.com/brodieG/vetr/archive/development.zip'
+download.file(github.url, f.dl)
+unzip(f.dl, exdir=f.uz)
+install.packages(file.path(f.uz, 'vetr-development'), repos=NULL, type='source')
+unlink(c(f.dl, f.uz))
 ```
+
+(Travis build status: [![](https://travis-ci.org/brodieG/vetr.svg?branch=development)](https://travis-ci.org/brodieG/vetr)).  The master branch typically mirrors CRAN and should be stable.
 
 ## Alternatives
 
@@ -95,6 +109,8 @@ Thank you to:
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
   the repository, and Uwe Ligges in particular for maintaining
   [Winbuilder](http://win-builder.r-project.org/).
+* Users and others who have reported bugs and/or helped contribute fixes (see
+  NEWS.md).
 * Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) and rcnst to help
   detect errors in compiled code, and in particular for his infinite patience in
   helping me resolve the issues he identified for me.
