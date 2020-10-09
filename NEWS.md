@@ -1,3 +1,7 @@
+## 0.2.10
+
+* Banish ghosts of `stringsAsFactors`.
+
 ## 0.2.9
 
 * `stringsAsFactors` in tests explicitly set to TRUE due to r-devel change

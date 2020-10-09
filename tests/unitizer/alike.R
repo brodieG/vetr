@@ -110,7 +110,7 @@ unitizer_sect("Data Frames", {
   )  # TRUE
   alike(       # TRUE, note this is recursive
     data.frame(a=integer(), b=factor()),
-    data.frame(a=1:3, b=letters[1:3])
+    data.frame(a=1:3, b=letters[1:3], stringsAsFactors=TRUE)
   )
   # FALSE mis-match at index[[1]]
   alike(
