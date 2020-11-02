@@ -90,7 +90,7 @@ vet_token <- function(exp, err.msg="%s") {
   if(
     !is.character(err.msg) || length(err.msg) != 1L || is.na(err.msg) ||
     inherits(try(sprintf(err.msg, "test"), silent=TRUE), "try-error") ||
-    identical(sprintf(err.msg, "test"), err.msg)
+    identical(suppressWarnings(sprintf(err.msg, "test")), err.msg)
   ) {
     stop(
       "Argument `err.msg` must be character(1L) and contain a single '%s' ",
