@@ -114,8 +114,8 @@ SEXP VALC_remove_parens(SEXP lang) {
       } else {
         break;
       }
-    }
-    lang = CADR(lang);
+      lang = CADR(lang);
+    } else break;
   }
   SEXP res = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res, 0, lang);
