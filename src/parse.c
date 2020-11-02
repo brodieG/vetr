@@ -203,6 +203,12 @@ SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 /*
+ * Parse Validator Language
+ *
+ * Create a structure with the same recusive topology as the call, but for each
+ * element replace with two elements, the original element, along with the
+ * designation of the element (is it an &&, ||, as-is, or alike token).
+ *
  * @param arg_tag the parameter name being validated, apparently `var_name` is
  *   the full substituted call, not just the symbol.
  */
@@ -354,9 +360,6 @@ void VALC_parse_recurse(
 
     first_fun = lang_track;
   }
-  lang = CDR(lang);
-  lang2 = CDR(lang2);
-  lang_track = CDR(lang_track);
   call_type = 999; // Reset for sub-elements
 
   // Loop through remaining elements of call; if any are calls, recurse,
