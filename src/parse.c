@@ -95,21 +95,25 @@ SEXP VALC_remove_parens(SEXP lang) {
   mode = mode_0;
 
   while(TYPEOF(lang) == LANGSXP) {
-    if(!strcmp(CHAR(PRINTNAME(CAR(lang))), "(")) {
-      if(length(lang) != 2) {
-        // nocov start
-        error(
-          "Internal Error: %s",
-          "`(` call with more than one argument; contact maintainer."
-        );
-        // nocov end
+    SEXP fun_symb = CAR(lang);
+    if(TYPEOF(fun_symb) == SYMSXP) {
+      const char * sym_name = CHAR(PRINTNAME(fun_symb));
+      if(!strcmp(sym_name, "(")) {
+        if(length(lang) != 2) {
+          // nocov start
+          error(
+            "Internal Error: %s",
+            "`(` call with more than one argument; contact maintainer."
+          );
+          // nocov end
+        }
+      } else if(!strcmp(sym_name, ".")) {
+        if(length(lang) != 2)
+          error("`.(` must be used with only one argument.");
+        mode = mode_1;
+      } else {
+        break;
       }
-    } else if(!strcmp(CHAR(PRINTNAME(CAR(lang))), ".")) {
-      if(length(lang) != 2)
-        error("`.(` must be used with only one argument.");
-      mode = mode_1;
-    } else {
-      break;
     }
     lang = CADR(lang);
   }
@@ -314,6 +318,8 @@ void VALC_parse_recurse(
   one with the status, and the recursion is done by passing pointers to the
   current position in each tree.  Would be simpler.  Here instead we try to cram
   both trees into one by using lists and we get this mess below
+
+  For more details on call_type values see VALC_evaluate_recurse
   */
   static int counter = -1;
   int call_type = 999;
@@ -325,18 +331,20 @@ void VALC_parse_recurse(
     error("Internal Error: unexpectedly encountered a non-language object");
     // nocov end
   }
-  const char * call_symb;
-
   // Determine if we're dealing with a special code, and if so determine what
   // type and record
 
-  call_symb = CHAR(PRINTNAME(CAR(lang)));
-  if(eval_as_is) {
+  SEXP fun_symb = CAR(lang);
+  if(eval_as_is) {  // expression contains `.`, should not be aliked
     call_type = 10;
-  } else if(!strcmp(call_symb, "&&")) {
-    call_type = 1;
-  } else if(!strcmp(call_symb, "||")) {
-    call_type = 2;
+  } else if(TYPEOF(fun_symb) == SYMSXP) {  // could be pkg::fun
+    const char * call_symb;
+    call_symb = CHAR(PRINTNAME(fun_symb));
+    if(!strcmp(call_symb, "&&")) {
+      call_type = 1;
+    } else if(!strcmp(call_symb, "||")) {
+      call_type = 2;
+    }
   }
   SETCAR(lang_track, ScalarInteger(call_type));           // Track type of call
 
