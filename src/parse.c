@@ -207,7 +207,8 @@ SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
  *
  * Create a structure with the same recusive topology as the call, but for each
  * element replace with two elements, the original element, along with the
- * designation of the element (is it an &&, ||, as-is, or alike token).
+ * designation of the element (is it an `&&` (1), `||` (2), as-is (10, i.e.
+ * contains dot), or alike token (999)).
  *
  * @param arg_tag the parameter name being validated, apparently `var_name` is
  *   the full substituted call, not just the symbol.
@@ -331,7 +332,6 @@ void VALC_parse_recurse(
   int call_type = 999;
   counter++;  // Tracks recursion level, used for debugging
 
-
   if(TYPEOF(lang) != LANGSXP) {  // Not a language expression
     // nocov start
     error("Internal Error: unexpectedly encountered a non-language object");
@@ -352,7 +352,7 @@ void VALC_parse_recurse(
       call_type = 2;
     }
   }
-  SETCAR(lang_track, ScalarInteger(call_type));           // Track type of call
+  SETCAR(lang_track, ScalarInteger(call_type));     // Track type of call
 
   if(first_fun == R_NilValue && call_type >= 10) {
     // First time we're no longer parsing && / ||, record so that we can then
@@ -360,7 +360,6 @@ void VALC_parse_recurse(
 
     first_fun = lang_track;
   }
-  call_type = 999; // Reset for sub-elements
 
   // Loop through remaining elements of call; if any are calls, recurse,
   // otherwise sub for dots and record as templates (999).  Stuff here shouldn't
@@ -419,13 +418,13 @@ void VALC_parse_recurse(
         first_fun, set, track_hash, track_hash2, arg_tag
       );
     } else {
-      int new_call_type = call_type;
+      // Problem we have here is that we do not want to reset to 999 yet
       if(is_one_dot || eval_as_is_internal) {
         if(first_fun != R_NilValue)
           SETCAR(first_fun, ScalarInteger(10));
-        new_call_type = 10;
+        call_type = 10;
       }
-      SETCAR(lang_track, ScalarInteger(new_call_type));
+      SETCAR(lang_track, ScalarInteger(call_type));
     }
     // Now reset the track hash to avoid spurious collision warnings
 
@@ -434,6 +433,7 @@ void VALC_parse_recurse(
     lang = CDR(lang);
     lang2 = CDR(lang2);
     lang_track = CDR(lang_track);
+    call_type = 999; // Reset for sub-elements
   }
   if(lang == R_NilValue && (lang_track != R_NilValue || lang2 != R_NilValue)) {
     // nocov start
