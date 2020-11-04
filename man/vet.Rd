@@ -3,14 +3,25 @@
 \name{vet}
 \alias{vet}
 \alias{tev}
-\alias{tev}
 \title{Verify Objects Meet Structural Requirements}
 \usage{
-vet(target, current, env = parent.frame(), format = "text", stop = FALSE,
-  settings = NULL)
+vet(
+  target,
+  current,
+  env = parent.frame(),
+  format = "text",
+  stop = FALSE,
+  settings = NULL
+)
 
-tev(current, target, env = parent.frame(), format = "text", stop = FALSE,
-  settings = NULL)
+tev(
+  current,
+  target,
+  env = parent.frame(),
+  format = "text",
+  stop = FALSE,
+  settings = NULL
+)
 }
 \arguments{
 \item{target}{a template, a vetting expression, or a compound expression}
@@ -50,7 +61,7 @@ integration with \code{magrittr}.  There are two major caveats:
 \itemize{
 \item error messages will be less useful since you will get \code{.} instead
 of the deparsed call
-\item \code{x \\\%>\\\% tev(y)} is much slower than \code{vet(y, x)} (or even \code{tev(x, y)})
+\item \verb{x \\\\\%>\\\\\% tev(y)} is much slower than \code{vet(y, x)} (or even \code{tev(x, y)})
 }
 }
 \section{Vetting Expressions}{
