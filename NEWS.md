@@ -1,3 +1,10 @@
+## 0.2.11
+
+* Update tests for new r-devel warnings for `sprintf`.
+* [#100](https://github.com/brodieG/vetr/issues/100) Vetting expressions
+  containing package qualified function calls (e.g. `base::sum(...)`) would
+  fail.
+
 ## 0.2.10
 
 * Banish ghosts of `stringsAsFactors`.

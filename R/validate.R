@@ -168,6 +168,9 @@ tev <- function(
 #' enclosing function automatically matched to the vetting expressions provided
 #' in `...`.
 #'
+#' Only named arguments may be vetted; in other words it is not possible to vet
+#' arguments passed via `...`.
+#'
 #' @inheritSection vet Vetting Expressions
 #'
 #' @note `vetr` will force evaluation of any arguments that are being
@@ -221,9 +224,14 @@ vetr <- function(..., .VETR_SETTINGS=NULL)
     match.call(
       definition=fun.match,
       call=sys.call(sys.parent(1)),
-      envir=parent.frame(2L)
+      envir=parent.frame(2L),
+      expand.dots=FALSE
     ),
-    match.call(definition=fun.match, envir=(par.frame <- parent.frame())),
+    match.call(
+      definition=fun.match,
+      envir=(par.frame <- parent.frame()),
+      expand.dots=FALSE
+    ),
     par.frame,
     .VETR_SETTINGS
   )

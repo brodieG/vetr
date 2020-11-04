@@ -41,7 +41,7 @@ struct VALC_res_list VALC_evaluate_recurse(
   struct VALC_res_list res_list
 ) {
   /*
-  check act_codes:
+  check act_codes (aka call_type in parse_recurse):
     if 1 or 2
       recurse and:
         if return value is TRUE
@@ -54,7 +54,7 @@ struct VALC_res_list VALC_evaluate_recurse(
             record for later return if no TRUEs are met
         if return value is TRUE,
         if with mode set to corresponding value (does it matter)
-    if 10, eval as is
+    if 10, eval as is because expression contains a `.`
       if returns character then return character
       if returns FALSE deparse into something like (`x` does not eval to TRUE`)
     if 999, eval as alike

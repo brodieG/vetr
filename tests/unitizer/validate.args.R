@@ -156,3 +156,10 @@ unitizer_sect("Default arg mix-up", {
   fun10b <- function(x, y=TRUE, z=999) vetr(INT, z=INT.1)
   fun10b(1, z=1:3)
 })
+unitizer_sect("Dots", {
+  f <- function(x, y=1L, z=1L, ...) vetr(1L, 1L, 1L)
+  f(2L, w=3L)
+
+  f <- function(x, y=1L, ...) vetr(1L, 1L, 1L)
+  f(2L, z=3L)
+})
