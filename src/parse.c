@@ -95,23 +95,27 @@ SEXP VALC_remove_parens(SEXP lang) {
   mode = mode_0;
 
   while(TYPEOF(lang) == LANGSXP) {
-    if(!strcmp(CHAR(PRINTNAME(CAR(lang))), "(")) {
-      if(length(lang) != 2) {
-        // nocov start
-        error(
-          "Internal Error: %s",
-          "`(` call with more than one argument; contact maintainer."
-        );
-        // nocov end
+    SEXP fun_symb = CAR(lang);
+    if(TYPEOF(fun_symb) == SYMSXP) {
+      const char * sym_name = CHAR(PRINTNAME(fun_symb));
+      if(!strcmp(sym_name, "(")) {
+        if(length(lang) != 2) {
+          // nocov start
+          error(
+            "Internal Error: %s",
+            "`(` call with more than one argument; contact maintainer."
+          );
+          // nocov end
+        }
+      } else if(!strcmp(sym_name, ".")) {
+        if(length(lang) != 2)
+          error("`.(` must be used with only one argument.");
+        mode = mode_1;
+      } else {
+        break;
       }
-    } else if(!strcmp(CHAR(PRINTNAME(CAR(lang))), ".")) {
-      if(length(lang) != 2)
-        error("`.(` must be used with only one argument.");
-      mode = mode_1;
-    } else {
-      break;
-    }
-    lang = CADR(lang);
+      lang = CADR(lang);
+    } else break;
   }
   SEXP res = PROTECT(allocVector(VECSXP, 2));
   SET_VECTOR_ELT(res, 0, lang);
@@ -199,6 +203,13 @@ SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
 /* -------------------------------------------------------------------------- *\
 \* -------------------------------------------------------------------------- */
 /*
+ * Parse Validator Language
+ *
+ * Create a structure with the same recusive topology as the call, but for each
+ * element replace with two elements, the original element, along with the
+ * designation of the element (is it an `&&` (1), `||` (2), as-is (10, i.e.
+ * contains dot), or alike token (999)).
+ *
  * @param arg_tag the parameter name being validated, apparently `var_name` is
  *   the full substituted call, not just the symbol.
  */
@@ -314,31 +325,34 @@ void VALC_parse_recurse(
   one with the status, and the recursion is done by passing pointers to the
   current position in each tree.  Would be simpler.  Here instead we try to cram
   both trees into one by using lists and we get this mess below
+
+  For more details on call_type values see VALC_evaluate_recurse
   */
   static int counter = -1;
   int call_type = 999;
   counter++;  // Tracks recursion level, used for debugging
-
 
   if(TYPEOF(lang) != LANGSXP) {  // Not a language expression
     // nocov start
     error("Internal Error: unexpectedly encountered a non-language object");
     // nocov end
   }
-  const char * call_symb;
-
   // Determine if we're dealing with a special code, and if so determine what
   // type and record
 
-  call_symb = CHAR(PRINTNAME(CAR(lang)));
-  if(eval_as_is) {
+  SEXP fun_symb = CAR(lang);
+  if(eval_as_is) {  // expression contains `.`, should not be aliked
     call_type = 10;
-  } else if(!strcmp(call_symb, "&&")) {
-    call_type = 1;
-  } else if(!strcmp(call_symb, "||")) {
-    call_type = 2;
+  } else if(TYPEOF(fun_symb) == SYMSXP) {  // could be pkg::fun
+    const char * call_symb;
+    call_symb = CHAR(PRINTNAME(fun_symb));
+    if(!strcmp(call_symb, "&&")) {
+      call_type = 1;
+    } else if(!strcmp(call_symb, "||")) {
+      call_type = 2;
+    }
   }
-  SETCAR(lang_track, ScalarInteger(call_type));           // Track type of call
+  SETCAR(lang_track, ScalarInteger(call_type));     // Track type of call
 
   if(first_fun == R_NilValue && call_type >= 10) {
     // First time we're no longer parsing && / ||, record so that we can then
@@ -346,10 +360,6 @@ void VALC_parse_recurse(
 
     first_fun = lang_track;
   }
-  lang = CDR(lang);
-  lang2 = CDR(lang2);
-  lang_track = CDR(lang_track);
-  call_type = 999; // Reset for sub-elements
 
   // Loop through remaining elements of call; if any are calls, recurse,
   // otherwise sub for dots and record as templates (999).  Stuff here shouldn't
@@ -408,13 +418,13 @@ void VALC_parse_recurse(
         first_fun, set, track_hash, track_hash2, arg_tag
       );
     } else {
-      int new_call_type = call_type;
+      // Problem we have here is that we do not want to reset to 999 yet
       if(is_one_dot || eval_as_is_internal) {
         if(first_fun != R_NilValue)
           SETCAR(first_fun, ScalarInteger(10));
-        new_call_type = 10;
+        call_type = 10;
       }
-      SETCAR(lang_track, ScalarInteger(new_call_type));
+      SETCAR(lang_track, ScalarInteger(call_type));
     }
     // Now reset the track hash to avoid spurious collision warnings
 
@@ -423,6 +433,7 @@ void VALC_parse_recurse(
     lang = CDR(lang);
     lang2 = CDR(lang2);
     lang_track = CDR(lang_track);
+    call_type = 999; // Reset for sub-elements
   }
   if(lang == R_NilValue && (lang_track != R_NilValue || lang2 != R_NilValue)) {
     // nocov start

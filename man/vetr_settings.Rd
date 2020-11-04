@@ -4,12 +4,24 @@
 \alias{vetr_settings}
 \title{Generate Control Settings For vetr and alike}
 \usage{
-vetr_settings(type.mode = 0L, attr.mode = 0L, lang.mode = 0L,
-  fun.mode = 0L, rec.mode = 0L, suppress.warnings = FALSE,
-  fuzzy.int.max.len = 100L, width = -1L, env.depth.max = 65535L,
-  symb.sub.depth.max = 65535L, symb.size.max = 15000L, nchar.max = 65535L,
-  track.hash.content.size = 63L, env = NULL, result.list.size.init = 64L,
-  result.list.size.max = 1024L)
+vetr_settings(
+  type.mode = 0L,
+  attr.mode = 0L,
+  lang.mode = 0L,
+  fun.mode = 0L,
+  rec.mode = 0L,
+  suppress.warnings = FALSE,
+  fuzzy.int.max.len = 100L,
+  width = -1L,
+  env.depth.max = 65535L,
+  symb.sub.depth.max = 65535L,
+  symb.size.max = 15000L,
+  nchar.max = 65535L,
+  track.hash.content.size = 63L,
+  env = NULL,
+  result.list.size.init = 64L,
+  result.list.size.max = 1024L
+)
 }
 \arguments{
 \item{type.mode}{integer(1L) in 0:2, defaults to 0, determines how object
