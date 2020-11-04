@@ -160,8 +160,8 @@ Thank you to:
 
 Brodie Gaslam is a hobbyist programmer based on the US East Coast.
 
-[1]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html
-[2]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/alike.html
-[3]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#non-standard-evaluation
-[4]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/inst/doc/vetr.html#in-functions
+[1]: https://cran.r-project.org/package=vetr/vignettes/vetr.html
+[2]: https://cran.r-project.org/package=vetr/vignettes/alike.html
+[3]: https://cran.r-project.org/package=vetr/vignettes/vetr.html#non-standard-evaluation
+[4]: https://cran.r-project.org/package=vetr/vignettes/vetr.html#in-functions
 [5]: http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/extra/compare.html
