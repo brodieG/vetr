@@ -380,16 +380,11 @@ SEXP VALC_validate_args(
     // Either our function is improperly missing an argument, or we have
     // validation for a default argument.  Note that since default arguments can
     // reference other arguments, we can't just assume that the default value is
-    // completely reasonable, although.
+    // completely reasonable.
+    //
+    // If the default arg not specified in fun_call, set the fun_tok to that
+    // default value for validation.
 
-    /*
-    Rprintf(
-      "Checking call: '%s' frm: '%s' val: '%s'\n",
-      TYPEOF(arg_tag) == SYMSXP ? CHAR(PRINTNAME(arg_tag)) : "",
-      TYPEOF(frm_tag) == SYMSXP ? CHAR(PRINTNAME(frm_tag)) : "",
-      TYPEOF(val_tag) == SYMSXP ? CHAR(PRINTNAME(val_tag)) : ""
-    );
-    */
     SEXP val_tok, fun_tok = R_MissingArg;
     if(arg_tag != frm_tag) {
       fun_call_match = 0;
@@ -424,34 +419,38 @@ SEXP VALC_validate_args(
       VALC_arg_error(TAG(fun_call_cpy), fun_call, "Argument `%s` is missing");
       // nocov end
     }
-    // Need to evaluate the argument
+    // Need to evaluate the argument, but only if it is not dots
 
-    int err_val = 0;
-    int * err_point = &err_val;
+    if(val_tag != R_DotsSymbol) {
+      int err_val = 0;
+      int * err_point = &err_val;
 
-    // Force evaluation of argument in fun frame, which should cause the
-    // corresponding promise to be evaluated in the correct frame
+      // Force evaluation of argument in fun frame, which should cause the
+      // corresponding promise to be evaluated in the correct frame
 
-    SEXP fun_val = R_tryEval(arg_tag, fun_frame, err_point);
-    if(* err_point) {
-      VALC_arg_error(
-        arg_tag, fun_call,
-        "Argument `%s` produced error during evaluation; see previous error."
-    );}
-    // Evaluate the validation expression
+      SEXP fun_val = R_tryEval(arg_tag, fun_frame, err_point);
+      if(* err_point) {
+        VALC_arg_error(
+          arg_tag, fun_call,
+          "Argument `%s` produced error during evaluation; see previous error."
+      );}
+      // Evaluate the validation expression
 
-    SEXP val_res = PROTECT(
-      VALC_evaluate(val_tok, fun_tok, arg_tag, fun_val, val_call, set, 0)
-    );
-    if(xlength(val_res)) {
-      // fail, produce error message: NOTE - might change if we try to use full
-      // expression instead of just arg name
-      VALC_process_error(val_res, arg_tag, fun_call, 1, 1, set);
-      // nocov start
-      error("Internal Error: should never get here 2487; contact maintainer");
-      // nocov end
+      SEXP val_res = PROTECT(
+        VALC_evaluate(val_tok, fun_tok, arg_tag, fun_val, val_call, set, 0)
+      );
+      if(xlength(val_res)) {
+        // fail, produce error message: NOTE - might change if we try to use full
+        // expression instead of just arg name
+        VALC_process_error(val_res, arg_tag, fun_call, 1, 1, set);
+        // nocov start
+        error("Internal Error: should never get here 2487; contact maintainer");
+        // nocov end
+      }
+      UNPROTECT(1);
+    } else {
+      warning("`...` vetting is not supported.");
     }
-    UNPROTECT(1);
   }
   if(val_call_cpy != R_NilValue || fun_call_cpy != R_NilValue) {
     // nocov start
