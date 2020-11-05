@@ -89,7 +89,10 @@
 vet_token <- function(exp, err.msg="%s") {
   if(
     !is.character(err.msg) || length(err.msg) != 1L || is.na(err.msg) ||
-    inherits(try(sprintf(err.msg, "test"), silent=TRUE), "try-error") ||
+    inherits(
+      suppressWarnings(try(sprintf(err.msg, "test"), silent=TRUE)),
+      "try-error"
+    ) ||
     identical(suppressWarnings(sprintf(err.msg, "test")), err.msg)
   ) {
     stop(
