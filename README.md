@@ -13,9 +13,9 @@ vetr
 [![](http://www.r-pkg.org/badges/version/vetr)](https://cran.r-project.org/package=vetr)
 [![Project Status: WIP - Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
-public.](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip)
+public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![Dependencies
-direct/recursive](https://tinyverse.netlify.com/badge/vetr)](https://tinyverse.netlify.com/)
+direct/recursive](https://tinyverse.netlify.app/badge/vetr)](https://tinyverse.netlify.app/)
 
 Trust, but Verify
 -----------------
@@ -169,7 +169,7 @@ them:
 `isTRUE(all(. >= x & . <= y))` for large vectors):
 
     vet(all_bw(., 0, 1), runif(5) + 1)
-    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.357045` at index 1 not in `[0,1]`\")"
+    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.369447` at index 1 not in `[0,1]`\")"
 
 There are a number of predefined vetting tokens you can use in your
 vetting expressions such as:
@@ -329,7 +329,7 @@ Thank you to:
     [knitr](https://cran.r-project.org/package=knitr) and [J.J.
     Allaire](https://github.com/jjallaire) etal for
     [rmarkdown](https://cran.r-project.org/package=rmarkdown), and by
-    extension John MacFarlane for [pandoc](http://pandoc.org/).
+    extension John MacFarlane for [pandoc](https://pandoc.org/).
 -   [Michel Lang](https://github.com/mllg) for pushing me to implement
     `all_bw` to compete with his own package
     [`checkmate`](https://cran.r-project.org/package=checkmate).
@@ -348,12 +348,11 @@ Thank you to:
 -   [Github](https://github.com/), [Travis-CI](https://travis-ci.org/),
     [Codecov](https://codecov.io/),
     [Vagrant](https://www.vagrantup.com/),
-    [Docker](https://www.docker.com/),
-    [Ubuntu](https://www.ubuntu.com/), [Brew](https://brew.sh/) for
-    providing infrastructure that greatly simplifies open source
-    development.
--   [Free Software Foundation](http://fsf.org/) for developing the GPL
-    license and promotion of the free software movement.
+    [Docker](https://www.docker.com/), [Ubuntu](https://ubuntu.com/),
+    [Brew](https://brew.sh/) for providing infrastructure that greatly
+    simplifies open source development.
+-   [Free Software Foundation](https://www.fsf.org/) for developing the
+    GPL license and promotion of the free software movement.
 
 About the Author
 ----------------

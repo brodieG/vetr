@@ -3,7 +3,7 @@ Title: Trust, but Verify
 Description: Declarative template-based framework for verifying that objects
   meet structural requirements, and auto-composing error messages when they do
   not.
-Version: 0.2.11
+Version: 0.2.12
 Authors@R: c(
     person("Brodie", "Gaslam", email="brodie.gaslam@yahoo.com",
     role=c("aut", "cre")),
