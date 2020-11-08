@@ -260,3 +260,9 @@ unitizer_sect("Result Buffer", {
   vet(1, 1, settings=set4)
   vet(1, 1, settings=set5)
 })
+
+unitizer_sect("pkg::fun calls (issue #100)", {
+  vet(base::sum(.), 1:10)
+  vet((base::.)(identity), is.function)
+  vet((base::.)(identity), is.integer)
+})

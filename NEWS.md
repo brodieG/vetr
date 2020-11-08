@@ -1,3 +1,13 @@
+## 0.2.11
+
+* [#102](https://github.com/brodieG/vetr/issues/102) `vetr()` now explicitly
+  does not support vetting of `...`; previously it would allow it, but then fail
+  ugly in internal code.
+* [#100](https://github.com/brodieG/vetr/issues/100) Vetting expressions
+  containing package qualified function calls (e.g. `base::sum(...)`) would
+  fail.
+* Update tests for new r-devel warnings for `sprintf`.
+
 ## 0.2.10
 
 * Banish ghosts of `stringsAsFactors`.

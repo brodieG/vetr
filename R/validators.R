@@ -22,18 +22,18 @@
 #' are also documented here.
 #'
 #' Allows you to supply error messages for vetting to use for each error
-#' token.  Your token should not contain top level \code{&&} or \code{||}.  If
+#' token.  Your token should not contain top level `&&` or `||`.  If
 #' it does your error message will not be reported because `vetr` looks for
 #' error messages attached to atomic tokens.  If your token must involve
-#' top level \code{&&} or `||`, use \code{I(x && y)} to ensure that
+#' top level `&&` or `||`, use `I(x && y)` to ensure that
 #' your error message is used by `vet`, but beware than in doing so you do
 #' not use templates within the `I` call as everything therein will be
 #' interpreted as a vetting expression rather than a template.
 #'
-#' Error messages are typically of the form \dQuote{\%s should be XXX}.
+#' Error messages are typically of the form "%s should be XXX".
 #'
 #' This package ships with many predefined tokens for common use cases. They
-#' are listed in the \dQuote{Usage} section of this documentation.  The tokens
+#' are listed in the `Usage` section of this documentation.  The tokens
 #' are named in format `TYPE[.LENGTH][.OTHER]`.  For example
 #' `INT` will vet an integer vector, `INT.1` will vet a scalar integer
 #' vector, and `INT.1.POS.STR` will vet a strictly positive integer vector.
@@ -51,10 +51,10 @@
 #'
 #' @export
 #' @seealso [vet()]
-#' @param exp an expression which will be captured but not evaluated
+#' @param exp an expression which will be captured but not evaluated.
 #' @param err.msg character(1L) a message that tells the user what the
-#'   expected value should be, should contain a \dQuote{\%s} for `sprintf`
-#'   to use (e.g. \dQuote{\%s should be greater than 2})
+#'   expected value should be, should contain a "%s" for `sprintf`
+#'   to use (e.g. "%s should be greater than 2").
 #' @return a quoted expressions with `err.msg` attribute set
 #' @examples
 #' ## Predefined tokens:
@@ -89,8 +89,11 @@
 vet_token <- function(exp, err.msg="%s") {
   if(
     !is.character(err.msg) || length(err.msg) != 1L || is.na(err.msg) ||
-    inherits(try(sprintf(err.msg, "test"), silent=TRUE), "try-error") ||
-    identical(sprintf(err.msg, "test"), err.msg)
+    inherits(
+      suppressWarnings(try(sprintf(err.msg, "test"), silent=TRUE)),
+      "try-error"
+    ) ||
+    identical(suppressWarnings(sprintf(err.msg, "test")), err.msg)
   ) {
     stop(
       "Argument `err.msg` must be character(1L) and contain a single '%s' ",

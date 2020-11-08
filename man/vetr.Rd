@@ -25,6 +25,10 @@ arguments.  Works just like \code{\link[=vet]{vet()}}, except that the formals o
 enclosing function automatically matched to the vetting expressions provided
 in \code{...}.
 }
+\details{
+Only named arguments may be vetted; in other words it is not possible to vet
+arguments passed via \code{...}.
+}
 \note{
 \code{vetr} will force evaluation of any arguments that are being
 checked (you may omit arguments that should not be evaluate from
