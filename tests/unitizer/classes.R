@@ -19,7 +19,7 @@ unitizer_sect("Class Matching", {
   alike(obj1, obj2, settings=vetr_settings(attr.mode=1))   # FALSE
 } )
 unitizer_sect("S4", {
-  bn <- .BaseNamespaceEnv
+  bn <- new.env()  # used to be base namespace
   setClass("foo", representation(a = "character", b = "numeric"), where=bn)
   setClass("bar", representation(d = "numeric", c = "numeric"), where=bn)
   setClass("baz", contains="foo", list(c="character"), where=bn)
