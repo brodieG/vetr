@@ -32,6 +32,63 @@
 \alias{LGL}
 \alias{LGL.1}
 \title{Vetting Tokens With Custom Error Messages}
+\format{
+An object of class \code{call} of length 2.
+
+An object of class \code{call} of length 2.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+
+An object of class \code{call} of length 3.
+}
 \usage{
 vet_token(exp, err.msg = "\%s")
 

@@ -21,5 +21,9 @@
 #'
 #' @name vetr-package
 #' @docType package
+#' @importFrom methods new
 
 NULL
+
+# importFrom methods needed for tests of reference classes because we don't want
+# to create the classes in the tests due to the topenv issues.

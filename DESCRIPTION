@@ -19,10 +19,13 @@ License: GPL (>=2)
 URL: https://github.com/brodieG/vetr
 BugReports: https://github.com/brodieG/vetr/issues
 VignetteBuilder: knitr
+Imports:
+    methods,
+    stats,
+    utils
 Suggests:
     knitr,
     rmarkdown,
-    unitizer,
-    methods
-RoxygenNote: 7.1.0
-Roxygen: list(markdown = TRUE)
+    unitizer
+RoxygenNote: 7.1.1
+Roxygen: list(markdown = TRUE, load = "installed")
