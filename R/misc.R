@@ -114,3 +114,15 @@ list_as_sorted_vec <- function(x) .Call(VALC_list_as_sorted_vec, x)
 ##test2 <- function(a, b) .Call(VALC_test2, a, b)
 ###' @export
 ##test3 <- function(a, b, c) .Call(VALC_test3, a, b, c)
+
+# Used for tests.  We can't really create them test time as `where` is not
+# allowed, and even if it where, it only works becaue it seems topenv doesn't
+# anticipate the possibility globalenv will not be on the search path.
+
+setClass("vetr_foo", representation(a = "character", b = "numeric"))
+setClass("vetr_bar", representation(d = "numeric", c = "numeric"))
+setClass("vetr_baz", contains="vetr_foo", list(c="character"))
+
+Foo <- setRefClass("Foo")
+Bar <- setRefClass("Bar")
+
