@@ -59,7 +59,7 @@ stopifnot_iris <- function(x) {
     identical(levels(x$Species), levels(iris$Species))
   )
 }
-stopifnot_iris(iris.fake)
+try(stopifnot_iris(iris.fake))
 ```
 
 `vetr` saved us typing, and the time and thought needed to come up with what
