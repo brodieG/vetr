@@ -19,14 +19,10 @@ unitizer_sect("Class Matching", {
   alike(obj1, obj2, settings=vetr_settings(attr.mode=1))   # FALSE
 } )
 unitizer_sect("S4", {
-  # By virtue of vetr being the first package on the search path, that is where
-  # the class definitions will go due to logic in topenv().  This might not be
-  # robust in the long term as "this works" only because topenv() assumes it's
-  # being evaluated in the namespace due to not running into global env first.
-  #
-  # Ultimately, we might need to scrub the error messages of the environment
-  # name to make this truly reproducible.
-
+  # We used to define classes here, but under unitizer by virtue of vetr being
+  # the first package on the search path, that is where the class definitions
+  # ended up due to logic in topenv().  That seemed fragile so we switched to
+  # defining in package.
 
   x <- new("vetr_foo")
   y <- new("vetr_foo")

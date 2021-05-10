@@ -1,6 +1,7 @@
 ## 0.2.13
 
 * Tests no longer attempt to create S4 class definitions in base namespace.
+* Fix UCRT warnings.
 
 ## 0.2.11-12
 
