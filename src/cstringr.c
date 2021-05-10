@@ -221,20 +221,19 @@ char * CSR_strmcpy_int(const char * str, size_t maxlen, int warn) {
   char * str_new = R_alloc(len + 1, sizeof(char));
 
   // should we use memcpy?
-  if(!strncpy(str_new, str, len)) {
-    // nocov start
-    error("%s%s",
-      "Internal Error (CSR_strncopy): failed making copy of string for  ",
-      "truncation; contact maintainer."
-    );
-    // nocov end
+  if(len) {
+    if(!strncpy(str_new, str, len)) {
+      // nocov start
+      error("%s%s",
+        "Internal Error (CSR_strncopy): failed making copy of string for  ",
+        "truncation; contact maintainer."
+      );
+      // nocov end
+    }
   }
-  // Ensure null terminated if last character is not NULL; this happens when
-  // truncating to `maxlen`, also if zero len make sure that is a NULL
+  // Ensure null terminated.
 
-  if(!len) {
-    str_new[0] = '\0';
-  } else str_new[len] = '\0';
+  str_new[len] = '\0';
 
   return str_new;
 }
@@ -264,20 +263,20 @@ void CSR_strappend(char * target, const char * str, size_t maxlen) {
     if(len == maxlen && str[len])
       warning("CSR_strmcopy: truncated string longer than %d", maxlen);
 
-    if(!strncpy(target, str, len)) {
-      // nocov start
-      error("%s%s",
-        "Internal Error (CSR_strappend): failed making copy of string for  ",
-        "truncation; contact maintainer."
-      );
-      // nocov end
+    if(len) {
+      if(!strncpy(target, str, len)) {
+        // nocov start
+        error("%s%s",
+          "Internal Error (CSR_strappend): failed making copy of string for  ",
+          "truncation; contact maintainer."
+        );
+        // nocov end
+      }
     }
     // Ensure null terminated if last character is not NULL; this happens when
     // truncating to `maxlen`, also if zero len make sure that is a NULL
 
-    if(!len) {
-      target[0] = '\0';
-    } else if(target[len - 1]) target[len] = '\0';
+    target[len] = '\0';
   }
 }
 /*
@@ -484,18 +483,28 @@ char * CSR_collapse(SEXP str, const char * sep, size_t max_len) {
         size_all = CSR_add_szt(size_all, sep_len);
       }
     }
+    max_len = size_all;
     // Allocate and generate string
 
-    char * str_new = R_alloc(size_all + 1, sizeof(char));
+    char * str_new = R_alloc(max_len + 1, sizeof(char));
     char * str_cpy = str_new;
 
     for(i = 0; i < str_len; i++) {
       const char * to_copy = CHAR(STRING_ELT(str, i));
       CSR_strappend(str_cpy, to_copy, max_len);
-      str_cpy += CSR_strmlen_x(to_copy, max_len);
+      size_t copy_len = CSR_strmlen_x(to_copy, max_len);
+      str_cpy += copy_len;
+      // nocov start
+      if(max_len < copy_len) error("Internal error: exhaused copy buffer.");
+      // nocov end
+      max_len -= copy_len;
       if(i < str_len - 1) {
         CSR_strappend(str_cpy, sep, max_len);
         str_cpy += sep_len;
+        // nocov start
+        if(max_len < sep_len) error("Internal error: exhaused copy buffer 2.");
+        // nocov end
+        max_len -= sep_len;
       }
     }
     *str_cpy = '\0';

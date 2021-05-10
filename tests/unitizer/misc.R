@@ -22,7 +22,7 @@ unitizer_sect("bench_mark", {
 
   capt_wo_time <- function(x) {
     txt <- capture.output(x)
-    gsub("~ *-?[0-9.]*", "~", txt)
+    gsub("~ *-?[0-9.e+\\-]*", "~", txt)
   }
   capt_wo_time(bench_mark(Sys.sleep(1.2), times=1))
   capt_wo_time(bench_mark(Sys.sleep(.01), times=10))

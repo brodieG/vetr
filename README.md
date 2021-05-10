@@ -2,13 +2,15 @@
 
 library(rmarkdown)
 render('README.Rmd', output_format=html_vignette(css='vignettes/styles.css'))
-render('README.Rmd', output_format=md_document())
+rmarkdown::render('README.Rmd', output_format=md_document())
 
 -->
 vetr
 ====
 
-[![](https://travis-ci.org/brodieG/vetr.svg?branch=master)](https://travis-ci.org/brodieG/vetr)
+[![R build
+status](https://github.com/brodieG/vetr/workflows/R-CMD-check/badge.svg)](https://github.com/brodieG/vetr/actions)
+[![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://app.codecov.io/gh/brodieG/vetr?branch=master)
 [![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://codecov.io/github/brodieG/vetr?branch=master)
 [![](http://www.r-pkg.org/badges/version/vetr)](https://cran.r-project.org/package=vetr)
 [![Project Status: WIP - Initial development is in progress, but there
@@ -169,7 +171,7 @@ them:
 `isTRUE(all(. >= x & . <= y))` for large vectors):
 
     vet(all_bw(., 0, 1), runif(5) + 1)
-    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.369447` at index 1 not in `[0,1]`\")"
+    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.428231` at index 1 not in `[0,1]`\")"
 
 There are a number of predefined vetting tokens you can use in your
 vetting expressions such as:
@@ -249,8 +251,6 @@ For the development version use
     install.packages(file.path(f.uz, 'vetr-development'), repos=NULL, type='source')
     unlink(c(f.dl, f.uz))
 
-(Travis build status:
-[![](https://travis-ci.org/brodieG/vetr.svg?branch=development)](https://travis-ci.org/brodieG/vetr)).
 The master branch typically mirrors CRAN and should be stable.
 
 Alternatives
@@ -345,8 +345,7 @@ Thank you to:
     Ulrich](https://github.com/joshuaulrich) for making it lightweight.
 -   All open source developers out there that make their work freely
     available for others to use.
--   [Github](https://github.com/), [Travis-CI](https://travis-ci.org/),
-    [Codecov](https://codecov.io/),
+-   [Github](https://github.com/), [Codecov](https://about.codecov.io/),
     [Vagrant](https://www.vagrantup.com/),
     [Docker](https://www.docker.com/), [Ubuntu](https://ubuntu.com/),
     [Brew](https://brew.sh/) for providing infrastructure that greatly

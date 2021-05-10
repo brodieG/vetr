@@ -19,16 +19,16 @@ unitizer_sect("Class Matching", {
   alike(obj1, obj2, settings=vetr_settings(attr.mode=1))   # FALSE
 } )
 unitizer_sect("S4", {
-  bn <- .BaseNamespaceEnv
-  setClass("foo", representation(a = "character", b = "numeric"), where=bn)
-  setClass("bar", representation(d = "numeric", c = "numeric"), where=bn)
-  setClass("baz", contains="foo", list(c="character"), where=bn)
+  # We used to define classes here, but under unitizer by virtue of vetr being
+  # the first package on the search path, that is where the class definitions
+  # ended up due to logic in topenv().  That seemed fragile so we switched to
+  # defining in package.
 
-  x <- new("foo")
-  y <- new("foo")
-  z <- new("bar")
-  v <- new("baz")
-  w <- structure(list(a=character(), b=numeric()), class="foo")
+  x <- new("vetr_foo")
+  y <- new("vetr_foo")
+  z <- new("vetr_bar")
+  v <- new("vetr_baz")
+  w <- structure(list(a=character(), b=numeric()), class="vetr_foo")
 
   alike(x, y)  # TRUE
   alike(x, z)  # FALSE
@@ -49,7 +49,7 @@ unitizer_sect("S4", {
 
   # Borked S4
   v2 <- v
-  class(v2) <- c("baz", "foo")
+  class(v2) <- c("vetr_baz", "vetr_foo")
   alike(x, v2)
 
   # Stress test installation of `inherits`; right now the inherits command is
@@ -61,12 +61,9 @@ unitizer_sect("S4", {
   alike(y, v)  # TRUE
 } )
 unitizer_sect("R5", {
-  Foo <- setRefClass("Foo", where=bn)
-  Bar <- setRefClass("Bar", where=bn)
-
-  Foo.1 <- Foo$new()
-  Foo.2 <- Foo$new()
-  Bar.1 <- Bar$new()
+  Foo.1 <- vetr:::Foo$new()
+  Foo.2 <- vetr:::Foo$new()
+  Bar.1 <- vetr:::Bar$new()
 
   alike(Foo.1, Foo.2)
   alike(Foo.1, Bar.1)

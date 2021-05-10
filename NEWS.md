@@ -1,4 +1,9 @@
-## 0.2.11
+## 0.2.13
+
+* Tests no longer attempt to create S4 class definitions in base namespace.
+* Fix UCRT warnings.
+
+## 0.2.11-12
 
 * [#102](https://github.com/brodieG/vetr/issues/102) `vetr()` now explicitly
   does not support vetting of `...`; previously it would allow it, but then fail
