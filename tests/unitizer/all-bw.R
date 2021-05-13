@@ -367,9 +367,9 @@ unitizer_sect('all_bw - strings', {
 
   utf8 <- list(
     s4="\xF0\x90\x80\x80",  # four byte start
-    e4="\xF4\xBF\xBF\xBF",  # four byte end
+    e4="\xF4\x8F\xBF\xBD",  # last four byte before non-chars
     s3="\xE0\xA0\x80",      # three byte start
-    e3="\xEF\xBF\xBF",      # three byte end
+    e3="\xEF\xBF\xBD",      # last three byte before non-chars
     s2="\xC2\x80",          # two byte start
     e2="\xDF\xBF"           # two byte end
   )
