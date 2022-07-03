@@ -157,7 +157,7 @@ unitizer_sect("UTF8 corner cases, in UTF-8", {
   # e.g. failed on windows
 
   utf8.kuhn <- readLines('unitizer/helper/UTF-8-test.txt', encoding='UTF-8');
-  test.start <- grep("^Here come the tests:", utf8.kuhn)
+  test.start <- grep("^Here come the tests:", utf8.kuhn, useBytes=TRUE)
   test.start
 
   utf8.test <- tail(utf8.kuhn, -test.start)
