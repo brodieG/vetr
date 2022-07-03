@@ -500,6 +500,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
               res.dat.strings.tar_pre = "contain";
               res.dat.strings.target[0] = "variable `%s`";
               res.dat.strings.target[1] = var_name_chr;
+              res.dat.strings.cur_pre = "";
               res.dat.strings.current[1] = ""; // gcc-10
             } else {
               SEXP var_in_frame = PROTECT(findVarInFrame(target, var_name));
