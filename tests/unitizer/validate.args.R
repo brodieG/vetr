@@ -163,3 +163,8 @@ unitizer_sect("Dots", {
   f <- function(x, y=1L, ...) vetr(1L, 1L, 1L)
   f(2L, z=3L)
 })
+unitizer_sect("Don't access promises in environments", {
+  fenv <- function(env) vetr(environment())
+  env <- FALSE
+  fenv(environment())
+})
