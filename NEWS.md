@@ -1,3 +1,7 @@
+## 0.2.14
+
+* Work-around `utf8toucs` issues on Solaris CRAN check farm.
+
 ## 0.2.13
 
 * Tests no longer attempt to create S4 class definitions in base namespace.
