@@ -1,0 +1,33 @@
+## Release Steps
+
+[x] Coverage 100%
+[ ] Coverage 100% on codecov
+
+Make sure to check codecov as the algorithms are different (and better?) there.
+
+[x] R CMD check
+[ ] winbuilder    r81416
+[ ] Other locale (e.g. 8859-15, not "latin1")
+
+[ ] R 3.2
+[ ] R 3.3
+
+Github Actions doesn't work anymore with the default Rstudio setup, so we've
+just been running locally on our 3.3 version (or on docker?).
+
+[x] Revdep (dataonderivatives; run manually)
+
+[ ] Rchk
+[ ] valgrind
+[ ] SAN
+[ ] CSAN (catches things GCCSAN does not).
+
+^ Do these last as inevitably we end up making changes
+
+[ ] CRAN policy
+
+[ ] Review documentation
+[x] New README
+[ ] Logo
+
+
