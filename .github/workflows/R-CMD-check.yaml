@@ -24,17 +24,20 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-16.04,   r: 'devel' }
-          - {os: ubuntu-16.04,   r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/xenial/latest"}
-          - {os: ubuntu-16.04,   r: 'oldrel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/xenial/latest"}
-          - {os: ubuntu-16.04,   r: '3.3', rspm: "https://packagemanager.rstudio.com/cran/__linux__/xenial/latest"}
-          - {os: ubuntu-16.04,   r: '3.2', rspm: "https://packagemanager.rstudio.com/cran/__linux__/xenial/latest"}
+          - {os: ubuntu-20.04,   r: 'devel' }
+          - {os: ubuntu-20.04,   r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
+          - {os: ubuntu-20.04,   r: 'oldrel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
+          # need to manually set _R_CHECK_PACKAGE_NAME_ for R < ~3.4.4
+          # But we no longer test due to weird rspm failures, will test manually
+          # Also, tests fail due to possible changes in Unicode tables.
+          # - {os: ubuntu-20.04,   r: '3.3', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", rchkpkgname: "fansi"}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       RSPM: ${{ matrix.config.rspm }}
       # don't treat missing suggested packages as error
       _R_CHECK_FORCE_SUGGESTS_: false
+      _R_CHECK_PACKAGE_NAME_: ${{ matrix.config.rchkpkgname }}
 
     steps:
       - uses: actions/checkout@v2
@@ -66,7 +69,7 @@ jobs:
           while read -r cmd
           do
             eval sudo $cmd
-          done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "16.04"))')
+          done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE)
@@ -86,5 +89,9 @@ jobs:
           path: check
 
       - name: Test coverage
-        run: covr::codecov()
+        run: |
+          options(covr.exclude_end="(?://|#)[[:space:]]*nocov[[:space:]]*end")
+          options(covr.exclude_start="(?://|#)[[:space:]]*nocov[[:space:]]*start")
+          options(covr.exclude_pattern="(?://|#)[[:space:]]*nocov")
+          covr::codecov()
         shell: Rscript {0}
