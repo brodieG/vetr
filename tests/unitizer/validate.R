@@ -266,3 +266,13 @@ unitizer_sect("pkg::fun calls (issue #100)", {
   vet((base::.)(identity), is.function)
   vet((base::.)(identity), is.integer)
 })
+unitizer_sect("promises (issue #106)", {
+  env1 <- new.env()
+  delayedAssign("x", stop('error 1'), assign.env=env1)
+  env2 <- new.env()
+  delayedAssign("x", stop('error 2'), assign.env=env2)
+  env0 <- list2env(list(x=TRUE), new.env())
+
+  vet(env1, env0)   # error 1
+  vet(env0, env2)   # error 2
+})
