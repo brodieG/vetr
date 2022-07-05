@@ -25,3 +25,5 @@ them:
   but does not enforce type hinting.
 * [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi, which
   implements parameter validation via roxygen tags (not released to CRAN).
+* [`typed`](https://moodymudskipper.github.io/typed/) by Antoine Fabri, which
+  enforces types of symbols, function parameters, and return values.

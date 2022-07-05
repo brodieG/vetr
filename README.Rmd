@@ -109,7 +109,7 @@ Thank you to:
 * R Core for developing and maintaining such a wonderful language.
 * CRAN maintainers, for patiently shepherding packages onto CRAN and maintaining
   the repository, and Uwe Ligges in particular for maintaining
-  [Winbuilder](http://win-builder.r-project.org/).
+  [Winbuilder](https://win-builder.r-project.org/).
 * Users and others who have reported bugs and/or helped contribute fixes (see
   NEWS.md).
 * Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) and rcnst to help
@@ -127,8 +127,7 @@ Thank you to:
 * [Winston Chang](https://github.com/wch) for the
   [r-debug](https://hub.docker.com/r/wch1/r-debug/) docker container, in
   particular because of the valgrind level 2 instrumented version of R.
-* [Hadley Wickham](https://github.com/hadley/) for
-  [devtools](https://cran.r-project.org/package=devtools) and with [Peter
+* [Hadley Wickham](https://github.com/hadley/) and [Peter
   Danenberg](https://github.com/klutometis) for
   [roxygen2](https://cran.r-project.org/package=roxygen2).
 * [Yihui Xie](https://github.com/yihui) for
