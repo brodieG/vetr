@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 Brodie Gaslam
+Copyright (C) 2022 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
