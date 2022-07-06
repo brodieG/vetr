@@ -396,15 +396,17 @@ SEXP CSR_char_offsets(SEXP string) {
   R_xlen_t len = xlength(string);
   if(len != 1) error("Argument `string` must be scalar.");
 
-  R_len_t string_len = LENGTH(STRING_ELT(string, 0));
-  int * char_offs = (int *) R_alloc(string_len, sizeof(int));
-
   unsigned const char * char_start, * char_ptr;
   unsigned char char_val;
 
   SEXP chr_cont = STRING_ELT(string, 0);
   cetype_t char_enc = getCharCE(chr_cont);
   char_start = as_utf8_char(chr_cont);
+
+  // won't have more chars than bytes in the translated string, we might
+  // overallocate here (but drop the extra at the end)
+  int * char_offs =
+    (int *) R_alloc(strlen((const char *) char_start), sizeof(int));
 
   int byte_count = 0, char_count = 0;
 
