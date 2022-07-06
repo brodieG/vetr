@@ -52,7 +52,7 @@ static int is_utf8_enc(cetype_t type) {
   for (R_xlen_t i = 0; i < XLENGTH(l10n_names); ++i) {
     if(!strcmp(CHAR(STRING_ELT(l10n_names, i)), "UTF-8")) {
       if(TYPEOF(VECTOR_ELT(l10n, i)) != LGLSXP)
-        error("Internal Error: l10n_info()[['UTF-8']] is not logical.");
+        error("Internal Error: l10n_info()$`UTF-8` is not logical."); // nocov
       utf8_loc = asInteger(VECTOR_ELT(l10n, i));
       break;
   } }

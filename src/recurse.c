@@ -148,8 +148,8 @@ SEXP ALIKEC_rec_ind_as_lang(struct ALIKEC_rec_track rec) {
           if(!ALIKEC_is_valid_name(rec.indices[j].ind.chr))
             setAttrib(res, ALIKEC_SYM_syntacticnames, ScalarLogical(0));
           break;
-        default: {
           // nocov start
+        default: {
           error(
             "Internal Error: unexpected index type %d; contact maintainer.",
             rec.indices[j].type
