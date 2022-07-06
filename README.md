@@ -11,7 +11,6 @@ rmarkdown::render('README.Rmd', output_format=rmarkdown::md_document())
 [![R build
 status](https://github.com/brodieG/vetr/workflows/R-CMD-check/badge.svg)](https://github.com/brodieG/vetr/actions)
 [![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://app.codecov.io/gh/brodieG/vetr?branch=master)
-[![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://codecov.io/github/brodieG/vetr?branch=master)
 [![](http://www.r-pkg.org/badges/version/vetr)](https://cran.r-project.org/package=vetr)
 [![Project Status: WIP - Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
@@ -173,7 +172,7 @@ them:
 `isTRUE(all(. >= x & . <= y))` for large vectors):
 
     vet(all_bw(., 0, 1), runif(5) + 1)
-    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.152030` at index 1 not in `[0,1]`\")"
+    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.234342` at index 1 not in `[0,1]`\")"
 
 There are a number of predefined vetting tokens you can use in your
 vetting expressions such as:
