@@ -1,15 +1,14 @@
 ## Release Steps
 
 [x] Coverage 100%
-[ ] Coverage 100% on codecov
+[x] Coverage 100% on codecov
 
 Make sure to check codecov as the algorithms are different (and better?) there.
 
 [x] R CMD check
 [ ] winbuilder    r81416
-[ ] Other locale (e.g. 8859-15, not "latin1")
+[x] Other locale (e.g. 8859-15, not "latin1")
 
-[ ] R 3.2
 [x] R 3.3 (vignettes fail, but tests pass)
 
 Github Actions doesn't work anymore with the default Rstudio setup, so we've
@@ -19,8 +18,8 @@ just been running locally on our 3.3 version (or on docker?).
 
 [x] Rchk      (via rhub locally)
 [x] valgrind  (found an oob access)
-[ ] SAN
-[ ] CSAN (catches things GCCSAN does not).
+[x] SAN
+[x] CSAN (catches things GCCSAN does not).
 
 ^ Do these last as inevitably we end up making changes
 

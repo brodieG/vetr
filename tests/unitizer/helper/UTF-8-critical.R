@@ -20,6 +20,7 @@ crit.1 <- c(
   n.0="\x7F",
   y.1="\x80"
 )
+Encoding(crit.1) <- "UTF-8"
 crit.2 <- c(
   n.0="\xC1\x91",
   n.1="\xC2\x79",
@@ -27,6 +28,7 @@ crit.2 <- c(
   y.3="\xDF\xBF",
   n.4="\xDF\xC0"
 )
+Encoding(crit.2) <- "UTF-8"
 crit.3 <- c(
   n.00="\xE0\x9F\x91",
   n.01="\xE0\xA0\x79",
@@ -51,6 +53,7 @@ crit.3 <- c(
   n.22="\xEF\xBF\xC0",
   n.23="\xEF\xC0\xBF"
 )
+Encoding(crit.3) <- "UTF-8"
 crit.4 <- c(
   n.00="\xF0\x89\x80\x80",
   n.01="\xF0\x90\x79\x80",
@@ -78,3 +81,4 @@ crit.4 <- c(
   n.24="\xF4\x90\x01\x01",
   n.25="\xF5\x81\x81\x81"
 )
+Encoding(crit.4) <- "UTF-8"
