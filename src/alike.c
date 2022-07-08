@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 Brodie Gaslam
+Copyright (C) 2022 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -500,14 +500,24 @@ struct ALIKEC_res ALIKEC_alike_rec(
               res.dat.strings.tar_pre = "contain";
               res.dat.strings.target[0] = "variable `%s`";
               res.dat.strings.target[1] = var_name_chr;
+              res.dat.strings.cur_pre = "";
               res.dat.strings.current[1] = ""; // gcc-10
             } else {
               SEXP var_in_frame = PROTECT(findVarInFrame(target, var_name));
+              // Could find a promise, which we should evaluate. It shouldn't
+              // matter where we evaluate it, so eval in empty env.
+              if(TYPEOF(var_in_frame) == PROMSXP) {
+                var_in_frame = PROTECT(eval(var_in_frame, R_EmptyEnv));
+              } else PROTECT(R_NilValue); // Stack balance
+              if(TYPEOF(var_cur_val) == PROMSXP) {
+                var_cur_val = PROTECT(eval(var_cur_val, R_EmptyEnv));
+              } else PROTECT(R_NilValue); // Stack balance
+
               res = ALIKEC_alike_rec(
                 var_in_frame, var_cur_val, res.dat.rec, set
               );
               REPROTECT(res.wrap, ipx);
-              UNPROTECT(1);
+              UNPROTECT(3);
               if(!res.success) {
                 res.dat.rec = ALIKEC_rec_ind_chr(res.dat.rec, var_name_chr);
             } }

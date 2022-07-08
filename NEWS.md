@@ -1,3 +1,12 @@
+## 0.2.14
+
+* [#106](https://github.com/brodieG/vetr/issues/106) force promises prior to
+  comparison to avoid accidentally accessing during comparisons.
+* [#104](https://github.com/brodieG/vetr/issues/104) document need for
+  `utils::globalVariables(".")`.
+* Fix `grep` usage in tests for R 4.3 upcoming changes.
+* Work-around `utf8toucs` issues on Solaris CRAN check farm.
+
 ## 0.2.13
 
 * Tests no longer attempt to create S4 class definitions in base namespace.

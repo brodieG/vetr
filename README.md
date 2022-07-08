@@ -2,16 +2,15 @@
 
 library(rmarkdown)
 render('README.Rmd', output_format=html_vignette(css='vignettes/styles.css'))
-rmarkdown::render('README.Rmd', output_format=md_document())
+rmarkdown::render('README.Rmd', output_format=rmarkdown::md_document())
 
 -->
-vetr
-====
+
+# vetr
 
 [![R build
 status](https://github.com/brodieG/vetr/workflows/R-CMD-check/badge.svg)](https://github.com/brodieG/vetr/actions)
 [![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://app.codecov.io/gh/brodieG/vetr?branch=master)
-[![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://codecov.io/github/brodieG/vetr?branch=master)
 [![](http://www.r-pkg.org/badges/version/vetr)](https://cran.r-project.org/package=vetr)
 [![Project Status: WIP - Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
@@ -19,8 +18,7 @@ public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostat
 [![Dependencies
 direct/recursive](https://tinyverse.netlify.app/badge/vetr)](https://tinyverse.netlify.app/)
 
-Trust, but Verify
------------------
+## Trust, but Verify
 
 ### Easily
 
@@ -38,8 +36,7 @@ messages as needed.
 `vetr` is written in C to minimize overhead from parameter checks in
 your functions. It has no dependencies.
 
-Declarative Checks with Templates
----------------------------------
+## Declarative Checks with Templates
 
 ### Templates
 
@@ -131,8 +128,7 @@ It tells us:
 location of failure is generated such that you can easily copy it in
 part or full to the R prompt for further examination.
 
-Vetting Expressions
--------------------
+## Vetting Expressions
 
 You can combine templates with `&&` / `||`:
 
@@ -150,6 +146,11 @@ refer to the object:
     ## [1] "`-42 > 0` is not TRUE (FALSE)"
     vet(numeric(1L) && . > 0, 42)
     ## [1] TRUE
+
+If you do use the `.` symbol in your vetting expressions in your
+packages, you will need to include `utils::globalVariables(".")` as a
+top-level call to avoid the “no visible binding for global variable ‘.’”
+R CMD check NOTE.
 
 You can compose vetting expressions as language objects and combine
 them:
@@ -171,7 +172,7 @@ them:
 `isTRUE(all(. >= x & . <= y))` for large vectors):
 
     vet(all_bw(., 0, 1), runif(5) + 1)
-    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.428231` at index 1 not in `[0,1]`\")"
+    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.234342` at index 1 not in `[0,1]`\")"
 
 There are a number of predefined vetting tokens you can use in your
 vetting expressions such as:
@@ -185,8 +186,7 @@ usage ideas, or at the [“Non Standard Evaluation” section of the
 vignette](https://cran.r-project.org/package=vetr/vignettes/vetr.html#non-standard-evaluation)
 for the gory details.
 
-`vetr` in Functions
--------------------
+## `vetr` in Functions
 
 If you are vetting function inputs, you can use the `vetr` function,
 which works just like `vet` except that it is streamlined for use within
@@ -209,8 +209,7 @@ See
 [vignette](https://cran.r-project.org/package=vetr/vignettes/vetr.html#in-functions)
 for additional details on how the `vetr` function works.
 
-Additional Documentation
-------------------------
+## Additional Documentation
 
 -   [`vetr`
     vignette](https://cran.r-project.org/package=vetr/vignettes/vetr.html),
@@ -221,18 +220,16 @@ Additional Documentation
 -   A survey of [parameter validation
     functions](http://htmlpreview.github.io/?https://github.com/brodieG/vetr/blob/master/extra/compare.html).
 
-Development Status
-------------------
+## Development Status
 
 `vetr` is still in development, although most of the features are
 considered mature. The most likely area of change is the treatment of
-function and language templates (e.g. `alike(sum, max)`), and more
+function and language templates (e.g. `alike(sum, max)`), and more
 flexible treatment of list templates (e.g. in future lists may be
 allowed to be different lengths so long as every named element in the
 template exists in the object).
 
-Installation
-------------
+## Installation
 
 This package is available on CRAN:
 
@@ -253,8 +250,7 @@ For the development version use
 
 The master branch typically mirrors CRAN and should be stable.
 
-Alternatives
-------------
+## Alternatives
 
 There are many alternatives available to `vetr`. We do a survey of the
 following in our [parameter validation
@@ -292,16 +288,18 @@ review them:
 -   [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi,
     which implements parameter validation via roxygen tags (not released
     to CRAN).
+-   [`typed`](https://moodymudskipper.github.io/typed/) by Antoine
+    Fabri, which enforces types of symbols, function parameters, and
+    return values.
 
-Acknowledgments
----------------
+## Acknowledgments
 
 Thank you to:
 
 -   R Core for developing and maintaining such a wonderful language.
 -   CRAN maintainers, for patiently shepherding packages onto CRAN and
     maintaining the repository, and Uwe Ligges in particular for
-    maintaining [Winbuilder](http://win-builder.r-project.org/).
+    maintaining [Winbuilder](https://win-builder.r-project.org/).
 -   Users and others who have reported bugs and/or helped contribute
     fixes (see NEWS.md).
 -   Tomas Kalibera for [rchk](https://github.com/kalibera/rchk) and
@@ -321,9 +319,8 @@ Thank you to:
     [r-debug](https://hub.docker.com/r/wch1/r-debug/) docker container,
     in particular because of the valgrind level 2 instrumented version
     of R.
--   [Hadley Wickham](https://github.com/hadley/) for
-    [devtools](https://cran.r-project.org/package=devtools) and with
-    [Peter Danenberg](https://github.com/klutometis) for
+-   [Hadley Wickham](https://github.com/hadley/) and [Peter
+    Danenberg](https://github.com/klutometis) for
     [roxygen2](https://cran.r-project.org/package=roxygen2).
 -   [Yihui Xie](https://github.com/yihui) for
     [knitr](https://cran.r-project.org/package=knitr) and [J.J.
@@ -353,7 +350,6 @@ Thank you to:
 -   [Free Software Foundation](https://www.fsf.org/) for developing the
     GPL license and promotion of the free software movement.
 
-About the Author
-----------------
+## About the Author
 
 Brodie Gaslam is a hobbyist programmer based on the US East Coast.

@@ -43,6 +43,11 @@ combination of template and standard tokens combined with \code{&&} and/or
 much like the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Standard tokens are tokens
 that contain the \code{.} symbol and are used to vet values.
 
+If you do use the \code{.} symbol in your vetting expressions in your
+packages, you will need to include \code{utils::globalVariables(".")} as a
+top-level call to avoid the "no visible binding for global variable '.'"'
+R CMD check NOTE.
+
 See \code{vignette('vetr', package='vetr')} and examples for details on how
 to craft vetting expressions.
 }

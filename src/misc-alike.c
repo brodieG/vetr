@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 Brodie Gaslam
+Copyright (C) 2022 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -380,8 +380,8 @@ struct ALIKEC_pad_quote_res ALIKEC_pad_or_quote(
     case -1: syntactic = ALIKEC_syntactic_names(lang); break;
     case 0:
     case 1: break;
-    default: {
       // nocov start
+    default: {
       error("Internal Error: unexpected `syntactic` value; contat maintainer");
       // nocov end
     }

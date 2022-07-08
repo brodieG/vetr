@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 Brodie Gaslam
+Copyright (C) 2022 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -280,8 +280,8 @@ static SEXP VALC_error_standard(
       case -4: err_tok = "contains NAs"; break;
       // case -5: err_tok = "zero length"; break;
       case 0: err_tok = "contains non-TRUE values"; break;
-      default: {
         // nocov start
+      default: {
         error(
           "Internal Error: %s %d; contact maintainer.",
           "unexpected user exp eval value", eval_res_c
