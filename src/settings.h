@@ -57,7 +57,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     int result_list_size_init;
     int result_list_size_max;
   };
-  struct VALC_settings VALC_settings_init();
+  struct VALC_settings VALC_settings_init(void);
   struct VALC_settings VALC_settings_vet(SEXP set_list, SEXP env);
 
 #endif
