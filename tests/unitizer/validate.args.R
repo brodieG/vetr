@@ -168,3 +168,7 @@ unitizer_sect("Don't access promises in environments", {
   env <- FALSE
   fenv(environment())
 })
+unitizer_sect("Invocation via `do.call` (#109)", {
+  f <- function(x) vetr(is.function(.))
+  do.call(f, list(mean))
+})

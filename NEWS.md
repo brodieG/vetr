@@ -1,5 +1,11 @@
 ## 0.2.14
 
+* [#109](https://github.com/brodieG/vetr/issues/109) allow for substituted
+  arguments to contain objects (e.g. as might happen when a function is invoked
+  with `do.call`).
+
+## 0.2.14
+
 * [#106](https://github.com/brodieG/vetr/issues/106) force promises prior to
   comparison to avoid accidentally accessing during comparisons.
 * [#104](https://github.com/brodieG/vetr/issues/104) document need for
