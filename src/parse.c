@@ -211,7 +211,8 @@ SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho) {
  * contains dot), or alike token (999)).
  *
  * @param arg_tag the parameter name being validated, apparently `var_name` is
- *   the full substituted call, not just the symbol.
+ *   the full substituted call, not just the symbol (and per #109 could even be
+ *   a live object in cases of e.g. `do.call` invocation).
  */
 
 SEXP VALC_parse(
