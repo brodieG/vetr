@@ -1,4 +1,4 @@
-# Copyright (C) 2020 Brodie Gaslam
+# Copyright (C) 2022 Brodie Gaslam
 #
 # This file is part of "vetr - Trust, but Verify"
 #
@@ -33,6 +33,11 @@
 #' \code{||}.  Template tokens are R objects that define the required structure,
 #' much like the `FUN.VALUE` argument to [vapply()].  Standard tokens are tokens
 #' that contain the `.` symbol and are used to vet values.
+#'
+#' If you do use the `.` symbol in your vetting expressions in your
+#' packages, you will need to include `utils::globalVariables(".")` as a
+#' top-level call to avoid the "no visible binding for global variable '.'"'
+#' R CMD check NOTE.
 #'
 #' See `vignette('vetr', package='vetr')` and examples for details on how
 #' to craft vetting expressions.

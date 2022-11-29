@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 Brodie Gaslam
+Copyright (C) 2022 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -385,8 +385,8 @@ struct ALIKEC_res ALIKEC_compare_dims(
             err_dim2 = tar_dim_val == 1 ? " row" : " rows"; break;
           case (R_xlen_t) 1:
             err_dim2 = tar_dim_val == 1 ? " column" : " columns"; break;
-          default:
             // nocov start
+          default:
             error(
               "%s%s",
               "Internal Error: inconsistent matrix dimensions; contact  ",
@@ -733,8 +733,8 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
                     SETCAR(wrap_call, R_RowNamesSymbol); break;
                   case (R_xlen_t) 1:
                     SETCAR(wrap_call, ALIKEC_SYM_colnames); break;
-                  default: {
                     // nocov start
+                  default: {
                     error(
                       "Internal Error: dimnames dimension; contact maintainer."
                     );

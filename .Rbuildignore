@@ -11,4 +11,5 @@
 ^scratch
 ^README\.Rmd
 ^README\.html
+^RELEASE\.Rmd
 notcran

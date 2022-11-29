@@ -31,48 +31,34 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  *
  */
 static int is_utf8_enc(cetype_t type) {
-  SEXP sys_getlocale = PROTECT(install("Sys.getlocale"));
-  SEXP lc_ctype = PROTECT(mkString("LC_CTYPE"));
-  SEXP loc_call = PROTECT(lang2(sys_getlocale, lc_ctype));
+  SEXP l10n_info = PROTECT(install("l10n_info"));
+  SEXP l10n_call = PROTECT(lang1(l10n_info));
 
   int err_val = 0;
-  SEXP eval_tmp = PROTECT(R_tryEval(loc_call, R_BaseEnv, &err_val));
+  SEXP l10n = PROTECT(R_tryEval(l10n_call, R_BaseEnv, &err_val));
   if(err_val)
     // nocov start
     error("Internal Error: failed getting UTF8 locale; contact maintainer.");
     // nocov end
 
-  if(TYPEOF(eval_tmp) != STRSXP && xlength(eval_tmp) != 1)
-    // nocov start
-    error("Internal Error: UTF8 locale not a string; contact maintainer.");
-    // nocov end
+  if(TYPEOF(l10n) != VECSXP)
+    error("Internal Error: l10n_info did not return a list."); // nocov
 
-  const char * loc_string = CHAR(asChar(eval_tmp));
+  SEXP l10n_names = getAttrib(l10n, R_NamesSymbol);
+  if(TYPEOF(l10n_names) != STRSXP)
+    error("Internal Error: l10n_info did not return a named list."); // nocov
 
-  // If eval_tmp produces a non-null terminated string we're screwed here...
+  int utf8_loc = 0;
+  for (R_xlen_t i = 0; i < XLENGTH(l10n_names); ++i) {
+    if(!strcmp(CHAR(STRING_ELT(l10n_names, i)), "UTF-8")) {
+      if(TYPEOF(VECTOR_ELT(l10n, i)) != LGLSXP)
+        error("Internal Error: l10n_info()$`UTF-8` is not logical."); // nocov
+      utf8_loc = asInteger(VECTOR_ELT(l10n, i));
+      break;
+  } }
+  int res = (type == CE_UTF8) || (type == CE_NATIVE && utf8_loc);
 
-  size_t loc_len = strlen(loc_string);
-
-  if(loc_len >= INT_MAX)
-    // nocov start
-    error(
-      "%s%s",
-      "Internal Error: UTF8 locale string possibly longer than INT_MAX; ",
-      "contact maintainer."
-    );
-    // nocov end
-
-  int res = type == CE_UTF8 ||
-    (
-      type == CE_NATIVE && loc_len >= 5 &&
-      loc_string[loc_len - 1] == '8' &&
-      loc_string[loc_len - 2] == '-' &&
-      (loc_string[loc_len - 3] == 'F' || loc_string[loc_len - 3] == 'f') &&
-      (loc_string[loc_len - 4] == 'T' || loc_string[loc_len - 4] == 't') &&
-      (loc_string[loc_len - 5] == 'U' || loc_string[loc_len - 5] == 'u')
-    );
-
-  UNPROTECT(4);
+  UNPROTECT(3);
   return res;
 }
 /*
@@ -410,15 +396,17 @@ SEXP CSR_char_offsets(SEXP string) {
   R_xlen_t len = xlength(string);
   if(len != 1) error("Argument `string` must be scalar.");
 
-  R_len_t string_len = LENGTH(STRING_ELT(string, 0));
-  int * char_offs = (int *) R_alloc(string_len, sizeof(int));
-
   unsigned const char * char_start, * char_ptr;
   unsigned char char_val;
 
   SEXP chr_cont = STRING_ELT(string, 0);
   cetype_t char_enc = getCharCE(chr_cont);
   char_start = as_utf8_char(chr_cont);
+
+  // won't have more chars than bytes in the translated string, we might
+  // overallocate here (but drop the extra at the end)
+  int * char_offs =
+    (int *) R_alloc(strlen((const char *) char_start), sizeof(int));
 
   int byte_count = 0, char_count = 0;
 

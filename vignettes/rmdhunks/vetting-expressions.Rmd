@@ -14,6 +14,10 @@ vet(numeric(1L) && . > 0, -42)  # strictly positive scalar numeric
 vet(numeric(1L) && . > 0, 42)
 ```
 
+If you do use the `.` symbol in your vetting expressions in your packages, you
+will need to include `utils::globalVariables(".")` as a top-level call to avoid
+the "no visible binding for global variable '.'" R CMD check NOTE.
+
 You can compose vetting expressions as language objects and combine them:
 
 ```{r}
