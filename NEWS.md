@@ -1,8 +1,9 @@
-## 0.2.14
+## 0.2.15
 
 * [#109](https://github.com/brodieG/vetr/issues/109) allow for substituted
   arguments to contain objects (e.g. as might happen when a function is invoked
   with `do.call`).
+* Address fun(void) declarations.
 
 ## 0.2.14
 
