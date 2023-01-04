@@ -376,7 +376,9 @@ static SEXP VALC_error_extract(
 \* -------------------------------------------------------------------------- */
 /*
 @param lang the validator expression
-@param arg_lang the substituted language being validated
+@param arg_lang the substituted language being validated, which doesn't actually
+  have to be language in cases where a function is called via `do.call`, or a
+  scalar atomic is provided.
 @param arg_tag the variable name being validated
 @param arg_value the value being validated
 @param lang_full solely so that we can produce error message with original call
@@ -390,9 +392,6 @@ SEXP VALC_evaluate(
   SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
   struct VALC_settings set, int use_lang_raw
 ) {
-  if(!IS_LANG(arg_lang))
-    error("Internal Error: argument `arg_lang` must be language.");  // nocov
-
   SEXP lang_parsed = PROTECT(VALC_parse(lang, arg_lang, set, arg_tag));
   struct VALC_res_list res_list, res_init = VALC_res_list_init(set);
   PROTECT(res_init.list_sxp);
