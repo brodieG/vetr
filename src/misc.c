@@ -32,12 +32,6 @@ SEXP VALC_test3(SEXP a, SEXP b, SEXP c) {
 
 // - Helper Functions ----------------------------------------------------------
 
-int IS_LANG(SEXP x) {
-  return(
-    TYPEOF(x) == LANGSXP || TYPEOF(x) == SYMSXP ||
-    (isVectorAtomic(x) && XLENGTH(x) == 1) || x == R_NilValue
-  );
-}
 /*
 Fake `stop`
 
