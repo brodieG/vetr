@@ -67,7 +67,7 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
     // nocov end
   }
   const char * err_tag = CHAR(PRINTNAME(tag));
-  char * err_msg = CSR_smprintf1(SIZE_MAX, err_base, err_tag);
+  char * err_msg = CSR_smprintf1(10001, err_base, err_tag);
   VALC_stop(fun_call, err_msg);
   // nocov start
   error("Internal Error: shouldn't get here 181; contact maintainer.");// nocov

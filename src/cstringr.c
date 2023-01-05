@@ -188,7 +188,8 @@ size_t CSR_strmlen_x(const char * str, size_t maxlen) {
   if((uintptr_t)str > UINTPTR_MAX - maxlen)
     // nocov start
     error(
-      "Internal error in strmlen, maxlen would imply pointer overflow"
+      "Internal error in strmlen, maxlen (%jd) would imply pointer overflow",
+      maxlen
     );
     // nocov end
 
