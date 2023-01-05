@@ -264,16 +264,7 @@ static SEXP VALC_error_standard(
       case -2: {
         const char * err_tok_tmp = type2char(TYPEOF(eval_tmp));
         const char * err_tok_base = "is \"%s\" instead of a \"logical\"";
-        err_tok = R_alloc(
-          strlen(err_tok_tmp) + strlen(err_tok_base), sizeof(char)
-        );
-        if(sprintf(err_tok, err_tok_base, err_tok_tmp) < 0)
-          // nocov start
-          error(
-            "Internal error: build token error failure; contact maintainer"
-          );
-          // nocov end
-        }
+        err_tok = CSR_smprintf2(set.nchar_max, err_tok_base, err_tok_tmp);
         break;
       case -1: err_tok = "FALSE"; break;
       case -3: err_tok = "NA"; break;
@@ -311,7 +302,7 @@ static SEXP VALC_error_standard(
     if(!err_call.multi_line) extra_blank = " ";
 
     for(int i = 0; i < 4; ++i) {
-      if(INT_MAX - str_sizes[i] < alloc_size)
+      if(INT_MAX - str_sizes[i] <= alloc_size)
         // nocov start
         error(
           "%s%s (%d)",
@@ -322,12 +313,13 @@ static SEXP VALC_error_standard(
 
       alloc_size += str_sizes[i];
     }
+    ++alloc_size;  // for terminator; above we check with <=
     err_str = R_alloc(alloc_size, sizeof(char));
 
     // not sure why we're not using cstringr here
     if(
-      sprintf(
-        err_str, err_base, err_call.chr, extra_blank, err_extra, err_tok
+      snprintf(
+        err_str, alloc_size, err_base, err_call.chr, extra_blank, err_extra, err_tok
       ) < 0
     ) {
       // nocov start

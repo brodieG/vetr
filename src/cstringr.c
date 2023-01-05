@@ -323,6 +323,7 @@ char * CSR_smprintf6(
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(d, maxlen));
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(e, maxlen));
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(f, maxlen));
+  full_len = CSR_add_szt(full_len, 1);
 
   char * res;
 
@@ -335,9 +336,11 @@ char * CSR_smprintf6(
   char * e_cpy = CSR_strmcpy(e, maxlen);
   char * f_cpy = CSR_strmcpy(f, maxlen);
 
-  res = R_alloc(full_len + 1, sizeof(char));
-  int res_len = sprintf(
-    res, CSR_strmcpy(format, maxlen), a_cpy, b_cpy, c_cpy, d_cpy, e_cpy, f_cpy
+  res = R_alloc(full_len, sizeof(char));
+  int res_len = snprintf(
+    res, full_len,
+    CSR_strmcpy(format, maxlen),
+    a_cpy, b_cpy, c_cpy, d_cpy, e_cpy, f_cpy
   );
   if(res_len < 0) {
     // nocov start
