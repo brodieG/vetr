@@ -262,9 +262,10 @@ static SEXP VALC_error_standard(
         }
         break;
       case -2: {
-        const char * err_tok_tmp = type2char(TYPEOF(eval_tmp));
-        const char * err_tok_base = "is \"%s\" instead of a \"logical\"";
-        err_tok = CSR_smprintf2(set.nchar_max, err_tok_base, err_tok_tmp);
+          const char * err_tok_tmp = type2char(TYPEOF(eval_tmp));
+          const char * err_tok_base = "is \"%s\" instead of a \"logical\"";
+          err_tok = CSR_smprintf1(set.nchar_max, err_tok_base, err_tok_tmp);
+        }
         break;
       case -1: err_tok = "FALSE"; break;
       case -3: err_tok = "NA"; break;
