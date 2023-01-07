@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -32,12 +32,6 @@ SEXP VALC_test3(SEXP a, SEXP b, SEXP c) {
 
 // - Helper Functions ----------------------------------------------------------
 
-int IS_LANG(SEXP x) {
-  return(
-    TYPEOF(x) == LANGSXP || TYPEOF(x) == SYMSXP ||
-    (isVectorAtomic(x) && XLENGTH(x) == 1) || x == R_NilValue
-  );
-}
 /*
 Fake `stop`
 
@@ -72,12 +66,8 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
     );
     // nocov end
   }
-
   const char * err_tag = CHAR(PRINTNAME(tag));
-  char * err_msg = R_alloc(
-    strlen(err_base) - 2 + strlen(err_tag) + 1, sizeof(char)
-  );
-  sprintf(err_msg, err_base, err_tag);
+  char * err_msg = CSR_smprintf1(10001, err_base, err_tag);
   VALC_stop(fun_call, err_msg);
   // nocov start
   error("Internal Error: shouldn't get here 181; contact maintainer.");// nocov

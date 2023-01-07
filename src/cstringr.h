@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -47,11 +47,11 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP CSR_nchar_u(SEXP string);
   SEXP CSR_char_offsets(SEXP string);
 
-  SEXP CSR_test_strmcpy();
-  SEXP CSR_test_strappend();
-  SEXP CSR_test_strappend2();
-  SEXP CSR_test_add_szt();
-  SEXP CSR_test_smprintfx();
+  SEXP CSR_test_strmcpy(void);
+  SEXP CSR_test_strappend(void);
+  SEXP CSR_test_strappend2(void);
+  SEXP CSR_test_add_szt(void);
+  SEXP CSR_test_smprintfx(void);
 
   // Internal Functions
 

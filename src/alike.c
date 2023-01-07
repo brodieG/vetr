@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -50,7 +50,7 @@ SEXP ALIKEC_res_strings_to_SEXP(struct ALIKEC_res_strings strings) {
  * One question here is whether we should create this object once and then
  * re-use it unless an actual error occurs to avoid the R_alloc calls.
  */
-struct ALIKEC_res_strings ALIKEC_res_strings_init() {
+struct ALIKEC_res_strings ALIKEC_res_strings_init(void) {
   struct ALIKEC_res_strings res;
 
   res.target = (const char **) R_alloc(5, sizeof(const char *));
@@ -74,7 +74,7 @@ struct ALIKEC_res_strings ALIKEC_res_strings_init() {
 
   return res;
 }
-struct ALIKEC_res ALIKEC_res_init() {
+struct ALIKEC_res ALIKEC_res_init(void) {
   return (struct ALIKEC_res) {
     .success=1,
     .dat=(struct ALIKEC_res_dat) {

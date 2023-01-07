@@ -22,7 +22,7 @@ static int scalar_na(SEXP x) {
 /*
  * helper fun to throw error
  */
-static void include_end_err() {
+static void include_end_err(void) {
   const char * valid_ends =
     "\"[]\", \"[)\", \"(]\", \"()\"";
   error(

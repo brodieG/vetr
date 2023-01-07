@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -439,7 +439,7 @@ Implements comparing character vectors element for element:
 This is used to compare names, row.names, etc.
 
 Return value is either a zero length string if comparison successfull, or a
-string containing `%s` that can then be used to sprintf in the name of the
+string containing `%s` that can then be used to snprintf in the name of the
 object being compared.
 */
 /*

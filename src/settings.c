@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -23,7 +23,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  * Initialize settings with default values; why did we end up deciding to use
  * all the 2^n - 1 values?
  */
-struct VALC_settings VALC_settings_init() {
+struct VALC_settings VALC_settings_init(void) {
   return (struct VALC_settings) {
     .type_mode = 0,
     .attr_mode = 0,

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -186,7 +186,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
   void psh(const char * lab);
   SEXP ALIKEC_rec_ind_as_lang(struct ALIKEC_rec_track rec);
-  struct ALIKEC_rec_track ALIKEC_rec_track_init();
+  struct ALIKEC_rec_track ALIKEC_rec_track_init(void);
   struct ALIKEC_rec_track ALIKEC_rec_ind_chr(
     struct ALIKEC_rec_track res, const char * ind
   );
@@ -222,7 +222,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP ALIKEC_match_call(SEXP call, SEXP match_call, SEXP env);
   SEXP ALIKEC_findFun(SEXP symbol, SEXP rho);
   SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho);
-  struct ALIKEC_res ALIKEC_res_init();
+  struct ALIKEC_res ALIKEC_res_init(void);
   SEXP ALIKEC_res_as_strsxp(
     struct ALIKEC_res res, SEXP call, struct VALC_settings set
   );

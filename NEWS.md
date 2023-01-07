@@ -1,3 +1,11 @@
+## 0.2.15
+
+* [#109](https://github.com/brodieG/vetr/issues/109) allow for substituted
+  arguments to contain objects (e.g. as might happen when a function is invoked
+  with `do.call`).
+* Address fun(void) declarations.
+* Swap `snprintf` for `sprintf` (and fix off by one allocations).
+
 ## 0.2.14
 
 * [#106](https://github.com/brodieG/vetr/issues/106) force promises prior to

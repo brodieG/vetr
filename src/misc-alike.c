@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -458,49 +458,6 @@ const char * ALIKEC_deparse_chr(
   return res;
 }
 
-/*
-Simplified version of R's internal findFun
-
-Doesn't do quick lookups for special symbols, or use the global cache if it is
-available.
-
-Most importantly, instead of failing if function is not found, returns
-R_UnboundValue.
-
-The code is copied almost verbatim from src/main/envir.c:findFun()
-*/
-
-SEXP ALIKEC_findFun(SEXP symbol, SEXP rho) {
-  if(TYPEOF(symbol) != SYMSXP)
-    error("Internal Error: `symbol` must be symbol");  // nocov
-  if(TYPEOF(rho) != ENVSXP)
-    error("Internal Error: `rho` must be environment");// nocov
-  SEXP vl;
-  while (rho != R_EmptyEnv) {
-    vl = findVarInFrame3(rho, symbol, TRUE);
-    if (vl != R_UnboundValue) {
-      if (TYPEOF(vl) == PROMSXP) {
-        PROTECT(vl);
-        vl = eval(vl, rho);
-        UNPROTECT(1);
-      }
-      if (
-        TYPEOF(vl) == CLOSXP || TYPEOF(vl) == BUILTINSXP ||
-        TYPEOF(vl) == SPECIALSXP
-      )
-        return (vl);
-      if (vl == R_MissingArg) {
-        return R_UnboundValue;
-    } }  // nocov
-    rho = ENCLOS(rho);
-  }
-  return R_UnboundValue;
-}
-SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho) {
-  SEXP res = ALIKEC_findFun(symbol, rho);
-  if(res == R_UnboundValue) return R_NilValue;
-  return res;
-}
 /*
  * Convert the target and current component strings into one long string
  *

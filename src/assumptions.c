@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -30,7 +30,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  */
 // nocov start by definition none of the errors should be thrown, so no sense in
 // covering this
-SEXP VALC_check_assumptions() {
+SEXP VALC_check_assumptions(void) {
   const char * err_base = "Failed system assumption: %s%s";
   if(sizeof(R_len_t) < sizeof(int))
     warningcall(R_NilValue, err_base, "R_len_t is not gte to int", "");

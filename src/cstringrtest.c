@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -25,21 +25,21 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
  * These are all expected to produce errors
  */
 
-SEXP CSR_test_strmcpy() {
+SEXP CSR_test_strmcpy(void) {
   size_t maxlen = 0;
   maxlen--; // size_t of max value
   CSR_strmcpy("hello", maxlen);
   return R_NilValue;  // nocov
 }
 
-SEXP CSR_test_strappend() {
+SEXP CSR_test_strappend(void) {
   size_t maxlen = 0;
   maxlen--; // size_t of max value
   CSR_strappend("hello", "hello", maxlen);
   return R_NilValue;  // nocov
 }
 
-SEXP CSR_test_add_szt() {
+SEXP CSR_test_add_szt(void) {
   size_t maxlen = 0;
   maxlen--; // size_t of max value
   CSR_add_szt(maxlen, maxlen);
@@ -48,7 +48,7 @@ SEXP CSR_test_add_szt() {
 /*
  * Make sure all the variations on CSR_smprintf6 actually work
  */
-SEXP CSR_test_smprintfx() {
+SEXP CSR_test_smprintfx(void) {
   return mkString(
     CSR_smprintf5(
       10000, "%s\n%s\n%s\n%s\n",
@@ -62,7 +62,7 @@ SEXP CSR_test_smprintfx() {
 }
 // Make sure warning generated correctly
 
-SEXP CSR_test_strappend2() {
+SEXP CSR_test_strappend2(void) {
   char * str_new = R_alloc(20, sizeof(char));
   CSR_strappend(str_new, "hellothere", 5);
   return R_NilValue;

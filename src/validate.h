@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -89,9 +89,9 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   SEXP VALC_test2(SEXP a, SEXP b);
   SEXP VALC_test3(SEXP a, SEXP b, SEXP c);
 
-  SEXP VALC_check_assumptions();
+  SEXP VALC_check_assumptions(void);
 
-  SEXP VALC_res_init();
+  SEXP VALC_res_init(void);
   struct VALC_res_list VALC_res_add(
     struct VALC_res_list list, struct VALC_res res
   );
@@ -127,7 +127,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     SEXP arg_tag
   );
   SEXP VALC_sub_symbol_ext(SEXP lang, SEXP rho);
-  void VALC_install_objs();
+  void VALC_install_objs(void);
   SEXP VALC_evaluate(
     SEXP lang, SEXP arg_lang, SEXP arg_tag, SEXP arg_value, SEXP lang_full,
     struct VALC_settings set, int use_lang_raw

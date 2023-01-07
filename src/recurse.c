@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -79,7 +79,7 @@ struct ALIKEC_rec_track ALIKEC_rec_ind_num(
   union ALIKEC_index_raw ind_u = {.num = ind};
   return ALIKEC_rec_ind_set(res, (struct ALIKEC_index) {ind_u, 0});
 }
-struct ALIKEC_rec_track ALIKEC_rec_track_init() {
+struct ALIKEC_rec_track ALIKEC_rec_track_init(void) {
   return (struct ALIKEC_rec_track) {
     .lvl = 0,
     .lvl_max = 0,
