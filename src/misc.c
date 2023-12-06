@@ -60,8 +60,8 @@ void VALC_arg_error(SEXP tag, SEXP fun_call, const char * err_base) {
   if(TYPEOF(tag) != SYMSXP) {
     // nocov start
     error(
-      "Internal Error: %s%s"
-      "non symbol arg names are not currently supported; ",
+      "Internal Error:"
+      "non symbol arg names are not currently supported; "
       "contact maintainer."
     );
     // nocov end

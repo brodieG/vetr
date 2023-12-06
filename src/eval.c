@@ -67,16 +67,16 @@ struct VALC_res_list VALC_evaluate_recurse(
       (TYPEOF(lang2) != LANGSXP && TYPEOF(lang2) != LISTSXP)
     ) {
       // nocov start
-      error("%s%s"
-        "Internal Error: mismatched language and eval type tracking 1; contact ",
+      error(
+        "Internal Error: mismatched language and eval type tracking 1; contact "
         "maintainer."
       );
       // nocov end
     }
     if(TYPEOF(CAR(act_codes)) != INTSXP) {
       // nocov start
-      error("%s%s",
-        "Internal error: no integer codes produced by parsing process, which ",
+      error(
+        "Internal error: no integer codes produced by parsing process, which "
         "should not happen; contact maintainer."
       );
       // nocov end
