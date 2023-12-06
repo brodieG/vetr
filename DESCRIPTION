@@ -3,7 +3,7 @@ Title: Trust, but Verify
 Description: Declarative template-based framework for verifying that objects
   meet structural requirements, and auto-composing error messages when they do
   not.
-Version: 0.2.14.9000
+Version: 0.2.15.9000
 Authors@R: c(
     person("Brodie", "Gaslam", email="brodie.gaslam@yahoo.com",
     role=c("aut", "cre")),
@@ -11,8 +11,7 @@ Authors@R: c(
     table implementation in src/pfhash.h"),
     person(family="R Core Team",
     email="R-core@r-project.org", role="cph",
-    comment="Used/adapted several code snippets from R sources, see src/misc-alike.c and src/valname.c"
-    ))
+    comment="Used/adapted several code snippets from R sources, see src/r-copied.c"))
 Depends:
     R (>= 3.2.0)
 License: GPL (>=2)
@@ -27,5 +26,5 @@ Suggests:
     knitr,
     rmarkdown,
     unitizer
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE, load = "installed")

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -161,7 +161,7 @@ size_t CSR_strmlen(const char * str, size_t maxlen) {
   size_t res = CSR_strmlen_x(str, maxlen);
   if(res == maxlen && *(str + res)) {
     // reached max len and next charcter is not NULL terminator
-    error("%s %s %d %s",
+    error("%s %s %zu %s",
       "Internal Error (CSR_strmlen): failed to find string terminator prior",
       "to maxlen", maxlen, "characters"
     );
@@ -188,7 +188,8 @@ size_t CSR_strmlen_x(const char * str, size_t maxlen) {
   if((uintptr_t)str > UINTPTR_MAX - maxlen)
     // nocov start
     error(
-      "Internal error in strmlen, maxlen would imply pointer overflow"
+      "Internal error in strmlen, maxlen (%jd) would imply pointer overflow",
+      maxlen
     );
     // nocov end
 
@@ -216,7 +217,7 @@ char * CSR_strmcpy_int(const char * str, size_t maxlen, int warn) {
 
   size_t len = CSR_strmlen_x(str, maxlen);
   if(warn && len == maxlen && str[len])
-    warning("CSR_strmcpy: truncated string longer than %d", maxlen);
+    warning("CSR_strmcpy: truncated string longer than %zu", maxlen);
 
   char * str_new = R_alloc(len + 1, sizeof(char));
 
@@ -261,7 +262,7 @@ void CSR_strappend(char * target, const char * str, size_t maxlen) {
     size_t len = CSR_strmlen_x(str, maxlen);
 
     if(len == maxlen && str[len])
-      warning("CSR_strmcopy: truncated string longer than %d", maxlen);
+      warning("CSR_strmcopy: truncated string longer than %zu", maxlen);
 
     if(len) {
       if(!strncpy(target, str, len)) {
@@ -323,6 +324,7 @@ char * CSR_smprintf6(
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(d, maxlen));
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(e, maxlen));
   full_len = CSR_add_szt(full_len, CSR_strmlen_x(f, maxlen));
+  full_len = CSR_add_szt(full_len, 1);
 
   char * res;
 
@@ -335,9 +337,11 @@ char * CSR_smprintf6(
   char * e_cpy = CSR_strmcpy(e, maxlen);
   char * f_cpy = CSR_strmcpy(f, maxlen);
 
-  res = R_alloc(full_len + 1, sizeof(char));
-  int res_len = sprintf(
-    res, CSR_strmcpy(format, maxlen), a_cpy, b_cpy, c_cpy, d_cpy, e_cpy, f_cpy
+  res = R_alloc(full_len, sizeof(char));
+  int res_len = snprintf(
+    res, full_len,
+    CSR_strmcpy(format, maxlen),
+    a_cpy, b_cpy, c_cpy, d_cpy, e_cpy, f_cpy
   );
   if(res_len < 0) {
     // nocov start

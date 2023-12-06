@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 Brodie Gaslam
+Copyright (C) 2023 Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -67,16 +67,16 @@ struct VALC_res_list VALC_evaluate_recurse(
       (TYPEOF(lang2) != LANGSXP && TYPEOF(lang2) != LISTSXP)
     ) {
       // nocov start
-      error("%s%s"
-        "Internal Error: mismatched language and eval type tracking 1; contact ",
+      error(
+        "Internal Error: mismatched language and eval type tracking 1; contact "
         "maintainer."
       );
       // nocov end
     }
     if(TYPEOF(CAR(act_codes)) != INTSXP) {
       // nocov start
-      error("%s%s",
-        "Internal error: no integer codes produced by parsing process, which ",
+      error(
+        "Internal error: no integer codes produced by parsing process, which "
         "should not happen; contact maintainer."
       );
       // nocov end
@@ -262,17 +262,9 @@ static SEXP VALC_error_standard(
         }
         break;
       case -2: {
-        const char * err_tok_tmp = type2char(TYPEOF(eval_tmp));
-        const char * err_tok_base = "is \"%s\" instead of a \"logical\"";
-        err_tok = R_alloc(
-          strlen(err_tok_tmp) + strlen(err_tok_base), sizeof(char)
-        );
-        if(sprintf(err_tok, err_tok_base, err_tok_tmp) < 0)
-          // nocov start
-          error(
-            "Internal error: build token error failure; contact maintainer"
-          );
-          // nocov end
+          const char * err_tok_tmp = type2char(TYPEOF(eval_tmp));
+          const char * err_tok_base = "is \"%s\" instead of a \"logical\"";
+          err_tok = CSR_smprintf1(set.nchar_max, err_tok_base, err_tok_tmp);
         }
         break;
       case -1: err_tok = "FALSE"; break;
@@ -311,7 +303,7 @@ static SEXP VALC_error_standard(
     if(!err_call.multi_line) extra_blank = " ";
 
     for(int i = 0; i < 4; ++i) {
-      if(INT_MAX - str_sizes[i] < alloc_size)
+      if(INT_MAX - str_sizes[i] <= alloc_size)
         // nocov start
         error(
           "%s%s (%d)",
@@ -322,12 +314,13 @@ static SEXP VALC_error_standard(
 
       alloc_size += str_sizes[i];
     }
+    ++alloc_size;  // for terminator; above we check with <=
     err_str = R_alloc(alloc_size, sizeof(char));
 
     // not sure why we're not using cstringr here
     if(
-      sprintf(
-        err_str, err_base, err_call.chr, extra_blank, err_extra, err_tok
+      snprintf(
+        err_str, alloc_size, err_base, err_call.chr, extra_blank, err_extra, err_tok
       ) < 0
     ) {
       // nocov start
