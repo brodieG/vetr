@@ -173,8 +173,9 @@ SEXP ALIKEC_env_track_test(SEXP env_list, SEXP stack_size_init, SEXP env_limit) 
     SEXP env = VECTOR_ELT(env_list, i);
     if(TYPEOF(env) != ENVSXP)
       error(
-        "All contents of `env` %s at item %d\n",
-        "should be environments; error ", i + 1
+        "All contents of `env` %s at item %jd\n",
+        "should be environments; error ",
+        i == INTMAX_MAX ? - 1 : (intmax_t) i + 1
       );
     res_int[i] = ALIKEC_env_track(env, envs, env_limit_int);
   }

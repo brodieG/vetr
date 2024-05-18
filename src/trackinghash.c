@@ -107,7 +107,7 @@ int VALC_add_to_track_hash(
       if(new_size > max_long) {
         // nocov start
         error(
-          "Internal Error: attempted to allocate hash content vector bigger ",
+          "Internal Error: attempted to allocate hash content vector bigger "
           "than int size."
         );
         // nocov end

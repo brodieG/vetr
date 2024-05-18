@@ -1,22 +1,20 @@
 ## Submission Checklist
 
-* Review CRAN policy
-* Check version
-* Run tests with
-    * winbuilder
-    * valgrind
-    * rchk
-* Check coverage
+[x] Revdeps
+[x] Review CRAN policy
+[x] Check version
+[x] Run tests with
+    [x] winbuilder
+    [x] valgrind
+    [ ] rchk
+[x] Check coverage
+[ ] Check build user
 
 ## Submission Notes:
 
 This is a minor release primarily intended
-to address the undeclared dependencies in 
-tests raised by Professor Hornik.
-
-I have removed the tests in question completely
-from the built package.  Previously, these tests
-were run conditionally.
+to address the outstanding CRAN check warnings,
+and fix a minor bug.
 
 ## R CMD check --as-cran
 

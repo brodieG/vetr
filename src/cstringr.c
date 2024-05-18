@@ -161,7 +161,7 @@ size_t CSR_strmlen(const char * str, size_t maxlen) {
   size_t res = CSR_strmlen_x(str, maxlen);
   if(res == maxlen && *(str + res)) {
     // reached max len and next charcter is not NULL terminator
-    error("%s %s %d %s",
+    error("%s %s %zu %s",
       "Internal Error (CSR_strmlen): failed to find string terminator prior",
       "to maxlen", maxlen, "characters"
     );
@@ -217,7 +217,7 @@ char * CSR_strmcpy_int(const char * str, size_t maxlen, int warn) {
 
   size_t len = CSR_strmlen_x(str, maxlen);
   if(warn && len == maxlen && str[len])
-    warning("CSR_strmcpy: truncated string longer than %d", maxlen);
+    warning("CSR_strmcpy: truncated string longer than %zu", maxlen);
 
   char * str_new = R_alloc(len + 1, sizeof(char));
 
@@ -262,7 +262,7 @@ void CSR_strappend(char * target, const char * str, size_t maxlen) {
     size_t len = CSR_strmlen_x(str, maxlen);
 
     if(len == maxlen && str[len])
-      warning("CSR_strmcopy: truncated string longer than %d", maxlen);
+      warning("CSR_strmcopy: truncated string longer than %zu", maxlen);
 
     if(len) {
       if(!strncpy(target, str, len)) {
