@@ -46,7 +46,7 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
   if(!isFunction(target) || !isFunction(current))
     error("Arguments must be functions.");
 
-  SEXP tar_form, cur_form, args;
+  SEXP tar_form, cur_form, args, func;
   SEXPTYPE tar_type = TYPEOF(target), cur_type = TYPEOF(current);
   struct ALIKEC_res res = ALIKEC_res_init();
 

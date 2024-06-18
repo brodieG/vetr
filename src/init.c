@@ -107,6 +107,7 @@ SEXP ALIKEC_SYM_inherits;
 SEXP ALIKEC_SYM_paren_open;
 SEXP ALIKEC_SYM_tilde;
 SEXP ALIKEC_SYM_args;
+SEXP ALIKEC_SYM_function;
 SEXP ALIKEC_SYM_deparse;
 SEXP ALIKEC_SYM_nlines;
 SEXP ALIKEC_SYM_widthcutoff;
