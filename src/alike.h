@@ -263,6 +263,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   extern SEXP ALIKEC_SYM_tilde;
   extern SEXP ALIKEC_SYM_paren_open;
   extern SEXP ALIKEC_SYM_args;
+  extern SEXP ALIKEC_SYM_function;
   extern SEXP ALIKEC_SYM_deparse;
   extern SEXP ALIKEC_SYM_nlines;
   extern SEXP ALIKEC_SYM_getOption;
