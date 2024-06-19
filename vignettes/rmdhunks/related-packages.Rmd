@@ -19,7 +19,7 @@ them:
 * [`validate`](https://github.com/data-cleaning/validate) by Mark van
   der Loo and Edwin de Jonge, with a primary focus on validating data in data
   frames and similar data structures.
-* [`assertr`](https://github.com/ropensci/assertr) by Tony Fischetti, also
+* [`assertr`](https://github.com/tonyfischetti/assertr) by Tony Fischetti, also
   focused on data validation in data frames and similar structures.
 * [`types`](https://github.com/jimhester/types) by Jim Hester, which implements
   but does not enforce type hinting.
