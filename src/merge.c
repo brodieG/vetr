@@ -117,18 +117,17 @@ static SEXP ALIKEC_unique_msg(SEXP msgs) {
   R_xlen_t len = xlength(msgs);
   if(len < 2) return(msgs);
 
-  // Loop once to check for dupes
+  // Loop once to count how many distinct values
 
-  int some_dup = 0;
+  int distinct_vals = 1;
   for(R_xlen_t i = 1; i < len; ++i) {
-    if(R_compute_identical(VECTOR_ELT(msgs, i - 1), VECTOR_ELT(msgs, i), 16)) {
-      some_dup = 1;
-      break;
+    if(!R_compute_identical(VECTOR_ELT(msgs, i - 1), VECTOR_ELT(msgs, i), 16)) {
+      ++distinct_vals;
     }
   }
   SEXP res;
-  if(some_dup) {
-    res = PROTECT(allocVector(VECSXP, len));
+  if(distinct_vals != len) {
+    res = PROTECT(allocVector(VECSXP, distinct_vals));
     SET_VECTOR_ELT(res, 0, VECTOR_ELT(msgs, 0));
     R_xlen_t j = 1;
     for(R_xlen_t i = 1; i < len; ++i) {
@@ -138,7 +137,6 @@ static SEXP ALIKEC_unique_msg(SEXP msgs) {
         SET_VECTOR_ELT(res, j++, VECTOR_ELT(msgs, i));
       }
     }
-    SETLENGTH(res, j);
     UNPROTECT(1);
   } else res = msgs;
   return res;
