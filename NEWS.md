@@ -1,4 +1,4 @@
-## 0.2.17
+## 0.2.17-18
 
 * Fix bad C API accesses uncovered by new R-devel checks.
 
