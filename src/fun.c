@@ -46,19 +46,17 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
   if(!isFunction(target) || !isFunction(current))
     error("Arguments must be functions.");
 
-  SEXP tar_form, cur_form, args;
+  SEXP tar_form, cur_form, args, func;
   SEXPTYPE tar_type = TYPEOF(target), cur_type = TYPEOF(current);
   struct ALIKEC_res res = ALIKEC_res_init();
 
   // Translate specials and builtins to formals, if possible
 
   args = PROTECT(list2(ALIKEC_SYM_args, R_NilValue));
-  if(
-    tar_type == SPECIALSXP || tar_type == BUILTINSXP ||
-    cur_type == SPECIALSXP || cur_type == BUILTINSXP
-  ) {
-    SET_TYPEOF(args, LANGSXP);
-  }
+  SET_TYPEOF(args, LANGSXP);
+  func = PROTECT(list3(ALIKEC_SYM_function, R_NilValue, R_NilValue));
+  SET_TYPEOF(func, LANGSXP);
+
   if(tar_type == SPECIALSXP || tar_type == BUILTINSXP) {
     SETCADR(args, target);
     target = PROTECT(eval(args, R_BaseEnv));
@@ -67,6 +65,16 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
   if(cur_type == SPECIALSXP || cur_type == BUILTINSXP) {
     SETCADR(args, current);
     current = PROTECT(eval(args, R_BaseEnv));
+  } else PROTECT(R_NilValue);
+
+  // As of ~r86700 R became stricter about what we could call FORMALS on, so we
+  // need to make sure that we do get actual formals and not NULL.
+
+  if(TYPEOF(target) != CLOSXP) {
+    target = PROTECT(eval(func, R_BaseEnv));
+  } else PROTECT(R_NilValue);
+  if(TYPEOF(current) != CLOSXP) {
+    current = PROTECT(eval(func, R_BaseEnv));
   } else PROTECT(R_NilValue);
 
   // Cycle through all formals
@@ -156,7 +164,7 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
       res.dat.strings.target[2] = arg_type;
     }
   }
-  UNPROTECT(3);
+  UNPROTECT(6);
   if(!res.success) res.wrap = allocVector(VECSXP, 2);
   return res;
 }

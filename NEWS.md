@@ -1,3 +1,11 @@
+## 0.2.17-18
+
+* Fix bad C API accesses uncovered by new R-devel checks.
+
+## 0.2.16
+
+* Fix -Wformat warnings.
+
 ## 0.2.15
 
 * [#109](https://github.com/brodieG/vetr/issues/109) allow for substituted

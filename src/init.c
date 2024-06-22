@@ -107,6 +107,7 @@ SEXP ALIKEC_SYM_inherits;
 SEXP ALIKEC_SYM_paren_open;
 SEXP ALIKEC_SYM_tilde;
 SEXP ALIKEC_SYM_args;
+SEXP ALIKEC_SYM_function;
 SEXP ALIKEC_SYM_deparse;
 SEXP ALIKEC_SYM_nlines;
 SEXP ALIKEC_SYM_widthcutoff;
@@ -143,6 +144,7 @@ void R_init_vetr(DllInfo *info)
   ALIKEC_SYM_paren_open = install("(");
   ALIKEC_SYM_tilde = install("~");
   ALIKEC_SYM_args = install("args");
+  ALIKEC_SYM_function = install("function");
   ALIKEC_SYM_deparse = install("deparse");
   ALIKEC_SYM_nlines = install("nlines");
   ALIKEC_SYM_widthcutoff = install("width.cutoff");

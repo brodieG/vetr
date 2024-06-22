@@ -63,7 +63,7 @@ SEXP ALIKEC_findFun(SEXP symbol, SEXP rho) {
     error("Internal Error: `rho` must be environment");// nocov
   SEXP vl;
   while (rho != R_EmptyEnv) {
-    vl = findVarInFrame3(rho, symbol, TRUE);
+    vl = findVarInFrame(rho, symbol);
     if (vl != R_UnboundValue) {
       if (TYPEOF(vl) == PROMSXP) {
         PROTECT(vl);
