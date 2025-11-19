@@ -77,7 +77,8 @@ struct VALC_res_list VALC_evaluate_recurse(
       // nocov start
       error(
         "Internal error: no integer codes produced by parsing process, which "
-        "should not happen; contact maintainer."
+        "should not happen; contact maintainer. Is (%s)",
+        type2char(TYPEOF(CAR(act_codes)))
       );
       // nocov end
     } else {
