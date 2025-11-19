@@ -172,7 +172,7 @@ them:
 `isTRUE(all(. >= x & . <= y))` for large vectors):
 
     vet(all_bw(., 0, 1), runif(5) + 1)
-    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.459409` at index 1 not in `[0,1]`\")"
+    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.643241` at index 1 not in `[0,1]`\")"
 
 There are a number of predefined vetting tokens you can use in your
 vetting expressions such as:
@@ -264,8 +264,8 @@ review:
 -   [`assertive`](https://www.r-pkg.org/pkg/assertive) by Richie Cotton
 -   [`checkmate`](https://github.com/mllg/checkmate) by Michel Lang
 
-The following packages also perform related tasks, although we do not
-review them:
+The following packages also perform related tasks, although we have not
+used them and do not review them:
 
 -   [`valaddin`](https://github.com/egnha/valaddin) v0.1.0 by Eugene Ha,
     a framework for augmenting existing functions with validation
@@ -291,6 +291,8 @@ review them:
 -   [`typed`](https://moodymudskipper.github.io/typed/) by Antoine
     Fabri, which enforces types of symbols, function parameters, and
     return values.
+-   [`erify`](https://github.com/flujoo/erify/) by Renfei Mao, with a
+    focus on readable error messages.
 
 ## Acknowledgments
 
