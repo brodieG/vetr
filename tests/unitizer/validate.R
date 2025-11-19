@@ -292,3 +292,11 @@ unitizer_sect("promises (issue #106)", {
   vet(env1, env0)   # error 1
   vet(env0, env2)   # error 2
 })
+
+unitizer_sect("pkg::fun calls v2 (issue #112)", {
+  vetr::vet(base::sum(), 1)
+  vetr::vet(base::sum, 1)
+  # Recognize as is expression (see also #100 above)
+  vetr::vet((.)(isTRUE), identity)  
+  vetr::vet(base:::sum(), 1)
+})

@@ -120,8 +120,8 @@ struct ALIKEC_res ALIKEC_alike_obj(
   tar_type = TYPEOF(target);
   cur_type = TYPEOF(current);
   int s4_cur, s4_tar;
-  s4_tar = ((IS_S4_OBJECT)(target) != 0);
-  s4_cur = ((IS_S4_OBJECT)(current) != 0);
+  s4_tar = (Rf_isS4(target) != 0);
+  s4_cur = (Rf_isS4(current) != 0);
 
   // don't run length or attribute checks on S4
   if(res.success && (s4_cur || s4_tar)) {
@@ -152,8 +152,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
       // from src/main/objects.c directly
 
       SEXP t, s;
-      t = s = PROTECT(allocList(3));
-      SET_TYPEOF(s, LANGSXP);
+      t = s = PROTECT(Rf_lang3(R_NilValue, R_NilValue, R_NilValue));
       SETCAR(t, ALIKEC_SYM_inherits); t = CDR(t);
       SETCAR(t, current); t = CDR(t);
       SETCAR(t, klass);
@@ -480,7 +479,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
           res.dat.strings.target[1] = "the global environment";
           res.dat.strings.current[1] = ""; // gcc-10
         } else {
-          SEXP tar_names = PROTECT(R_lsInternal(target, TRUE));
+          SEXP tar_names = PROTECT(R_lsInternal3(target, TRUE, TRUE));
           R_xlen_t tar_name_len = XLENGTH(tar_names), i;
 
           if(tar_name_len != tar_len) {

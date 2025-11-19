@@ -38,16 +38,14 @@ Fake `stop`
 Main benefit is that it allows us to control the call that gets displayed.
 */
 void VALC_stop(SEXP call, const char * msg) {
-  SEXP quot_call = list2(VALC_SYM_quote, call);
-  SET_TYPEOF(quot_call, LANGSXP);
+  SEXP quot_call = PROTECT(Rf_lang2(VALC_SYM_quote, call));
+  SEXP msg_string = PROTECT(ScalarString(mkChar(msg)));
   SEXP cond_call = PROTECT(
-    list3(install("simpleError"), ScalarString(mkChar(msg)), quot_call)
+    Rf_lang3(install("simpleError"), msg_string, quot_call)
   );
-  SET_TYPEOF(cond_call, LANGSXP);
   SEXP cond = PROTECT(eval(cond_call, R_GlobalEnv));
-  SEXP err_call = PROTECT(list2(install("stop"), cond));
-  SET_TYPEOF(err_call, LANGSXP);
-  UNPROTECT(3);
+  SEXP err_call = PROTECT(Rf_lang2(install("stop"), cond));
+  UNPROTECT(5);
   eval(err_call, R_GlobalEnv);
   // nocov start
   error("Internal Error: 3423; contact maintainer.");
