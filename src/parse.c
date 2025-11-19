@@ -329,9 +329,9 @@ void VALC_parse_recurse(
 
   For more details on call_type values see VALC_evaluate_recurse
   */
-  static int counter = -1;
+  // static int counter = -1;
   int call_type = 999;
-  counter++;  // Tracks recursion level, used for debugging
+  // counter++;  // Tracks recursion level, used for debugging
 
   if(TYPEOF(lang) != LANGSXP) {  // Not a language expression
     // nocov start
@@ -444,7 +444,7 @@ void VALC_parse_recurse(
     );
     // nocov end
   }
-  counter--;
+  // counter--;
 
   // Don't return anything as all is done by modifying `lang` and `lang_track`
 }

@@ -17,6 +17,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 
 #include "validate.h"
+#include "backports.h" // for R_ClosureFormals
+
 /*
  * Result has a SEXP in .list_sxp that must be protected.
  */
@@ -323,7 +325,7 @@ SEXP VALC_validate_args(
 
   SEXP val_call_cpy, fun_call_cpy, fun_form_cpy;
   // note `fun` will always be a closure
-  SEXP fun_form = FORMALS(fun);
+  SEXP fun_form = R_ClosureFormals(fun);
   // `fun_form` is only the formals so we don't need to skip the first value
   fun_form_cpy = fun_form;
   int fun_call_match = 0;

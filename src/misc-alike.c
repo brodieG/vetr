@@ -54,10 +54,10 @@ SEXP ALIKEC_class(SEXP obj, SEXP class) {
 run `getOption` from C
 */
 SEXP ALIKEC_getopt(const char * opt) {
-  SEXP opt_call = PROTECT(list2(ALIKEC_SYM_getOption, mkString(opt)));
-  SET_TYPEOF(opt_call, LANGSXP);
+  SEXP opt_string = PROTECT(mkString(opt));
+  SEXP opt_call = PROTECT(Rf_lang2(ALIKEC_SYM_getOption, opt_string));
   SEXP opt_val = PROTECT(eval(opt_call, R_BaseEnv));
-  UNPROTECT(2);
+  UNPROTECT(3);
   return opt_val;
 }
 // - Abstraction ---------------------------------------------------------------
@@ -102,20 +102,17 @@ Run deparse command and return character vector with results
 set width_cutoff to be less than zero to use default
 */
 SEXP ALIKEC_deparse_core(SEXP obj, int width_cutoff) {
-  SEXP quot_call = PROTECT(list2(R_QuoteSymbol, obj));
+  SEXP quot_call = PROTECT(Rf_lang2(R_QuoteSymbol, obj));
   SEXP dep_call;
 
-  SET_TYPEOF(quot_call, LANGSXP);
-
   if(width_cutoff < 0){
-    dep_call = PROTECT(list2(ALIKEC_SYM_deparse, quot_call));
+    dep_call = PROTECT(Rf_lang2(ALIKEC_SYM_deparse, quot_call));
   } else {
     dep_call = PROTECT(
-      list3(ALIKEC_SYM_deparse, quot_call, ScalarInteger(width_cutoff))
+      Rf_lang3(ALIKEC_SYM_deparse, quot_call, ScalarInteger(width_cutoff))
     );
     SET_TAG(CDDR(dep_call), ALIKEC_SYM_widthcutoff);
   }
-  SET_TYPEOF(dep_call, LANGSXP);
   SEXP res = eval(dep_call, R_BaseEnv);
   UNPROTECT(2);
   return res;
