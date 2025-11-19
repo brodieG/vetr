@@ -65,6 +65,19 @@ SEXP VALC_check_assumptions(void) {
       "package assumes that they are equal; please contact maintainer."
     );
   }
+  if(INT_MIN < DBL_MIN) {
+    warningcall(
+      R_NilValue, err_base, "INT_MIN < DBL_MIN but the code in this ",
+      "package assumes the opposite; please contact maintainer."
+    );
+  }
+  if(INT_MAX > DBL_MAX) {
+    warningcall(
+      R_NilValue, err_base, "INT_MAX > DBL_MAX but the code in this ",
+      "package assumes the opposite; please contact maintainer."
+    );
+  }
+
   // Mostly because we try to represent R_xlen_t values with %.0f
 
   if(R_XLEN_T_MAX >= DBL_MAX)
