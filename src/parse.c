@@ -296,7 +296,7 @@ SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
  *
  * Even worse, turns out that we only need the `lang2` business for `vetr`,
  * `vet`/`tev` are fine with the original logic, so now we have the entire
- * duplicated version of teh `lang2` logic that we throw away for `vet`/`tev`.
+ * duplicated version of the `lang2` logic that we throw away for `vet`/`tev`.
  *
  * @param lang the original call that where we will substitute `.` with the
  *   corresponding parameter
@@ -331,6 +331,7 @@ void VALC_parse_recurse(
   */
   // static int counter = -1;
   int call_type = 999;
+  int first_fun_here = 0;
   // counter++;  // Tracks recursion level, used for debugging
 
   if(TYPEOF(lang) != LANGSXP) {  // Not a language expression
@@ -360,11 +361,12 @@ void VALC_parse_recurse(
     // modify call_type if we run into a `.` while parsing expression
 
     first_fun = lang_track;
+    first_fun_here = 1;
   }
 
   // Loop through remaining elements of call; if any are calls, recurse,
   // otherwise sub for dots and record as templates (999).  Stuff here shouldn't
-  // need to be PROTECTed since it is pointed at but PROTECTED stuff.
+  // need to be PROTECTed since it is pointed at by PROTECTED stuff.
 
   while(lang != R_NilValue) {
     int eval_as_is_internal = eval_as_is;
@@ -418,6 +420,9 @@ void VALC_parse_recurse(
         lang_car, lang2_car, CAR(lang_track), var_name, eval_as_is_internal,
         first_fun, set, track_hash, track_hash2, arg_tag
       );
+      // For fun.ref in (fun.ref)(...), we don't want to store the whole tree,
+      // only whether there was a dot found in fun.ref
+
     } else {
       // Problem we have here is that we do not want to reset to 999 yet
       if(is_one_dot || eval_as_is_internal) {
@@ -433,6 +438,13 @@ void VALC_parse_recurse(
     VALC_reset_track_hash(track_hash2, substitute_level2);
     lang = CDR(lang);
     lang2 = CDR(lang2);
+
+    // If this is the first function, and after recursion it was determined not
+    // to contain, periods, then it should be declared as type 999
+
+    if(first_fun_here && TYPEOF(CAR(first_fun)) != INTSXP) {
+      SETCAR(first_fun, ScalarInteger(999));
+    }
     lang_track = CDR(lang_track);
     call_type = 999; // Reset for sub-elements
   }
