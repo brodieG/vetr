@@ -47,8 +47,10 @@ care of the rest:
     tpl <- numeric(1L)
     vet(tpl, 1:3)
     ## [1] "`length(1:3)` should be 1 (is 3)"
+
     vet(tpl, "hello")
     ## [1] "`\"hello\"` should be type \"numeric\" (is \"character\")"
+
     vet(tpl, 42)
     ## [1] TRUE
 
@@ -59,6 +61,7 @@ example, zero length templates match any length:
     tpl <- integer()
     vet(tpl, 1L:3L)
     ## [1] TRUE
+
     vet(tpl, 1L)
     ## [1] TRUE
 
@@ -68,6 +71,7 @@ considered integer:
     tpl <- integer(1L)
     vet(tpl, 1)       # this is a numeric, not an integer
     ## [1] TRUE
+
     vet(tpl, 1.0001)
     ## [1] "`1.0001` should be type \"integer-like\" (is \"double\")"
 
@@ -79,6 +83,7 @@ considered integer:
 
     vet(tpl.iris, iris)
     ## [1] TRUE
+
     vet(tpl.iris, iris.fake)
     ## [1] "`levels(iris.fake$Species)[3]` should be \"virginica\" (is \"sibirica\")"
 
@@ -134,8 +139,10 @@ You can combine templates with `&&` / `||`:
 
     vet(numeric(1L) || NULL, NULL)
     ## [1] TRUE
+
     vet(numeric(1L) || NULL, 42)
     ## [1] TRUE
+
     vet(numeric(1L) || NULL, "foo")
     ## [1] "`\"foo\"` should be `NULL`, or type \"numeric\" (is \"character\")"
 
@@ -144,6 +151,7 @@ refer to the object:
 
     vet(numeric(1L) && . > 0, -42)  # strictly positive scalar numeric
     ## [1] "`-42 > 0` is not TRUE (FALSE)"
+
     vet(numeric(1L) && . > 0, 42)
     ## [1] TRUE
 
@@ -161,8 +169,10 @@ them:
 
     vet(vet.exp, 42)
     ## [1] TRUE
+
     vet(vet.exp, "foo")
     ## [1] TRUE
+
     vet(vet.exp, "baz")
     ## [1] "At least one of these should pass:"                         
     ## [2] "  - `\"baz\" %in% c(\"foo\", \"bar\")` is not TRUE (FALSE)" 
@@ -172,7 +182,7 @@ them:
 `isTRUE(all(. >= x & . <= y))` for large vectors):
 
     vet(all_bw(., 0, 1), runif(5) + 1)
-    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.234342` at index 1 not in `[0,1]`\")"
+    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.614709` at index 1 not in `[0,1]`\")"
 
 There are a number of predefined vetting tokens you can use in your
 vetting expressions such as:
@@ -198,6 +208,7 @@ functions:
     }
     fun(1:2, "foo")
     ## Error in fun(x = 1:2, y = "foo"): For argument `x`, `length(1:2)` should be 1 (is 2)
+
     fun(1, "foo")
     ## Error in fun(x = 1, y = "foo"): For argument `y`, `"foo"` should be type "logical" (is "character")
 
@@ -280,9 +291,9 @@ review them:
 -   [`validate`](https://github.com/data-cleaning/validate) by Mark van
     der Loo and Edwin de Jonge, with a primary focus on validating data
     in data frames and similar data structures.
--   [`assertr`](https://github.com/ropensci/assertr) by Tony Fischetti,
-    also focused on data validation in data frames and similar
-    structures.
+-   [`assertr`](https://github.com/tonyfischetti/assertr) by Tony
+    Fischetti, also focused on data validation in data frames and
+    similar structures.
 -   [`types`](https://github.com/jimhester/types) by Jim Hester, which
     implements but does not enforce type hinting.
 -   [`argufy`](https://github.com/gaborcsardi/argufy) by Gábor Csárdi,
