@@ -55,6 +55,7 @@ The code is copied almost verbatim from src/main/envir.c:findFun()
 #include <Rinternals.h>
 #include <wctype.h>
 #include "alike.h"
+#include "backports.h"  // For R_ParentEnv
 
 SEXP ALIKEC_findFun(SEXP symbol, SEXP rho) {
   if(TYPEOF(symbol) != SYMSXP)
@@ -78,7 +79,7 @@ SEXP ALIKEC_findFun(SEXP symbol, SEXP rho) {
       if (vl == R_MissingArg) {
         return R_UnboundValue;
     } }  // nocov
-    rho = ENCLOS(rho);
+    rho = R_ParentEnv(rho);
   }
   return R_UnboundValue;
 }
