@@ -152,8 +152,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
       // from src/main/objects.c directly
 
       SEXP t, s;
-      t = s = PROTECT(allocList(3));
-      SET_TYPEOF(s, LANGSXP);
+      t = s = PROTECT(Rf_lang3(R_NilValue, R_NilValue, R_NilValue));
       SETCAR(t, ALIKEC_SYM_inherits); t = CDR(t);
       SETCAR(t, current); t = CDR(t);
       SETCAR(t, klass);

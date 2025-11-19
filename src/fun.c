@@ -53,10 +53,10 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
 
   // Translate specials and builtins to formals, if possible
 
-  args = PROTECT(list2(ALIKEC_SYM_args, R_NilValue));
-  SET_TYPEOF(args, LANGSXP);
-  func = PROTECT(list3(ALIKEC_SYM_function, R_NilValue, R_NilValue));
-  SET_TYPEOF(func, LANGSXP);
+  args = PROTECT(Rf_lang2(ALIKEC_SYM_args, R_NilValue));
+  func = PROTECT(
+    Rf_lang3(ALIKEC_SYM_function, R_NilValue, R_NilValue)
+  );
 
   if(tar_type == SPECIALSXP || tar_type == BUILTINSXP) {
     SETCADR(args, target);
