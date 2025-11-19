@@ -140,6 +140,8 @@ stopifnot(length(x) == 1L && (is.integer(x) || is.numeric(x) && floor(x) == x))
 stopifnot(alike(integer(1L), x))
 ```
 
+See `?type_alike` for additional details.
+
 <a name="fuzzylen"></a>Note that we only check numerics of length <= 100 for
 integerness to avoid full scans on large vectors.  We  expect that the primary
 source of these integer-like numerics is hand input vectors (e.g. `c(1, 2, 3)`),

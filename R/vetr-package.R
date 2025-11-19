@@ -20,10 +20,9 @@
 #' structural requirements, and auto-composing error messages when they do not.
 #'
 #' @name vetr-package
-#' @docType package
 #' @importFrom methods new
 
-NULL
+"_PACKAGE"
 
 # importFrom methods needed for tests of reference classes because we don't want
 # to create the classes in the tests due to the topenv issues.

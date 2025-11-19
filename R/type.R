@@ -14,45 +14,43 @@
 #
 # Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
-#' A Fuzzier Version of [typeof()]
+#' @export
+#' @rdname type_alike
+
+type_of <- function(object)
+  .Call(VALC_typeof, object)
+
+#' Fuzzily Compare Types of Objects
 #'
-#' Numerics that are equivalent to integers (e.g `x == floor(x)`) are
-#' classified as integers, and builtin and special functions are reported as
-#' closures.
+#' Type evaluation and comparison is carried out with special treatment for
+#' numerics, integers, and function types.  Whole number NA-free numeric vectors
+#' of sufficiently short length (<100 by default) representable in the integer
+#' type are considered to be type integer.  Closures, built-ins, and specials
+#' are all treated as type closure.
 #'
+#' Specific behavior can be tuned with the `type.mode` parameter to the
+#' [vetr_settings()] object passed as the `settings` parameter to this function.
+#'
+#' @seealso [alike()], [vetr_settings()], in particular the section about
+#'   the `type.mode` parameter which affects how this function behaves.
+#' @param target the object to test type alikeness against
+#' @param current the object to test the type alikeness of
+#' @param settings NULL, or a list as produced by [vetr_settings()]
 #' @param object the object to check the type of
-#' @return character(1L) the type of the object
+#' @return For `type_of` character(1L) the type of the object, for `type_alike`
+#'   either TRUE, or a string describing why the types are not alike.
 #' @export
 #' @examples
-#'
 #' type_of(1.0001)          # numeric
 #' type_of(1.0)             # integer (`typeof` returns numeric)
 #' type_of(1)               # integer (`typeof` returns numeric)
 #' type_of(sum)             # closure (`typeof` returns builtin)
 #' type_of(`$`)             # closure (`typeof` returns special)
-
-type_of <- function(object)
-  .Call(VALC_typeof, object)
-
-#' Compare Types of Objects
 #'
-#' By default, checks [type_of()] objects and two objects are
-#' considered `type_alike` if they have the same type.  There is special
-#' handling for integers, numerics, and functions.
-#'
-#' For integers and numerics, if `current` is integer or integer-like
-#' (e.g. 1.0) it will match real or integer `target` values.  Closures,
-#' built-ins, and specials are all treated as type function.
-#'
-#' Specific behavior can be tuned with the `type.mode` parameter to the
-#' [vetr_settings()] object passed as the `settings` parameter to this function.
-#'
-#' @seealso type_of, alike, [vetr_settings()], in particular the section about
-#'   the `type.mode` parameter which affects how this function behaves.
-#' @param target the object to test type alikeness against
-#' @param current the object to test the type alikeness of
-#' @param settings NULL, or a list as produced by [vetr_settings()]
-#' @export
+#' type_alike(1L, 1)
+#' type_alike(1L, 1.1)
+#' type_alike(integer(), numeric(100))
+#' type_alike(integer(), numeric(101))  # too long
 
 type_alike <- function(target, current, settings=NULL)
   .Call(VALC_type_alike, target, current, substitute(current), settings)

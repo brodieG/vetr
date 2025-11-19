@@ -29,21 +29,25 @@ Similar to \code{\link{all.equal}}, but compares object structure rather than
 value.  The \code{target} argument defines a template that the \code{current}
 argument must match.
 }
+\note{
+The semantics of alikeness for language objects, formulas, and
+functions may change in the future.
+}
 \section{alikeness}{
 
 
 Generally speaking two objects are alike if they are of the same type (as
-determined by \code{\link{type_alike}}) and length.  Attributes on the
-objects are required to be recursively \code{alike}, though the following
-attributes are treated specially: \code{class}, \code{dim}, \code{dimnames},
-\code{names}, \code{row.names}, \code{levels}, \code{tsp}, and \code{srcref}.
+determined by \code{\link{type_alike}}) and length.  \code{\link{type_alike}}
+has special treatment for integer-like numerics and function-like objects.
+
+Attributes on the objects are required to be recursively \code{alike}, though
+the following attributes are treated specially: \code{class}, \code{dim},
+\code{dimnames}, \code{names}, \code{row.names}, \code{levels}, \code{tsp},
+and \code{srcref}.
 
 Exactly what makes two objects \code{alike} is complex, but should be
 intuitive.  The best way to understand "alikeness" is to review the examples.
 For a thorough exposition see \href{../doc/alike.html}{the vignette}.
-
-Note that the semantics of alikeness for language objects, formulas, and
-functions may change in the future.
 }
 
 \examples{
