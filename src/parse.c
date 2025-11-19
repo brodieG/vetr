@@ -127,7 +127,8 @@ SEXP VALC_remove_parens(SEXP lang) {
 \* -------------------------------------------------------------------------- */
 /*
 If a variable expands to language, sub it in and keep parsing unless the sub
-itself is to symbol then keep subbing until it doesn't
+itself is to symbol then keep subbing until it doesn't.  This handles things
+like INT.1.POS, etc.
 
 See VALC_name_sub too.  We substitute `.` here as well, but logic before this
 function is called should ensure that we only call it on `.` when it was
@@ -286,6 +287,16 @@ SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
 \* -------------------------------------------------------------------------- */
 
 /*
+ * Parsing does the following:
+ *
+ * * Substitutes symbols like INT.1.POS.
+ * * Removes superfluous parentheses (including `.()`)
+ * * Identifies which top-level expressions contain `.` (or are wrapped in
+ *    `.()`).
+ * * Classifies top-level expressions on whether they should be evaluated as is
+ *   to check for truth, or whether they should be compared to the parameter
+ *   under validation with `alike`.
+ *
  * A bit wasteful that we have both `lang` and `lang2`, but we realized we need
  * them because `lang` is the langauge that gets evaluaed, and `lang2` the one
  * that we use for error reporting.  We need them to be different because they
@@ -303,6 +314,12 @@ SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho) {
  * @param lang2 the original call that where we will substitute `.` with the
  *   corresponding substituted language used for the corresponding parameter;
  *   this is used to produce more descriptive errors.
+ * @param eval_as_is whether we're in a dot expression already.
+ * @param lang_track a pairlist that mirrors the call structure, but contains in
+ *   CARS the type of token each element is.
+ * @param first_fun a reference back to the token in lang_track at the
+ *   point at which we exited the top-level (i.e. calls other than &&/||
+ *   intervened).
  */
 
 void VALC_parse_recurse(
