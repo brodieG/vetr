@@ -44,6 +44,7 @@ Original copyright notices follow.
  * Code necessitated by the API restrictions implemented in R4.6+
  */
 
+#include <Rversion.h>
 #if R_VERSION < R_Version(4, 4, 1)
 #define allocLang Rf_allocLang
 
