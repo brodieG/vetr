@@ -9,7 +9,7 @@ Authors@R: c(
     role=c("aut", "cre")),
     person(family="Paxdiablo", role="cph", comment="Hash
     table implementation in src/pfhash.h"),
-    person(family="R Core Team",
+    person(given="R Core Team",
     email="R-core@r-project.org", role="cph",
     comment="Used/adapted several code snippets from R sources, see src/r-copied.c"))
 Depends:
