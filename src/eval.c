@@ -62,6 +62,7 @@ struct VALC_res_list VALC_evaluate_recurse(
   int mode;
 
   if(TYPEOF(act_codes) == LISTSXP) {
+    // This is a e.g. A && B call.
     if(
       (TYPEOF(lang) != LANGSXP && TYPEOF(lang) != LISTSXP) ||
       (TYPEOF(lang2) != LANGSXP && TYPEOF(lang2) != LISTSXP)
@@ -81,15 +82,23 @@ struct VALC_res_list VALC_evaluate_recurse(
         type2char(TYPEOF(CAR(act_codes)))
       );
       // nocov end
-    } else {
-      mode=asInteger(CAR(act_codes));
+    }
+    mode=asInteger(CAR(act_codes));
+    if(mode != 1 && mode != 2) {
+      // nocov start
+      error(
+        "Internal Error, unexpected mode; contact maintainer.  Is %d",
+        mode
+      );
+      // nocov end
     }
   } else {
-    if(TYPEOF(lang) == LANGSXP || TYPEOF(lang2) == LISTSXP) {
+    // This is a token that should be evaluated as.is or alike.
+    if(TYPEOF(act_codes) != INTSXP) {
       // nocov start
-      error("%s%s",
-        "Internal Error: mismatched language and eval type tracking 2; contact ",
-        "maintainer."
+      error(
+        "Internal Error, unexpected mode format; contact maintainer.  Is %s",
+        type2char(TYPEOF(act_codes))
       );
       // nocov end
     }

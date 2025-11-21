@@ -16,20 +16,6 @@
 
 library(vetr)
 
-unitizer_sect("name_sub", {
-  vetr:::name_sub(quote(.), quote(xyz))
-  vetr:::name_sub(quote(.), quote(x + yz))   # Works, but may break parent fun
-  vetr:::name_sub(quote(.), c(1:3))          # Works, but may break parent fun
-  vetr:::name_sub(quote(..), quote(xyz))
-  vetr:::name_sub(quote(...), quote(xyz))
-  vetr:::name_sub(quote(.zzz), quote(xyz))
-  vetr:::name_sub(quote(zzz.), quote(xyz))
-  vetr:::name_sub(quote(zzz), quote(xyz))
-  vetr:::name_sub(quote(a + b), quote(xyz))  # Does nothing
-  vetr:::name_sub(quote(. + .), quote(xyz))  # Does nothing
-  vetr:::name_sub(quote(.(zzz)), quote(xyz)) # Does nothing
-  vetr:::name_sub("hello", quote(xyz))       # Does nothing
-})
 unitizer_sect("remove parens", {
   vetr:::remove_parens(quote((a)))
   vetr:::remove_parens(quote(.(a)))
@@ -61,6 +47,24 @@ unitizer_sect("parse", {
 unitizer_sect("token sub", {
   vetr:::symb_sub(INT.1)
   vetr:::symb_sub(NO.NA)
+
+  # Dot unescaping
+  `..` <- quote(yes)
+  `.zzz` <- `zzz.` <- quote(yup)
+  `.` <- quote(...)
+  vetr:::symb_sub(quote(..))
+  vetr:::symb_sub(quote(...))
+  vetr:::symb_sub(quote(.zzz))
+  vetr:::symb_sub(quote(zzz.))
+
+  # Errors
+  `.` <- quote(..)
+  vetr:::symb_sub(quote(..))
+  vetr:::symb_sub(quote(.))
+
+  # Identity operations on non-symbols
+  vetr:::symb_sub(quote(.(zzz)))
+  vetr:::symb_sub("hello")
 })
 
 unitizer_sect("preset tokens", {

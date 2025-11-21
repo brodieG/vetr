@@ -21,8 +21,9 @@ Useful links:
 
 Other contributors:
 \itemize{
-  \item  Paxdiablo (Hash table implementation in src/pfhash.h) [copyright holder]
+  \item Paxdiablo (Hash table implementation in src/pfhash.h) [copyright holder]
   \item R Core Team \email{R-core@r-project.org} (Used/adapted several code snippets from R sources, see src/r-copied.c) [copyright holder]
+  \item Michael Chirico \email{michaelchirico4@gmail.com} (\href{https://orcid.org/0000-0003-0787-087X}{ORCID}) [contributor]
 }
 
 }

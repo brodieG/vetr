@@ -38,21 +38,29 @@ checked (you may omit arguments that should not be evaluate from
 
 
 Vetting expressions can be template tokens, standard tokens, or any
-combination of template and standard tokens combined with \code{&&} and/or
-\code{||}.  Template tokens are R objects that define the required structure,
-much like the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Standard tokens are tokens
-that contain the \code{.} symbol and are used to vet values.
+expression built with them, \code{||}, \code{&&}, and parentheses.  Template tokens
+are R objects that define the required structure, much like the \code{FUN.VALUE}
+argument to \code{\link[=vapply]{vapply()}}.  Standard tokens are R expressions evaluated and
+checked for being \code{all(TRUE)}.
 
-If you do use the \code{.} symbol in your vetting expressions in your
-packages, you will need to include \code{utils::globalVariables(".")} as a
-top-level call to avoid the "no visible binding for global variable '.'"'
-R CMD check NOTE.
+Standard tokens are distinguished from templates by whether they reference
+the \code{.} symbol or not.  If you have a need to reference an object bound to
+\code{.} in a vetting expression, you can escape the \code{.}  with an extra dot (i.e.
+use \code{..}, and \code{...} for \code{..},  and so forth for symbols comprising only
+dots).  If you use standard tokens in your packages you will need to include
+\code{utils::globalVariables(".")} as a top-level call to avoid the "no visible
+binding for global variable '.'"' R CMD check NOTE.  Standard tokens that
+return a string like e.g. \code{all.equal(x, .)} will result in that string being
+incorporated into the error message.
 
 See \code{vignette('vetr', package='vetr')} and examples for details on how
 to craft vetting expressions.
 }
 
 \examples{
+## Look at `?vet` examples for more details on how to craft
+## vetting expressions.
+
 fun1 <- function(x, y) {
   vetr(integer(), LGL.1)
   TRUE   # do some work
