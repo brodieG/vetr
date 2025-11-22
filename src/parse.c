@@ -380,8 +380,9 @@ int VALC_parse_recurse(
   if(call_type != 1 && call_type != 2) token = 1;
   else if(length(lang) != 3) {
     error(
-      "Top-level call to %s should have two arguments but does not:\n\n%s",
-      call_type == 1 ? "&&" : "||", ALIKEC_deparse_chr(lang, -1, set)
+      "Top-level call to %s should have 2 arguments but has %d:\n\n%s",
+      call_type == 1 ? "&&" : "||", length(lang) - 1,
+      ALIKEC_deparse_chr(lang, -1, set)
     );
   } else {
     // A vetr expression: pop off the &&/|| symbol and recurse through rest

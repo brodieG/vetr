@@ -227,6 +227,9 @@ unitizer_sect("Language", {
 })
 unitizer_sect("Errors", {
   vet(1, 1, env="hello")
+
+  vet(`&&`(1, 2, 3), 1)
+  vet(`||`(1, 2, 3), 1)
 })
 
 unitizer_sect("Custom tokens", {
