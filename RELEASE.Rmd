@@ -1,32 +1,48 @@
 ## Release Steps
 
 [x] Coverage 100%
-[x] Coverage 100% on codecov
 
 Make sure to check codecov as the algorithms are different (and better?) there.
 
 [x] R CMD check
-[ ] winbuilder    r81416
+[x] Devel / Release / Oldrel (Github Actions)
+[ ] winbuilder
 [x] Other locale (e.g. 8859-15, not "latin1")
 
-[x] R 3.3 (vignettes fail, but tests pass)
+    LC_ALL=ca_FR.ISO8859-15 LANG=ca_FR.ISO8859-15 R CMD check
 
-Github Actions doesn't work anymore with the default Rstudio setup, so we've
-just been running locally on our 3.3 version (or on docker?).
+[x] Revdep
 
-[x] Revdep (dataonderivatives; run manually)
 
-[x] Rchk      (via rhub locally)
-[x] valgrind  (found an oob access)
-[x] SAN
-[x] CSAN (catches things GCCSAN does not).
+Review the details of revdep: it claims everything is fine, but there are
+several failures (could be b/c of 10 minute timeout?).  Also, it took ~10 hours
+to do the revdeps for 26 packages; what is going on with that?  Possibly not
+enough RAM causing us to hit swap?  Need more RAM for docker?
 
-^ Do these last as inevitably we end up making changes
+Revdepcheck relies on crancache, which hasn't been updated in a while.
 
 [ ] CRAN policy
 
-[ ] Review documentation
+[x] Review documentation
+[x] Update DESCRIPTION / NEWS
 [x] New README
-[ ] Logo
+[x] Re-render vignette
+
+Compiled code issues (do these last as inevitably we end up making changes).
+
+[x] Rchk (rhub)
+[x] valgrind
+[x] Clang UBSAN (Rhub)
+[x] Clang ASAN (Rhub) (catches things GCCSAN does not).
+
+    path <- 'vetr_0.2.19.tar.gz'
+    rhub::rc_submit(
+      path=path,
+      platforms=c('clang-asan', 'clang-ubsan', 'valgrind', 'rchk')
+    )
+
+Optional
+
+[ ] New animation
 
 
