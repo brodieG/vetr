@@ -1,7 +1,6 @@
 on:
   push:
     branches:
-      - master
       - rc
   pull_request:
     branches:
@@ -10,88 +9,73 @@ on:
 
 name: R-CMD-check
 
-# Increment this version when we want to clear cache
 env:
-  cache-version: v1
+  cache-version: v2
 
 jobs:
-  R-CMD-check:
-    runs-on: ${{ matrix.config.os }}
-
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
-
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - {os: ubuntu-20.04,   r: 'devel' }
-          - {os: ubuntu-20.04,   r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
-          - {os: ubuntu-20.04,   r: 'oldrel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
-          # need to manually set _R_CHECK_PACKAGE_NAME_ for R < ~3.4.4
-          # But we no longer test due to weird rspm failures, will test manually
-          # Also, tests fail due to possible changes in Unicode tables.
-          # - {os: ubuntu-20.04,   r: '3.3', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", rchkpkgname: "fansi"}
+  # Always run release
+  R-CMD-check-release:
+    runs-on: ubuntu-latest
+    name: ubuntu-latest (release)
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      RSPM: ${{ matrix.config.rspm }}
-      # don't treat missing suggested packages as error
       _R_CHECK_FORCE_SUGGESTS_: false
-      _R_CHECK_PACKAGE_NAME_: ${{ matrix.config.rchkpkgname }}
 
     steps:
-      - uses: actions/checkout@v2
-
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-pandoc@v2
       - uses: r-lib/actions/setup-r@v2
         with:
-          r-version: ${{ matrix.config.r }}
-
-      - uses: r-lib/actions/setup-pandoc@v2
-
-      - name: Query dependencies
-        run: |
-          install.packages('remotes')
-          saveRDS(remotes::dev_package_deps(dependencies = TRUE), "depends.Rds", version = 2)
-        shell: Rscript {0}
-
-      - name: Cache R packages
-        if: runner.os != 'Windows'
-        uses: actions/cache@v1
+          r-version: 'release'
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ env.cache-version }}-${{ runner.os }}-r-${{ matrix.config.r }}-${{ hashFiles('depends.Rds') }}
-          restore-keys: ${{ env.cache-version }}-${{ runner.os }}-r-${{ matrix.config.r }}-
-
-      - name: Install system dependencies on Linux
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install libcurl4-openssl-dev
-          while read -r cmd
-          do
-            eval sudo $cmd
-          done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
-      - name: Install dependencies
-        run: |
-          remotes::install_deps(dependencies = TRUE)
-          remotes::install_cran("rcmdcheck")
-          remotes::install_cran("covr")
-        shell: Rscript {0}
-
+          extra-packages: any::rcmdcheck, any::covr
+          needs: check
       - name: Check
-        run: rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "warning", check_dir = "check")
-        shell: Rscript {0}
-
-      - name: Upload check results
-        if: failure()
-        uses: actions/upload-artifact@master
+        uses: r-lib/actions/check-r-package@v2
         with:
-          name: ${{ runner.os }}-r${{ matrix.config.r }}-results
-          path: check
+          args: 'c("--no-manual", "--as-cran")'
 
       - name: Test coverage
+        if: github.event_name == 'push' && github.ref == 'refs/heads/rc'
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: |
           options(covr.exclude_end="(?://|#)[[:space:]]*nocov[[:space:]]*end")
           options(covr.exclude_start="(?://|#)[[:space:]]*nocov[[:space:]]*start")
           options(covr.exclude_pattern="(?://|#)[[:space:]]*nocov")
-          covr::codecov()
+          covr::codecov(token = Sys.getenv("CODECOV_TOKEN"))
         shell: Rscript {0}
+
+  # Only run on push to rc
+  R-CMD-check-extended:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/rc'
+    runs-on: ubuntu-latest
+    name: ubuntu-latest (${{ matrix.r }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        r: ['devel', 'oldrel-1']
+
+    env:
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      _R_CHECK_FORCE_SUGGESTS_: false
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r }}
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+      - name: Check
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--no-manual", "--as-cran")'

@@ -52,50 +52,54 @@ TRUE if validation succeeds, otherwise varies according to value
 chosen with parameter \code{stop}
 }
 \description{
-Use vetting expressions to enforce structural requirements for objects.
-\code{tev} is a version of \code{vet} compatible with \code{magrittr} pipes.
-}
-\details{
-\code{tev} just reverses the \code{target} and \code{current} arguments for better
-integration with \code{magrittr}.  There are two major caveats:
-\itemize{
-\item error messages will be less useful since you will get \code{.} instead
-of the deparsed call
-\item \verb{x \\\\\%>\\\\\% tev(y)} is much slower than \code{vet(y, x)} (or even \code{tev(x, y)})
-}
+Use vetting expressions to enforce structural requirements and/or evaluate
+test conditions for truth.  \code{tev} is identical to \code{vet} except with reversed
+arguments for pipe based workflows.
 }
 \section{Vetting Expressions}{
 
 
 Vetting expressions can be template tokens, standard tokens, or any
-combination of template and standard tokens combined with \code{&&} and/or
-\code{||}.  Template tokens are R objects that define the required structure,
-much like the \code{FUN.VALUE} argument to \code{\link[=vapply]{vapply()}}.  Standard tokens are tokens
-that contain the \code{.} symbol and are used to vet values.
+expression built with them, \code{||}, \code{&&}, and parentheses.  Template tokens
+are R objects that define the required structure, much like the \code{FUN.VALUE}
+argument to \code{\link[=vapply]{vapply()}}.  Standard tokens are R expressions evaluated and
+checked for being \code{all(TRUE)}.
 
-If you do use the \code{.} symbol in your vetting expressions in your
-packages, you will need to include \code{utils::globalVariables(".")} as a
-top-level call to avoid the "no visible binding for global variable '.'"'
-R CMD check NOTE.
+Standard tokens are distinguished from templates by whether they reference
+the \code{.} symbol or not.  If you have a need to reference an object bound to
+\code{.} in a vetting expression, you can escape the \code{.}  with an extra dot (i.e.
+use \code{..}, and \code{...} for \code{..},  and so forth for symbols comprising only
+dots).  If you use standard tokens in your packages you will need to include
+\code{utils::globalVariables(".")} as a top-level call to avoid the "no visible
+binding for global variable '.'"' R CMD check NOTE.  Standard tokens that
+return a string like e.g. \code{all.equal(x, .)} will result in that string being
+incorporated into the error message.
 
 See \code{vignette('vetr', package='vetr')} and examples for details on how
 to craft vetting expressions.
 }
 
 \examples{
-## template vetting
+## Template token vetting
 vet(numeric(2L), runif(2))
 vet(numeric(2L), runif(3))
 vet(numeric(2L), letters)
 try(vet(numeric(2L), letters, stop=TRUE))
 
-## `tev` just reverses target and current for use with maggrittr
-\dontrun{
-if(require(magrittr)) {
-  runif(2) \%>\% tev(numeric(2L))
-  runif(3) \%>\% tev(numeric(2L))
-}
-}
+## Standard token vetting
+vet(. > 0, runif(2))
+
+## Expression made of standard and template tokens.
+vet(numeric(1) && . > 0, 1)
+try(vet(numeric(1) && . > 0, 1:2))
+try(vet(numeric(1) && . > 0, -1))
+
+## `tev` just reverses target and current
+## if(getRversion() >= "4.1.0") { # would be a parse error so commented
+##   runif(2) |> tev(numeric(2L))
+##   runif(3) |> tev(numeric(2L))
+## }
+
 ## Zero length templates are wild cards
 vet(numeric(), runif(2))
 vet(numeric(), runif(100))
@@ -159,6 +163,10 @@ vet(vet.exp, 42)
 vet(scalar.num.pos || foo.or.bar, 42)  # equivalently
 vet(vet.exp, "foo")
 vet(vet.exp, "baz")
+
+## Standard tokens that return strings see the string shown
+## in the error message:
+vet(all.equal(., 2), 1)
 }
 \seealso{
 \code{\link[=vetr]{vetr()}} for a version optimized to vet function arguments,

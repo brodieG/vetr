@@ -18,6 +18,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 #include <float.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <Rinternals.h>
 
 /*
@@ -54,7 +55,9 @@ SEXP VALC_check_assumptions(void) {
   // solution is to not use size_t in the structs if this becomes a problem
 
   if(sizeof(size_t) > sizeof(double))
-    warningcall(R_NilValue, err_base, "size_t larger than double not same size");
+    warningcall(
+      R_NilValue, err_base, "size_t larger than double not same size", ""
+    );
 
   // Important for some our boundary condition assumptions, in particular that
   // NA_INTEGER < int x.
@@ -65,10 +68,32 @@ SEXP VALC_check_assumptions(void) {
       "package assumes that they are equal; please contact maintainer."
     );
   }
-  // Mostly because we try to represent R_xlen_t values with %.0f
+#ifndef IEEE_754
+  warningcall(
+    R_NilValue, err_base, "This package assumes IEEE-754 real implementation ",
+    "but that does not appear to be the case; please contact maintainer."
+  );
+#else
+  // If these checks fail they would be UB anyway because promotion rules are to
+  // convert the integer to double (6.3.1.8), which would be UB.
+  // if(INT_MIN < -DBL_MAX) {
+  //   warningcall(
+  //     R_NilValue, err_base, "INT_MIN < -DBL_MAX but the code in this ",
+  //     "package assumes the opposite; please contact maintainer."
+  //   );
+  // }
+  // if(INT_MAX > DBL_MAX) {
+  //   warningcall(
+  //     R_NilValue, err_base, "INT_MAX > DBL_MAX but the code in this ",
+  //     "package assumes the opposite; please contact maintainer."
+  //   );
+  // }
+#endif
 
-  if(R_XLEN_T_MAX >= DBL_MAX)
-    warningcall(R_NilValue, err_base, "R_XLEN_T_MAX is not less than DBL_MAX");
+  // We would like to check because we try to represent R_xlen_t values with %.0f,
+  // but for the same reason as above this would be UB.
+  // if(R_XLEN_T_MAX >= DBL_MAX)
+  //   warningcall(R_NilValue, err_base, "R_XLEN_T_MAX is not less than DBL_MAX", "");
 
   if(sizeof(R_len_t) != sizeof(int))
     warningcall(R_NilValue, err_base, "R_len_t not same size as int", "");

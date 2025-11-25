@@ -1,3 +1,10 @@
+## 0.2.19
+
+* Fix non C API access.
+* [#109](https://github.com/brodieG/vetr/issues/109) fix namespaced function
+  calls in template when the call does not reference `.`.
+* Streamline vetting expression parsing.
+
 ## 0.2.17-18
 
 * Fix bad C API accesses uncovered by new R-devel checks.

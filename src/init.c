@@ -24,7 +24,6 @@ static const
 R_CallMethodDef callMethods[] = {
   {"validate", (DL_FUNC) &VALC_validate, 8},
   {"validate_args", (DL_FUNC) &VALC_validate_args, 5},
-  {"name_sub", (DL_FUNC) &VALC_name_sub_ext, 2},
   {"symb_sub", (DL_FUNC) &VALC_sub_symbol_ext, 2},
   {"parse", (DL_FUNC) &VALC_parse_ext, 3},
   {"remove_parens", (DL_FUNC) &VALC_remove_parens, 1},

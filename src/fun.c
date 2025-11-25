@@ -17,6 +17,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 
 #include "alike.h"
+#include "backports.h" // for R_ClosureFormals
 
 /*
 Functions are considered alike if they have compatible function signatures:
@@ -52,10 +53,10 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
 
   // Translate specials and builtins to formals, if possible
 
-  args = PROTECT(list2(ALIKEC_SYM_args, R_NilValue));
-  SET_TYPEOF(args, LANGSXP);
-  func = PROTECT(list3(ALIKEC_SYM_function, R_NilValue, R_NilValue));
-  SET_TYPEOF(func, LANGSXP);
+  args = PROTECT(Rf_lang2(ALIKEC_SYM_args, R_NilValue));
+  func = PROTECT(
+    Rf_lang3(ALIKEC_SYM_function, R_NilValue, R_NilValue)
+  );
 
   if(tar_type == SPECIALSXP || tar_type == BUILTINSXP) {
     SETCADR(args, target);
@@ -84,7 +85,7 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
   SEXP last_match = R_NilValue, tar_tag, cur_tag;
 
   for(
-    tar_form = FORMALS(target), cur_form = FORMALS(current);
+    tar_form = R_ClosureFormals(target), cur_form = R_ClosureFormals(current);
     tar_form != R_NilValue && cur_form != R_NilValue;
     tar_form = CDR(tar_form), cur_form = CDR(cur_form), tar_args++
   ) {

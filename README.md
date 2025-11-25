@@ -10,7 +10,7 @@ rmarkdown::render('README.Rmd', output_format=rmarkdown::md_document())
 
 [![R build
 status](https://github.com/brodieG/vetr/workflows/R-CMD-check/badge.svg)](https://github.com/brodieG/vetr/actions)
-[![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=master)](https://app.codecov.io/gh/brodieG/vetr?branch=master)
+[![](https://codecov.io/github/brodieG/vetr/coverage.svg?branch=rc)](https://app.codecov.io/gh/brodieG/vetr?branch=rc)
 [![](http://www.r-pkg.org/badges/version/vetr)](https://cran.r-project.org/package=vetr)
 [![Project Status: WIP - Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
@@ -47,10 +47,8 @@ care of the rest:
     tpl <- numeric(1L)
     vet(tpl, 1:3)
     ## [1] "`length(1:3)` should be 1 (is 3)"
-
     vet(tpl, "hello")
     ## [1] "`\"hello\"` should be type \"numeric\" (is \"character\")"
-
     vet(tpl, 42)
     ## [1] TRUE
 
@@ -61,7 +59,6 @@ example, zero length templates match any length:
     tpl <- integer()
     vet(tpl, 1L:3L)
     ## [1] TRUE
-
     vet(tpl, 1L)
     ## [1] TRUE
 
@@ -71,7 +68,6 @@ considered integer:
     tpl <- integer(1L)
     vet(tpl, 1)       # this is a numeric, not an integer
     ## [1] TRUE
-
     vet(tpl, 1.0001)
     ## [1] "`1.0001` should be type \"integer-like\" (is \"double\")"
 
@@ -83,7 +79,6 @@ considered integer:
 
     vet(tpl.iris, iris)
     ## [1] TRUE
-
     vet(tpl.iris, iris.fake)
     ## [1] "`levels(iris.fake$Species)[3]` should be \"virginica\" (is \"sibirica\")"
 
@@ -139,10 +134,8 @@ You can combine templates with `&&` / `||`:
 
     vet(numeric(1L) || NULL, NULL)
     ## [1] TRUE
-
     vet(numeric(1L) || NULL, 42)
     ## [1] TRUE
-
     vet(numeric(1L) || NULL, "foo")
     ## [1] "`\"foo\"` should be `NULL`, or type \"numeric\" (is \"character\")"
 
@@ -151,7 +144,6 @@ refer to the object:
 
     vet(numeric(1L) && . > 0, -42)  # strictly positive scalar numeric
     ## [1] "`-42 > 0` is not TRUE (FALSE)"
-
     vet(numeric(1L) && . > 0, 42)
     ## [1] TRUE
 
@@ -169,10 +161,8 @@ them:
 
     vet(vet.exp, 42)
     ## [1] TRUE
-
     vet(vet.exp, "foo")
     ## [1] TRUE
-
     vet(vet.exp, "baz")
     ## [1] "At least one of these should pass:"                         
     ## [2] "  - `\"baz\" %in% c(\"foo\", \"bar\")` is not TRUE (FALSE)" 
@@ -182,7 +172,7 @@ them:
 `isTRUE(all(. >= x & . <= y))` for large vectors):
 
     vet(all_bw(., 0, 1), runif(5) + 1)
-    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.614709` at index 1 not in `[0,1]`\")"
+    ## [1] "`all_bw(runif(5) + 1, 0, 1)` is not TRUE (is chr: \"`1.643241` at index 1 not in `[0,1]`\")"
 
 There are a number of predefined vetting tokens you can use in your
 vetting expressions such as:
@@ -208,7 +198,6 @@ functions:
     }
     fun(1:2, "foo")
     ## Error in fun(x = 1:2, y = "foo"): For argument `x`, `length(1:2)` should be 1 (is 2)
-
     fun(1, "foo")
     ## Error in fun(x = 1, y = "foo"): For argument `y`, `"foo"` should be type "logical" (is "character")
 
@@ -275,8 +264,8 @@ review:
 -   [`assertive`](https://www.r-pkg.org/pkg/assertive) by Richie Cotton
 -   [`checkmate`](https://github.com/mllg/checkmate) by Michel Lang
 
-The following packages also perform related tasks, although we do not
-review them:
+The following packages also perform related tasks, although we have not
+used them and do not review them:
 
 -   [`valaddin`](https://github.com/egnha/valaddin) v0.1.0 by Eugene Ha,
     a framework for augmenting existing functions with validation
@@ -302,6 +291,8 @@ review them:
 -   [`typed`](https://moodymudskipper.github.io/typed/) by Antoine
     Fabri, which enforces types of symbols, function parameters, and
     return values.
+-   [`erify`](https://github.com/flujoo/erify/) by Renfei Mao, with a
+    focus on readable error messages.
 
 ## Acknowledgments
 
@@ -323,7 +314,7 @@ Thank you to:
     Boettiger](https://github.com/cboettig) for the
     [rocker](https://github.com/rocker-org/rocker) project, and [Gábor
     Csárdi](https://github.com/gaborcsardi) and the
-    [R-consortium](https://www.r-consortium.org/) for
+    [R-consortium](https://r-consortium.org/) for
     [Rhub](https://github.com/r-hub), without which testing bugs on
     R-devel and other platforms would be a nightmare.
 -   [Winston Chang](https://github.com/wch) for the

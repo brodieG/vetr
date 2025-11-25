@@ -105,7 +105,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     SEXP fun, SEXP fun_call, SEXP val_call, SEXP fun_frame, SEXP settings
   );
   SEXP VALC_remove_parens(SEXP lang);
-  SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_name);
+  SEXP VALC_name_sub_ext(SEXP symb, SEXP arg_lang);
   void VALC_stop(SEXP call, const char * msg);
   void VALC_stop2(SEXP call, const char * msg, SEXP rho);
   SEXP VALC_all_ext(SEXP vec);
@@ -113,12 +113,12 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   int IS_TRUE(SEXP x);
   int IS_LANG(SEXP x);
   SEXP VALC_parse(
-    SEXP lang, SEXP var_name, struct VALC_settings settings, SEXP arg_tag
+    SEXP lang, SEXP arg_lang, struct VALC_settings settings, SEXP arg_tag
   );
-  SEXP VALC_parse_ext(SEXP lang, SEXP var_name, SEXP rho);
-  void VALC_parse_recurse(
-    SEXP lang, SEXP lang2, SEXP lang_track, SEXP var_name, int eval_as_is,
-    SEXP first_fun, struct VALC_settings set,
+  SEXP VALC_parse_ext(SEXP lang, SEXP arg_lang, SEXP rho);
+  int VALC_parse_recurse(
+    SEXP lang, SEXP lang2, SEXP lang_track, SEXP arg_lang, 
+    int token, struct VALC_settings set, 
     struct track_hash * track_hash, struct track_hash * track_hash2,
     SEXP arg_tag
   );

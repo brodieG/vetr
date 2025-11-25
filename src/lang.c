@@ -481,13 +481,10 @@ SEXP ALIKEC_lang_alike_core(
   size_t * cur_varnum = &curtmp;
 
   // Can't figure out how to do this on init; cost ~60ns
+  SEXP match_call_args = PROTECT(Rf_lang2(R_QuoteSymbol, R_NilValue));
   SEXP match_call = PROTECT(
-    list3(
-      ALIKEC_SYM_matchcall, R_NilValue,
-      list2(R_QuoteSymbol, R_NilValue)
-  ) );
-  SET_TYPEOF(match_call, LANGSXP);
-  SET_TYPEOF(CADDR(match_call), LANGSXP);
+    Rf_lang3(ALIKEC_SYM_matchcall, R_NilValue, match_call_args)
+  );
 
   int formula = 0;
 
@@ -546,7 +543,7 @@ SEXP ALIKEC_lang_alike_core(
     SET_VECTOR_ELT(res_fin, 5, current);
     UNPROTECT(1);
   }
-  UNPROTECT(4);
+  UNPROTECT(5);
   return res_fin;
 }
 /*
