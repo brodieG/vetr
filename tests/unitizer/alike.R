@@ -32,6 +32,16 @@ unitizer_sect("Atomic", {
 
   alike(c(a=1, b=2), 3)         # Length mismatch
   alike(c(a=1, b=2), c(1, 2))   # Names
+
+  # Integer-like ness limits
+  alike(1L, 2^31-1)
+  alike(1L, 2^31)
+  alike(1L, Inf)
+  alike(1L, -2^31+1)
+  alike(1L, -2^31)
+  alike(1L, -Inf)
+  alike(1L, NaN)
+  alike(1L, NA_real_)
 } )
 unitizer_sect("lists", {
   lst <-   list(list( 1,  2), list( 3, list( 4, list( 5, list(6, 6.1, 6.2)))))

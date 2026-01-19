@@ -8,3 +8,22 @@
 Declarative template-based framework for verifying that objects meet
 structural requirements, and auto-composing error messages when they do not.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/brodieG/vetr}
+  \item Report bugs at \url{https://github.com/brodieG/vetr/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Brodie Gaslam \email{brodie.gaslam@yahoo.com}
+
+Other contributors:
+\itemize{
+  \item Paxdiablo (Hash table implementation in src/pfhash.h) [copyright holder]
+  \item R Core Team \email{R-core@r-project.org} (Used/adapted several code snippets from R sources, see src/r-copied.c) [copyright holder]
+  \item Michael Chirico \email{michaelchirico4@gmail.com} (\href{https://orcid.org/0000-0003-0787-087X}{ORCID}) [contributor]
+}
+
+}

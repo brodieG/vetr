@@ -124,8 +124,11 @@ SEXPTYPE ALIKEC_typeof_internal(SEXP object) {
         */
         for(i = 0; i < obj_len; i++) {
           if(
-            (isnan(obj_real[i]) || !isfinite(obj_real[i])) ||
-            obj_real[i] != (int)obj_real[i]
+            (
+              isnan(obj_real[i]) ||
+              obj_real[i] > INT_MAX || obj_real[i] <= INT_MIN ||
+              obj_real[i] != (int)obj_real[i]
+            )
           )
             return REALSXP;
         }

@@ -5,8 +5,8 @@
 * [`assertive`](https://www.r-pkg.org/pkg/assertive) by Richie Cotton
 * [`checkmate`](https://github.com/mllg/checkmate) by Michel Lang
 
-The following packages also perform related tasks, although we do not review
-them:
+The following packages also perform related tasks, although we have not used
+them and do not review them:
 
 * [`valaddin`](https://github.com/egnha/valaddin) v0.1.0 by Eugene Ha, a
   framework for augmenting existing functions with validation contracts.
@@ -27,3 +27,5 @@ them:
   implements parameter validation via roxygen tags (not released to CRAN).
 * [`typed`](https://moodymudskipper.github.io/typed/) by Antoine Fabri, which
   enforces types of symbols, function parameters, and return values.
+* [`erify`](https://github.com/flujoo/erify/) by Renfei Mao, with a focus on
+  readable error messages.
