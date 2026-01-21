@@ -963,7 +963,10 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   tar_attr = PROTECT(R_getAttributes(target));
   cur_attr = PROTECT(R_getAttributes(current));
 
-  if(tar_attr == R_NilValue && cur_attr == R_NilValue) return res_attr;
+  if(tar_attr == R_NilValue && cur_attr == R_NilValue) {
+    UNPROTECT(2);
+    return res_attr;
+  }
   /*
   Array to store major errors; to see what each position corresponds to see the
   docs for ALIKEC_res.lvl
