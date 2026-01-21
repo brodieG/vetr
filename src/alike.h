@@ -230,7 +230,6 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     struct ALIKEC_res res, SEXP call, struct VALC_settings set
   );
   SEXP ALIKEC_class(SEXP obj, SEXP class);
-  SEXP ALIKEC_abstract_ts(SEXP x, SEXP what);
   int ALIKEC_env_track(SEXP env, struct ALIKEC_env_track * envs, int env_limit);
   SEXP ALIKEC_env_track_test(SEXP env, SEXP stack_size_init, SEXP env_limit);
   struct ALIKEC_env_track * ALIKEC_env_set_create(

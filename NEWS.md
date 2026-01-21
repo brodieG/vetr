@@ -1,3 +1,14 @@
+## 0.2.20
+
+R 4.6.0 makes `ATTRIB` inaccessible from package C code.  The following changes
+stem from this:
+
+* Replace `ATTRIB` usage with `R_getAttributes`, and adjust code for difference
+  in return values between those two.
+* `abstract.ts` now creates an R object with a "tsp_vetr" attribute to replace
+  the "tsp" attribute in the template (see `?abstract`).
+* Pairlist name error messages are slightly different.
+
 ## 0.2.19
 
 * Fix non C API access.
