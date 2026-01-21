@@ -14,7 +14,7 @@ lifted directly from: http://powerfield-software.com/?p=615 under license:
 > article.
 */
 /*
-Copyright (C) 2023 Brodie Gaslam
+Copyright (C) Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
