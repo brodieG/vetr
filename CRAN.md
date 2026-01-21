@@ -5,10 +5,13 @@
 [x] Check version
 [x] Run tests with
     [x] winbuilder
+[ ] Rhub
     [x] valgrind
     [ ] rchk
 [x] Check coverage
 [ ] Check build user
+
+
 
 ## Submission Notes:
 
