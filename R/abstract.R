@@ -40,15 +40,16 @@
 #'
 #' @section Time Series:
 #'
-#' \code{\link{alike}} will treat time series parameter components with zero in
-#' them as wildcards.  This function allows you to create these wild card time
-#' series attributes since R does not allow direct creation/modification of
-#' \code{ts} attributes with zero values.
-#'
-#' Make sure you do not try to use the templates you create with this for
-#' anything other than as \code{\link{alike}} templates since the result is
-#' likely undefined given R expects non zero values for the \code{ts}
-#' attribute and attempts to prevent such attributes.
+#' `abstract` replaces the "tsp" attribute with a "tsp_vetr" attribute with the
+#' components specified in `what` set to zero.  \code{\link{alike}} will
+#' treat it as a "tsp" attribute except that the zero components become
+#' wildcards.  If you manually create a template object with both
+#' "tsp" and "tsp_vetr" attributes, "tsp_vetr" is treated as a regular
+#' attribute.  `vetr` does not consider whether the "ts" class is also set
+#' when attributing special semantics to the "tsp".  The "tsp_vetr" attribute is
+#' required because R does not permit 0 values in "tsp".  Prior to R4.6.0 and
+#' `vetr` 2.20, `vetr` constructed a "tsp" attribute with zeroes, but it no
+#' longer does that.
 #'
 #' @export
 #' @param x the object to abstract
@@ -175,8 +176,13 @@ abstract.ts <- function(x, what=c("start", "end", "frequency"), ...) {
   attr(x, "tsp") <- NULL
   x <- abstract.default(x, ...)
 
+  # Set the wildcard values to zero and store as "tsp_vetr" attribute
+  # (not "tsp") since R validates tsp and rejects zero frequency.
+  # The C comparison code recognizes both "tsp" and "tsp_vetr" as
+  # time series template attributes.
   tsp[match(unique(what), what.valid)] <- 0
-  .Call(VALC_abstract_ts, x, tsp)
+  attr(x, "tsp_vetr") <- tsp
+  x
 }
 #' Set Element to NULL Without Removing It
 #'

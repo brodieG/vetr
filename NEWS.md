@@ -1,3 +1,9 @@
+## 0.2.20
+
+* Fix non C API access.
+* Related to the above, `abstract.ts` now creates an R object with a "tsp_vetr"
+  attribute to replace the "tsp" attribute in the template (see `?abstract`).
+
 ## 0.2.19
 
 * Fix non C API access.

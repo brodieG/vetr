@@ -17,6 +17,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 
 #include "alike.h"
+#include "backports.h"
 /*
  * used to take res_sub as input, but we got rid of that when we rationalized
  * most of our result structs to be ALIKEC_res
@@ -257,8 +258,10 @@ struct ALIKEC_res ALIKEC_compare_class(
   // Make sure class attributes are alike
 
   if(res.success) {
-    res =
-      ALIKEC_alike_attr(ATTRIB(target), ATTRIB(current), "class", set);
+    SEXP tar_class_attrs = PROTECT(R_getAttributes(target));
+    SEXP cur_class_attrs = PROTECT(R_getAttributes(current));
+    res = ALIKEC_alike_attr(tar_class_attrs, cur_class_attrs, "class", set);
+    UNPROTECT(2);
     PROTECT(res.wrap);
   } else PROTECT(R_NilValue);
   res.dat.df = is_df;
@@ -615,34 +618,38 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
     will the checking all attributes; also, do we really need to check whether
     dimnames has attributes other than names?*/
 
-    SEXP prim_attr = ATTRIB(prim), sec_attr = ATTRIB(sec);
+    SEXP prim_attr_list = PROTECT(R_getAttributes(prim));
+    SEXP sec_attr_list = PROTECT(R_getAttributes(sec));
+    SEXP prim_attr_sort = PROTECT(ALIKEC_list_as_sorted_vec(prim_attr_list));
+    SEXP sec_attr_sort = PROTECT(ALIKEC_list_as_sorted_vec(sec_attr_list));
+    SEXP prim_attr_names = PROTECT(getAttrib(prim_attr_sort, R_NamesSymbol));
+    SEXP sec_attr_names = PROTECT(getAttrib(sec_attr_sort, R_NamesSymbol));
+
+    R_xlen_t prim_attr_count = XLENGTH(prim_attr_sort);
+    R_xlen_t sec_attr_count = XLENGTH(sec_attr_sort);
 
     /*
     Check that all `dimnames` attributes other than `names` that are both in
-    target and current are alike; this is also a double loop that could be
-    optimized; can't do the normal check because we need to leave out the
-    `names` attribute from the comparison.  This could be simplified if we had
-    an attribute comparison function that could skip a particular attribute.
+    target and current are alike; using sorted vectors for O(n) comparison.
     */
 
-    SEXP prim_attr_cpy, sec_attr_cpy;
-    for(
-      prim_attr_cpy = prim_attr; prim_attr_cpy != R_NilValue;
-      prim_attr_cpy = CDR(prim_attr_cpy)
-    ) {
-      SEXP prim_tag_symb = TAG(prim_attr_cpy);
-      const char * prim_tag = CHAR(PRINTNAME(prim_tag_symb));
-      int do_continue = 0;
+    R_xlen_t pi = 0, si = 0;
+    for(pi = 0; pi < prim_attr_count; ++pi) {
+      const char * prim_tag = CHAR(STRING_ELT(prim_attr_names, pi));
+
       // skip names attribute
-      if(prim_tag_symb == R_NamesSymbol) continue;
-      for(
-        sec_attr_cpy = sec_attr; sec_attr_cpy != R_NilValue;
-        sec_attr_cpy = CDR(sec_attr_cpy)
-      ) {
-        if(prim_tag_symb == TAG(sec_attr_cpy)) {
-          res = ALIKEC_alike_internal(
-            CAR(prim_attr_cpy), CAR(sec_attr_cpy), set
-          );
+      if(strcmp(prim_tag, "names") == 0) continue;
+
+      // Advance sec index to find matching tag or determine it's missing
+      int do_continue = 0;
+      while(si < sec_attr_count) {
+        const char * sec_tag = CHAR(STRING_ELT(sec_attr_names, si));
+        int cmp = strcmp(prim_tag, sec_tag);
+        if(cmp == 0) {
+          // Found matching tag, compare values
+          SEXP prim_val = VECTOR_ELT(prim_attr_sort, pi);
+          SEXP sec_val = VECTOR_ELT(sec_attr_sort, si);
+          res = ALIKEC_alike_internal(prim_val, sec_val, set);
           REPROTECT(res.wrap, ipx);
 
           if(!res.success) {
@@ -654,19 +661,28 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
             break;
           } else {
             do_continue = 1;
+            si++;
             break;
-      } } }
+          }
+        } else if(cmp < 0) {
+          // prim_tag < sec_tag: prim_tag is missing from sec
+          break;
+        } else {
+          // sec_tag < prim_tag: skip extra attr in sec
+          si++;
+        }
+      }
       if(do_continue == 1) continue;    // success, next outer loop
       else if(do_continue == 2) break;  // failure, exit outer
-
-      // missing attribute
-
+      // prim_tag was not found
       res.success = 0;
       res.dat.strings.tar_pre = "not be";
       res.dat.strings.target[1] = "missing";
       res.dat.strings.current[1] = ""; // gcc-10
       REPROTECT(res.wrap = ALIKEC_compare_dimnames_wrap(prim_tag), ipx);
+      break;
     }
+    UNPROTECT(6);
     // Compare actual dimnames attr, note that zero length primary attribute
     // matches any sec attribute
 
@@ -941,14 +957,11 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
 ) {
   struct ALIKEC_res res_attr = ALIKEC_res_init();
 
-  // Note we don't protect these because target and curent should come in
-  // protected so every SEXP under them should also be protected
-
   SEXP tar_attr, cur_attr;
   int rev = 0, is_df = 0;
 
-  tar_attr = ATTRIB(target);
-  cur_attr = ATTRIB(current);
+  tar_attr = PROTECT(R_getAttributes(target));
+  cur_attr = PROTECT(R_getAttributes(current));
 
   if(tar_attr == R_NilValue && cur_attr == R_NilValue) return res_attr;
   /*
@@ -998,6 +1011,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
   R_xlen_t i, j;
   i = 0; j = 0;
   int is_names = 0;
+  int tar_has_tsp = 0;
 
   // A bit of a weird loop, we walk up through both sorted lists depending on
   // what attributes are missing from either list.
@@ -1022,6 +1036,12 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
         "This should not happen; contact maintainer."
       );
       // nocov end
+
+    // Handle the special tsp_vetr attribute (see `abstract`).  If it is present
+    // in the template, convert it to "tsp".
+
+    if(!strcmp(tar_tag, "tsp")) tar_has_tsp = 1;  // sorted so first
+    if(!strcmp(tar_tag, "tsp_vetr") && !tar_has_tsp) tar_tag = "tsp";
 
     // Get elements to check; we use dummy NULL values if we're at the end of
     // the vectors to allow for dummy checks
@@ -1241,7 +1261,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
       break;
   } }
   res_attr.dat.df = is_df;
-  UNPROTECT(6);
+  UNPROTECT(8);
   return res_attr;
 }
 /*-----------------------------------------------------------------------------\

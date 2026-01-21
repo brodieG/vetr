@@ -39,16 +39,27 @@ unitizer_sect("Standard Methods", {
 })
 unitizer_sect("Time Series", {
   y <- ts(runif(12), start=1970, frequency=12)
-  attr(abstract(y), "tsp")
-  attr(abstract(y, "start"), "tsp")
-  attr(abstract(y, "end"), "tsp")
-  attr(abstract(y, "frequency"), "tsp")
-  attr(abstract(y, c("start", "frequency")), "tsp")
+  attributes(abstract(y), "tsp")
+  attributes(abstract(y, "start"), "tsp")
+  attributes(abstract(y, "end"), "tsp")
+  attributes(abstract(y, "frequency"), "tsp")
+  attributes(abstract(y, c("start", "frequency")), "tsp")
+
+  y2 <- ts(numeric(12), start=1960, frequency=12)
+  alike(abstract(y, c("start", "end")), y2)
+  alike(abstract(y, c("start")), y2)
 
   # Errors
 
   abstract(y, "boom")
   vetr:::abstract.ts(1:12)
+
+  # Test what happens with both "tsp" and "tsp_vetr"
+  y.abs <- abstract(y)
+  attr(y.abs, "tsp") <- attr(y, "tsp")
+  alike(y.abs, y)
+  alike(y, y.abs)
+  alike(y.abs, y.abs)
 })
 unitizer_sect("s4", {
   ## s4 objects are unaffected
