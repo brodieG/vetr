@@ -2,6 +2,7 @@
 
 [x] Revdeps
 [x] Review CRAN policy
+[ ] Rebuild / Review doc changes
 [x] Check version
 [x] Run tests with
     [x] winbuilder

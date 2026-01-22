@@ -69,15 +69,16 @@ S4 and RC objects are returned unchanged.
 \section{Time Series}{
 
 
-\code{\link{alike}} will treat time series parameter components with zero in
-them as wildcards.  This function allows you to create these wild card time
-series attributes since R does not allow direct creation/modification of
-\code{ts} attributes with zero values.
-
-Make sure you do not try to use the templates you create with this for
-anything other than as \code{\link{alike}} templates since the result is
-likely undefined given R expects non zero values for the \code{ts}
-attribute and attempts to prevent such attributes.
+\code{abstract} replaces the "tsp" attribute with a "tsp_vetr" attribute with the
+components specified in \code{what} set to zero.  \code{\link{alike}} will
+treat it as a "tsp" attribute except that the zero components become
+wildcards.  If you manually create a template object with both
+"tsp" and "tsp_vetr" attributes, "tsp_vetr" is treated as a regular
+attribute.  \code{vetr} does not consider whether the "ts" class is also set
+when attributing special semantics to the "tsp".  The "tsp_vetr" attribute is
+required because R does not permit 0 values in "tsp".  Prior to R4.6.0 and
+\code{vetr} 2.20, \code{vetr} constructed a "tsp" attribute with zeroes, but it no
+longer does that.
 }
 
 \examples{
