@@ -590,7 +590,8 @@ SEXP ALIKEC_list_as_sorted_vec(SEXP x) {
     }
     // Sort the buffer and reorder the vectors
 
-    qsort(sort_buff, (size_t) x_len, sizeof(struct chr_idx), cmpfun);
+    if(x_len > 1)
+      qsort(sort_buff, (size_t) x_len, sizeof(struct chr_idx), cmpfun);
 
     res = PROTECT(allocVector(VECSXP, x_len));
     res_nm = PROTECT(allocVector(STRSXP, x_len));

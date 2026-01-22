@@ -5,13 +5,22 @@
 [ ] Rebuild / Review doc changes
 [x] Check version
 [x] Run tests with
-    [x] winbuilder
+    [ ] winbuilder
 [ ] Rhub
     [x] valgrind
-    [ ] rchk
+    [x] rchk
+    [ ] SAN
 [x] Check coverage
 [ ] Check build user
+[ ] Revdeps
 
+## Rhub
+
+    rhub::rhub_platforms()
+    rhub::rc_submit('vetr_0.2.20.tar.gz', c('valgrind', 'rchk', 'clang-asan'))
+    rhub::rc_submit('vetr_0.2.20.tar.gz', c('rchk', 'clang-ubsan'))
+
+We're not doing `gcc-asan` (no particular reason).
 
 
 ## Submission Notes:
