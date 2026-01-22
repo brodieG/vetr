@@ -74,6 +74,8 @@ struct ALIKEC_res_strings ALIKEC_res_strings_init(void) {
 
   return res;
 }
+// Any function that calls this must call ALIKEC_res_wrap_check at every return
+
 struct ALIKEC_res ALIKEC_res_init(void) {
   return (struct ALIKEC_res) {
     .success=1,
@@ -88,9 +90,6 @@ struct ALIKEC_res ALIKEC_res_init(void) {
     // R_NilValue and rely on code to do the correct initialization when
     // something actually fails. This is ugly and as one might have guessed,
     // caused bugs.
-    //
-    // All functions that return ALIKEC_res structs should run
-    // ALIKEC_res_wrap_check on them just prior to return.
 
     .wrap=R_NilValue,
   };
@@ -580,14 +579,12 @@ struct ALIKEC_res ALIKEC_alike_internal(
     res.dat.strings.target[1] = "`NULL`";
     res.dat.strings.current[0] = "\"%s\"";
     res.dat.strings.current[1] = type2char(TYPEOF(current));
-    res.wrap = PROTECT(allocVector(VECSXP, 2));
   } else {
     // Recursively check object
 
     res = ALIKEC_alike_rec(target, current, ALIKEC_rec_track_init(), set);
-    PROTECT(R_NilValue);  /// stack balance
   }
-  UNPROTECT(1);
+  ALIKEC_res_wrap_check(&res);
   return res;
 }
 /*
@@ -668,10 +665,11 @@ void ALIKEC_rewrap(SEXP wrap, SEXP new_call, SEXP new_ref) {
 
 /*
  * Ensure the wrap dummy value on failure is correctly initialized.
- * This should be called right before every return of functions that return
- * ALIKEC_res structs since wrap is not protected.  All callers of functions
- * that return ALIKEC_res structs are expected to immediately protect e.g.
- * res.wrap.
+ *
+ * This should be called right before every return of functions that call
+ * ALIKEC_res_init.  This allocates res.wrap and does not PROTECT, so all
+ * callers of functions that return ALIKEC_res structs are expected to
+ * immediately protect e.g.  res.wrap.
  */
 void ALIKEC_res_wrap_check(struct ALIKEC_res * res) {
   if(res->success == 0 && res->wrap == R_NilValue)

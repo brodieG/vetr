@@ -250,7 +250,6 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
   }
   UNPROTECT(4);
   ALIKEC_res_wrap_check(&res);
-
   return res;
 }
 

@@ -55,10 +55,6 @@ SEXP ALIKEC_res_sub_as_sxp(struct ALIKEC_res sub, struct VALC_settings set) {
     UNPROTECT(1);
 
     SET_VECTOR_ELT(message, 0, message_strings);
-    // For coherence with older tests before we changed result structure
-    if(sub.wrap == R_NilValue) {
-      sub.wrap = PROTECT(allocVector(VECSXP, 2));
-    } else PROTECT(R_NilValue);
     SET_VECTOR_ELT(message, 1, sub.wrap);
   } else message = PROTECT(PROTECT(PROTECT(R_NilValue)));
 
@@ -135,6 +131,7 @@ struct ALIKEC_res ALIKEC_alike_attr(
     res_sub.wrap = PROTECT(ALIKEC_attr_wrap(attr_symb_sym, R_NilValue));
     UNPROTECT(2);
   }
+  ALIKEC_res_wrap_check(&res_sub);
   return res_sub;
 }
 
@@ -797,11 +794,13 @@ struct ALIKEC_res ALIKEC_compare_ts(
         SET_VECTOR_ELT(res.wrap, 0, lang_sub);
         SET_VECTOR_ELT(res.wrap, 1, CDR(CADR(VECTOR_ELT(res.wrap, 0))));
         UNPROTECT(4);
+        ALIKEC_res_wrap_check(&res);
         return res;
     } }
   } else {
     return ALIKEC_alike_attr(target, current, "tsp", set);
   }
+  ALIKEC_res_wrap_check(&res);
   return res;
 }
 /*
@@ -873,8 +872,10 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal_simple(
     tae_type == EXTPTRSXP || tae_type == WEAKREFSXP ||
     tae_type == BCODESXP || tae_type == ENVSXP
   );
-  if(dont_check || both_null || ref_obj) return res;
-
+  if(dont_check || both_null || ref_obj) {
+    ALIKEC_res_wrap_check(&res);
+    return res;
+  }
   // Now checks that produce errors
 
   if(tae_type == NILSXP || cae_type == NILSXP) {
@@ -937,6 +938,7 @@ struct ALIKEC_res ALIKEC_compare_attributes_internal(
 
   if(tar_attr == R_NilValue && cur_attr == R_NilValue) {
     UNPROTECT(2);
+    ALIKEC_res_wrap_check(&res_attr);
     return res_attr;
   }
   /*
