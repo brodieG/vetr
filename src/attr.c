@@ -52,7 +52,6 @@ SEXP ALIKEC_res_sub_as_sxp(struct ALIKEC_res sub, struct VALC_settings set) {
     SET_STRING_ELT(res_msg_names, 0, mkChar("message"));
     SET_STRING_ELT(res_msg_names, 1, mkChar("wrap"));
     setAttrib(message, R_NamesSymbol, res_msg_names);
-    UNPROTECT(1);
 
     SET_VECTOR_ELT(message, 0, message_strings);
     SET_VECTOR_ELT(message, 1, sub.wrap);
@@ -691,6 +690,7 @@ struct ALIKEC_res ALIKEC_compare_dimnames(
             // nocov end
           }
           ALIKEC_rewrap(wrap, wrap_call, CDR(CADR(wrap_call)));
+          UNPROTECT(1);
         }
       }
       // look at dimnames themselves (i.e. not the names)
