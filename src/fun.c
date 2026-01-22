@@ -166,7 +166,7 @@ struct ALIKEC_res ALIKEC_fun_alike_internal(
     }
   }
   UNPROTECT(6);
-  if(!res.success) res.wrap = allocVector(VECSXP, 2);
+  ALIKEC_res_wrap_check(&res);
   return res;
 }
 SEXP ALIKEC_fun_alike_ext(SEXP target, SEXP current) {

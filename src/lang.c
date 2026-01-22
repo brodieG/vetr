@@ -247,9 +247,10 @@ struct ALIKEC_res ALIKEC_lang_obj_compare(
       res.dat.rec = ALIKEC_rec_ind_num(res.dat.rec, i + 2);
       res.dat.rec = ALIKEC_rec_dec(res.dat.rec);
     }
-    if(res.wrap == R_NilValue) res.wrap = allocVector(VECSXP, 2);
   }
   UNPROTECT(4);
+  ALIKEC_res_wrap_check(&res);
+
   return res;
 }
 
@@ -435,6 +436,8 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
     }
     res.dat.rec = ALIKEC_rec_dec(res.dat.rec);
   }
+  ALIKEC_res_wrap_check(&res);
+
   return res;
 }
 /*
@@ -585,6 +588,7 @@ struct ALIKEC_res ALIKEC_lang_alike_internal(
     res.wrap = wrap;
   }
   UNPROTECT(2);
+  ALIKEC_res_wrap_check(&res);
   return res;
 }
 /*

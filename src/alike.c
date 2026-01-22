@@ -86,8 +86,12 @@ struct ALIKEC_res ALIKEC_res_init(void) {
     // Would be cleaner to initialize this to allocVector(VECSXP, 2), but that
     // costs ~20ns and we do that a lot so instead we initialize this as
     // R_NilValue and rely on code to do the correct initialization when
-    // something actually fails.  Dirty, but performance impact seems to warrant
-    // it as we can easily instantiate dozens of these objects.
+    // something actually fails. This is ugly and as one might have guessed,
+    // caused bugs.
+    //
+    // All functions that return ALIKEC_res structs should run
+    // ALIKEC_res_wrap_check on them just prior to return.
+
     .wrap=R_NilValue,
   };
 }
@@ -368,9 +372,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
     }
   }
   UNPROTECT(2);
-  if(!res.success && res.wrap == R_NilValue) {
-    res.wrap = allocVector(VECSXP, 2);
-  }
+  ALIKEC_res_wrap_check(&res);
   return res;
 }
 /*
@@ -582,6 +584,7 @@ struct ALIKEC_res ALIKEC_alike_rec(
     res.dat.rec = ALIKEC_rec_dec(res.dat.rec); // decrement recursion tracker
   }
   UNPROTECT(1);
+  ALIKEC_res_wrap_check(&res);
   return res;
 }
 /*-----------------------------------------------------------------------------\
@@ -623,7 +626,7 @@ struct ALIKEC_res ALIKEC_alike_internal(
  * Augments wrap by injection call in the reserved spot
  *
  * This whole wrap business is needed because we do not generate the recursion
- * indices until we get here, so we need a mechanism for generating languge of
+ * indices until we get here, so we need a mechanism for generating language of
  * the form
  *
  *    attr(xxx[[1]][[2]])
@@ -645,9 +648,6 @@ struct ALIKEC_res ALIKEC_alike_internal(
 SEXP ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
   SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.dat.rec));
 
-  if(TYPEOF(res.wrap) != VECSXP || xlength(res.wrap) != 2) {
-    error("Internal Error: wrap struct eleme should be length 2 list.");// nocov
-  }
   SEXP wrap = res.wrap;
 
   // Need to check if our call could become ambigous with the indexing
@@ -675,18 +675,41 @@ SEXP ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
     call = VECTOR_ELT(rec_ind, 0);
   }
   // Merge the wrap call with the original call so we can get stuff like
-  // `names(call)`
+  // `names(call)`.
 
-  if(
-    VECTOR_ELT(wrap, 0) != R_NilValue && TYPEOF(VECTOR_ELT(wrap, 1)) == LISTSXP
-  ) {
-    SETCAR(VECTOR_ELT(wrap, 1), call);
-  } else {
-    SET_VECTOR_ELT(wrap, 0, call);
-  }
+  ALIKEC_rewrap(wrap, call, R_NilValue);
+
   UNPROTECT(2);
   return VECTOR_ELT(wrap, 0);
 }
+// Carry ot the actual substitution of e.g. call(NULL), hello, into call(hello)
+
+void ALIKEC_rewrap(SEXP wrap, SEXP new_call, SEXP new_ref) {
+  if(TYPEOF(wrap) != VECSXP || xlength(wrap) != 2) {
+    error("Internal Error: wrap struct should be length 2 list.");// nocov
+  }
+  if(
+    VECTOR_ELT(wrap, 0) != R_NilValue && TYPEOF(VECTOR_ELT(wrap, 1)) == LISTSXP
+  ) {
+    SETCAR(VECTOR_ELT(wrap, 1), new_call);
+  } else {
+    SET_VECTOR_ELT(wrap, 0, new_call);
+  }
+  if(new_ref != R_NilValue) SET_VECTOR_ELT(wrap, 1, new_ref);
+}
+
+/*
+ * Ensure the wrap dummy value on failure is correctly initialized.
+ * This should be called right before every return of functions that return
+ * ALIKEC_res structs since wrap is not protected.  All callers of functions
+ * that return ALIKEC_res structs are expected to immediately protect e.g.
+ * res.wrap.
+ */
+void ALIKEC_res_wrap_check(struct ALIKEC_res * res) {
+  if(res->success == 0 && res->wrap == R_NilValue)
+    res->wrap = allocVector(VECSXP, 2);
+}
+
 /*
 Main external interface
 */

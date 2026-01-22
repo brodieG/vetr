@@ -85,7 +85,8 @@ struct ALIKEC_res ALIKEC_type_alike_internal(
   res_fin.dat.strings.target[1]= what;
   res_fin.dat.strings.current[0] = "\"%s\"";
   res_fin.dat.strings.current[1] = type2char(cur_type);
-  res_fin.wrap = allocVector(VECSXP, 2); // note not PROTECTing b/c return
+
+  ALIKEC_res_wrap_check(&res_fin);
   return res_fin;
 }
 SEXP ALIKEC_type_alike(
