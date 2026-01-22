@@ -535,52 +535,20 @@ struct ALIKEC_res ALIKEC_alike_rec(
         tar_sub = target, cur_sub = current; tar_sub != R_NilValue;
         tar_sub = CDR(tar_sub), cur_sub = CDR(cur_sub), i++
       ) {
-        // Check tag names; should be in same order??  Probably
-
-        SEXP tar_tag = TAG(tar_sub);
-        SEXP tar_tag_chr = PRINTNAME(tar_tag);
-        if(tar_tag != R_NilValue && tar_tag != TAG(cur_sub)) {
-          REPROTECT(res.wrap = allocVector(VECSXP, 2), ipx);
-          res.success = 0;
-          res.dat.strings.tar_pre = "be";
-          res.dat.strings.target[0] =  "\"%s\"%s%s%s";
-          res.dat.strings.target[1] =  CHAR(asChar(tar_tag_chr));
-
-          if(TAG(cur_sub) == R_NilValue) {
-            res.dat.strings.current[1] =  "\"\"";
-          } else {
-            res.dat.strings.current[0] =  "\"%s\"%s%s%s";
-            res.dat.strings.current[1] =  CHAR(asChar(PRINTNAME(TAG(cur_sub))));
-          }
-          if(i >= INT_MAX)
-            // nocov start
-            error(
-              "Internal Error: %s%s",
-              "exceeded INT_MAX when counting through pairlist, ",
-              "contact maintainer."
-            );
-            // nocov end
-          SEXP sub_index = PROTECT(ScalarInteger(i + 1));
-          SEXP sub_sub_lang = PROTECT(lang2(R_NamesSymbol, R_NilValue));
-          SEXP sub_lang = PROTECT(
-            lang3(R_Bracket2Symbol, sub_sub_lang, sub_index)
-          );
-          SET_VECTOR_ELT(res.wrap, 0, sub_lang);
-          SET_VECTOR_ELT(res.wrap, 1, CDR(sub_sub_lang));
-          UNPROTECT(3);
+        // As of vetr 2.20 LISTSXP names are checked by ALIKEC_alike_obj
+        res = ALIKEC_alike_rec(CAR(tar_sub), CAR(cur_sub), res.dat.rec, set);
+        REPROTECT(res.wrap, ipx);
+        if(!res.success) {
+          SEXP tar_tag = TAG(tar_sub);
+          SEXP tar_tag_chr = PRINTNAME(tar_tag);
+          if(tar_tag != R_NilValue)
+            res.dat.rec =
+              ALIKEC_rec_ind_chr(res.dat.rec, CHAR(asChar(tar_tag_chr)));
+          else
+            res.dat.rec =
+              ALIKEC_rec_ind_num(res.dat.rec, i + 1);
           break;
-        } else {
-          res = ALIKEC_alike_rec(CAR(tar_sub), CAR(cur_sub), res.dat.rec, set);
-          REPROTECT(res.wrap, ipx);
-          if(!res.success) {
-            if(tar_tag != R_NilValue)
-              res.dat.rec =
-                ALIKEC_rec_ind_chr(res.dat.rec, CHAR(asChar(tar_tag_chr)));
-            else
-              res.dat.rec =
-                ALIKEC_rec_ind_num(res.dat.rec, i + 1);
-            break;
-    } } } }
+    } } }
     res.dat.rec = ALIKEC_rec_dec(res.dat.rec); // decrement recursion tracker
   }
   UNPROTECT(1);

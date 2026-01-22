@@ -437,7 +437,6 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
     res.dat.rec = ALIKEC_rec_dec(res.dat.rec);
   }
   ALIKEC_res_wrap_check(&res);
-
   return res;
 }
 /*
@@ -530,15 +529,13 @@ SEXP ALIKEC_lang_alike_core(
     SEXP res_msg = PROTECT(allocVector(VECSXP, 2));
     SEXP res_msg_names = PROTECT(allocVector(STRSXP, 2));
     SET_VECTOR_ELT(res_msg, 0, ALIKEC_res_strings_to_SEXP(res.dat.strings));
-    if(res.wrap == R_NilValue) {
-      res.wrap = PROTECT(allocVector(VECSXP, 2));
-    } else PROTECT(R_NilValue);
+    // res.wrap already checked by ALIKEC_lang_alike_rec
     SET_VECTOR_ELT(res_msg, 1, res.wrap);
     SET_STRING_ELT(res_msg_names, 0, mkChar("message"));
     SET_STRING_ELT(res_msg_names, 1, mkChar("wrap"));
     setAttrib(res_msg, R_NamesSymbol, res_msg_names);
     SET_VECTOR_ELT(res_fin, 1, res_msg);
-    UNPROTECT(3);
+    UNPROTECT(2);
 
     SET_VECTOR_ELT(res_fin, 2, CAR(curr_cpy_par));
     SET_VECTOR_ELT(res_fin, 3, VECTOR_ELT(rec_ind, 0));
