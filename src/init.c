@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2023 Brodie Gaslam
+Copyright (C) Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -60,7 +60,6 @@ R_CallMethodDef callMethods[] = {
   {"pad", (DL_FUNC) &ALIKEC_pad_ext, 3},
   {"pad_or_quote", (DL_FUNC) &ALIKEC_pad_or_quote_ext, 3},
   {"match_call", (DL_FUNC) &ALIKEC_match_call, 3},
-  {"abstract_ts", (DL_FUNC) &ALIKEC_abstract_ts, 2},
   {"env_track", (DL_FUNC) &ALIKEC_env_track_test, 3},
   {"msg_sort", (DL_FUNC) &ALIKEC_sort_msg_ext, 1},
   {"msg_merge", (DL_FUNC) &ALIKEC_merge_msg_ext, 1},

@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Brodie Gaslam
+# Copyright (C) Brodie Gaslam
 #
 # This file is part of "vetr - Trust, but Verify"
 #
@@ -39,16 +39,30 @@ unitizer_sect("Standard Methods", {
 })
 unitizer_sect("Time Series", {
   y <- ts(runif(12), start=1970, frequency=12)
-  attr(abstract(y), "tsp")
-  attr(abstract(y, "start"), "tsp")
-  attr(abstract(y, "end"), "tsp")
-  attr(abstract(y, "frequency"), "tsp")
-  attr(abstract(y, c("start", "frequency")), "tsp")
+  attributes(abstract(y))
+  attributes(abstract(y, "start"))
+  attributes(abstract(y, "end"))
+  attributes(abstract(y, "frequency"))
+  attributes(abstract(y, c("start", "frequency")))
+
+  y2 <- ts(numeric(12), start=1960, frequency=12)
+  alike(abstract(y, c("start", "end")), y2)
+  alike(abstract(y, c("start")), y2)
+
+  y2 <- ts(numeric(12), start=1960, frequency=13)
+  alike(abstract(y, c("start", "end")), y2)
 
   # Errors
 
   abstract(y, "boom")
   vetr:::abstract.ts(1:12)
+
+  # Test what happens with both "tsp" and "tsp_vetr"
+  y.abs <- abstract(y)
+  alike(y.abs, y)
+  alike(y, y.abs)
+  # ... should have attribute "tsp", see ?abstract, str(y.abs)
+  alike(y.abs, y.abs)
 })
 unitizer_sect("s4", {
   ## s4 objects are unaffected

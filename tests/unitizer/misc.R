@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Brodie Gaslam
+# Copyright (C) Brodie Gaslam
 #
 # This file is part of "vetr - Trust, but Verify"
 #
@@ -44,11 +44,12 @@ unitizer_sect("bench_mark", {
   capt_wo_time(bench_mark(Sys.sleep(.01), times=10))
   capt_wo_time(bench_mark(1 + 1, NULL, times=100))
 })
-unitizer_sect("sort pair lists", {
-  vetr:::list_as_sorted_vec(pairlist(c=1, a=list(), b=NULL))
+unitizer_sect("sort lists", {
+  vetr:::list_as_sorted_vec(list(c=1, a=list(), b=NULL))
   # # equal names not stable, but we should never hit this with attribute lists
   # vetr:::list_as_sorted_vec(pairlist(a=1, a=list(), a=NULL))
-  vetr:::list_as_sorted_vec(pairlist(b=1, 2, a=3))
-  vetr:::list_as_sorted_vec(pairlist())
-  vetr:::list_as_sorted_vec(pairlist(a=1))
+  vetr:::list_as_sorted_vec(list(b=1, 2, a=3))
+  vetr:::list_as_sorted_vec(list())
+  vetr:::list_as_sorted_vec(list(a=1))
+  vetr:::list_as_sorted_vec(list(1))
 })

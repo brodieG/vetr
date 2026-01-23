@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2023 Brodie Gaslam
+Copyright (C) Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -19,6 +19,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 #include "alike.h"
 #include "pfhash.h"
 #include <time.h>
+#include "backports.h"
 
 // - Helper Functions ----------------------------------------------------------
 
@@ -61,41 +62,7 @@ SEXP ALIKEC_getopt(const char * opt) {
   return opt_val;
 }
 // - Abstraction ---------------------------------------------------------------
-/*
-sets the select `tsp` values to zero
-*/
-SEXP ALIKEC_abstract_ts(SEXP x, SEXP attr) {
-  if(TYPEOF(attr) != REALSXP || XLENGTH(attr) != 3) {
-    // nocov start
-    error("Internal Error: incorrect format for tsp attr, contact maintainer");
-    // nocov end
-  }
-  SEXP x_cp = PROTECT(duplicate(x));
 
-  // Get to last attribute, and make sure tsp is not set
-
-  SEXP attrs = ATTRIB(x_cp), attrs_cpy, attrs_last = R_NilValue;
-  for(attrs_cpy = attrs; attrs_cpy != R_NilValue; attrs_cpy = CDR(attrs_cpy)) {
-    attrs_last = attrs_cpy;
-    if(TAG(attrs_cpy) == R_TspSymbol) break;
-  }
-  if(attrs_cpy != R_NilValue) {
-    // nocov start
-    error("Internal Error: object already has a `tsp` attribute");
-    // nocov end
-  }
-  if(attrs_last == R_NilValue) {
-    // nocov start
-    error("Internal Error: failed finding last attribute when adding tsp");
-    // nocov end
-  }
-  // Illegally append non-kosher tsp attribute
-
-  SETCDR(attrs_last, list1(attr));
-  SET_TAG(CDR(attrs_last), R_TspSymbol);
-  UNPROTECT(1);
-  return x_cp;
-}
 /*
 Run deparse command and return character vector with results
 
@@ -574,15 +541,15 @@ SEXP ALIKEC_is_dfish_ext(SEXP obj) {
   return ScalarLogical(ALIKEC_is_dfish(obj));
 }
 /*
- * Starts with a pair list, and returns it as a VECSXP sorted by tag
+ * Takes a named vector list (VECSXP, e.g. from R_getAttributes) and returns
+ * it sorted by name.
  *
- * Note that this uses `qsort` so the sort is not stable on ties.  Our primary
- * use case is to compare attributes where there should not be duplicate tas in
- * the attribute LISTSXP, so that should not matter.
+ * This function expects input from R_getAttributes which returns a named
+ * VECSXP. Input must be NULL or VECSXP.
  *
- * Not sure if there is a way to sort a SEXP VECSXP in place, but seems pretty
- * dangerous so we'll settle for the intermediate approach where we sort the
- * indeces and tag names.
+ * Note that this uses `qsort` so the sort is not stable on ties. Our primary
+ * use case is to compare attributes where there should not be duplicate names,
+ * so that should not matter.
  */
 
 struct chr_idx {SEXP name; SEXP val; R_xlen_t idx;};
@@ -595,34 +562,36 @@ static int cmpfun (const void * p, const void * q) {
   return(strcmp(a_chr, b_chr));
 }
 SEXP ALIKEC_list_as_sorted_vec(SEXP x) {
-  if(x != R_NilValue && TYPEOF(x) != LISTSXP)
-    error("Internal Error: input should be NULL or a LISTSXP"); // nocov
-
   SEXP res, res_nm;
 
   if(x == R_NilValue) {
-    res = PROTECT(PROTECT(allocVector(VECSXP, 0)));
-  } else {
-    SEXP x_el = x;
-    R_xlen_t x_len = xlength(x);
+    res_nm = PROTECT(allocVector(STRSXP, 0));
+    res = PROTECT(PROTECT(allocVector(VECSXP, 0))); // stack bal
+    setAttrib(res, R_NamesSymbol, res_nm);
+  } else if(TYPEOF(x) == VECSXP) {
+    R_xlen_t x_len = XLENGTH(x);
+    SEXP x_names = PROTECT(getAttrib(x, R_NamesSymbol));
 
-    // Fill our sort buffer and transfer everything to VECSXP
-
+    // Fill our sort buffer
     struct chr_idx * sort_buff =
       (struct chr_idx *) R_alloc((size_t) x_len, sizeof(struct chr_idx));
 
     for(R_xlen_t i = 0; i < x_len; ++i) {
-      SEXP nm = TAG(x_el) == R_NilValue ? R_BlankString : PRINTNAME(TAG(x_el));
+      SEXP nm;
+      if(x_names == R_NilValue || TYPEOF(x_names) != STRSXP) {
+        nm = R_BlankString;
+      } else {
+        nm = STRING_ELT(x_names, i);
+        if(nm == NA_STRING) nm = R_BlankString;
+      }
       *(sort_buff + i) = (struct chr_idx) {
-        .name = nm, .val = CAR(x_el), .idx = i
+        .name = nm, .val = VECTOR_ELT(x, i), .idx = i
       };
-      x_el = CDR(x_el);
     }
     // Sort the buffer and reorder the vectors
 
-    qsort(sort_buff, (size_t) x_len, sizeof(struct chr_idx), cmpfun);
-
-    // `head` holds the data at the current spot that needs to be overwritten
+    if(x_len > 1)
+      qsort(sort_buff, (size_t) x_len, sizeof(struct chr_idx), cmpfun);
 
     res = PROTECT(allocVector(VECSXP, x_len));
     res_nm = PROTECT(allocVector(STRSXP, x_len));
@@ -633,7 +602,9 @@ SEXP ALIKEC_list_as_sorted_vec(SEXP x) {
       SET_STRING_ELT(res_nm, i, tar.name);
     }
     setAttrib(res, R_NamesSymbol, res_nm);
+  } else {
+    error("Internal Error: input should be NULL or VECSXP"); // nocov
   }
-  UNPROTECT(2);
+  UNPROTECT(3);
   return res;
 }
