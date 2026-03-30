@@ -57,6 +57,8 @@ The code is copied almost verbatim from src/main/envir.c:findFun()
 #include "alike.h"
 #include "backports.h"  // For R_ParentEnv
 
+// It is an error for symbol to resolve to R_MissingArg
+
 SEXP ALIKEC_findFun(SEXP symbol, SEXP rho) {
   if(TYPEOF(symbol) != SYMSXP)
     error("Internal Error: `symbol` must be symbol");  // nocov
@@ -64,21 +66,22 @@ SEXP ALIKEC_findFun(SEXP symbol, SEXP rho) {
     error("Internal Error: `rho` must be environment");// nocov
   SEXP vl;
   while (rho != R_EmptyEnv) {
-    vl = findVarInFrame(rho, symbol);
+    vl = R_getVarEx(symbol, rho, false, R_UnboundValue);
     if (vl != R_UnboundValue) {
-      if (TYPEOF(vl) == PROMSXP) {
-        PROTECT(vl);
-        vl = eval(vl, rho);
-        UNPROTECT(1);
-      }
       if (
         TYPEOF(vl) == CLOSXP || TYPEOF(vl) == BUILTINSXP ||
         TYPEOF(vl) == SPECIALSXP
       )
         return (vl);
-      if (vl == R_MissingArg) {
-        return R_UnboundValue;
-    } }  // nocov
+      // This is no longer possible as it's now an error due to the change from
+      // findVar to getVarEx.  AFAICT this should not be possible to occur in
+      // our use case of ALIKEC_match_call -> ALIKEC_get_fun -> ALIKEC_findFun
+      // since ALIKEC_match_call uses a function symbol that is known to
+      // resolve, but I'm not entirely sure if I would have added stumbled into
+      // this if it wasn't actually possible to trigger without relying on the
+      // unit testing harness.
+      // if (vl == R_MissingArg) { return R_UnboundValue; }
+    }
     rho = R_ParentEnv(rho);
   }
   return R_UnboundValue;
