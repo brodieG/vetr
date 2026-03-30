@@ -102,3 +102,42 @@ SEXP R_getAttributes(SEXP x)
     return value;
 }
 #endif
+#if R_VERSION < R_Version(4, 5, 0)
+/*
+ * R_getVar* were introduced in R 4.5.0 as replacements for R_findVar*
+ *
+ * This code is from ~r89742
+ */
+
+// In Rinternals.h
+SEXP R_getVarEx(SEXP sym, SEXP rho, Rboolean inherits, SEXP ifnotfound)
+{
+    if (TYPEOF(sym) != SYMSXP)
+	error(_("first argument to '%s' must be a symbol"), __func__);
+    if (TYPEOF(rho) != ENVSXP)
+	error(_("second argument to '%s' must be an environment"), __func__);
+
+    SEXP val = inherits ? R_findVar(sym, rho) : R_findVarInFrame(rho, sym);
+    if (val == R_MissingArg) {
+        // This should not be reachable in our use case, see ALIKEC_findFun
+        error("Unexpected missing symbol."); // nocov
+    }
+    else if (val == R_UnboundValue)
+	return ifnotfound;
+    else if (TYPEOF(val) == PROMSXP) {
+	PROTECT(val);
+	val = eval(val, rho);
+	UNPROTECT(1);
+    }
+    return val;
+}
+
+// In Rinternals.h
+SEXP R_getVar(SEXP sym, SEXP rho, Rboolean inherits)
+{
+    SEXP val = R_getVarEx(sym, rho, inherits, R_UnboundValue);
+    if (val == R_UnboundValue)
+	error(_("object '%s' not found"), EncodeChar(PRINTNAME(sym)));
+    return val;
+}
+#endif
