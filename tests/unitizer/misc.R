@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Brodie Gaslam
+# Copyright (C) Brodie Gaslam
 #
 # This file is part of "vetr - Trust, but Verify"
 #
@@ -51,4 +51,5 @@ unitizer_sect("sort lists", {
   vetr:::list_as_sorted_vec(list(b=1, 2, a=3))
   vetr:::list_as_sorted_vec(list())
   vetr:::list_as_sorted_vec(list(a=1))
+  vetr:::list_as_sorted_vec(list(1))
 })

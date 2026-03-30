@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2023 Brodie Gaslam
+Copyright (C) Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -74,6 +74,8 @@ struct ALIKEC_res_strings ALIKEC_res_strings_init(void) {
 
   return res;
 }
+// Any function that calls this must call ALIKEC_res_wrap_check at every return
+
 struct ALIKEC_res ALIKEC_res_init(void) {
   return (struct ALIKEC_res) {
     .success=1,
@@ -86,8 +88,9 @@ struct ALIKEC_res ALIKEC_res_init(void) {
     // Would be cleaner to initialize this to allocVector(VECSXP, 2), but that
     // costs ~20ns and we do that a lot so instead we initialize this as
     // R_NilValue and rely on code to do the correct initialization when
-    // something actually fails.  Dirty, but performance impact seems to warrant
-    // it as we can easily instantiate dozens of these objects.
+    // something actually fails. This is ugly and as one might have guessed,
+    // caused bugs.
+
     .wrap=R_NilValue,
   };
 }
@@ -368,9 +371,7 @@ struct ALIKEC_res ALIKEC_alike_obj(
     }
   }
   UNPROTECT(2);
-  if(!res.success && res.wrap == R_NilValue) {
-    res.wrap = allocVector(VECSXP, 2);
-  }
+  ALIKEC_res_wrap_check(&res);
   return res;
 }
 /*
@@ -533,55 +534,24 @@ struct ALIKEC_res ALIKEC_alike_rec(
         tar_sub = target, cur_sub = current; tar_sub != R_NilValue;
         tar_sub = CDR(tar_sub), cur_sub = CDR(cur_sub), i++
       ) {
-        // Check tag names; should be in same order??  Probably
-
-        SEXP tar_tag = TAG(tar_sub);
-        SEXP tar_tag_chr = PRINTNAME(tar_tag);
-        if(tar_tag != R_NilValue && tar_tag != TAG(cur_sub)) {
-          REPROTECT(res.wrap = allocVector(VECSXP, 2), ipx);
-          res.success = 0;
-          res.dat.strings.tar_pre = "be";
-          res.dat.strings.target[0] =  "\"%s\"%s%s%s";
-          res.dat.strings.target[1] =  CHAR(asChar(tar_tag_chr));
-
-          if(TAG(cur_sub) == R_NilValue) {
-            res.dat.strings.current[1] =  "\"\"";
-          } else {
-            res.dat.strings.current[0] =  "\"%s\"%s%s%s";
-            res.dat.strings.current[1] =  CHAR(asChar(PRINTNAME(TAG(cur_sub))));
-          }
-          if(i >= INT_MAX)
-            // nocov start
-            error(
-              "Internal Error: %s%s",
-              "exceeded INT_MAX when counting through pairlist, ",
-              "contact maintainer."
-            );
-            // nocov end
-          SEXP sub_index = PROTECT(ScalarInteger(i + 1));
-          SEXP sub_sub_lang = PROTECT(lang2(R_NamesSymbol, R_NilValue));
-          SEXP sub_lang = PROTECT(
-            lang3(R_Bracket2Symbol, sub_sub_lang, sub_index)
-          );
-          SET_VECTOR_ELT(res.wrap, 0, sub_lang);
-          SET_VECTOR_ELT(res.wrap, 1, CDR(sub_sub_lang));
-          UNPROTECT(3);
+        // As of vetr 2.20 LISTSXP names are checked by ALIKEC_alike_obj
+        res = ALIKEC_alike_rec(CAR(tar_sub), CAR(cur_sub), res.dat.rec, set);
+        REPROTECT(res.wrap, ipx);
+        if(!res.success) {
+          SEXP tar_tag = TAG(tar_sub);
+          SEXP tar_tag_chr = PRINTNAME(tar_tag);
+          if(tar_tag != R_NilValue)
+            res.dat.rec =
+              ALIKEC_rec_ind_chr(res.dat.rec, CHAR(asChar(tar_tag_chr)));
+          else
+            res.dat.rec =
+              ALIKEC_rec_ind_num(res.dat.rec, i + 1);
           break;
-        } else {
-          res = ALIKEC_alike_rec(CAR(tar_sub), CAR(cur_sub), res.dat.rec, set);
-          REPROTECT(res.wrap, ipx);
-          if(!res.success) {
-            if(tar_tag != R_NilValue)
-              res.dat.rec =
-                ALIKEC_rec_ind_chr(res.dat.rec, CHAR(asChar(tar_tag_chr)));
-            else
-              res.dat.rec =
-                ALIKEC_rec_ind_num(res.dat.rec, i + 1);
-            break;
-    } } } }
+    } } }
     res.dat.rec = ALIKEC_rec_dec(res.dat.rec); // decrement recursion tracker
   }
   UNPROTECT(1);
+  ALIKEC_res_wrap_check(&res);
   return res;
 }
 /*-----------------------------------------------------------------------------\
@@ -609,21 +579,19 @@ struct ALIKEC_res ALIKEC_alike_internal(
     res.dat.strings.target[1] = "`NULL`";
     res.dat.strings.current[0] = "\"%s\"";
     res.dat.strings.current[1] = type2char(TYPEOF(current));
-    res.wrap = PROTECT(allocVector(VECSXP, 2));
   } else {
     // Recursively check object
 
     res = ALIKEC_alike_rec(target, current, ALIKEC_rec_track_init(), set);
-    PROTECT(R_NilValue);  /// stack balance
   }
-  UNPROTECT(1);
+  ALIKEC_res_wrap_check(&res);
   return res;
 }
 /*
  * Augments wrap by injection call in the reserved spot
  *
  * This whole wrap business is needed because we do not generate the recursion
- * indices until we get here, so we need a mechanism for generating languge of
+ * indices until we get here, so we need a mechanism for generating language of
  * the form
  *
  *    attr(xxx[[1]][[2]])
@@ -645,9 +613,6 @@ struct ALIKEC_res ALIKEC_alike_internal(
 SEXP ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
   SEXP rec_ind = PROTECT(ALIKEC_rec_ind_as_lang(res.dat.rec));
 
-  if(TYPEOF(res.wrap) != VECSXP || xlength(res.wrap) != 2) {
-    error("Internal Error: wrap struct eleme should be length 2 list.");// nocov
-  }
   SEXP wrap = res.wrap;
 
   // Need to check if our call could become ambigous with the indexing
@@ -675,18 +640,42 @@ SEXP ALIKEC_inject_call(struct ALIKEC_res res, SEXP call) {
     call = VECTOR_ELT(rec_ind, 0);
   }
   // Merge the wrap call with the original call so we can get stuff like
-  // `names(call)`
+  // `names(call)`.
 
-  if(
-    VECTOR_ELT(wrap, 0) != R_NilValue && TYPEOF(VECTOR_ELT(wrap, 1)) == LISTSXP
-  ) {
-    SETCAR(VECTOR_ELT(wrap, 1), call);
-  } else {
-    SET_VECTOR_ELT(wrap, 0, call);
-  }
+  ALIKEC_rewrap(wrap, call, R_NilValue);
+
   UNPROTECT(2);
   return VECTOR_ELT(wrap, 0);
 }
+// Carry ot the actual substitution of e.g. call(NULL), hello, into call(hello)
+
+void ALIKEC_rewrap(SEXP wrap, SEXP new_call, SEXP new_ref) {
+  if(TYPEOF(wrap) != VECSXP || xlength(wrap) != 2) {
+    error("Internal Error: wrap struct should be length 2 list.");// nocov
+  }
+  if(
+    VECTOR_ELT(wrap, 0) != R_NilValue && TYPEOF(VECTOR_ELT(wrap, 1)) == LISTSXP
+  ) {
+    SETCAR(VECTOR_ELT(wrap, 1), new_call);
+  } else {
+    SET_VECTOR_ELT(wrap, 0, new_call);
+  }
+  if(new_ref != R_NilValue) SET_VECTOR_ELT(wrap, 1, new_ref);
+}
+
+/*
+ * Ensure the wrap dummy value on failure is correctly initialized.
+ *
+ * This should be called right before every return of functions that call
+ * ALIKEC_res_init.  This allocates res.wrap and does not PROTECT, so all
+ * callers of functions that return ALIKEC_res structs are expected to
+ * immediately protect e.g.  res.wrap.
+ */
+void ALIKEC_res_wrap_check(struct ALIKEC_res * res) {
+  if(res->success == 0 && res->wrap == R_NilValue)
+    res->wrap = allocVector(VECSXP, 2);
+}
+
 /*
 Main external interface
 */

@@ -9,6 +9,11 @@ stem from this:
   the "tsp" attribute in the template (see `?abstract`).
 * Pairlist name error messages are slightly different.
 
+Additionally:
+
+* Fixed corner case bugs for e.g. `dimnames` with S4 attributes, and
+* Refactored code to reduce probability of bugs like the above.
+
 ## 0.2.19
 
 * Fix non C API access.

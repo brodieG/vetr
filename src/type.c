@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2023 Brodie Gaslam
+Copyright (C) Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -35,7 +35,10 @@ struct ALIKEC_res ALIKEC_type_alike_internal(
 
   struct ALIKEC_res res = ALIKEC_res_init();
 
-  if(tar_type_raw == cur_type_raw) return res;
+  if(tar_type_raw == cur_type_raw) {
+    ALIKEC_res_wrap_check(&res);
+    return res;
+  }
 
   tar_type = tar_type_raw;
   cur_type = cur_type_raw;
@@ -60,11 +63,13 @@ struct ALIKEC_res ALIKEC_type_alike_internal(
       cur_type = ALIKEC_typeof_internal(current);
     }
   }
-  if(tar_type == cur_type) return res;
   if(
-    cur_type == INTSXP && set.type_mode < 2 &&
-    (tar_type == INTSXP || tar_type == REALSXP)
+    tar_type == cur_type || (
+      cur_type == INTSXP && set.type_mode < 2 &&
+      (tar_type == INTSXP || tar_type == REALSXP)
+    )
   ) {
+    ALIKEC_res_wrap_check(&res);
     return res;
   }
   const char * what;
@@ -85,7 +90,8 @@ struct ALIKEC_res ALIKEC_type_alike_internal(
   res_fin.dat.strings.target[1]= what;
   res_fin.dat.strings.current[0] = "\"%s\"";
   res_fin.dat.strings.current[1] = type2char(cur_type);
-  res_fin.wrap = allocVector(VECSXP, 2); // note not PROTECTing b/c return
+
+  ALIKEC_res_wrap_check(&res_fin);
   return res_fin;
 }
 SEXP ALIKEC_type_alike(

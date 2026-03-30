@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Brodie Gaslam
+# Copyright (C) Brodie Gaslam
 #
 # This file is part of "vetr - Trust, but Verify"
 #

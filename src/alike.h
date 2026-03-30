@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2023 Brodie Gaslam
+Copyright (C) Brodie Gaslam
 
 This file is part of "vetr - Trust, but Verify"
 
@@ -219,6 +219,8 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
     SEXP obj, int width_cutoff, struct VALC_settings set
   );
   SEXP ALIKEC_inject_call(struct ALIKEC_res res, SEXP call);
+  void ALIKEC_rewrap(SEXP wrap, SEXP new_call, SEXP new_ref);
+  void ALIKEC_res_wrap_check(struct ALIKEC_res * res);
   SEXP ALIKEC_match_call(SEXP call, SEXP match_call, SEXP env);
   SEXP ALIKEC_findFun(SEXP symbol, SEXP rho);
   SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho);

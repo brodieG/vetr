@@ -87,9 +87,12 @@ SEXP R_getAttributes(SEXP x)
 	    SET_STRING_ELT(names, nvalues, PRINTNAME(tag));
 	}
 	else { // empty tag, hence name = ""
+            // Not reachable AFAIK
+            // nocov start
 	    MARK_NOT_MUTABLE(CAR(attrs));
 	    SET_VECTOR_ELT(value, nvalues, CAR(attrs));
 	    SET_STRING_ELT(names, nvalues, R_BlankString);
+            // nocov end
 	}
 	attrs = CDR(attrs);
 	nvalues++;

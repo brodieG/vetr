@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Brodie Gaslam
+# Copyright (C) Brodie Gaslam
 #
 # This file is part of "vetr - Trust, but Verify"
 #
@@ -126,6 +126,20 @@ unitizer_sect("Matrix / Arrays", {
 
   alike(mx.tpl, mx.cur)
   alike(mx.tpl, mx.cur2)
+
+  # dimnames with attributes
+  dn0 <- structure(list(c('a', 'b'), 'c'), attr1='a1', attrZ=1)
+  dn1 <- structure(list(c('a', 'b'), 'c'), attr1='a1', attrBOB='aa', attrZ=1)
+  dn2 <- structure(list(c('a', 'b'), 'c'), attr1='a1', attrJANE='bb', attrZ=1)
+  mx.dn0 <- matrix(1:2, ncol=1, dimnames=dn0)
+  mx.dn1 <- matrix(1:2, ncol=1, dimnames=dn1)
+  mx.dn2 <- matrix(1:2, ncol=1, dimnames=dn2)
+  alike(mx.dn0, mx.dn1)  # extra attr skip okay
+  alike(mx.dn1, mx.dn0)  # but converse not true
+  # Logic slightly different depending on lexical order of attributes
+  # for these next two; result should be the similar.
+  alike(mx.dn1, mx.dn2)
+  alike(mx.dn2, mx.dn1)
 } )
 unitizer_sect("Data Frames", {
   alike(mtcars, 1:3)

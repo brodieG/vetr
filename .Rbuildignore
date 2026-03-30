@@ -12,4 +12,5 @@
 ^README\.Rmd
 ^README\.html
 ^RELEASE\.Rmd
+^ai
 notcran

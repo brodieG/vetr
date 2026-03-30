@@ -1,16 +1,24 @@
 ## Submission Checklist
 
-[x] Revdeps
 [x] Review CRAN policy
+[x] Rebuild / Review doc changes
 [x] Check version
 [x] Run tests with
     [x] winbuilder
-[ ] Rhub
-    [x] valgrind
-    [ ] rchk
+    [x] Rhub valgrind
+    [x] Rhub rchk
+    [x] Rhub SAN
 [x] Check coverage
-[ ] Check build user
+[x] Check build user
+[x] Revdeps
+    [x] Dataonderivates, make sure to run with NOT_CRAN=false in ~/.Renviron
 
+## Rhub
+
+    rhub::rhub_platforms()
+    rhub::rc_submit('vetr_0.2.20.tar.gz', c('valgrind', 'rchk', 'clang-asan'))
+
+ASAN runs ubsan.
 
 
 ## Submission Notes:
