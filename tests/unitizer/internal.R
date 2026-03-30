@@ -509,7 +509,8 @@ unitizer_sect("Find funs", {
   vetr:::find_fun(quote(fun), environment())
   vetr:::find_fun(quote(asdhfqwerasdfasdf), environment())
 
-  fun2 <- function(x) vetr:::find_fun(quote(x), environment())
-  # corner case
-  fun2()
+  # corner case for missingArg, no longer supported since findVar became
+  # inaccessible.  This should not be possible to trigger in regular use.
+  # fun2 <- function(x) vetr:::find_fun(quote(x), environment())
+  # fun2()
 })
