@@ -1,17 +1,17 @@
 ## Submission Checklist
 
-[x] Review CRAN policy
-[x] Rebuild / Review doc changes
-[x] Check version
-[x] Run tests with
-    [x] winbuilder
-    [x] Rhub valgrind
-    [x] Rhub rchk
-    [x] Rhub SAN
-[x] Check coverage
-[x] Check build user
-[x] Revdeps
-    [x] Dataonderivates, make sure to run with NOT_CRAN=false in ~/.Renviron
+[ ] Review CRAN policy
+[ ] Rebuild / Review doc changes
+[ ] Check version
+[ ] Run tests with
+    [ ] winbuilder
+    [ ] Rhub valgrind
+    [ ] Rhub rchk
+    [ ] Rhub SAN
+[ ] Check coverage
+[ ] Check build user
+[ ] Revdeps
+    [ ] Dataonderivates, make sure to run with NOT_CRAN=false in ~/.Renviron
 
 ## Rhub
 

@@ -60,7 +60,8 @@ static SEXP Rf_allocLang(int n)
 #if R_VERSION < R_Version(4, 5, 0)
 # define R_ClosureFormals(x) FORMALS(x)
 # define R_ParentEnv(x) ENCLOS(x)
-
+SEXP R_getVarEx(SEXP sym, SEXP rho, Rboolean inherits, SEXP ifnotfound);
+SEXP R_getVar(SEXP sym, SEXP rho, Rboolean inherits)
 #endif
 
 #if R_VERSION < R_Version(4, 6, 0)

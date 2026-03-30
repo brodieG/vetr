@@ -55,7 +55,7 @@ The code is copied almost verbatim from src/main/envir.c:findFun()
 #include <Rinternals.h>
 #include <wctype.h>
 #include "alike.h"
-#include "backports.h"  // For R_ParentEnv
+#include "backports.h"  // For R_ParentEnv, R_getVar*
 
 // It is an error for symbol to resolve to R_MissingArg
 

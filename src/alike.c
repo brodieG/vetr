@@ -18,6 +18,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 
 #include "settings.h"
 #include "alike.h"
+#include "backports.h" // for R_getVar*
 
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
