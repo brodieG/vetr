@@ -120,7 +120,7 @@ SEXP R_getVarEx(SEXP sym, SEXP rho, Rboolean inherits, SEXP ifnotfound)
         // This should not be reachable in our use case, see ALIKEC_findFun
         error("Unexpected missing symbol.");
     }
-    else if (val == VALC_UnboundValue)
+    else if (val == R_UnboundValue)
 	return ifnotfound;
     else if (TYPEOF(val) == PROMSXP) {
 	PROTECT(val);
