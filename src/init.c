@@ -161,9 +161,8 @@ void R_init_vetr(DllInfo *info)
   VALC_UnboundValue = R_NewEnv(R_EmptyEnv, FALSE, 0);
   R_PreserveObject(VALC_UnboundValue);
 }
+// nocov start
 void R_unload_vetr(DllInfo *info) {
   R_ReleaseObject(VALC_UnboundValue);
 }
-
-
-
+// nocov end
