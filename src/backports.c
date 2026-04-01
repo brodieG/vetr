@@ -51,6 +51,7 @@ the R sources.  Original copyright notices follow.
  */
 #include <Rinternals.h>
 #include <Rversion.h>
+#include "validate.h"  // For VALC_UnboundValue, should really merge headers
 
 #if R_VERSION < R_Version(4, 6, 0)
 SEXP R_getAttributes(SEXP x)
@@ -119,7 +120,7 @@ SEXP R_getVarEx(SEXP sym, SEXP rho, Rboolean inherits, SEXP ifnotfound)
         // This should not be reachable in our use case, see ALIKEC_findFun
         error("Unexpected missing symbol.");
     }
-    else if (val == R_UnboundValue)
+    else if (val == VALC_UnboundValue)
 	return ifnotfound;
     else if (TYPEOF(val) == PROMSXP) {
 	PROTECT(val);
@@ -131,8 +132,8 @@ SEXP R_getVarEx(SEXP sym, SEXP rho, Rboolean inherits, SEXP ifnotfound)
 
 SEXP R_getVar(SEXP sym, SEXP rho, Rboolean inherits)
 {
-    SEXP val = R_getVarEx(sym, rho, inherits, R_UnboundValue);
-    if (val == R_UnboundValue)
+    SEXP val = R_getVarEx(sym, rho, inherits, VALC_UnboundValue);
+    if (val == VALC_UnboundValue)
 	error("object '%s' not found", Rf_translateChar(PRINTNAME(sym)));
     return val;
 }

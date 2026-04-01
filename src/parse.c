@@ -172,7 +172,7 @@ SEXP VALC_sub_symbol(
       );
     }
     int var_found_resolves_symbol = 0;
-    if(R_getVarEx(lang, rho, true, R_UnboundValue) != R_UnboundValue) {
+    if(R_getVarEx(lang, rho, true, VALC_UnboundValue) != VALC_UnboundValue) {
       SEXP found_val = PROTECT(eval(lang, rho));
       SEXPTYPE found_val_type = TYPEOF(found_val);
       if(found_val_type == LANGSXP || found_val_type == SYMSXP) {

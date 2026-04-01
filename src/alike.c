@@ -19,6 +19,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 #include "settings.h"
 #include "alike.h"
 #include "backports.h" // for R_getVar*
+#include "validate.h"  // For VALC_UnboundValue, should really merge headers
 
 /*-----------------------------------------------------------------------------\
 \-----------------------------------------------------------------------------*/
@@ -495,8 +496,8 @@ struct ALIKEC_res ALIKEC_alike_rec(
             const char * var_name_chr = CHAR(STRING_ELT(tar_names, i));
             SEXP var_name = PROTECT(install(var_name_chr));
             SEXP var_cur_val =
-                PROTECT(R_getVarEx(var_name, current, false, R_UnboundValue));
-            if(var_cur_val == R_UnboundValue) {
+                PROTECT(R_getVarEx(var_name, current, false, VALC_UnboundValue));
+            if(var_cur_val == VALC_UnboundValue) {
               REPROTECT(res.wrap = allocVector(VECSXP, 2), ipx);
               res.success = 0;
               res.dat.strings.tar_pre = "contain";

@@ -84,6 +84,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
   extern SEXP VALC_SYM_current;
   extern SEXP VALC_TRUE;
   extern SEXP VALC_SYM_errmsg;
+  extern SEXP VALC_UnboundValue; // Replaces banned R_UnboundValue;
 
   SEXP VALC_test1(SEXP a);
   SEXP VALC_test2(SEXP a, SEXP b);
