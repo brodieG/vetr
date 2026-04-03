@@ -46,7 +46,7 @@ Doesn't do quick lookups for special symbols, or use the global cache if it is
 available.
 
 Most importantly, instead of failing if function is not found, returns
-R_UnboundValue.
+VALC_UnboundValue.
 
 The code is copied almost verbatim from src/main/envir.c:findFun()
 */
@@ -55,7 +55,10 @@ The code is copied almost verbatim from src/main/envir.c:findFun()
 #include <Rinternals.h>
 #include <wctype.h>
 #include "alike.h"
-#include "backports.h"  // For R_ParentEnv
+#include "backports.h"  // For R_ParentEnv, R_getVar*
+#include "validate.h"  // For VALC_UnboundValue, should really merge headers
+
+// It is an error for symbol to resolve to R_MissingArg
 
 SEXP ALIKEC_findFun(SEXP symbol, SEXP rho) {
   if(TYPEOF(symbol) != SYMSXP)
@@ -64,28 +67,29 @@ SEXP ALIKEC_findFun(SEXP symbol, SEXP rho) {
     error("Internal Error: `rho` must be environment");// nocov
   SEXP vl;
   while (rho != R_EmptyEnv) {
-    vl = findVarInFrame(rho, symbol);
-    if (vl != R_UnboundValue) {
-      if (TYPEOF(vl) == PROMSXP) {
-        PROTECT(vl);
-        vl = eval(vl, rho);
-        UNPROTECT(1);
-      }
+    vl = R_getVarEx(symbol, rho, false, VALC_UnboundValue);
+    if (vl != VALC_UnboundValue) {
       if (
         TYPEOF(vl) == CLOSXP || TYPEOF(vl) == BUILTINSXP ||
         TYPEOF(vl) == SPECIALSXP
       )
         return (vl);
-      if (vl == R_MissingArg) {
-        return R_UnboundValue;
-    } }  // nocov
+      // This is no longer possible as it's now an error due to the change from
+      // findVar to getVarEx.  AFAICT this should not be possible to occur in
+      // our use case of ALIKEC_match_call -> ALIKEC_get_fun -> ALIKEC_findFun
+      // since ALIKEC_match_call uses a function symbol that is known to
+      // resolve, but I'm not entirely sure if I would have added stumbled into
+      // this if it wasn't actually possible to trigger without relying on the
+      // unit testing harness.
+      // if (vl == R_MissingArg) { return VALC_UnboundValue; }
+    }
     rho = R_ParentEnv(rho);
   }
-  return R_UnboundValue;
+  return VALC_UnboundValue;
 }
 SEXP ALIKEC_findFun_ext(SEXP symbol, SEXP rho) {
   SEXP res = ALIKEC_findFun(symbol, rho);
-  if(res == R_UnboundValue) return R_NilValue;
+  if(res == VALC_UnboundValue) return R_NilValue;
   return res;
 }
 

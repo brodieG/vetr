@@ -1,3 +1,8 @@
+## 0.2.21
+
+R 4.6.0 makes `Rf_findVar*` inaccessible from package C code.  This update
+replaces those uses with `R_getVar`.
+
 ## 0.2.20
 
 R 4.6.0 makes `ATTRIB` inaccessible from package C code.  The following changes

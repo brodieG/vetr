@@ -18,6 +18,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 This file contains code copied from the R's Writing R Extensions manual and from
 the R sources.  Original copyright notices follow.
 */
+// nocov start
 /*
  *  R : A Computer Language for Statistical Data Analysis
  *  Copyright (C) 1999--2025  The R Core Team.
@@ -48,9 +49,9 @@ the R sources.  Original copyright notices follow.
  *
  * This code is from ~r89313
  */
-
 #include <Rinternals.h>
 #include <Rversion.h>
+#include "validate.h"  // For VALC_UnboundValue, should really merge headers
 
 #if R_VERSION < R_Version(4, 6, 0)
 SEXP R_getAttributes(SEXP x)
@@ -88,11 +89,9 @@ SEXP R_getAttributes(SEXP x)
 	}
 	else { // empty tag, hence name = ""
             // Not reachable AFAIK
-            // nocov start
 	    MARK_NOT_MUTABLE(CAR(attrs));
 	    SET_VECTOR_ELT(value, nvalues, CAR(attrs));
 	    SET_STRING_ELT(names, nvalues, R_BlankString);
-            // nocov end
 	}
 	attrs = CDR(attrs);
 	nvalues++;
@@ -102,3 +101,41 @@ SEXP R_getAttributes(SEXP x)
     return value;
 }
 #endif
+#if R_VERSION < R_Version(4, 5, 0)
+/*
+ * R_getVar* were introduced in R 4.5.0 as replacements for R_findVar*
+ *
+ * This code is adapted from ~r89742
+ */
+
+SEXP R_getVarEx(SEXP sym, SEXP rho, Rboolean inherits, SEXP ifnotfound)
+{
+    if (TYPEOF(sym) != SYMSXP)
+	error("first argument to '%s' must be a symbol", __func__);
+    if (TYPEOF(rho) != ENVSXP)
+	error("second argument to '%s' must be an environment", __func__);
+
+    SEXP val = inherits ? Rf_findVar(sym, rho) : Rf_findVarInFrame(rho, sym);
+    if (val == R_MissingArg) {
+        // This should not be reachable in our use case, see ALIKEC_findFun
+        error("Unexpected missing symbol.");
+    }
+    else if (val == R_UnboundValue)
+	return ifnotfound;
+    else if (TYPEOF(val) == PROMSXP) {
+	PROTECT(val);
+	val = eval(val, rho);
+	UNPROTECT(1);
+    }
+    return val;
+}
+
+SEXP R_getVar(SEXP sym, SEXP rho, Rboolean inherits)
+{
+    SEXP val = R_getVarEx(sym, rho, inherits, VALC_UnboundValue);
+    if (val == VALC_UnboundValue)
+	error("object '%s' not found", Rf_translateChar(PRINTNAME(sym)));
+    return val;
+}
+#endif
+// nocov end
