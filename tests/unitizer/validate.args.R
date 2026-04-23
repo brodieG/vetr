@@ -122,7 +122,8 @@ unitizer_sect("Args evaled in correct env?", {
   # make sure we can access variables that are not in fun lexical scope
 
   fun8b <- function(x) vetr(x=length(.) > 0 && integer())
-  get("zfqwefkj")  # should fail
+  # should fail, using try b/c of new objectNotFoundError 
+  inherits(try(get("zfqwefkj")), "try-error")
   local({
     zfqwefkj <- 200L
     fun8b(zfqwefkj)
