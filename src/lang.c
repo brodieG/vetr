@@ -17,6 +17,7 @@ Go to <https://www.r-project.org/Licenses/GPL-2> for a copy of the license.
 */
 
 #include "alike.h"
+#include "validate.h"  // For VALC_UnboundValue, should really merge headers
 
 /*
 Initialize return object
@@ -327,7 +328,7 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
         PROTECT(PROTECT(R_NilValue)); // stack balance
       }
       SEXP tar_sub, cur_sub, cur_sub_tag, tar_sub_tag,
-        prev_tag = R_UnboundValue;
+        prev_tag = VALC_UnboundValue;
       R_xlen_t arg_num;
 
       for(
@@ -354,7 +355,7 @@ struct ALIKEC_res ALIKEC_lang_alike_rec(
 
         if(tar_sub_tag != R_NilValue && tar_sub_tag != cur_sub_tag) {
           char * prev_tag_msg = "as first argument";
-          if(prev_tag != R_UnboundValue) {
+          if(prev_tag != VALC_UnboundValue) {
             if(prev_tag == R_NilValue) {
               prev_tag_msg = CSR_smprintf4(
                 set.nchar_max, "after argument %s", CSR_len_as_chr(arg_num),

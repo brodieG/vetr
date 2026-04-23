@@ -100,6 +100,8 @@ SEXP VALC_SYM_paren;
 SEXP VALC_SYM_current;
 SEXP VALC_SYM_errmsg;
 SEXP VALC_TRUE;
+SEXP VALC_UnboundValue;
+
 SEXP ALIKEC_SYM_package;
 SEXP ALIKEC_SYM_inherits;
 SEXP ALIKEC_SYM_paren_open;
@@ -154,5 +156,13 @@ void R_init_vetr(DllInfo *info)
   ALIKEC_SYM_colnames = install("colnames");
   ALIKEC_SYM_length = install("length");
   ALIKEC_SYM_syntacticnames = install("syntacticnames");
-}
 
+  // Sentinel to replace R_UnboundValue
+  VALC_UnboundValue = R_NewEnv(R_EmptyEnv, FALSE, 0);
+  R_PreserveObject(VALC_UnboundValue);
+}
+// nocov start
+void R_unload_vetr(DllInfo *info) {
+  R_ReleaseObject(VALC_UnboundValue);
+}
+// nocov end

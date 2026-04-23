@@ -58,11 +58,16 @@ static SEXP Rf_allocLang(int n)
 #endif
 
 #if R_VERSION < R_Version(4, 5, 0)
+#include <stdbool.h>
 # define R_ClosureFormals(x) FORMALS(x)
 # define R_ParentEnv(x) ENCLOS(x)
-
+// Annoyingly Rboolean is being "phased out" but in 4.5 true/false is used so we
+// need to include them for < 4.5.
+SEXP R_getVarEx(SEXP sym, SEXP rho, Rboolean inherits, SEXP ifnotfound);
+SEXP R_getVar(SEXP sym, SEXP rho, Rboolean inherits);
 #endif
 
 #if R_VERSION < R_Version(4, 6, 0)
+
 SEXP R_getAttributes(SEXP x);
 #endif
