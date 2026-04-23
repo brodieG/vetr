@@ -1,3 +1,7 @@
+## 0.2.22
+
+Relax text fixture to account for new `objectNotFoundError` error class.
+
 ## 0.2.21
 
 R 4.6.0 makes `Rf_findVar*` inaccessible from package C code.  This update
